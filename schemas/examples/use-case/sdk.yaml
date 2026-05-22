@@ -1,0 +1,20 @@
+# UseCase example — sdk archetype.
+schema_version: 2.0.0
+id: create-client-use-case
+title: "Consumer instantiates the SDK client and is ready to make calls"
+archetype_scope: [sdk]
+
+entry_points:
+  - id: create-client-symbol
+    archetype: sdk
+    spec:
+      exported_symbol: createClient
+
+given:
+  - "Configuration matching {{fixtures.client-config-fixture}} is available"
+when:
+  - "The consumer calls {{entry_points.create-client-symbol}}"
+then:
+  - "An initialized client matching {{fixtures.client-instance-fixture}} is returned"
+
+fixture_ids: [client-config-fixture, client-instance-fixture]

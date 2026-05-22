@@ -1,0 +1,21 @@
+# UseCase example — event-consumer archetype.
+schema_version: 2.0.0
+id: record-incoming-order-use-case
+title: "Service records an order received via the orders.created queue"
+archetype_scope: [event-consumer]
+
+entry_points:
+  - id: on-order-created
+    archetype: event-consumer
+    spec:
+      channel_kind: queue
+      channel_name: orders.created
+
+given:
+  - "An event matching {{fixtures.order-created-event-fixture}} is published to {{entry_points.on-order-created}}"
+when:
+  - "The handler receives the event"
+then:
+  - "The order is recorded in the application's storage"
+
+fixture_ids: [order-created-event-fixture]

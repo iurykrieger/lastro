@@ -1,0 +1,20 @@
+# UseCase example — library archetype.
+schema_version: 2.0.0
+id: parse-config-use-case
+title: "Caller parses a configuration document into a typed structure"
+archetype_scope: [library]
+
+entry_points:
+  - id: parse-config-symbol
+    archetype: library
+    spec:
+      exported_symbol: parseConfig
+
+given:
+  - "A configuration document matching {{fixtures.config-input-fixture}}"
+when:
+  - "The caller invokes {{entry_points.parse-config-symbol}}"
+then:
+  - "A typed configuration matching {{fixtures.config-parsed-fixture}} is returned"
+
+fixture_ids: [config-input-fixture, config-parsed-fixture]

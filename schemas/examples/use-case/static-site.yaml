@@ -1,0 +1,20 @@
+# UseCase example — static-site archetype.
+schema_version: 2.0.0
+id: pricing-page-use-case
+title: "/pricing renders the published rate card"
+archetype_scope: [static-site]
+
+entry_points:
+  - id: pricing-route
+    archetype: static-site
+    spec:
+      route_path: /pricing
+
+given:
+  - "A rate card matching {{fixtures.rate-card-fixture}} is available at build time"
+when:
+  - "A client fetches {{entry_points.pricing-route}}"
+then:
+  - "The response body matches {{fixtures.pricing-html-fixture}}"
+
+fixture_ids: [rate-card-fixture, pricing-html-fixture]

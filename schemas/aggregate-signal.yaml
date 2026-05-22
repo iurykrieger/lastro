@@ -1,0 +1,101 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/aggregate-signal.yaml"
+title: AggregateSignal
+description: |
+  Terminal record emitted by every sensor at the end of its run. For
+  single-shot sensors, mirrors the sole signal. For stream sensors, rolls
+  up counts. For observational sensors, reports observation completeness.
+
+type: object
+required: [schema_version, type, sensor_id, use_case_id, angle, started_at, ended_at, termination_reason, verdict, confidence, rollup]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  type:
+    type: string
+    const: aggregate
+  sensor_id:
+    $ref: "#/$defs/Id"
+  use_case_id:
+    $ref: "#/$defs/Id"
+  angle:
+    type: string
+    description: "Canonical source: schemas/enums/validation-angles.yaml"
+    enum: [security, build, code-structure, unit-test, e2e-test,
+           contracts, logs, metrics, database, performance]
+  started_at:
+    type: string
+    format: date-time
+  ended_at:
+    type: string
+    format: date-time
+  termination_reason:
+    type: string
+    description: "Canonical source: schemas/enums/termination-reasons.yaml"
+    enum: [completed, stopped, timeout, error]
+  verdict:
+    type: string
+    description: "Canonical source: schemas/enums/verdicts.yaml"
+    enum: [pass, fail, inconclusive]
+  confidence:
+    type: number
+    minimum: 0
+    maximum: 1
+  rollup:
+    type: object
+    required: [total_signals, pass_count, fail_count, inconclusive_count]
+    additionalProperties: false
+    properties:
+      total_signals:       { type: integer, minimum: 0 }
+      pass_count:          { type: integer, minimum: 0 }
+      fail_count:          { type: integer, minimum: 0 }
+      inconclusive_count:  { type: integer, minimum: 0 }
+  completeness:
+    type: object
+    additionalProperties: false
+    properties:
+      expected_observations:
+        type: array
+        items: { type: string, minLength: 1 }
+      missing_observations:
+        type: array
+        items: { type: string, minLength: 1 }
+  heal_hint:
+    $ref: "#/$defs/HealHint"
+
+allOf:
+  - if:
+      properties:
+        verdict: { const: fail }
+    then:
+      required: [heal_hint]
+
+$defs:
+  Id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*$"
+    minLength: 1
+    maxLength: 128
+  HealHint:
+    type: object
+    required: [summary, rationale]
+    additionalProperties: false
+    properties:
+      summary:
+        type: string
+        minLength: 1
+      suggested_locus:
+        type: array
+        items:
+          type: object
+          required: [path]
+          additionalProperties: false
+          properties:
+            path:   { type: string, minLength: 1 }
+            symbol: { type: string }
+      rationale:
+        type: string
+        minLength: 1

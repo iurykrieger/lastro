@@ -453,3 +453,38 @@ func loadGolden(t *testing.T) StackManifest {
 	}
 	return m
 }
+
+func TestLintCapabilitiesWarnsOnUnknown(t *testing.T) {
+	m := loadGolden(t)
+	known := []string{"http-routing", "middleware", "dependency-injection", "transactions"}
+	got := m.LintCapabilities(known)
+
+	// Golden manifest declares: nestjs={dependency-injection, http-routing, middleware},
+	// postgres={transactions, row-level-security}.
+	// 'row-level-security' is the one unknown capability.
+	if len(got) != 1 {
+		t.Fatalf("len = %d, want 1; warnings = %+v", len(got), got)
+	}
+	w := got[0]
+	if w.ComponentID != "postgres" {
+		t.Errorf("ComponentID = %q, want %q", w.ComponentID, "postgres")
+	}
+	if w.Capability != "row-level-security" {
+		t.Errorf("Capability = %q, want %q", w.Capability, "row-level-security")
+	}
+	if w.Message == "" {
+		t.Error("Message: empty; want a human-readable string")
+	}
+}
+
+func TestLintCapabilitiesReturnsEmptyWhenAllKnown(t *testing.T) {
+	m := loadGolden(t)
+	known := []string{
+		"http-routing", "middleware", "dependency-injection",
+		"transactions", "row-level-security",
+	}
+	got := m.LintCapabilities(known)
+	if len(got) != 0 {
+		t.Errorf("len = %d, want 0; warnings = %+v", len(got), got)
+	}
+}

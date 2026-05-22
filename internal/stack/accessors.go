@@ -34,3 +34,36 @@ func (m StackManifest) ComponentsWithCapability(cap string) []StackComponent {
 	}
 	return out
 }
+
+// LintWarning is emitted by LintCapabilities for each capability string not
+// found in the supplied recognized-vocabulary list.
+type LintWarning struct {
+	ComponentID string
+	Capability  string
+	Message     string
+}
+
+// LintCapabilities returns one LintWarning per (component, capability) pair
+// where the capability is not in known. Warnings only — never errors.
+// Order: manifest order of components, then declared order of capabilities
+// within each component.
+func (m StackManifest) LintCapabilities(known []string) []LintWarning {
+	set := make(map[string]struct{}, len(known))
+	for _, k := range known {
+		set[k] = struct{}{}
+	}
+	var out []LintWarning
+	for _, c := range m.Components {
+		for _, cap := range c.Capabilities {
+			if _, ok := set[cap]; ok {
+				continue
+			}
+			out = append(out, LintWarning{
+				ComponentID: c.ID,
+				Capability:  cap,
+				Message:     "unrecognized capability " + cap + " on component " + c.ID,
+			})
+		}
+	}
+	return out
+}

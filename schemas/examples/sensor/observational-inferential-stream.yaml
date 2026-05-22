@@ -9,7 +9,7 @@ nature: inferential
 output_type: stream
 
 uses:
-  - pino
+  - node
 
 steps:
   - id: derive-patterns

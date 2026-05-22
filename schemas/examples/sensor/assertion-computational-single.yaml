@@ -9,7 +9,7 @@ nature: computational
 output_type: single-shot
 
 uses:
-  - typescript
+  - node
   - express
 
 steps:

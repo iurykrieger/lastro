@@ -9,8 +9,8 @@ nature: inferential
 output_type: stream
 
 uses:
-  - openapi
   - express
+  - grpc
 
 steps:
   - id: extract-endpoints

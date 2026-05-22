@@ -9,7 +9,8 @@ nature: inferential
 output_type: single-shot
 
 uses:
-  - typescript
+  - node
+  - eslint
 
 steps:
   - id: collect-context

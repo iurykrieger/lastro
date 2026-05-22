@@ -9,8 +9,8 @@ nature: computational
 output_type: stream
 
 uses:
-  - jest
-  - typescript
+  - node
+  - express
 
 steps:
   - id: run-tests

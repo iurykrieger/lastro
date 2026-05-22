@@ -1382,7 +1382,7 @@ nature: computational
 output_type: single-shot
 
 uses:
-  - typescript
+  - node
   - express
 
 steps:
@@ -2344,8 +2344,8 @@ nature: computational
 output_type: stream
 
 uses:
-  - jest
-  - typescript
+  - node
+  - express
 
 steps:
   - id: run-tests
@@ -2366,7 +2366,8 @@ nature: inferential
 output_type: single-shot
 
 uses:
-  - typescript
+  - node
+  - eslint
 
 steps:
   - id: collect-context
@@ -2389,8 +2390,8 @@ nature: inferential
 output_type: stream
 
 uses:
-  - openapi
   - express
+  - grpc
 
 steps:
   - id: extract-endpoints
@@ -2416,7 +2417,7 @@ nature: computational
 output_type: stream
 
 uses:
-  - pino
+  - node
   - express
 
 steps:
@@ -2440,7 +2441,7 @@ nature: inferential
 output_type: stream
 
 uses:
-  - pino
+  - node
 
 steps:
   - id: derive-patterns

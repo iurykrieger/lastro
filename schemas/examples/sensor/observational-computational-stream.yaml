@@ -9,7 +9,7 @@ nature: computational
 output_type: stream
 
 uses:
-  - pino
+  - node
   - express
 
 steps:

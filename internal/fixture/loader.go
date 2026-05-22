@@ -47,7 +47,12 @@ func LoadFixture(path string) (Fixture, error) {
 	}
 	fx.Payload = []byte(rawPayload.Payload)
 
-	// Phase 4 (payload parsing): integrated in Task 14.
+	// Phase 4: eager payload parse (dispatched on content_type).
+	parsed, err := parsePayload(fx.ContentType, fx.Payload)
+	if err != nil {
+		return Fixture{}, fmt.Errorf("fixture %s: parse payload: %w", path, err)
+	}
+	fx.Parsed = parsed
 
 	return fx, nil
 }

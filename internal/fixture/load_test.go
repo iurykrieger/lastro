@@ -36,3 +36,21 @@ func TestLoadFixtureInputExampleStructuralFields(t *testing.T) {
 		t.Errorf("Binding.Selector[method]: got %v, want POST", fx.Binding.Selector["method"])
 	}
 }
+
+func TestLoadFixtureInputExampleParsesJSONPayload(t *testing.T) {
+	p := filepath.Join("..", "..", "schemas", "examples", "fixture", "input.yaml")
+	fx, err := LoadFixture(p)
+	if err != nil {
+		t.Fatalf("LoadFixture: %v", err)
+	}
+	if fx.Parsed == nil {
+		t.Fatal("Parsed: nil; want non-nil for application/json payload")
+	}
+	m, ok := fx.Parsed.(map[string]any)
+	if !ok {
+		t.Fatalf("Parsed: got %T, want map[string]any", fx.Parsed)
+	}
+	if m["customer_id"] != "c-001" {
+		t.Errorf("Parsed.customer_id: got %v, want c-001", m["customer_id"])
+	}
+}

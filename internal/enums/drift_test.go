@@ -49,6 +49,26 @@ func stringify[T ~string](in []T) []string {
 	return out
 }
 
+func TestApplicableAnglesMatchYAML(t *testing.T) {
+	ef := readEnumFile(t, "archetypes")
+	if len(ef.Values) != len(ApplicableAngles) {
+		t.Fatalf("archetype count: yaml=%d, go=%d", len(ef.Values), len(ApplicableAngles))
+	}
+	for _, v := range ef.Values {
+		t.Run(v.ID, func(t *testing.T) {
+			goList, ok := ApplicableAngles[Archetype(v.ID)]
+			if !ok {
+				t.Fatalf("ApplicableAngles missing archetype %q", v.ID)
+			}
+			goIDs := stringify(goList)
+			if !reflect.DeepEqual(v.ApplicableAngles, goIDs) {
+				t.Errorf("drift for archetype %q:\n  yaml: %v\n  go:   %v",
+					v.ID, v.ApplicableAngles, goIDs)
+			}
+		})
+	}
+}
+
 func TestGoConstantsMatchYAML(t *testing.T) {
 	cases := []struct {
 		yamlFile string

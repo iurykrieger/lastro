@@ -22,6 +22,7 @@ var entities = []string{
 var enums = []string{
 	"validation-angles", "archetypes", "sensor-kinds", "sensor-natures",
 	"signal-output-types", "fixture-roles", "verdicts", "termination-reasons",
+	"stack-kinds",
 }
 
 const baseURL = "https://lastro.dev/harness/schemas/"

@@ -1,0 +1,46 @@
+schema_version: 1.0.0
+title: Archetype
+description: |
+  Shape of an application's observable surface. Each archetype declares
+  which validation angles can produce sensors against it. This file is
+  the canonical archetype × angle matrix.
+
+values:
+  - id: http-api
+    purpose: "HTTP server exposing routes"
+    applicable_angles:
+      [security, build, code-structure, unit-test, e2e-test,
+       contracts, logs, metrics, database, performance]
+  - id: event-consumer
+    purpose: "Listens on a queue or topic and reacts to messages"
+    applicable_angles:
+      [security, build, code-structure, unit-test, e2e-test,
+       contracts, logs, metrics, database]
+  - id: event-producer
+    purpose: "Publishes events to a queue or topic"
+    applicable_angles:
+      [security, build, code-structure, unit-test, contracts, logs, metrics]
+  - id: cli
+    purpose: "Command-line program"
+    applicable_angles:
+      [security, build, code-structure, unit-test, contracts, logs]
+  - id: sdk
+    purpose: "Library distributed for embedding in other applications"
+    applicable_angles:
+      [security, build, code-structure, unit-test, contracts]
+  - id: library
+    purpose: "Internal-facing reusable module"
+    applicable_angles:
+      [security, build, code-structure, unit-test, contracts]
+  - id: worker
+    purpose: "Background process triggered by cron or signal"
+    applicable_angles:
+      [security, build, code-structure, unit-test, logs, metrics, database]
+  - id: batch-job
+    purpose: "Bulk processor with input source and output destination"
+    applicable_angles:
+      [security, build, code-structure, unit-test, logs, metrics, database, performance]
+  - id: static-site
+    purpose: "Pre-rendered HTML asset bundle"
+    applicable_angles:
+      [security, build, code-structure, contracts, performance]

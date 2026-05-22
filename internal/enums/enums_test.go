@@ -189,3 +189,33 @@ func TestIsValidFixtureRoleRejectsUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestAllVerdictsReturnsCanonicalOrder(t *testing.T) {
+	got := AllVerdicts()
+	want := []Verdict{VerdictPass, VerdictFail, VerdictInconclusive}
+	if len(got) != len(want) {
+		t.Fatalf("AllVerdicts length: got %d, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("AllVerdicts[%d]: got %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestIsValidVerdictAcceptsCanonical(t *testing.T) {
+	for _, v := range AllVerdicts() {
+		if !IsValidVerdict(string(v)) {
+			t.Errorf("IsValidVerdict(%q) = false; want true", v)
+		}
+	}
+}
+
+func TestIsValidVerdictRejectsUnknown(t *testing.T) {
+	cases := []string{"", "passed", "PASS", " pass"}
+	for _, c := range cases {
+		if IsValidVerdict(c) {
+			t.Errorf("IsValidVerdict(%q) = true; want false", c)
+		}
+	}
+}

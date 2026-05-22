@@ -166,3 +166,27 @@ func IsValidFixtureRole(s string) bool {
 	}
 	return false
 }
+
+// Verdict is the outcome of a sensor execution or aggregation.
+type Verdict string
+
+const (
+	VerdictPass         Verdict = "pass"
+	VerdictFail         Verdict = "fail"
+	VerdictInconclusive Verdict = "inconclusive"
+)
+
+// AllVerdicts returns every Verdict in canonical (YAML) order.
+func AllVerdicts() []Verdict {
+	return []Verdict{VerdictPass, VerdictFail, VerdictInconclusive}
+}
+
+// IsValidVerdict reports whether s is one of the canonical Verdict values.
+func IsValidVerdict(s string) bool {
+	for _, v := range AllVerdicts() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}

@@ -192,3 +192,8 @@ each enum in use. The gate itself does not produce a `framework.lock`.
   says `additionalProperties: false`, but loaders may add their own
   policy).
 - Migration strategy when an enum value is renamed or removed.
+- Schema-file rename strategy. The versioning policy in §8 covers field-level
+  changes within a schema file, but not what happens when an entity schema
+  itself is renamed (e.g., `stack-component.yaml` → `platform-component.yaml`).
+  Every cross-reference description, every example file path, and every
+  inline doc would need updating in lockstep.

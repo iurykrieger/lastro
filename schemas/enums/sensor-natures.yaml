@@ -1,0 +1,13 @@
+schema_version: 1.0.0
+title: SensorNature
+description: |
+  Epistemic source of a sensor's verdict. Computational sensors derive
+  pass/fail deterministically; inferential sensors rely on LLM judgment.
+
+values:
+  - id: computational
+    purpose: "Deterministic; pass/fail derives from program output (exit codes, parsed structured data)"
+    confidence_default: 1.0
+  - id: inferential
+    purpose: "Probabilistic; pass/fail derives from LLM judgment over evidence"
+    confidence_default: 0.7

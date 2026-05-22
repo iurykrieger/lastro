@@ -96,3 +96,26 @@ func IsValidSensorKind(s string) bool {
 	}
 	return false
 }
+
+// SensorNature is the epistemic source of a sensor's verdicts.
+type SensorNature string
+
+const (
+	NatureComputational SensorNature = "computational"
+	NatureInferential   SensorNature = "inferential"
+)
+
+// AllSensorNatures returns every SensorNature in canonical (YAML) order.
+func AllSensorNatures() []SensorNature {
+	return []SensorNature{NatureComputational, NatureInferential}
+}
+
+// IsValidSensorNature reports whether s is one of the canonical SensorNature values.
+func IsValidSensorNature(s string) bool {
+	for _, v := range AllSensorNatures() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}

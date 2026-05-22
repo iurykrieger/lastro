@@ -99,3 +99,33 @@ func TestIsValidSensorKindRejectsUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestAllSensorNaturesReturnsCanonicalOrder(t *testing.T) {
+	got := AllSensorNatures()
+	want := []SensorNature{NatureComputational, NatureInferential}
+	if len(got) != len(want) {
+		t.Fatalf("AllSensorNatures length: got %d, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("AllSensorNatures[%d]: got %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestIsValidSensorNatureAcceptsCanonical(t *testing.T) {
+	for _, v := range AllSensorNatures() {
+		if !IsValidSensorNature(string(v)) {
+			t.Errorf("IsValidSensorNature(%q) = false; want true", v)
+		}
+	}
+}
+
+func TestIsValidSensorNatureRejectsUnknown(t *testing.T) {
+	cases := []string{"", "deterministic", "INFERENTIAL", " computational"}
+	for _, c := range cases {
+		if IsValidSensorNature(c) {
+			t.Errorf("IsValidSensorNature(%q) = true; want false", c)
+		}
+	}
+}

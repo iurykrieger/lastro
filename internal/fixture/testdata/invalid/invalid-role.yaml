@@ -1,0 +1,7 @@
+schema_version: 1.0.0
+id: invalid-role-fixture
+use_case_id: create-order-use-case
+role: output
+content_type: application/json
+payload: |
+  {}

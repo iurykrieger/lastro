@@ -1,0 +1,13 @@
+# ValidationPolicy example — org scope, inherits from global, tightens cli.
+schema_version: 1.0.0
+scope: org
+inherits_from: global-default-policy
+per_archetype:
+  http-api:
+    obligatory_angles: [build, security, unit-test, e2e-test, contracts, logs]
+    optional_angles:   [performance, metrics]
+    disabled_angles:   []
+  cli:
+    obligatory_angles: [build, security, contracts, unit-test]
+    optional_angles:   [logs]
+    disabled_angles:   [e2e-test, database, performance]

@@ -1,0 +1,20 @@
+schema_version: 1.0.0
+id: xml-input-fixture
+use_case_id: create-order-use-case
+role: input
+content_type: application/xml
+payload: |
+  <order>
+    <customer_id>c-001</customer_id>
+    <items>
+      <item>
+        <sku>BOOK-1</sku>
+        <qty>2</qty>
+      </item>
+    </items>
+  </order>
+binding:
+  channel: http
+  selector:
+    method: POST
+    path: /orders

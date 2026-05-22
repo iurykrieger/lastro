@@ -54,3 +54,63 @@ func TestLoadFixtureInputExampleParsesJSONPayload(t *testing.T) {
 		t.Errorf("Parsed.customer_id: got %v, want c-001", m["customer_id"])
 	}
 }
+
+func TestLoadFixtureExpectedOutputExample(t *testing.T) {
+	p := filepath.Join("..", "..", "schemas", "examples", "fixture", "expected-output.yaml")
+	fx, err := LoadFixture(p)
+	if err != nil {
+		t.Fatalf("LoadFixture: %v", err)
+	}
+	if fx.Role != RoleExpectedOutput {
+		t.Errorf("Role: got %q, want %q", fx.Role, RoleExpectedOutput)
+	}
+	if fx.Parsed == nil {
+		t.Error("Parsed: nil for application/json fixture; want non-nil")
+	}
+}
+
+func TestLoadFixtureExpectedSideEffectExampleHasRawTextPayloadOnly(t *testing.T) {
+	p := filepath.Join("..", "..", "schemas", "examples", "fixture", "expected-side-effect.yaml")
+	fx, err := LoadFixture(p)
+	if err != nil {
+		t.Fatalf("LoadFixture: %v", err)
+	}
+	if fx.Role != RoleExpectedSideEffect {
+		t.Errorf("Role: got %q, want %q", fx.Role, RoleExpectedSideEffect)
+	}
+	if fx.ContentType != "text/plain" {
+		t.Errorf("ContentType: got %q, want text/plain", fx.ContentType)
+	}
+	if fx.Parsed != nil {
+		t.Errorf("Parsed: got %v, want nil for text/plain", fx.Parsed)
+	}
+	if len(fx.Payload) == 0 {
+		t.Error("Payload: empty; want raw bytes preserved")
+	}
+}
+
+func TestLoadFixtureYAMLContentType(t *testing.T) {
+	p := filepath.Join("testdata", "yaml-content-type.yaml")
+	fx, err := LoadFixture(p)
+	if err != nil {
+		t.Fatalf("LoadFixture: %v", err)
+	}
+	m, ok := fx.Parsed.(map[string]any)
+	if !ok {
+		t.Fatalf("Parsed: got %T, want map[string]any", fx.Parsed)
+	}
+	if m["customer_id"] != "c-001" {
+		t.Errorf("Parsed.customer_id: got %v, want c-001", m["customer_id"])
+	}
+}
+
+func TestLoadFixtureXMLContentType(t *testing.T) {
+	p := filepath.Join("testdata", "xml-content-type.yaml")
+	fx, err := LoadFixture(p)
+	if err != nil {
+		t.Fatalf("LoadFixture: %v", err)
+	}
+	if _, ok := fx.Parsed.(map[string]any); !ok {
+		t.Fatalf("Parsed: got %T, want map[string]any", fx.Parsed)
+	}
+}

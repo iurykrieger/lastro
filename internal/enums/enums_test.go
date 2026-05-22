@@ -252,3 +252,72 @@ func TestIsValidTerminationReasonRejectsUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestApplicableAnglesHasAllNineArchetypes(t *testing.T) {
+	if len(ApplicableAngles) != 9 {
+		t.Fatalf("ApplicableAngles size: got %d, want 9", len(ApplicableAngles))
+	}
+	for _, a := range AllArchetypes() {
+		if _, ok := ApplicableAngles[a]; !ok {
+			t.Errorf("ApplicableAngles missing entry for archetype %q", a)
+		}
+	}
+}
+
+func TestApplicableAnglesValuesAreCanonicalAngles(t *testing.T) {
+	for a, list := range ApplicableAngles {
+		for _, v := range list {
+			if !IsValidAngle(string(v)) {
+				t.Errorf("ApplicableAngles[%q] contains non-canonical angle %q", a, v)
+			}
+		}
+	}
+}
+
+func TestApplicableAnglesNoDuplicatesPerArchetype(t *testing.T) {
+	for a, list := range ApplicableAngles {
+		seen := map[ValidationAngle]bool{}
+		for _, v := range list {
+			if seen[v] {
+				t.Errorf("ApplicableAngles[%q] contains duplicate angle %q", a, v)
+			}
+			seen[v] = true
+		}
+	}
+}
+
+func TestAppliesTrueWhenAngleInList(t *testing.T) {
+	cases := []struct {
+		a Archetype
+		v ValidationAngle
+	}{
+		{ArchetypeHTTPAPI, AnglePerformance},
+		{ArchetypeHTTPAPI, AngleE2ETest},
+		{ArchetypeCLI, AngleContracts},
+		{ArchetypeStaticSite, AngleSecurity},
+		{ArchetypeBatchJob, AngleDatabase},
+	}
+	for _, c := range cases {
+		if !Applies(c.a, c.v) {
+			t.Errorf("Applies(%q, %q) = false; want true", c.a, c.v)
+		}
+	}
+}
+
+func TestAppliesFalseWhenAngleNotInList(t *testing.T) {
+	cases := []struct {
+		a Archetype
+		v ValidationAngle
+	}{
+		{ArchetypeCLI, AnglePerformance},
+		{ArchetypeCLI, AngleE2ETest},
+		{ArchetypeStaticSite, AngleDatabase},
+		{ArchetypeStaticSite, AngleUnitTest},
+		{ArchetypeSDK, AngleE2ETest},
+	}
+	for _, c := range cases {
+		if Applies(c.a, c.v) {
+			t.Errorf("Applies(%q, %q) = true; want false", c.a, c.v)
+		}
+	}
+}

@@ -1,0 +1,68 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/sensor.yaml"
+title: Sensor
+description: |
+  Grounded validator produced for one (use case × applicable validation
+  angle). Top-level `uses:` lists StackComponent ids (grounding invariant).
+  Step-level `uses:` lists Fixture ids (binding per step). No sensor-level
+  fixture list.
+
+type: object
+required: [schema_version, id, use_case_id, angle, kind, nature, output_type, uses, steps]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  id:
+    $ref: "#/$defs/Id"
+  use_case_id:
+    $ref: "#/$defs/Id"
+  angle:
+    type: string
+    description: "Canonical source: schemas/enums/validation-angles.yaml"
+    enum: [security, build, code-structure, unit-test, e2e-test,
+           contracts, logs, metrics, database, performance]
+  kind:
+    type: string
+    description: "Canonical source: schemas/enums/sensor-kinds.yaml"
+    enum: [assertion, observational]
+  nature:
+    type: string
+    description: "Canonical source: schemas/enums/sensor-natures.yaml"
+    enum: [computational, inferential]
+  output_type:
+    type: string
+    description: "Canonical source: schemas/enums/signal-output-types.yaml"
+    enum: [single-shot, stream]
+  uses:
+    type: array
+    description: "StackComponent ids the sensor draws from (grounding invariant)"
+    items: { $ref: "#/$defs/Id" }
+  depends_on:
+    type: array
+    description: "Sensor ids that must pass before this one runs"
+    items: { $ref: "#/$defs/Id" }
+  steps:
+    type: array
+    minItems: 1
+    items: { $ref: "#/$defs/SensorStep" }
+
+$defs:
+  Id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*$"
+    minLength: 1
+    maxLength: 128
+  SensorStep:
+    type: object
+    required: [id, run]
+    additionalProperties: false
+    properties:
+      id:   { $ref: "#/$defs/Id" }
+      run:  { type: string, minLength: 1 }
+      uses:
+        type: array
+        description: "Fixture ids referenced by this step (must belong to the sensor's use_case_id — runtime invariant)"
+        items: { $ref: "#/$defs/Id" }

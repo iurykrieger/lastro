@@ -1,0 +1,13 @@
+schema_version: 1.0.0
+title: Verdict
+description: |
+  Outcome of a sensor signal or aggregate signal. Used by both Signal.verdict
+  and AggregateSignal.verdict.
+
+values:
+  - id: pass
+    purpose: "Behavior matched the criterion"
+  - id: fail
+    purpose: "Behavior did not match; heal_hint is required"
+  - id: inconclusive
+    purpose: "Sensor could not determine pass/fail (e.g., inferential confidence below floor, timeout without coverage)"

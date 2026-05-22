@@ -73,3 +73,26 @@ func IsValidArchetype(s string) bool {
 	}
 	return false
 }
+
+// SensorKind is the lifecycle shape of a sensor.
+type SensorKind string
+
+const (
+	KindAssertion     SensorKind = "assertion"
+	KindObservational SensorKind = "observational"
+)
+
+// AllSensorKinds returns every SensorKind in canonical (YAML) order.
+func AllSensorKinds() []SensorKind {
+	return []SensorKind{KindAssertion, KindObservational}
+}
+
+// IsValidSensorKind reports whether s is one of the canonical SensorKind values.
+func IsValidSensorKind(s string) bool {
+	for _, v := range AllSensorKinds() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}

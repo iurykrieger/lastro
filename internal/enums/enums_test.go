@@ -69,3 +69,33 @@ func TestIsValidArchetypeRejectsUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestAllSensorKindsReturnsCanonicalOrder(t *testing.T) {
+	got := AllSensorKinds()
+	want := []SensorKind{KindAssertion, KindObservational}
+	if len(got) != len(want) {
+		t.Fatalf("AllSensorKinds length: got %d, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("AllSensorKinds[%d]: got %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestIsValidSensorKindAcceptsCanonical(t *testing.T) {
+	for _, v := range AllSensorKinds() {
+		if !IsValidSensorKind(string(v)) {
+			t.Errorf("IsValidSensorKind(%q) = false; want true", v)
+		}
+	}
+}
+
+func TestIsValidSensorKindRejectsUnknown(t *testing.T) {
+	cases := []string{"", "ASSERTION", "watcher", " assertion"}
+	for _, c := range cases {
+		if IsValidSensorKind(c) {
+			t.Errorf("IsValidSensorKind(%q) = true; want false", c)
+		}
+	}
+}

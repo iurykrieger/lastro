@@ -1,0 +1,29 @@
+# StackManifest example — http-api archetype, two components.
+schema_version: 1.0.0
+archetype: http-api
+components:
+  - schema_version: 1.0.0
+    id: nestjs
+    kind: framework
+    name: "@nestjs/core"
+    version: 10.x
+    capabilities:
+      - dependency-injection
+      - http-routing
+      - middleware
+    detection_evidence:
+      - file: package.json
+        path: dependencies.@nestjs/core
+        value: ^10.0.0
+  - schema_version: 1.0.0
+    id: postgres
+    kind: datastore
+    name: postgres
+    version: 16.x
+    capabilities:
+      - transactions
+      - row-level-security
+    detection_evidence:
+      - file: docker-compose.yaml
+        path: services.db.image
+        value: postgres:16

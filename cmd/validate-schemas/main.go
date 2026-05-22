@@ -16,6 +16,7 @@ import (
 var entities = []string{
 	"stack-component", "entry-point", "use-case", "fixture",
 	"sensor", "signal", "aggregate-signal", "validation-policy",
+	"stack-manifest",
 }
 
 var enums = []string{

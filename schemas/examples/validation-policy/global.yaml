@@ -1,0 +1,12 @@
+# ValidationPolicy example — global scope, no inheritance.
+schema_version: 1.0.0
+scope: global
+per_archetype:
+  http-api:
+    obligatory_angles: [build, security, unit-test, e2e-test, contracts]
+    optional_angles:   [performance, metrics, logs]
+    disabled_angles:   []
+  cli:
+    obligatory_angles: [build, security, contracts]
+    optional_angles:   [unit-test, logs]
+    disabled_angles:   [e2e-test, database]

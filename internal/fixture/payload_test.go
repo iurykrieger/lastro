@@ -79,3 +79,40 @@ func TestParsePayloadXMLMalformedIsError(t *testing.T) {
 		t.Fatal("parsePayload: expected error on malformed XML, got nil")
 	}
 }
+
+func TestParsePayloadUnknownContentTypeReturnsNil(t *testing.T) {
+	cases := []string{"text/plain", "application/octet-stream", "", "image/png"}
+	for _, ct := range cases {
+		t.Run(ct, func(t *testing.T) {
+			got, err := parsePayload(ct, []byte("anything goes here"))
+			if err != nil {
+				t.Fatalf("parsePayload(%q): unexpected error %v", ct, err)
+			}
+			if got != nil {
+				t.Errorf("parsePayload(%q): got %v, want nil", ct, got)
+			}
+		})
+	}
+}
+
+func TestParsePayloadJSONSuffixMatch(t *testing.T) {
+	// application/vnd.api+json should dispatch to JSON.
+	got, err := parsePayload("application/vnd.api+json", []byte(`{"ok":true}`))
+	if err != nil {
+		t.Fatalf("parsePayload: %v", err)
+	}
+	m, ok := got.(map[string]any)
+	if !ok || m["ok"] != true {
+		t.Errorf("expected JSON parse via +json suffix; got %v (%T)", got, got)
+	}
+}
+
+func TestParsePayloadXMLSuffixMatch(t *testing.T) {
+	got, err := parsePayload("application/atom+xml", []byte(`<a><b>1</b></a>`))
+	if err != nil {
+		t.Fatalf("parsePayload: %v", err)
+	}
+	if _, ok := got.(map[string]any); !ok {
+		t.Errorf("expected XML parse via +xml suffix; got %T", got)
+	}
+}

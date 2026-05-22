@@ -3,6 +3,7 @@ package fixture
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/clbanning/mxj/v2"
 	"sigs.k8s.io/yaml"
@@ -39,7 +40,7 @@ func parsePayload(contentType string, payload []byte) (any, error) {
 }
 
 func isJSONContentType(ct string) bool {
-	return ct == "application/json"
+	return ct == "application/json" || hasMediaTypeSuffix(ct, "+json")
 }
 
 func isYAMLContentType(ct string) bool {
@@ -55,5 +56,16 @@ func isXMLContentType(ct string) bool {
 	case "application/xml", "text/xml":
 		return true
 	}
-	return false
+	return hasMediaTypeSuffix(ct, "+xml")
+}
+
+// hasMediaTypeSuffix reports whether ct is of the form "type/subtype+suffix".
+// Matches RFC 6839 structured-syntax-suffix conventions (e.g.,
+// application/vnd.api+json, application/atom+xml). YAML has no analogous
+// suffix convention; isYAMLContentType stays exact-match.
+func hasMediaTypeSuffix(ct, suffix string) bool {
+	if strings.IndexByte(ct, '/') < 0 {
+		return false
+	}
+	return strings.HasSuffix(ct, suffix)
 }

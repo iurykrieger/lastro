@@ -39,7 +39,7 @@ Single-component schema:
 
 ```yaml
 schema_version: 1.0.0
-id: express                           # required; unique within manifest; ^[a-z0-9][a-z0-9-]*$
+id: express                           # required; unique within manifest; ^[a-z][a-z0-9-]*$
 kind: framework                       # required; StackKind enum (from E1)
 name: express                         # required; human-readable
 version: "4.18.2"                     # required; free-form string
@@ -147,7 +147,7 @@ Both return aggregated errors so authors fix everything in one pass.
 
 **Component-level checks:**
 - `schema_version` equals `SchemaVersion` constant.
-- `id` non-empty and matches `^[a-z0-9][a-z0-9-]*$`.
+- `id` non-empty and matches `^[a-z][a-z0-9-]*$` (aligned with the existing `$defs.Id` pattern in the schema-freeze gate — first char must be a letter).
 - `kind` recognized by `enums.IsValidStackKind`.
 - `name`, `version` non-empty.
 - `capabilities` non-empty; each entry non-empty.

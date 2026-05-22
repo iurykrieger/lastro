@@ -9,4 +9,6 @@ capabilities:
   - http2-transport
   - protobuf-codec
 detection_evidence:
-  - "package.json:dependencies.@grpc/grpc-js"
+  - file: package.json
+    path: dependencies.@grpc/grpc-js
+    value: ^1.60.0

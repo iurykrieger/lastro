@@ -9,4 +9,6 @@ capabilities:
   - http-routing
   - middleware
 detection_evidence:
-  - "package.json:dependencies.@nestjs/core"
+  - file: package.json
+    path: dependencies.@nestjs/core
+    value: ^10.0.0

@@ -1,0 +1,29 @@
+# AggregateSignal example — observational sensor failed because an expected observation never arrived.
+schema_version: 1.0.0
+type: aggregate
+sensor_id: logs-create-order-sensor
+use_case_id: create-order-use-case
+angle: logs
+started_at: "2026-05-22T10:19:00Z"
+ended_at:   "2026-05-22T10:19:30Z"
+termination_reason: stopped
+verdict: fail
+confidence: 1.0
+rollup:
+  total_signals: 2
+  pass_count: 2
+  fail_count: 0
+  inconclusive_count: 0
+completeness:
+  expected_observations:
+    - "order-received"
+    - "order-validated"
+    - "order-persisted"
+  missing_observations:
+    - "order-persisted"
+heal_hint:
+  summary: "order-persisted log line never emitted; the persistence step is silently failing"
+  suggested_locus:
+    - path: src/handlers/orders.ts
+      symbol: persistOrder
+  rationale: "The first two observations were seen; the third did not arrive within the window. The persistence call likely swallows an error."

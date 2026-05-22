@@ -1,0 +1,16 @@
+# AggregateSignal example — terminal record from a stream sensor; all tests passed.
+schema_version: 1.0.0
+type: aggregate
+sensor_id: unit-tests-create-order-sensor
+use_case_id: create-order-use-case
+angle: unit-test
+started_at: "2026-05-22T10:16:00Z"
+ended_at:   "2026-05-22T10:16:30Z"
+termination_reason: completed
+verdict: pass
+confidence: 1.0
+rollup:
+  total_signals: 700
+  pass_count: 700
+  fail_count: 0
+  inconclusive_count: 0

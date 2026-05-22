@@ -1,0 +1,22 @@
+# AggregateSignal example — terminal record from a stream sensor; 70/700 failures with heal_hint.
+schema_version: 1.0.0
+type: aggregate
+sensor_id: unit-tests-create-order-sensor
+use_case_id: create-order-use-case
+angle: unit-test
+started_at: "2026-05-22T10:16:00Z"
+ended_at:   "2026-05-22T10:16:42Z"
+termination_reason: completed
+verdict: fail
+confidence: 1.0
+rollup:
+  total_signals: 700
+  pass_count: 630
+  fail_count: 70
+  inconclusive_count: 0
+heal_hint:
+  summary: "70 of 700 unit tests failed — concentrated in orders/validation"
+  suggested_locus:
+    - path: src/handlers/orders.ts
+      symbol: createOrder
+  rationale: "Individual signals carry per-test details; the cluster of failures is in body-validation tests."

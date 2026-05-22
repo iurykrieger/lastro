@@ -45,6 +45,7 @@ func main() {
 	var errs []string
 	c := jsonschema.NewCompiler()
 
+	// Register every entity schema by its canonical URL so $refs resolve.
 	for _, e := range entities {
 		path := filepath.Join("schemas", e+".yaml")
 		doc, err := loadYAMLAsAny(path)
@@ -57,6 +58,7 @@ func main() {
 		}
 	}
 
+	// Compile each entity schema — this is the "is itself a valid JSON Schema 2020-12" check.
 	schemas := map[string]*jsonschema.Schema{}
 	for _, e := range entities {
 		sch, err := c.Compile(baseURL + e + ".yaml")
@@ -68,6 +70,7 @@ func main() {
 		fmt.Printf("OK schemas/%s.yaml is a valid JSON Schema 2020-12\n", e)
 	}
 
+	// Compile _meta.yaml and validate each enum file against it.
 	metaPath := "schemas/enums/_meta.yaml"
 	metaDoc, err := loadYAMLAsAny(metaPath)
 	if err != nil {
@@ -95,6 +98,7 @@ func main() {
 		}
 	}
 
+	// Validate each example against its entity schema.
 	for _, e := range entities {
 		sch, ok := schemas[e]
 		if !ok {

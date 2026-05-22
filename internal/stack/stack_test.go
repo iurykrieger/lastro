@@ -1,6 +1,8 @@
 package stack
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -211,4 +213,180 @@ func validManifest() StackManifest {
 			},
 		},
 	}
+}
+
+func TestLoadGoldenManifestRoundTrips(t *testing.T) {
+	path := repoPath(t, "schemas/examples/stack-manifest/http-api.yaml")
+	first, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	tmp := filepath.Join(t.TempDir(), "round-trip.yaml")
+	writeYAML(t, tmp, first)
+	second, err := Load(tmp)
+	if err != nil {
+		t.Fatalf("Load (round-trip): %v", err)
+	}
+	if first.SchemaVersion != second.SchemaVersion ||
+		first.Archetype != second.Archetype ||
+		len(first.Components) != len(second.Components) {
+		t.Fatalf("round-trip mismatch: %+v vs %+v", first, second)
+	}
+	for i := range first.Components {
+		if !componentsEqual(first.Components[i], second.Components[i]) {
+			t.Errorf("component[%d] mismatch", i)
+		}
+	}
+}
+
+func TestLoadAllGoldenStackComponents(t *testing.T) {
+	dir := repoPath(t, "schemas/examples/stack-component")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("readdir: %v", err)
+	}
+	if len(entries) == 0 {
+		t.Fatal("no example files found")
+	}
+	for _, e := range entries {
+		if filepath.Ext(e.Name()) != ".yaml" {
+			continue
+		}
+		t.Run(e.Name(), func(t *testing.T) {
+			_, err := LoadComponent(filepath.Join(dir, e.Name()))
+			if err != nil {
+				t.Errorf("LoadComponent(%s): %v", e.Name(), err)
+			}
+		})
+	}
+}
+
+func TestLoadRejectsDuplicateIDs(t *testing.T) {
+	yaml := `schema_version: 1.0.0
+archetype: http-api
+components:
+  - schema_version: 1.0.0
+    id: express
+    kind: framework
+    name: express
+    version: "4.18.2"
+    capabilities: [http-routing]
+    detection_evidence:
+      - {file: package.json, path: dependencies.express}
+  - schema_version: 1.0.0
+    id: express
+    kind: library
+    name: express-also
+    version: "1.0.0"
+    capabilities: [http-routing]
+    detection_evidence:
+      - {file: package.json, path: dependencies.express}
+`
+	path := writeTempYAML(t, yaml)
+	_, err := Load(path)
+	if err == nil {
+		t.Fatal("expected duplicate-id error")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "express") {
+		t.Errorf("error %q does not name the duplicate id", msg)
+	}
+	if !strings.Contains(msg, "0") || !strings.Contains(msg, "1") {
+		t.Errorf("error %q does not name both occurrences", msg)
+	}
+}
+
+func TestLoadRejectsBadJSONSchemaShape(t *testing.T) {
+	// Missing required top-level field "archetype" — caught by JSON Schema
+	// before the Go validator runs.
+	yaml := `schema_version: 1.0.0
+components:
+  - schema_version: 1.0.0
+    id: express
+    kind: framework
+    name: express
+    version: "4.18.2"
+    capabilities: [http-routing]
+    detection_evidence:
+      - {file: package.json, path: dependencies.express}
+`
+	path := writeTempYAML(t, yaml)
+	_, err := Load(path)
+	if err == nil {
+		t.Fatal("expected JSON-Schema error")
+	}
+	if !strings.Contains(err.Error(), "archetype") {
+		t.Errorf("error %q should mention archetype", err.Error())
+	}
+}
+
+func TestLoadComponentRejectsBadJSONSchemaShape(t *testing.T) {
+	// detection_evidence using the old string shape — should be rejected
+	// by JSON Schema (items must be objects).
+	yaml := `schema_version: 1.0.0
+id: express
+kind: framework
+name: express
+version: "4.18.2"
+capabilities: [http-routing]
+detection_evidence:
+  - "package.json:dependencies.express"
+`
+	path := writeTempYAML(t, yaml)
+	_, err := LoadComponent(path)
+	if err == nil {
+		t.Fatal("expected JSON-Schema error for string-form evidence")
+	}
+}
+
+// --- test helpers ---
+
+func repoPath(t *testing.T, rel string) string {
+	t.Helper()
+	// Tests run with CWD = the package directory; ../../ reaches the repo root.
+	return filepath.Join("..", "..", rel)
+}
+
+func writeTempYAML(t *testing.T, content string) string {
+	t.Helper()
+	p := filepath.Join(t.TempDir(), "fixture.yaml")
+	if err := os.WriteFile(p, []byte(content), 0o600); err != nil {
+		t.Fatalf("write temp: %v", err)
+	}
+	return p
+}
+
+func writeYAML(t *testing.T, path string, m StackManifest) {
+	t.Helper()
+	b, err := yamlMarshal(m)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if err := os.WriteFile(path, b, 0o600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+}
+
+func componentsEqual(a, b StackComponent) bool {
+	if a.SchemaVersion != b.SchemaVersion || a.ID != b.ID || a.Kind != b.Kind ||
+		a.Name != b.Name || a.Version != b.Version {
+		return false
+	}
+	if len(a.Capabilities) != len(b.Capabilities) {
+		return false
+	}
+	for i := range a.Capabilities {
+		if a.Capabilities[i] != b.Capabilities[i] {
+			return false
+		}
+	}
+	if len(a.DetectionEvidence) != len(b.DetectionEvidence) {
+		return false
+	}
+	for i := range a.DetectionEvidence {
+		if a.DetectionEvidence[i] != b.DetectionEvidence[i] {
+			return false
+		}
+	}
+	return true
 }

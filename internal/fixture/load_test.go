@@ -114,3 +114,17 @@ func TestLoadFixtureXMLContentType(t *testing.T) {
 		t.Fatalf("Parsed: got %T, want map[string]any", fx.Parsed)
 	}
 }
+
+func TestLoadFixtureWithoutBinding(t *testing.T) {
+	p := filepath.Join("testdata", "no-binding.yaml")
+	fx, err := LoadFixture(p)
+	if err != nil {
+		t.Fatalf("LoadFixture: %v", err)
+	}
+	if fx.Binding != nil {
+		t.Errorf("Binding: got %+v, want nil", fx.Binding)
+	}
+	if fx.ID != "no-binding-fixture" {
+		t.Errorf("ID: got %q, want no-binding-fixture", fx.ID)
+	}
+}

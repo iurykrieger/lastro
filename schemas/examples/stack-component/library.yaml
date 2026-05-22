@@ -1,0 +1,12 @@
+# StackComponent example — a library kind (Express HTTP framework).
+schema_version: 1.0.0
+id: express
+kind: library
+name: express
+version: 4.18.x
+capabilities:
+  - http-routing
+  - middleware
+  - json-body-parsing
+detection_evidence:
+  - "package.json:dependencies.express"

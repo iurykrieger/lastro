@@ -1,0 +1,40 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/stack-component.yaml"
+title: StackComponent
+description: |
+  A detected library, runtime, framework, datastore, protocol, or tool present
+  in the repository. Sensors may only reference StackComponents whose ids
+  appear in the detected stack manifest (grounding invariant).
+
+type: object
+required: [schema_version, id, kind, name]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  id:
+    $ref: "#/$defs/Id"
+  kind:
+    type: string
+    description: "StackComponent classification (kind is inline-only; no canonical enum file)."
+    enum: [library, runtime, framework, datastore, protocol, tool]
+  name:
+    type: string
+    minLength: 1
+  version:
+    type: string
+  capabilities:
+    type: array
+    items: { type: string, minLength: 1 }
+  detection_evidence:
+    type: array
+    items: { type: string, minLength: 1 }
+
+$defs:
+  Id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*$"
+    minLength: 1
+    maxLength: 128

@@ -133,3 +133,82 @@ func validComponent() StackComponent {
 		},
 	}
 }
+
+func TestStackManifestValidateAcceptsValid(t *testing.T) {
+	if err := validManifest().Validate(); err != nil {
+		t.Errorf("validManifest().Validate() = %v, want nil", err)
+	}
+}
+
+func TestStackManifestValidateRejectsTopLevelProblems(t *testing.T) {
+	cases := []struct {
+		name   string
+		m      func(*StackManifest)
+		substr string
+	}{
+		{"wrong schema_version", func(m *StackManifest) { m.SchemaVersion = "9.9.9" }, "schema_version"},
+		{"missing archetype", func(m *StackManifest) { m.Archetype = "" }, "archetype"},
+		{"unknown archetype", func(m *StackManifest) { m.Archetype = "monolith" }, "archetype"},
+		{"empty components", func(m *StackManifest) { m.Components = nil }, "components"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := validManifest()
+			tc.m(&m)
+			err := m.Validate()
+			if err == nil {
+				t.Fatalf("expected error for %q", tc.name)
+			}
+			if !strings.Contains(err.Error(), tc.substr) {
+				t.Errorf("error %q does not mention %q", err.Error(), tc.substr)
+			}
+		})
+	}
+}
+
+func TestStackManifestValidatePrefixesComponentErrorsWithID(t *testing.T) {
+	m := validManifest()
+	m.Components[0].Name = "" // break the first (named "express")
+	err := m.Validate()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "components[express]") {
+		t.Errorf("expected error to mention components[express], got %q", err.Error())
+	}
+}
+
+func TestStackManifestValidatePrefixesByIndexWhenIDMissing(t *testing.T) {
+	m := validManifest()
+	m.Components[0].ID = ""
+	m.Components[0].Name = ""
+	err := m.Validate()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "components[0]") {
+		t.Errorf("expected error to mention components[0], got %q", err.Error())
+	}
+}
+
+// validManifest returns a known-good StackManifest with two components.
+func validManifest() StackManifest {
+	return StackManifest{
+		SchemaVersion: SchemaVersion,
+		Archetype:     "http-api",
+		Components: []StackComponent{
+			validComponent(),
+			{
+				SchemaVersion: SchemaVersion,
+				ID:            "postgres",
+				Kind:          "datastore",
+				Name:          "postgres",
+				Version:       "16",
+				Capabilities:  []string{"transactions"},
+				DetectionEvidence: []EvidenceRef{
+					{File: "docker-compose.yaml", Path: "services.db.image"},
+				},
+			},
+		},
+	}
+}

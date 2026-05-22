@@ -65,3 +65,39 @@ func (c StackComponent) Validate() error {
 	}
 	return errors.New("StackComponent invalid: " + strings.Join(problems, "; "))
 }
+
+// Validate checks manifest-level invariants and every component's
+// validity. Errors are aggregated; component errors are prefixed with
+// the component's id when present, otherwise its list index. Duplicate
+// id detection is NOT here — the loader does that after Validate.
+func (m StackManifest) Validate() error {
+	var problems []string
+
+	if m.SchemaVersion != SchemaVersion {
+		problems = append(problems,
+			fmt.Sprintf("schema_version: got %q, want %q", m.SchemaVersion, SchemaVersion))
+	}
+	if m.Archetype == "" {
+		problems = append(problems, "archetype: required")
+	} else if !enums.IsValidArchetype(string(m.Archetype)) {
+		problems = append(problems, fmt.Sprintf("archetype: %q is not a recognized Archetype", m.Archetype))
+	}
+	if len(m.Components) == 0 {
+		problems = append(problems, "components: at least one required")
+	}
+
+	for i, c := range m.Components {
+		if err := c.Validate(); err != nil {
+			prefix := fmt.Sprintf("components[%d]", i)
+			if c.ID != "" {
+				prefix = fmt.Sprintf("components[%s]", c.ID)
+			}
+			problems = append(problems, prefix+": "+err.Error())
+		}
+	}
+
+	if len(problems) == 0 {
+		return nil
+	}
+	return errors.New("StackManifest invalid: " + strings.Join(problems, "; "))
+}

@@ -39,3 +39,37 @@ func IsValidAngle(s string) bool {
 	}
 	return false
 }
+
+// Archetype is the shape of an application's observable surface.
+type Archetype string
+
+const (
+	ArchetypeHTTPAPI       Archetype = "http-api"
+	ArchetypeEventConsumer Archetype = "event-consumer"
+	ArchetypeEventProducer Archetype = "event-producer"
+	ArchetypeCLI           Archetype = "cli"
+	ArchetypeSDK           Archetype = "sdk"
+	ArchetypeLibrary       Archetype = "library"
+	ArchetypeWorker        Archetype = "worker"
+	ArchetypeBatchJob      Archetype = "batch-job"
+	ArchetypeStaticSite    Archetype = "static-site"
+)
+
+// AllArchetypes returns every Archetype in canonical (YAML) order.
+func AllArchetypes() []Archetype {
+	return []Archetype{
+		ArchetypeHTTPAPI, ArchetypeEventConsumer, ArchetypeEventProducer,
+		ArchetypeCLI, ArchetypeSDK, ArchetypeLibrary,
+		ArchetypeWorker, ArchetypeBatchJob, ArchetypeStaticSite,
+	}
+}
+
+// IsValidArchetype reports whether s is one of the canonical Archetype values.
+func IsValidArchetype(s string) bool {
+	for _, v := range AllArchetypes() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}

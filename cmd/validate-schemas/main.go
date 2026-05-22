@@ -77,7 +77,9 @@ func main() {
 		errs = append(errs, err.Error())
 	} else {
 		metaURL := baseURL + "enums/_meta.yaml"
-		_ = c.AddResource(metaURL, metaDoc)
+		if err := c.AddResource(metaURL, metaDoc); err != nil {
+			errs = append(errs, fmt.Sprintf("register %s: %v", metaPath, err))
+		}
 		metaSch, err := c.Compile(metaURL)
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("compile _meta: %v", err))
@@ -109,12 +111,18 @@ func main() {
 			continue
 		}
 		var files []string
-		_ = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-			if err == nil && !d.IsDir() && strings.HasSuffix(path, ".yaml") {
+		if walkErr := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if !d.IsDir() && strings.HasSuffix(path, ".yaml") {
 				files = append(files, path)
 			}
 			return nil
-		})
+		}); walkErr != nil {
+			errs = append(errs, fmt.Sprintf("walk %s: %v", dir, walkErr))
+			continue
+		}
 		sort.Strings(files)
 		for _, p := range files {
 			doc, err := loadYAMLAsAny(p)

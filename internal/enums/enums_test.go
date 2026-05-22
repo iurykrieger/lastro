@@ -129,3 +129,33 @@ func TestIsValidSensorNatureRejectsUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestAllSignalOutputTypesReturnsCanonicalOrder(t *testing.T) {
+	got := AllSignalOutputTypes()
+	want := []SignalOutputType{OutputSingleShot, OutputStream}
+	if len(got) != len(want) {
+		t.Fatalf("AllSignalOutputTypes length: got %d, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("AllSignalOutputTypes[%d]: got %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestIsValidSignalOutputTypeAcceptsCanonical(t *testing.T) {
+	for _, v := range AllSignalOutputTypes() {
+		if !IsValidSignalOutputType(string(v)) {
+			t.Errorf("IsValidSignalOutputType(%q) = false; want true", v)
+		}
+	}
+}
+
+func TestIsValidSignalOutputTypeRejectsUnknown(t *testing.T) {
+	cases := []string{"", "batched", "SINGLE-SHOT", " stream"}
+	for _, c := range cases {
+		if IsValidSignalOutputType(c) {
+			t.Errorf("IsValidSignalOutputType(%q) = true; want false", c)
+		}
+	}
+}

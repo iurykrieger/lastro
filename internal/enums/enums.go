@@ -119,3 +119,26 @@ func IsValidSensorNature(s string) bool {
 	}
 	return false
 }
+
+// SignalOutputType describes whether a sensor emits one signal or a stream.
+type SignalOutputType string
+
+const (
+	OutputSingleShot SignalOutputType = "single-shot"
+	OutputStream     SignalOutputType = "stream"
+)
+
+// AllSignalOutputTypes returns every SignalOutputType in canonical (YAML) order.
+func AllSignalOutputTypes() []SignalOutputType {
+	return []SignalOutputType{OutputSingleShot, OutputStream}
+}
+
+// IsValidSignalOutputType reports whether s is one of the canonical SignalOutputType values.
+func IsValidSignalOutputType(s string) bool {
+	for _, v := range AllSignalOutputTypes() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}

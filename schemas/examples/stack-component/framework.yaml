@@ -1,0 +1,12 @@
+# StackComponent example — framework kind (NestJS).
+schema_version: 1.0.0
+id: nestjs
+kind: framework
+name: "@nestjs/core"
+version: 10.x
+capabilities:
+  - dependency-injection
+  - http-routing
+  - middleware
+detection_evidence:
+  - "package.json:dependencies.@nestjs/core"

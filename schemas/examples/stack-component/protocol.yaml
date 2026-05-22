@@ -1,0 +1,12 @@
+# StackComponent example — protocol kind (gRPC).
+schema_version: 1.0.0
+id: grpc
+kind: protocol
+name: grpc
+version: "1.60"
+capabilities:
+  - streaming
+  - http2-transport
+  - protobuf-codec
+detection_evidence:
+  - "package.json:dependencies.@grpc/grpc-js"

@@ -1,0 +1,12 @@
+# StackComponent example — tool kind (ESLint).
+schema_version: 1.0.0
+id: eslint
+kind: tool
+name: eslint
+version: 9.x
+capabilities:
+  - lint
+  - autofix
+detection_evidence:
+  - "package.json:devDependencies.eslint"
+  - ".eslintrc.json"

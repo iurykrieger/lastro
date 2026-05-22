@@ -3,6 +3,8 @@ package fixture
 import (
 	"encoding/json"
 	"fmt"
+
+	"sigs.k8s.io/yaml"
 )
 
 // parsePayload eagerly parses raw payload bytes based on content_type.
@@ -19,10 +21,24 @@ func parsePayload(contentType string, payload []byte) (any, error) {
 			return nil, fmt.Errorf("payload: invalid JSON for content_type %q: %w", contentType, err)
 		}
 		return v, nil
+	case isYAMLContentType(contentType):
+		var v any
+		if err := yaml.Unmarshal(payload, &v); err != nil {
+			return nil, fmt.Errorf("payload: invalid YAML for content_type %q: %w", contentType, err)
+		}
+		return v, nil
 	}
 	return nil, nil
 }
 
 func isJSONContentType(ct string) bool {
 	return ct == "application/json"
+}
+
+func isYAMLContentType(ct string) bool {
+	switch ct {
+	case "application/yaml", "text/yaml", "application/x-yaml":
+		return true
+	}
+	return false
 }

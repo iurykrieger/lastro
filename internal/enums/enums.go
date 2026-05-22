@@ -142,3 +142,27 @@ func IsValidSignalOutputType(s string) bool {
 	}
 	return false
 }
+
+// FixtureRole describes the role a fixture plays in driving or verifying behavior.
+type FixtureRole string
+
+const (
+	RoleInput              FixtureRole = "input"
+	RoleExpectedOutput     FixtureRole = "expected-output"
+	RoleExpectedSideEffect FixtureRole = "expected-side-effect"
+)
+
+// AllFixtureRoles returns every FixtureRole in canonical (YAML) order.
+func AllFixtureRoles() []FixtureRole {
+	return []FixtureRole{RoleInput, RoleExpectedOutput, RoleExpectedSideEffect}
+}
+
+// IsValidFixtureRole reports whether s is one of the canonical FixtureRole values.
+func IsValidFixtureRole(s string) bool {
+	for _, v := range AllFixtureRoles() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}

@@ -159,3 +159,33 @@ func TestIsValidSignalOutputTypeRejectsUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestAllFixtureRolesReturnsCanonicalOrder(t *testing.T) {
+	got := AllFixtureRoles()
+	want := []FixtureRole{RoleInput, RoleExpectedOutput, RoleExpectedSideEffect}
+	if len(got) != len(want) {
+		t.Fatalf("AllFixtureRoles length: got %d, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("AllFixtureRoles[%d]: got %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestIsValidFixtureRoleAcceptsCanonical(t *testing.T) {
+	for _, v := range AllFixtureRoles() {
+		if !IsValidFixtureRole(string(v)) {
+			t.Errorf("IsValidFixtureRole(%q) = false; want true", v)
+		}
+	}
+}
+
+func TestIsValidFixtureRoleRejectsUnknown(t *testing.T) {
+	cases := []string{"", "output", "INPUT", " input"}
+	for _, c := range cases {
+		if IsValidFixtureRole(c) {
+			t.Errorf("IsValidFixtureRole(%q) = true; want false", c)
+		}
+	}
+}

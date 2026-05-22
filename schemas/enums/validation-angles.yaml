@@ -1,0 +1,27 @@
+schema_version: 1.0.0
+title: ValidationAngle
+description: |
+  The ten facets a sensor can validate. Angles are extensible only by
+  framework version bump; users control which apply via ValidationPolicy.
+
+values:
+  - id: security
+    purpose: "Secrets, vulnerable deps, SAST findings, sensitive data in logs"
+  - id: build
+    purpose: "Compilation and packaging succeed"
+  - id: code-structure
+    purpose: "Conformance to architectural and lint patterns"
+  - id: unit-test
+    purpose: "Existence and execution of unit tests"
+  - id: e2e-test
+    purpose: "End-to-end behavior matches fixtures"
+  - id: contracts
+    purpose: "API, schema, or SDK contract conformance"
+  - id: logs
+    purpose: "Log shape, redaction, and semantic correctness"
+  - id: metrics
+    purpose: "Telemetry emission and shape"
+  - id: database
+    purpose: "Data writes and migrations match expectations"
+  - id: performance
+    purpose: "Latency, throughput, and resource ceilings"

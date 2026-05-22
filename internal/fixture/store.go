@@ -25,8 +25,12 @@ func NewStore(fixtures ...Fixture) (*Store, error) {
 	return s, nil
 }
 
-// LookupFixture is implemented in Task 6.
-func (s *Store) LookupFixture(string) (Fixture, bool) { return Fixture{}, false }
+// LookupFixture returns the fixture with the given id and ok=true if it
+// exists; otherwise the zero Fixture and ok=false.
+func (s *Store) LookupFixture(id string) (Fixture, bool) {
+	fx, ok := s.byID[id]
+	return fx, ok
+}
 
 // FixturesForUseCase is implemented in Task 7.
 func (s *Store) FixturesForUseCase(string) []Fixture { return nil }

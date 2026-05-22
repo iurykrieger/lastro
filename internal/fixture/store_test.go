@@ -32,3 +32,32 @@ func TestNewStoreRejectsDuplicateID(t *testing.T) {
 func TestStoreSatisfiesFixtureStoreInterface(t *testing.T) {
 	var _ FixtureStore = (*Store)(nil)
 }
+
+func TestStoreLookupFixtureHit(t *testing.T) {
+	want := Fixture{ID: "fx1", UseCaseID: "uc1", Role: RoleInput, ContentType: "application/json"}
+	s, err := NewStore(want)
+	if err != nil {
+		t.Fatalf("NewStore: %v", err)
+	}
+	got, ok := s.LookupFixture("fx1")
+	if !ok {
+		t.Fatal("LookupFixture(fx1): ok=false, want true")
+	}
+	if got.ID != want.ID || got.Role != want.Role {
+		t.Errorf("LookupFixture(fx1): got %+v, want %+v", got, want)
+	}
+}
+
+func TestStoreLookupFixtureMiss(t *testing.T) {
+	s, err := NewStore(Fixture{ID: "fx1"})
+	if err != nil {
+		t.Fatalf("NewStore: %v", err)
+	}
+	got, ok := s.LookupFixture("nope")
+	if ok {
+		t.Fatalf("LookupFixture(nope): ok=true; want false")
+	}
+	if got.ID != "" {
+		t.Errorf("LookupFixture(nope): got non-zero fixture %+v; want zero", got)
+	}
+}

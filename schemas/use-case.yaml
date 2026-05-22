@@ -1,0 +1,65 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/use-case.yaml"
+title: UseCase
+description: |
+  Behavioral specification in given/when/then form. Tech-agnostic text with
+  {{fixtures.<id>}} and {{entry_points.<id>}} interpolation. No steps, no
+  assertions — sensors validate; use cases describe.
+
+type: object
+required: [schema_version, id, title, archetype_scope, entry_points, given, when, then]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  id:
+    $ref: "#/$defs/Id"
+  title:
+    type: string
+    minLength: 1
+  archetype_scope:
+    type: array
+    minItems: 1
+    description: "Which archetypes this use case is valid under. Canonical source: schemas/enums/archetypes.yaml"
+    items:
+      type: string
+      enum: [http-api, event-consumer, event-producer, cli, sdk, library, worker, batch-job, static-site]
+  entry_points:
+    type: array
+    minItems: 1
+    items:
+      $ref: "https://lastro.dev/harness/schemas/entry-point.yaml"
+  given:
+    type: array
+    minItems: 1
+    items: { type: string, minLength: 1 }
+  when:
+    type: array
+    minItems: 1
+    items: { type: string, minLength: 1 }
+  then:
+    type: array
+    minItems: 1
+    items: { type: string, minLength: 1 }
+  source_refs:
+    type: array
+    items:
+      type: object
+      required: [path]
+      additionalProperties: false
+      properties:
+        path:   { type: string, minLength: 1 }
+        symbol: { type: string }
+        reason: { type: string }
+  fixture_ids:
+    type: array
+    items: { $ref: "#/$defs/Id" }
+
+$defs:
+  Id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*$"
+    minLength: 1
+    maxLength: 128

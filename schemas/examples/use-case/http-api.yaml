@@ -1,0 +1,26 @@
+# UseCase example — http-api archetype, create-order behavior.
+schema_version: 2.0.0
+id: create-order-use-case
+title: "Client creates an order via HTTP"
+archetype_scope: [http-api]
+
+entry_points:
+  - id: create-order-endpoint
+    archetype: http-api
+    spec:
+      method: POST
+      path: /orders
+
+given:
+  - "A request payload matching {{fixtures.order-input-fixture}} is constructed by the client"
+when:
+  - "The client invokes {{entry_points.create-order-endpoint}}"
+then:
+  - "The endpoint responds with a payload matching {{fixtures.order-output-fixture}}"
+
+source_refs:
+  - path: src/handlers/orders.ts
+    symbol: createOrder
+    reason: "reverse-engineered to detect this use case"
+
+fixture_ids: [order-input-fixture, order-output-fixture]

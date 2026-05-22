@@ -1,0 +1,14 @@
+schema_version: 1.0.0
+title: SensorKind
+description: |
+  Lifecycle shape of a sensor. Sensors are either short-lived assertions
+  that run steps and emit a verdict, or long-lived observers that watch a
+  stream and emit signals until stopped.
+
+values:
+  - id: assertion
+    purpose: "Runs steps, terminates, emits a verdict"
+    lifecycle_notes: "Short-lived; produced by /run-sensor. May still emit a stream of signals (e.g., one per unit test) before its terminal AggregateSignal."
+  - id: observational
+    purpose: "Spawns a watcher over a stream, emits signals as patterns match, terminates on stop or completion"
+    lifecycle_notes: "Long-lived; managed by /start-sensor and /stop-sensor. AggregateSignal is emitted by stop-sensor and reports observation completeness."

@@ -190,3 +190,31 @@ func IsValidVerdict(s string) bool {
 	}
 	return false
 }
+
+// TerminationReason explains why a sensor execution ended.
+type TerminationReason string
+
+const (
+	TerminationCompleted TerminationReason = "completed"
+	TerminationStopped   TerminationReason = "stopped"
+	TerminationTimeout   TerminationReason = "timeout"
+	TerminationError     TerminationReason = "error"
+)
+
+// AllTerminationReasons returns every TerminationReason in canonical (YAML) order.
+func AllTerminationReasons() []TerminationReason {
+	return []TerminationReason{
+		TerminationCompleted, TerminationStopped,
+		TerminationTimeout, TerminationError,
+	}
+}
+
+// IsValidTerminationReason reports whether s is one of the canonical TerminationReason values.
+func IsValidTerminationReason(s string) bool {
+	for _, v := range AllTerminationReasons() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}

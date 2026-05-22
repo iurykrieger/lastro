@@ -219,3 +219,36 @@ func TestIsValidVerdictRejectsUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestAllTerminationReasonsReturnsCanonicalOrder(t *testing.T) {
+	got := AllTerminationReasons()
+	want := []TerminationReason{
+		TerminationCompleted, TerminationStopped,
+		TerminationTimeout, TerminationError,
+	}
+	if len(got) != len(want) {
+		t.Fatalf("AllTerminationReasons length: got %d, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("AllTerminationReasons[%d]: got %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestIsValidTerminationReasonAcceptsCanonical(t *testing.T) {
+	for _, v := range AllTerminationReasons() {
+		if !IsValidTerminationReason(string(v)) {
+			t.Errorf("IsValidTerminationReason(%q) = false; want true", v)
+		}
+	}
+}
+
+func TestIsValidTerminationReasonRejectsUnknown(t *testing.T) {
+	cases := []string{"", "done", "TIMEOUT", " completed"}
+	for _, c := range cases {
+		if IsValidTerminationReason(c) {
+			t.Errorf("IsValidTerminationReason(%q) = true; want false", c)
+		}
+	}
+}

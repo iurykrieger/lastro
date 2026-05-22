@@ -55,14 +55,14 @@ the `/detect-use-cases` skill (Phase B), or the runtime executor
 | D3 | `given`/`when`/`then` are arrays of strings, one-or-many | Matches plan §4.1; multi-step preconditions are supported. |
 | D4 | `source_refs` is pure provenance | Loader does not touch the filesystem; detection time validates code shape, not load time. |
 | D5 | E4 owns both the live resolver and the human-label renderer | Both consume the same parsed AST; sharing the parse is the point. |
-| D6 | `UseCase.id` is JCS (RFC 8785) + SHA-256 over a hashable view, truncated to 12 hex chars, prefixed `uc_` | Stable across cosmetic edits; reusable pattern for every other entity id. |
+| D6 | `UseCase.id` is an **author-supplied kebab-case slug** matching the frozen schema's pattern `^[a-z][a-z0-9-]*$` (max 128 chars). Loader validates charset + uniqueness. | The schema-freeze gate locked this contract; the entire harness toolchain reads slug-form ids. Content-hashing was considered (JCS+SHA-256+prefix) but conflicts with the gate. The hashing pattern remains available for entities where author-supplied ids are inappropriate (e.g., Sensor, which may be regenerated and benefit from content-addressing) — but not for UseCase. |
 | D7 | `fixture_ids[]` strictly mirrors template refs (both directions) | The declared dependency surface always equals what the text uses; drift caught at load time. |
 
 **Implicit decisions** (follow from the above):
 
 - IDs for entry points, fixtures, and template refs share charset
-  `^[a-z][a-z0-9_]{0,63}$` — dot-free, so the parser can split
-  `<id>` from `.<jsonpath>` on a dot boundary.
+  `^[a-z][a-z0-9-]*$` (max 128 chars) — kebab-case, dot-free, so the
+  parser can split `<id>` from `.<jsonpath>` on a dot boundary.
 - `{{entry_points.<id>.<field>}}` accepts only `spec.<key>`; nothing
   else, per the plan §4.1.2 grammar table.
 - No escape syntax for literal `{{` — use-case text describing behavior
@@ -77,7 +77,7 @@ the `/detect-use-cases` skill (Phase B), or the runtime executor
 internal/usecase/
 ├── usecase.go         # UseCase + SourceRef types; YAML tags only
 ├── loader.go          # YAML bytes → UseCase, runs validate() before returning
-├── id.go              # JCS canonicalization + SHA-256 → "uc_<12-hex>"
+├── id.go              # id charset & length validation (slug-form per gate)
 ├── validate.go        # cross-reference invariants
 ├── template/
 │   ├── grammar.go     # token kinds, charset rules, grammar productions
@@ -105,7 +105,7 @@ Two seams that allow parallel work with E3 and E5:
 
 type UseCase struct {
     SchemaVersion  string                  `yaml:"schema_version"`
-    ID             string                  `yaml:"id"`              // computed if empty; verified if present
+    ID             string                  `yaml:"id"`              // required; author-supplied slug, validated
     Title          string                  `yaml:"title"`
     ArchetypeScope []enums.Archetype       `yaml:"archetype_scope"`
     EntryPoints    []entrypoint.EntryPoint `yaml:"entry_points"`
@@ -132,38 +132,28 @@ The unexported `*Segs` fields cache the parsed AST per behavior line.
 The resolver and label renderer walk these directly — parsing happens
 exactly once per load.
 
-## 6. ID computation
+## 6. ID validation
 
-The hashable view projects a UseCase to the identity-defining fields
-only:
+`UseCase.id` is author-supplied and required (the frozen schema enforces
+presence and pattern). The loader validates only:
 
-```go
-type hashableView struct {
-    ArchetypeScope []enums.Archetype       // sorted before serialization
-    EntryPoints    []entrypoint.EntryPoint // sorted by id before serialization
-    Given          []string                // order-preserved (sequence is semantic)
-    When           []string                // order-preserved
-    Then           []string                // order-preserved
-}
-```
+1. **Charset** — matches `^[a-z][a-z0-9-]*$`.
+2. **Length** — between 1 and 128 chars inclusive.
+3. **Uniqueness** — within a load context, no other UseCase loaded by
+   the same caller has the same id. (Enforced at a higher level if a
+   `Registry` is used; the single-document `Load` cannot verify
+   cross-file uniqueness.)
 
-Procedure:
+These are codified by `USECASE_ID_CHARSET` and `USECASE_ID_TOO_LONG`
+(see §10.1).
 
-1. Build `hashableView` from the loaded `UseCase`.
-2. Sort the order-insensitive fields.
-3. Serialize to canonical JSON via RFC 8785 (JCS).
-4. SHA-256 the resulting bytes.
-5. Take the first 12 hex chars; prefix with `uc_`.
-
-Loader modes:
-
-- `id:` omitted in YAML → loader computes and assigns it.
-- `id:` present in YAML → loader computes independently and errors
-  (`USECASE_ID_MISMATCH`) if they disagree. Catches manual edits that
-  forgot to re-hash.
-
-The pattern (hashable view + JCS + SHA-256 + entity prefix) is intended
-for reuse by Fixture, Sensor, and any other content-addressed entity.
+**Content-hashing deferred.** A reusable pattern — hashable view + JCS
+(RFC 8785) + SHA-256 + entity prefix — was considered for UseCase id
+during brainstorming. It conflicts with the schema-freeze gate's
+slug-form contract and is not implemented here. The same pattern
+remains a valid option for Sensor (Phase 2, where generation produces
+content-addressable artifacts) and is mentioned in §13 as a follow-up
+to revisit at that time.
 
 ## 7. Template grammar
 
@@ -171,9 +161,9 @@ for reuse by Fixture, Sensor, and any other content-addressed entity.
 
 ```
 NAMESPACE := "fixtures" | "entry_points"
-ID        := [a-z][a-z0-9_]{0,63}
+ID        := [a-z][a-z0-9-]{0,127}       // matches the frozen schema's id pattern
 FIELD     := "spec"                      // only legal under entry_points
-JSONKEY   := [a-zA-Z_][a-zA-Z0-9_]*
+JSONKEY   := [a-zA-Z_][a-zA-Z0-9_-]*     // hyphens allowed; the parser is already past the id here
 DOT       := "."
 ```
 
@@ -291,7 +281,6 @@ YAML bytes
   ↓ yaml.Unmarshal into UseCase
   ↓ parse every given/when/then line into []Segment (cached on UseCase)
   ↓ validate(uc, FixtureStore)         (§10)
-  ↓ if id is empty, compute and assign; else verify
   → return *UseCase, nil
 ```
 
@@ -311,9 +300,11 @@ Order of checks (later checks may assume earlier ones held):
 2. **Required fields** present — `title`, `archetype_scope` non-empty,
    ≥1 in each of `given`/`when`/`then`, ≥1 `entry_points[]`, every
    entry has non-empty `id`.
-3. **Charset** — every entry_point id and fixture id matches
-   `^[a-z][a-z0-9_]{0,63}$`. (Source_ref symbols are language-native
-   identifiers from the user's code and are not constrained.)
+3. **Charset & length** — `UseCase.id`, every entry_point id, and
+   every fixture id matches `^[a-z][a-z0-9-]*$` with length 1-128.
+   Mismatch → `USECASE_ID_CHARSET`; over-length → `USECASE_ID_TOO_LONG`.
+   (Source_ref symbols are language-native identifiers from the user's
+   code and are not constrained.)
 4. **Uniqueness** — entry_point ids unique within use case;
    `fixture_ids[]` has no duplicates.
 5. **Archetype scope** — every `entry_points[i].archetype ∈
@@ -332,8 +323,6 @@ Order of checks (later checks may assume earlier ones held):
    referenced by at least one template → `USECASE_FIXTURE_DECLARED_UNUSED`.
    (No symmetric check for entry_points; they may be declared without
    being interpolated, since sensors can bind to them by id.)
-10. **Computed-id consistency** — if YAML carries `id:`, recomputed id
-    must match → `USECASE_ID_MISMATCH`.
 
 ### 10.1 Error catalogue
 
@@ -343,6 +332,7 @@ Codes are stable contract for tooling and skill prompts:
 USECASE_SCHEMA_VERSION_UNSUPPORTED
 USECASE_REQUIRED_FIELD_MISSING
 USECASE_ID_CHARSET
+USECASE_ID_TOO_LONG
 USECASE_DUPLICATE_ID
 USECASE_ARCHETYPE_OUT_OF_SCOPE
 USECASE_TEMPLATE_PARSE
@@ -351,7 +341,6 @@ USECASE_TEMPLATE_UNKNOWN_ENTRY_POINT
 USECASE_FIXTURE_USED_UNDECLARED
 USECASE_FIXTURE_NOT_IN_STORE
 USECASE_FIXTURE_DECLARED_UNUSED
-USECASE_ID_MISMATCH
 ```
 
 ```go
@@ -374,7 +363,7 @@ failure case* — drives the suite shape.
 | Unit | `template/parser_test.go` | All 4 grammar forms accepted; bad inputs (nested, unclosed, unknown namespace, malformed spec access, bad ids) rejected with correct position. |
 | Unit | `template/resolver_test.go` | Every interpolation form; jsonpath misses; one spec-field case per archetype; unknown spec field is an error. |
 | Unit | `template/label_test.go` | Every grammar form renders to the locked label format. |
-| Unit | `id_test.go` | JCS stability: reordering archetype_scope/entry_points does not change id; reordering g/w/t does; cosmetic field changes (title, source_refs, fixture_ids order) do not. |
+| Unit | `id_test.go` | Charset & length validation: accepts valid kebab-case slugs of varying lengths; rejects uppercase, leading digit, underscores, dots, hyphenless boundary cases, and lengths 0 / 129+. |
 | Unit | `validate_test.go` | One targeted negative per error code; one happy-path per archetype. |
 | Integration | `loader_test.go` | Golden examples for http-api, cli, event-consumer at minimum. For each: refs resolve, labels match snapshots, recomputed id matches file. |
 | Property | `template/walk_test.go` | For a corpus of valid use cases, both walkers (resolver with stub, label renderer) produce output for every segment without panic. |
@@ -392,8 +381,8 @@ Matches the E4 doc, restated:
 - Every interpolation form has a passing resolver test.
 - Every error code in §10.1 has a targeted negative test.
 - The human-label renderer's output matches checked-in snapshots.
-- ID computation is stable across cosmetic edits and reactive to
-  semantic ones (per §6).
+- ID validation accepts the schema-conformant slugs in the golden
+  examples and rejects malformed ids (per §6).
 - No package in `internal/usecase/` lands without a sibling `_test.go`.
 
 ## 13. Out-of-scope follow-ups
@@ -406,9 +395,10 @@ Items surfaced during brainstorming but deferred:
 - **Stricter jsonpath** (array indexing, wildcards) — revisit if
   fixture payloads with arrays start needing addressing beyond
   whole-array references.
-- **Title and source_refs participating in id** — currently excluded by
-  design (§6). If detection-time provenance changes need to invalidate
-  cached signals, revisit then.
+- **Content-hashing for Sensor ids** — the hashable-view + JCS +
+  SHA-256 + entity-prefix pattern was designed in E4's brainstorm but
+  rejected for UseCase (slug-form per gate). Revisit when E6 (Sensor)
+  begins design: regenerated sensors benefit from content-addressing.
 - **Resolver-time error surfacing in `/validate-use-case`** — runtime
   ergonomics for jsonpath misses (e.g., re-pointing the LLM at the
   miss location) is a Phase 3 concern, not E4.

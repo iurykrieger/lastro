@@ -390,3 +390,66 @@ func componentsEqual(a, b StackComponent) bool {
 	}
 	return true
 }
+
+func TestByIDReturnsPresentComponent(t *testing.T) {
+	m := loadGolden(t)
+	c, ok := m.ByID("nestjs")
+	if !ok {
+		t.Fatal("ByID(nestjs) = _, false; want true")
+	}
+	if c.ID != "nestjs" {
+		t.Errorf("ByID returned wrong component: %+v", c)
+	}
+}
+
+func TestByIDReturnsZeroForAbsent(t *testing.T) {
+	m := loadGolden(t)
+	c, ok := m.ByID("never-installed")
+	if ok {
+		t.Errorf("ByID(never-installed) = %+v, true; want zero, false", c)
+	}
+	if c.ID != "" || c.Kind != "" || c.Name != "" || c.Version != "" {
+		t.Errorf("ByID returned non-zero for absent: %+v", c)
+	}
+}
+
+func TestHasCapability(t *testing.T) {
+	m := loadGolden(t)
+	if !m.HasCapability("http-routing") {
+		t.Error("HasCapability(http-routing) = false; want true")
+	}
+	if m.HasCapability("graphql-subscriptions") {
+		t.Error("HasCapability(graphql-subscriptions) = true; want false")
+	}
+}
+
+func TestComponentsWithCapabilityPreservesOrder(t *testing.T) {
+	m := loadGolden(t)
+	got := m.ComponentsWithCapability("http-routing")
+	if len(got) != 1 {
+		t.Fatalf("len = %d, want 1", len(got))
+	}
+	if got[0].ID != "nestjs" {
+		t.Errorf("got[0].ID = %q, want %q", got[0].ID, "nestjs")
+	}
+}
+
+func TestComponentsWithCapabilityReturnsEmptyNotNil(t *testing.T) {
+	m := loadGolden(t)
+	got := m.ComponentsWithCapability("never-declared")
+	if got == nil {
+		t.Error("got nil; want empty (non-nil) slice")
+	}
+	if len(got) != 0 {
+		t.Errorf("len = %d, want 0", len(got))
+	}
+}
+
+func loadGolden(t *testing.T) StackManifest {
+	t.Helper()
+	m, err := Load(repoPath(t, "schemas/examples/stack-manifest/http-api.yaml"))
+	if err != nil {
+		t.Fatalf("Load golden: %v", err)
+	}
+	return m
+}

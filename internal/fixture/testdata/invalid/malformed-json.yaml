@@ -1,0 +1,7 @@
+schema_version: 1.0.0
+id: malformed-json-fixture
+use_case_id: create-order-use-case
+role: input
+content_type: application/json
+payload: |
+  {not valid json,

@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+id: yaml-input-fixture
+use_case_id: create-order-use-case
+role: input
+content_type: application/yaml
+payload: |
+  customer_id: c-001
+  items:
+    - sku: BOOK-1
+      qty: 2
+binding:
+  channel: http
+  selector:
+    method: POST
+    path: /orders

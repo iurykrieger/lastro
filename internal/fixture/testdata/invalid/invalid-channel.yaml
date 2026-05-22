@@ -1,0 +1,9 @@
+schema_version: 1.0.0
+id: invalid-channel-fixture
+use_case_id: create-order-use-case
+role: input
+content_type: application/json
+payload: |
+  {}
+binding:
+  channel: smoke-signal

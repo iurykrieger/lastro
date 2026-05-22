@@ -1,0 +1,6 @@
+# EntryPoint example — worker archetype.
+id: daily-reconciliation-worker
+archetype: worker
+spec:
+  trigger_kind: cron
+  schedule_or_signal: "0 2 * * *"

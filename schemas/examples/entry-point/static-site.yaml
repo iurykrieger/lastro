@@ -1,0 +1,5 @@
+# EntryPoint example — static-site archetype.
+id: pricing-route
+archetype: static-site
+spec:
+  route_path: /pricing

@@ -1,0 +1,5 @@
+# EntryPoint example — cli archetype.
+id: harness-detect-cli
+archetype: cli
+spec:
+  command: harness

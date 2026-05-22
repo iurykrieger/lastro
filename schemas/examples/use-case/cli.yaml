@@ -1,0 +1,20 @@
+# UseCase example — cli archetype.
+schema_version: 2.0.0
+id: harness-detect-use-case
+title: "Operator detects stack on a repo via the harness CLI"
+archetype_scope: [cli]
+
+entry_points:
+  - id: harness-detect-cli
+    archetype: cli
+    spec:
+      command: harness
+
+given:
+  - "The user invokes {{entry_points.harness-detect-cli}} with arguments matching {{fixtures.detect-args-fixture}}"
+when:
+  - "The command completes"
+then:
+  - "Standard output matches {{fixtures.detect-stdout-fixture}} and the process exits with code 0"
+
+fixture_ids: [detect-args-fixture, detect-stdout-fixture]

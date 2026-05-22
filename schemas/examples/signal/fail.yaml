@@ -1,0 +1,18 @@
+# Signal example — verdict=fail with required heal_hint.
+schema_version: 1.0.0
+sensor_id: unit-tests-create-order-sensor
+use_case_id: create-order-use-case
+angle: unit-test
+emitted_at: "2026-05-22T10:16:42Z"
+verdict: fail
+confidence: 1.0
+evidence:
+  expected: "createOrder() returns 201 for valid input"
+  actual:   "createOrder() returned 500"
+  fixture_id: order-input-fixture
+heal_hint:
+  summary: "createOrder throws on valid input; check the validation branch"
+  suggested_locus:
+    - path: src/handlers/orders.ts
+      symbol: createOrder
+  rationale: "Test stack trace points to a thrown TypeError in body validation; the fixture passes the expected schema, so the validator is wrong, not the input."

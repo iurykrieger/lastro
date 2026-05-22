@@ -1,0 +1,6 @@
+# EntryPoint example — http-api archetype.
+id: create-order-endpoint
+archetype: http-api
+spec:
+  method: POST
+  path: /orders

@@ -1,0 +1,6 @@
+# EntryPoint example — batch-job archetype.
+id: csv-import-job
+archetype: batch-job
+spec:
+  input_source: "s3://imports/orders/*.csv"
+  output_destination: "postgres://app/orders"

@@ -15,14 +15,14 @@ In scope:
 - 8 enum YAML documents under `schemas/enums/` (structured data + meta-schema)
 - 44 worked examples under `schemas/examples/<entity>/`
 - `schemas/README.md` documenting the cross-reference catalog and conventions
-- A local validation script that proves every example passes its schema
+- A minimal Go validator (`cmd/validate-schemas/main.go` + `go.mod`) that proves every example passes its schema, every enum matches the meta-schema, and every entity schema is itself a valid JSON Schema 2020-12. The validator is intentionally small and dependency-light; Phase A entity chunks reuse its dependency (`santhosh-tekuri/jsonschema`) when building typed loaders.
 
 Out of scope:
 
-- Go code of any kind (typed structs, loaders, validators)
+- Typed Go structs, per-entity loaders, or business logic of any kind (those belong to Phase A)
 - Integrity validation across files (existence of referenced ids)
 - Skill or runtime implementation
-- CLI
+- CLI (the `harness` CLI is Phase B; the gate ships only the `validate-schemas` tool)
 
 ## 2. Decisions
 
@@ -232,12 +232,12 @@ The gate PR is complete when:
 3. `schemas/enums/_meta.yaml` exists and validates each enum file.
 4. 44 examples exist in `schemas/examples/<entity>/<scenario>.yaml`, each passing its schema.
 5. `schemas/README.md` covers the 10 sections in §8.
-6. A `scripts/validate-schemas.sh` (or equivalent) script:
+6. A Go validator at `cmd/validate-schemas/main.go` (with `go.mod` + `go.sum`) that:
    - Confirms each schema is itself a valid JSON Schema 2020-12
    - Validates each example against its entity's schema
    - Validates each enum file against `_meta.yaml`
    - Exits zero on success
-7. No `.go` files are introduced. No files outside `schemas/` and `scripts/`.
+7. Files introduced are limited to: `schemas/**`, `cmd/validate-schemas/**`, `go.mod`, `go.sum`. No typed Go structs, no per-entity loaders, no runtime, no skill code, no CLI beyond `validate-schemas` itself.
 
 ## 11. Risks and trade-offs
 

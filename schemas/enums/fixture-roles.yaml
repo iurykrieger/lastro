@@ -1,0 +1,12 @@
+schema_version: 1.0.0
+title: FixtureRole
+description: |
+  Role a fixture plays in driving or asserting a use case's behavior.
+
+values:
+  - id: input
+    purpose: "Drives the behavior (request payload, CLI args, event message)"
+  - id: expected-output
+    purpose: "Asserted output (response payload, emitted event, written DB row)"
+  - id: expected-side-effect
+    purpose: "Non-payload effects (log line shape, metric emission)"

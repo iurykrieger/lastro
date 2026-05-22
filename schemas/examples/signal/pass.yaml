@@ -1,0 +1,11 @@
+# Signal example — verdict=pass from a build sensor.
+schema_version: 1.0.0
+sensor_id: build-create-order-sensor
+use_case_id: create-order-use-case
+angle: build
+emitted_at: "2026-05-22T10:15:00Z"
+verdict: pass
+confidence: 1.0
+evidence:
+  expected: "tsc exits 0"
+  actual: "tsc exited 0"

@@ -1,0 +1,14 @@
+schema_version: 1.0.0
+title: TerminationReason
+description: |
+  Why a sensor execution ended. Carried on AggregateSignal.
+
+values:
+  - id: completed
+    purpose: "Sensor finished its scheduled work naturally"
+  - id: stopped
+    purpose: "Sensor was explicitly stopped (e.g., /stop-sensor invocation)"
+  - id: timeout
+    purpose: "Sensor exceeded its time budget before completing"
+  - id: error
+    purpose: "Sensor crashed or could not perform its work"

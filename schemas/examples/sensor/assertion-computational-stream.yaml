@@ -1,0 +1,17 @@
+# Sensor example — assertion / computational / stream.
+# Unit-test runner emits one signal per test, then an AggregateSignal.
+schema_version: 1.0.0
+id: unit-tests-create-order-sensor
+use_case_id: create-order-use-case
+angle: unit-test
+kind: assertion
+nature: computational
+output_type: stream
+
+uses:
+  - node
+  - express
+
+steps:
+  - id: run-tests
+    run: "jest --json src/handlers/orders.test.ts"

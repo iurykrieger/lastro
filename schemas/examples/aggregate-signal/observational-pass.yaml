@@ -1,0 +1,22 @@
+# AggregateSignal example — observational sensor stopped cleanly with all expected observations seen.
+schema_version: 1.0.0
+type: aggregate
+sensor_id: logs-create-order-sensor
+use_case_id: create-order-use-case
+angle: logs
+started_at: "2026-05-22T10:18:00Z"
+ended_at:   "2026-05-22T10:18:30Z"
+termination_reason: stopped
+verdict: pass
+confidence: 1.0
+rollup:
+  total_signals: 3
+  pass_count: 3
+  fail_count: 0
+  inconclusive_count: 0
+completeness:
+  expected_observations:
+    - "order-received"
+    - "order-validated"
+    - "order-persisted"
+  missing_observations: []

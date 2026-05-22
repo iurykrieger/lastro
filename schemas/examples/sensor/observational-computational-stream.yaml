@@ -1,0 +1,19 @@
+# Sensor example — observational / computational / stream.
+# Log-tail with structured matchers derived from the log library.
+schema_version: 1.0.0
+id: logs-create-order-sensor
+use_case_id: create-order-use-case
+angle: logs
+kind: observational
+nature: computational
+output_type: stream
+
+uses:
+  - node
+  - express
+
+steps:
+  - id: start-tail
+    run: "harness log-tail --logger orders --level info"
+    uses:
+      - order-created-log-fixture

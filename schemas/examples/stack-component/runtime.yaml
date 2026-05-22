@@ -1,0 +1,12 @@
+# StackComponent example — runtime kind (Node).
+schema_version: 1.0.0
+id: node
+kind: runtime
+name: node
+version: 20.x
+capabilities:
+  - event-loop
+  - child-processes
+  - native-tls
+detection_evidence:
+  - "package.json:engines.node"

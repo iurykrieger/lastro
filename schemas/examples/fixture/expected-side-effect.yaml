@@ -1,0 +1,17 @@
+# Fixture example — role=expected-side-effect, a log line shape.
+schema_version: 1.0.0
+id: order-created-log-fixture
+use_case_id: create-order-use-case
+role: expected-side-effect
+content_type: text/plain
+payload: |
+  {"level":"info","msg":"order created","order_id":"<uuid>","customer_id":"<id>"}
+binding:
+  channel: log-line
+  selector:
+    logger: orders
+    level: info
+source_refs:
+  - path: src/handlers/orders.ts
+    symbol: createOrder
+    reason: "log emitted on successful order creation"

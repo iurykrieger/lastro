@@ -1,0 +1,10 @@
+schema_version: 1.0.0
+title: SignalOutputType
+description: |
+  Cardinality of signals a sensor emits before its terminal AggregateSignal.
+
+values:
+  - id: single-shot
+    purpose: "Exactly one signal emitted, one verdict"
+  - id: stream
+    purpose: "N signals emitted (e.g., one per test, one per matched log line)"

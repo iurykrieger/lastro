@@ -1,0 +1,45 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/validation-policy.yaml"
+title: ValidationPolicy
+description: |
+  Per-archetype declaration of which validation angles are obligatory,
+  optional, or disabled. Resolution order: repo overrides org overrides global.
+
+type: object
+required: [schema_version, scope, per_archetype]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  scope:
+    type: string
+    enum: [org, global, repo]
+  inherits_from:
+    $ref: "#/$defs/Id"
+  per_archetype:
+    type: object
+    additionalProperties:
+      type: object
+      required: [obligatory_angles, optional_angles, disabled_angles]
+      additionalProperties: false
+      properties:
+        obligatory_angles: { $ref: "#/$defs/AngleList" }
+        optional_angles:   { $ref: "#/$defs/AngleList" }
+        disabled_angles:   { $ref: "#/$defs/AngleList" }
+    propertyNames:
+      enum: [http-api, event-consumer, event-producer, cli, sdk, library, worker, batch-job, static-site]
+
+$defs:
+  Id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*$"
+    minLength: 1
+    maxLength: 128
+  AngleList:
+    type: array
+    items:
+      type: string
+      enum: [security, build, code-structure, unit-test, e2e-test,
+             contracts, logs, metrics, database, performance]

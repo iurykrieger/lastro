@@ -1,0 +1,6 @@
+# EntryPoint example — event-consumer archetype.
+id: on-order-created
+archetype: event-consumer
+spec:
+  channel_kind: queue
+  channel_name: orders.created

@@ -1,0 +1,21 @@
+# UseCase example — event-producer archetype.
+schema_version: 2.0.0
+id: emit-payment-processed-use-case
+title: "Service emits payments.processed after charging a card"
+archetype_scope: [event-producer]
+
+entry_points:
+  - id: emit-payment-processed
+    archetype: event-producer
+    spec:
+      target_channel_kind: topic
+      target_channel_name: payments.processed
+
+given:
+  - "A successful card charge has occurred matching {{fixtures.charge-success-state-fixture}}"
+when:
+  - "The service publishes its outbound event"
+then:
+  - "An event matching {{fixtures.payment-processed-event-fixture}} is published to {{entry_points.emit-payment-processed}}"
+
+fixture_ids: [charge-success-state-fixture, payment-processed-event-fixture]

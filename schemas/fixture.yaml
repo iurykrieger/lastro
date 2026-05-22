@@ -1,0 +1,57 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/fixture.yaml"
+title: Fixture
+description: |
+  Concrete I/O proof of a use case's behavior. One fixture can be reused
+  by multiple sensors across angles (e.g., the same input payload drives
+  an e2e-test sensor and a unit-test sensor for the same use case).
+
+type: object
+required: [schema_version, id, use_case_id, role, content_type, payload]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  id:
+    $ref: "#/$defs/Id"
+  use_case_id:
+    $ref: "#/$defs/Id"
+  role:
+    type: string
+    description: "Canonical source: schemas/enums/fixture-roles.yaml"
+    enum: [input, expected-output, expected-side-effect]
+  content_type:
+    type: string
+    minLength: 1
+  payload:
+    type: string
+    description: "Concrete payload as a string (JSON, XML, plain text, etc.). Parsed only at runtime."
+  binding:
+    type: object
+    additionalProperties: false
+    properties:
+      channel:
+        type: string
+        enum: [http, cli-args, event, stdout, log-line, db-row]
+      selector:
+        type: object
+        additionalProperties: true
+  source_refs:
+    type: array
+    items:
+      type: object
+      required: [path]
+      additionalProperties: false
+      properties:
+        path:   { type: string, minLength: 1 }
+        symbol: { type: string }
+        reason: { type: string }
+
+$defs:
+  Id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*$"
+    minLength: 1
+    maxLength: 128

@@ -1,0 +1,5 @@
+# EntryPoint example — library archetype.
+id: parse-config-symbol
+archetype: library
+spec:
+  exported_symbol: parseConfig

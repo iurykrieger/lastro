@@ -1,0 +1,22 @@
+# Fixture example — role=expected-output, the response body from create-order.
+schema_version: 1.0.0
+id: order-output-fixture
+use_case_id: create-order-use-case
+role: expected-output
+content_type: application/json
+payload: |
+  {
+    "order_id": "o-001",
+    "status": "accepted",
+    "total_cents": 5990
+  }
+binding:
+  channel: http
+  selector:
+    method: POST
+    path: /orders
+    status: 201
+source_refs:
+  - path: src/handlers/orders.ts
+    symbol: createOrder
+    reason: "response body shape observed via reverse-engineering"

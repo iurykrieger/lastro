@@ -1,0 +1,13 @@
+# StackComponent example — datastore kind (Postgres).
+schema_version: 1.0.0
+id: postgres
+kind: datastore
+name: postgres
+version: 16.x
+capabilities:
+  - transactions
+  - row-level-security
+  - logical-replication
+detection_evidence:
+  - "docker-compose.yaml:services.db.image"
+  - "package.json:dependencies.pg"

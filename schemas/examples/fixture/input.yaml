@@ -1,0 +1,22 @@
+# Fixture example — role=input, an HTTP request body driving create-order.
+schema_version: 1.0.0
+id: order-input-fixture
+use_case_id: create-order-use-case
+role: input
+content_type: application/json
+payload: |
+  {
+    "customer_id": "c-001",
+    "items": [
+      { "sku": "BOOK-1", "qty": 2 }
+    ]
+  }
+binding:
+  channel: http
+  selector:
+    method: POST
+    path: /orders
+source_refs:
+  - path: src/handlers/orders.ts
+    symbol: createOrder
+    reason: "reverse-engineered from handler signature"

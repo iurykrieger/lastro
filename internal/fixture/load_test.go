@@ -115,6 +115,32 @@ func TestLoadFixtureXMLContentType(t *testing.T) {
 	}
 }
 
+func TestLoadDirectoryHappyPathExamples(t *testing.T) {
+	p := filepath.Join("..", "..", "schemas", "examples", "fixture")
+	store, err := LoadDirectory(p)
+	if err != nil {
+		t.Fatalf("LoadDirectory(%s): %v", p, err)
+	}
+	all := store.All()
+	if len(all) != 3 {
+		t.Fatalf("All: got %d fixtures, want 3", len(all))
+	}
+	for _, fx := range all {
+		if fx.UseCaseID != "create-order-use-case" {
+			t.Errorf("fixture %q: UseCaseID %q, want create-order-use-case", fx.ID, fx.UseCaseID)
+		}
+	}
+	roles := map[Role]bool{}
+	for _, fx := range all {
+		roles[fx.Role] = true
+	}
+	for _, r := range []Role{RoleInput, RoleExpectedOutput, RoleExpectedSideEffect} {
+		if !roles[r] {
+			t.Errorf("expected role %q not present in loaded fixtures", r)
+		}
+	}
+}
+
 func TestLoadFixtureWithoutBinding(t *testing.T) {
 	p := filepath.Join("testdata", "no-binding.yaml")
 	fx, err := LoadFixture(p)

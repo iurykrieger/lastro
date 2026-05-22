@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/yaml"
 )
@@ -55,6 +57,53 @@ func LoadFixture(path string) (Fixture, error) {
 	fx.Parsed = parsed
 
 	return fx, nil
+}
+
+// LoadDirectory loads every *.yaml / *.yml file directly inside the given
+// directory (non-recursive — fixtures are flat per the framework's
+// convention) and returns a Store containing them.
+//
+// Returns the first per-file load error encountered, or a duplicate-id
+// error decorated with both source file paths.
+func LoadDirectory(path string) (*Store, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil, fmt.Errorf("fixture dir %s: read: %w", path, err)
+	}
+
+	type loaded struct {
+		fx   Fixture
+		from string
+	}
+	var fixtures []loaded
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if !strings.HasSuffix(name, ".yaml") && !strings.HasSuffix(name, ".yml") {
+			continue
+		}
+		full := filepath.Join(path, name)
+		fx, err := LoadFixture(full)
+		if err != nil {
+			return nil, err // already path-decorated by LoadFixture
+		}
+		fixtures = append(fixtures, loaded{fx: fx, from: full})
+	}
+
+	// Build the store. Catch duplicate ids ourselves so we can name both files.
+	seen := make(map[string]string, len(fixtures))
+	bare := make([]Fixture, 0, len(fixtures))
+	for _, l := range fixtures {
+		if prior, dup := seen[l.fx.ID]; dup {
+			return nil, fmt.Errorf("fixture: duplicate id %q in %s and %s", l.fx.ID, prior, l.from)
+		}
+		seen[l.fx.ID] = l.from
+		bare = append(bare, l.fx)
+	}
+
+	return NewStore(bare...)
 }
 
 func validateAgainstSchema(jsonDoc []byte) error {

@@ -1,0 +1,18 @@
+# Sensor example — observational / inferential / stream.
+# Log-tail using LLM-derived patterns for semantic correctness.
+schema_version: 1.0.0
+id: semantic-logs-create-order-sensor
+use_case_id: create-order-use-case
+angle: logs
+kind: observational
+nature: inferential
+output_type: stream
+
+uses:
+  - pino
+
+steps:
+  - id: derive-patterns
+    run: "harness derive-log-patterns --use-case create-order-use-case"
+  - id: start-tail
+    run: "harness log-tail --semantic"

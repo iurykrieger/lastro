@@ -1,0 +1,22 @@
+# Sensor example — assertion / inferential / stream.
+# Contracts sensor judges each OpenAPI endpoint.
+schema_version: 1.0.0
+id: contracts-create-order-sensor
+use_case_id: create-order-use-case
+angle: contracts
+kind: assertion
+nature: inferential
+output_type: stream
+
+uses:
+  - openapi
+  - express
+
+steps:
+  - id: extract-endpoints
+    run: "harness extract-openapi src/api.yaml"
+  - id: judge-each
+    run: "harness llm-judge --rubric contract-per-endpoint"
+    uses:
+      - order-input-fixture
+      - order-output-fixture

@@ -180,12 +180,7 @@ func TestInlineSchemaEnumsMatchYAML(t *testing.T) {
 		}
 		var doc any
 		if err := yaml.Unmarshal(b, &doc); err != nil {
-			// Some schemas contain regex patterns with escape sequences (e.g. \d)
-			// that confuse the JSON-bridge in sigs.k8s.io/yaml. Those patterns
-			// are unrelated to enum blocks, so we skip the file rather than
-			// failing the test.
-			t.Logf("skipping %s (unmarshal error: %v)", e.Name(), err)
-			continue
+			t.Fatalf("unmarshal %s: %v", path, err)
 		}
 
 		for _, block := range findEnumBlocks(doc) {

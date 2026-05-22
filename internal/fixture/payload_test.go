@@ -48,3 +48,34 @@ func TestParsePayloadYAMLMalformedIsError(t *testing.T) {
 		t.Fatal("parsePayload: expected error on malformed YAML, got nil")
 	}
 }
+
+func TestParsePayloadXML(t *testing.T) {
+	cases := []string{"application/xml", "text/xml"}
+	for _, ct := range cases {
+		t.Run(ct, func(t *testing.T) {
+			got, err := parsePayload(ct, []byte(`<order><customer_id>c-001</customer_id><qty>2</qty></order>`))
+			if err != nil {
+				t.Fatalf("parsePayload: %v", err)
+			}
+			m, ok := got.(map[string]any)
+			if !ok {
+				t.Fatalf("parsePayload: got %T, want map[string]any", got)
+			}
+			// mxj wraps the document under its root element name.
+			order, ok := m["order"].(map[string]any)
+			if !ok {
+				t.Fatalf("expected nested order map, got %T (%+v)", m["order"], m)
+			}
+			if order["customer_id"] != "c-001" {
+				t.Errorf("order.customer_id: got %v, want c-001", order["customer_id"])
+			}
+		})
+	}
+}
+
+func TestParsePayloadXMLMalformedIsError(t *testing.T) {
+	_, err := parsePayload("application/xml", []byte(`<unclosed`))
+	if err == nil {
+		t.Fatal("parsePayload: expected error on malformed XML, got nil")
+	}
+}

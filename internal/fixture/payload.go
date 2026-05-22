@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/clbanning/mxj/v2"
 	"sigs.k8s.io/yaml"
 )
 
@@ -27,6 +28,12 @@ func parsePayload(contentType string, payload []byte) (any, error) {
 			return nil, fmt.Errorf("payload: invalid YAML for content_type %q: %w", contentType, err)
 		}
 		return v, nil
+	case isXMLContentType(contentType):
+		m, err := mxj.NewMapXml(payload)
+		if err != nil {
+			return nil, fmt.Errorf("payload: invalid XML for content_type %q: %w", contentType, err)
+		}
+		return map[string]any(m), nil
 	}
 	return nil, nil
 }
@@ -38,6 +45,14 @@ func isJSONContentType(ct string) bool {
 func isYAMLContentType(ct string) bool {
 	switch ct {
 	case "application/yaml", "text/yaml", "application/x-yaml":
+		return true
+	}
+	return false
+}
+
+func isXMLContentType(ct string) bool {
+	switch ct {
+	case "application/xml", "text/xml":
 		return true
 	}
 	return false

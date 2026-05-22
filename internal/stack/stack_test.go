@@ -1,6 +1,7 @@
 package stack
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -25,5 +26,110 @@ func TestEvidenceRefStringIgnoresValue(t *testing.T) {
 func TestSchemaVersionConstant(t *testing.T) {
 	if SchemaVersion != "1.0.0" {
 		t.Errorf("SchemaVersion = %q, want %q", SchemaVersion, "1.0.0")
+	}
+}
+
+func TestStackComponentValidateRejectsBadID(t *testing.T) {
+	cases := []struct {
+		name   string
+		id     string
+		substr string
+	}{
+		{"empty", "", "id"},
+		{"uppercase", "Express", "id"},
+		{"underscore", "express_v4", "id"},
+		{"leading dash", "-express", "id"},
+		{"leading digit", "4express", "id"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := validComponent()
+			c.ID = tc.id
+			err := c.Validate()
+			if err == nil {
+				t.Fatalf("expected error for id=%q", tc.id)
+			}
+			if !strings.Contains(err.Error(), tc.substr) {
+				t.Errorf("error %q does not mention %q", err.Error(), tc.substr)
+			}
+		})
+	}
+}
+
+func TestStackComponentValidateRejectsMissingFields(t *testing.T) {
+	base := validComponent()
+
+	type mutate func(*StackComponent)
+	cases := []struct {
+		name   string
+		m      mutate
+		substr string
+	}{
+		{"missing kind", func(c *StackComponent) { c.Kind = "" }, "kind"},
+		{"missing name", func(c *StackComponent) { c.Name = "" }, "name"},
+		{"missing version", func(c *StackComponent) { c.Version = "" }, "version"},
+		{"empty capabilities", func(c *StackComponent) { c.Capabilities = nil }, "capabilities"},
+		{"blank capability entry", func(c *StackComponent) { c.Capabilities = []string{""} }, "capabilities"},
+		{"empty evidence", func(c *StackComponent) { c.DetectionEvidence = nil }, "detection_evidence"},
+		{"evidence missing file", func(c *StackComponent) {
+			c.DetectionEvidence = []EvidenceRef{{Path: "x"}}
+		}, "file"},
+		{"evidence missing path", func(c *StackComponent) {
+			c.DetectionEvidence = []EvidenceRef{{File: "x"}}
+		}, "path"},
+		{"unknown kind", func(c *StackComponent) { c.Kind = "service" }, "kind"},
+		{"wrong schema_version", func(c *StackComponent) { c.SchemaVersion = "0.1.0" }, "schema_version"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := base
+			tc.m(&c)
+			err := c.Validate()
+			if err == nil {
+				t.Fatalf("expected error for case %q", tc.name)
+			}
+			if !strings.Contains(err.Error(), tc.substr) {
+				t.Errorf("error %q does not mention %q", err.Error(), tc.substr)
+			}
+		})
+	}
+}
+
+func TestStackComponentValidateAggregates(t *testing.T) {
+	c := validComponent()
+	c.ID = ""
+	c.Kind = ""
+	c.Name = ""
+	err := c.Validate()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	msg := err.Error()
+	for _, want := range []string{"id", "kind", "name"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("aggregated error %q missing %q", msg, want)
+		}
+	}
+}
+
+func TestStackComponentValidateAcceptsValid(t *testing.T) {
+	if err := validComponent().Validate(); err != nil {
+		t.Errorf("validComponent().Validate() = %v, want nil", err)
+	}
+}
+
+// validComponent returns a known-good StackComponent that individual
+// tests mutate one field at a time.
+func validComponent() StackComponent {
+	return StackComponent{
+		SchemaVersion: SchemaVersion,
+		ID:            "express",
+		Kind:          "framework",
+		Name:          "express",
+		Version:       "4.18.2",
+		Capabilities:  []string{"http-routing"},
+		DetectionEvidence: []EvidenceRef{
+			{File: "package.json", Path: "dependencies.express", Value: "^4.18.2"},
+		},
 	}
 }

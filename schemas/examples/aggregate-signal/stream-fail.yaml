@@ -12,6 +12,7 @@ confidence: 1.0
 rollup:
   total_signals: 700
   pass_count: 630
+  warn_count: 0
   fail_count: 70
   inconclusive_count: 0
 heal_hint:

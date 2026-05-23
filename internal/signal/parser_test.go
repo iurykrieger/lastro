@@ -292,4 +292,7 @@ func TestParseSignals_LineExceedsCap(t *testing.T) {
 	if !strings.Contains(ys[0].err.Error(), "scan") {
 		t.Errorf("expected error to mention 'scan', got: %v", ys[0].err)
 	}
+	if !reflect.DeepEqual(ys[0].sig, Signal{}) {
+		t.Errorf("expected zero Signal on scan error, got %+v", ys[0].sig)
+	}
 }

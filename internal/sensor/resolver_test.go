@@ -140,3 +140,40 @@ func TestResolveExecutionOrder_CrossUseCaseEdgesAllowed(t *testing.T) {
 		}
 	}
 }
+
+func TestResolveExecutionOrder_FiveNodeGraph(t *testing.T) {
+	// Graph (id naming deliberately makes topological order diverge
+	// from alphabetical):
+	//   z -> x -> m -> a
+	//   z -> y -> m
+	//
+	// z is the only zero-in-degree node — runs first.
+	// After z, x and y are both ready; id-sort picks x then y.
+	// m depends on both x and y; ready only after both — runs next.
+	// a depends on m — runs last.
+	//
+	// Topological with id-tiebreak: [z, x, y, m, a].
+	// Alphabetical-only: [a, m, x, y, z] — divergent, so a placeholder
+	// sort-by-id resolver would fail this test.
+	sensors := []Sensor{
+		{ID: "a", DependsOn: []string{"m"}},
+		{ID: "m", DependsOn: []string{"x", "y"}},
+		{ID: "y", DependsOn: []string{"z"}},
+		{ID: "x", DependsOn: []string{"z"}},
+		{ID: "z"},
+	}
+	out, err := ResolveExecutionOrder(sensors)
+	if err != nil {
+		t.Fatalf("five-node: %v", err)
+	}
+	got := ids(out)
+	want := []string{"z", "x", "y", "m", "a"}
+	if len(got) != len(want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	for i, w := range want {
+		if got[i] != w {
+			t.Fatalf("got %v, want %v", got, want)
+		}
+	}
+}

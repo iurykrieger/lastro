@@ -40,13 +40,22 @@ func computeVerdict(in RollupInput, a AggregateSignal) enums.Verdict {
 		return enums.VerdictFail
 	}
 
-	// Rule 4: single-shot → mirror the sole signal's verdict (clean term).
+	// Rules 2 + 3: timeout / error termination → fail wins, else inconclusive.
+	if in.TerminationReason == enums.TerminationTimeout || in.TerminationReason == enums.TerminationError {
+		for _, s := range in.Signals {
+			if s.Verdict == enums.VerdictFail {
+				return enums.VerdictFail
+			}
+		}
+		return enums.VerdictInconclusive
+	}
+
+	// Rule 4: single-shot → mirror.
 	if in.OutputType == enums.OutputSingleShot && len(in.Signals) == 1 {
 		return in.Signals[0].Verdict
 	}
 
-	// Rule 5: severity ordering (clean termination).
-	// fail > warn > inconclusive > pass.
+	// Rule 5: severity ordering (completed / stopped).
 	return severityVerdict(in.Signals)
 }
 

@@ -155,3 +155,36 @@ func TestRollupStreamSeverityOrdering(t *testing.T) {
 		})
 	}
 }
+
+func TestRollupTimeoutInconclusiveWithoutFail(t *testing.T) {
+	in := baseInput([]signalstub.Signal{sig(enums.VerdictPass), sig(enums.VerdictPass)})
+	in.TerminationReason = enums.TerminationTimeout
+	got, err := Rollup(in)
+	if err != nil {
+		t.Fatalf("Rollup: %v", err)
+	}
+	if got.Verdict != enums.VerdictInconclusive {
+		t.Errorf("Verdict = %q, want %q", got.Verdict, enums.VerdictInconclusive)
+	}
+}
+
+func TestRollupTimeoutFailWinsOverInconclusive(t *testing.T) {
+	in := baseInput([]signalstub.Signal{sig(enums.VerdictPass), sig(enums.VerdictFail)})
+	in.TerminationReason = enums.TerminationTimeout
+	got, err := Rollup(in)
+	if got.Verdict != enums.VerdictFail && err == nil {
+		t.Errorf("Verdict = %q, want %q", got.Verdict, enums.VerdictFail)
+	}
+}
+
+func TestRollupErrorTreatedLikeTimeout(t *testing.T) {
+	in := baseInput([]signalstub.Signal{sig(enums.VerdictPass)})
+	in.TerminationReason = enums.TerminationError
+	got, err := Rollup(in)
+	if err != nil {
+		t.Fatalf("Rollup: %v", err)
+	}
+	if got.Verdict != enums.VerdictInconclusive {
+		t.Errorf("Verdict = %q, want inconclusive", got.Verdict)
+	}
+}

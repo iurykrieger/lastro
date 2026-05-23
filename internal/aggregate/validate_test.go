@@ -101,3 +101,38 @@ func TestParseRejectsPassWithHealHint(t *testing.T) {
 		t.Errorf("error should mention 'heal_hint': %v", err)
 	}
 }
+
+func TestParseRejectsEndBeforeStart(t *testing.T) {
+	bad := strings.Replace(happyPathJSON, `"ended_at":   "2026-05-23T14:00:42Z"`, `"ended_at":   "2026-05-23T13:00:00Z"`, 1)
+	_, err := ParseAggregate(strings.NewReader(bad))
+	if err == nil {
+		t.Fatal("expected error for ended_at < started_at, got nil")
+	}
+	if !strings.Contains(err.Error(), "ended_at") {
+		t.Errorf("error should mention 'ended_at': %v", err)
+	}
+}
+
+func TestParseRejectsMissingObservationNotInExpected(t *testing.T) {
+	withCompleteness := strings.Replace(
+		happyPathJSON,
+		`"inconclusive_count": 0
+  }
+}`,
+		`"inconclusive_count": 0
+  },
+  "completeness": {
+    "expected_observations": ["a", "b"],
+    "missing_observations": ["c"]
+  }
+}`,
+		1,
+	)
+	_, err := ParseAggregate(strings.NewReader(withCompleteness))
+	if err == nil {
+		t.Fatal("expected error for missing_observation not in expected_observations, got nil")
+	}
+	if !strings.Contains(err.Error(), "missing_observations") {
+		t.Errorf("error should mention 'missing_observations': %v", err)
+	}
+}

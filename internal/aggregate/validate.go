@@ -18,8 +18,39 @@ func Validate(a AggregateSignal) error {
 	if err := validateHealHintAbsence(a); err != nil {
 		errs = append(errs, err)
 	}
+	if err := validateTimeOrder(a); err != nil {
+		errs = append(errs, err)
+	}
+	if err := validateCompleteness(a.Completeness); err != nil {
+		errs = append(errs, err)
+	}
 
 	return errors.Join(errs...)
+}
+
+func validateTimeOrder(a AggregateSignal) error {
+	if a.EndedAt.Before(a.StartedAt) {
+		return fmt.Errorf("ended_at (%s) is before started_at (%s)",
+			a.EndedAt.Format("2006-01-02T15:04:05Z07:00"),
+			a.StartedAt.Format("2006-01-02T15:04:05Z07:00"))
+	}
+	return nil
+}
+
+func validateCompleteness(c *Completeness) error {
+	if c == nil {
+		return nil
+	}
+	expected := make(map[string]bool, len(c.ExpectedObservations))
+	for _, k := range c.ExpectedObservations {
+		expected[k] = true
+	}
+	for _, k := range c.MissingObservations {
+		if !expected[k] {
+			return fmt.Errorf("completeness: missing_observations contains %q which is not in expected_observations", k)
+		}
+	}
+	return nil
 }
 
 func validateHealHintAbsence(a AggregateSignal) error {

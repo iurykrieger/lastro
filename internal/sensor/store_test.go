@@ -38,3 +38,54 @@ func TestNewStore_EmptyInput(t *testing.T) {
 		t.Fatal("NewStore() returned nil store with nil error")
 	}
 }
+
+func TestStore_LookupSensor(t *testing.T) {
+	a := Sensor{ID: "a-sensor", UseCaseID: "uc-1"}
+	store, _ := NewStore(a)
+	got, ok := store.LookupSensor("a-sensor")
+	if !ok {
+		t.Fatal("LookupSensor(a-sensor): ok=false, want true")
+	}
+	if got.ID != "a-sensor" {
+		t.Errorf("LookupSensor(a-sensor).ID = %q, want %q", got.ID, "a-sensor")
+	}
+	_, ok = store.LookupSensor("unknown")
+	if ok {
+		t.Error("LookupSensor(unknown): ok=true, want false")
+	}
+}
+
+func TestStore_ForUseCase_SortedByID(t *testing.T) {
+	// Insert in non-sorted order to verify the store sorts.
+	c := Sensor{ID: "c-sensor", UseCaseID: "uc-1"}
+	a := Sensor{ID: "a-sensor", UseCaseID: "uc-1"}
+	b := Sensor{ID: "b-sensor", UseCaseID: "uc-2"}
+	store, _ := NewStore(c, a, b)
+	got := store.ForUseCase("uc-1")
+	if len(got) != 2 {
+		t.Fatalf("ForUseCase(uc-1) returned %d, want 2", len(got))
+	}
+	if got[0].ID != "a-sensor" || got[1].ID != "c-sensor" {
+		t.Errorf("ForUseCase(uc-1) not sorted; got %v", []string{got[0].ID, got[1].ID})
+	}
+	if empty := store.ForUseCase("unknown"); len(empty) != 0 {
+		t.Errorf("ForUseCase(unknown): got %d, want 0", len(empty))
+	}
+}
+
+func TestStore_All_SortedByID(t *testing.T) {
+	c := Sensor{ID: "c-sensor", UseCaseID: "uc-1"}
+	a := Sensor{ID: "a-sensor", UseCaseID: "uc-2"}
+	b := Sensor{ID: "b-sensor", UseCaseID: "uc-1"}
+	store, _ := NewStore(c, a, b)
+	got := store.All()
+	want := []string{"a-sensor", "b-sensor", "c-sensor"}
+	if len(got) != len(want) {
+		t.Fatalf("All() length: got %d, want %d", len(got), len(want))
+	}
+	for i, w := range want {
+		if got[i].ID != w {
+			t.Errorf("All()[%d].ID = %q, want %q", i, got[i].ID, w)
+		}
+	}
+}

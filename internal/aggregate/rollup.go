@@ -27,6 +27,7 @@ func Rollup(in RollupInput) (AggregateSignal, error) {
 	}
 	a.Verdict = computeVerdict(in, a)
 	a.Confidence = computeConfidence(in.Signals, a.Verdict)
+	a.HealHint = synthesizeHealHint(in, a)
 
 	if err := Validate(a); err != nil {
 		return AggregateSignal{}, fmt.Errorf("rollup output failed validation: %w", err)

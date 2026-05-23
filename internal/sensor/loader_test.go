@@ -1,6 +1,7 @@
 package sensor
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -76,5 +77,42 @@ func TestLoadSensor_SchemaRejected(t *testing.T) {
 				t.Errorf("error did not mention %q; got: %v", tc.wantSubstr, err)
 			}
 		})
+	}
+}
+
+func TestLoadSensor_AllGoldenExamples(t *testing.T) {
+	dir := filepath.Join("..", "..", "schemas", "examples", "sensor")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("read examples dir: %v", err)
+	}
+	var loaded int
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if !strings.HasSuffix(name, ".yaml") && !strings.HasSuffix(name, ".yml") {
+			continue
+		}
+		t.Run(name, func(t *testing.T) {
+			s, err := LoadSensor(filepath.Join(dir, name))
+			if err != nil {
+				t.Fatalf("LoadSensor(%s): %v", name, err)
+			}
+			if s.ID == "" {
+				t.Errorf("loaded sensor has empty ID")
+			}
+			if s.UseCaseID == "" {
+				t.Errorf("loaded sensor has empty UseCaseID")
+			}
+			if len(s.Steps) == 0 {
+				t.Errorf("loaded sensor has no steps")
+			}
+		})
+		loaded++
+	}
+	if loaded < 6 {
+		t.Errorf("expected at least 6 sensor example files, found %d — schemas/examples/sensor/ may have shrunk", loaded)
 	}
 }

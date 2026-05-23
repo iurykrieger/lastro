@@ -1,6 +1,7 @@
 package signal
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -210,5 +211,85 @@ func TestParseSignals_TypedDecodeInvalidMidStream(t *testing.T) {
 	}
 	if ys[2].err != nil {
 		t.Errorf("ys[2] should be clean, got: %v", ys[2].err)
+	}
+}
+
+func TestParseSignals_EmptyStream(t *testing.T) {
+	f := openTestdata(t, "empty.jsonl")
+	sigs, errs := collectSignals(ParseSignals(f))
+	if len(sigs) != 0 {
+		t.Errorf("expected 0 signals from empty stream, got %d", len(sigs))
+	}
+	if len(errs) != 0 {
+		t.Errorf("expected 0 errors from empty stream, got %d: %v", len(errs), errs)
+	}
+}
+
+func TestParseSignals_BlankLines(t *testing.T) {
+	f := openTestdata(t, "blank-lines.jsonl")
+	sigs, errs := collectSignals(ParseSignals(f))
+	if len(errs) != 0 {
+		t.Fatalf("blank lines should be skipped silently, got errors: %v", errs)
+	}
+	if len(sigs) != 2 {
+		t.Errorf("expected 2 signals (blank lines skipped), got %d", len(sigs))
+	}
+}
+
+func TestParseSignals_BigEvidence(t *testing.T) {
+	// Build one signal with an ~900 KiB evidence.actual string, inline.
+	// This stays under the 1 MiB max-token-size; the parser should
+	// consume it cleanly in one yield.
+	const big = 900 * 1024
+	pad := bytes.Repeat([]byte{'x'}, big)
+	line := []byte(`{"schema_version":"1.0.0","sensor_id":"big-evidence-sensor","use_case_id":"create-order-use-case","angle":"logs","emitted_at":"2026-05-22T10:18:00Z","verdict":"pass","confidence":1.0,"evidence":{"expected":"short","actual":"`)
+	line = append(line, pad...)
+	line = append(line, []byte(`"}}`)...)
+	line = append(line, '\n')
+
+	sigs, errs := collectSignals(ParseSignals(bytes.NewReader(line)))
+	if len(errs) != 0 {
+		t.Fatalf("big evidence under 1 MiB should parse cleanly, got errors: %v", errs)
+	}
+	if len(sigs) != 1 {
+		t.Fatalf("expected 1 signal, got %d", len(sigs))
+	}
+	actual, ok := sigs[0].Evidence.Actual()
+	if !ok {
+		t.Fatal("evidence.actual missing")
+	}
+	s, _ := actual.(string)
+	if len(s) != big {
+		t.Errorf("evidence.actual length = %d, want %d", len(s), big)
+	}
+}
+
+func TestParseSignals_LineExceedsCap(t *testing.T) {
+	// 2 MiB line — exceeds the 1 MiB cap. bufio.Scanner should emit
+	// bufio.ErrTooLong; the parser wraps it as a single reader-level
+	// error yield, then terminates.
+	const huge = 2 * 1024 * 1024
+	pad := bytes.Repeat([]byte{'x'}, huge)
+	line := append([]byte(`{"x":"`), pad...)
+	line = append(line, []byte(`"}`)...)
+	line = append(line, '\n')
+
+	type yielded struct {
+		sig Signal
+		err error
+	}
+	var ys []yielded
+	for sig, err := range ParseSignals(bytes.NewReader(line)) {
+		ys = append(ys, yielded{sig, err})
+	}
+
+	if len(ys) != 1 {
+		t.Fatalf("expected exactly 1 yield (the scan error), got %d", len(ys))
+	}
+	if ys[0].err == nil {
+		t.Fatal("expected scan error, got nil")
+	}
+	if !strings.Contains(ys[0].err.Error(), "scan") {
+		t.Errorf("expected error to mention 'scan', got: %v", ys[0].err)
 	}
 }

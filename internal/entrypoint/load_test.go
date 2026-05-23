@@ -3,6 +3,7 @@ package entrypoint
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/enums"
@@ -75,6 +76,36 @@ func TestLoadFromExample_AllArchetypes(t *testing.T) {
 				if got, ok := ep.Spec[k]; !ok || got != want {
 					t.Errorf("Spec[%q] = (%v, %v), want (%v, true)", k, got, ok, want)
 				}
+			}
+		})
+	}
+}
+
+func TestLoadEntryPoint_RejectsInvalidFixtures(t *testing.T) {
+	cases := []struct {
+		name       string
+		file       string
+		expectSubs string // case-insensitive substring expected in the error
+	}{
+		{"missing id", "testdata/missing-id.yaml", "id"},
+		{"unknown archetype", "testdata/unknown-archetype.yaml", "archetype"},
+		{"http-api missing method", "testdata/http-api-missing-method.yaml", "method"},
+		{"event-consumer bad channel_kind", "testdata/event-consumer-bad-channel-kind.yaml", "channel_kind"},
+		{"worker bad trigger_kind", "testdata/worker-bad-trigger-kind.yaml", "trigger_kind"},
+		{"cli extra spec field", "testdata/extra-spec-field.yaml", "additional"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			raw, err := os.ReadFile(tc.file)
+			if err != nil {
+				t.Fatalf("read %s: %v", tc.file, err)
+			}
+			_, err = LoadEntryPoint(raw)
+			if err == nil {
+				t.Fatalf("expected error, got nil")
+			}
+			if !strings.Contains(strings.ToLower(err.Error()), strings.ToLower(tc.expectSubs)) {
+				t.Errorf("error %q missing expected substring %q", err.Error(), tc.expectSubs)
 			}
 		})
 	}

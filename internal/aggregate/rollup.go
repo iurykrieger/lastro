@@ -34,10 +34,42 @@ func Rollup(in RollupInput) (AggregateSignal, error) {
 	return a, nil
 }
 
-// computeVerdict is a placeholder until Task 17/18/19. It picks pass for
-// now so we can land tests incrementally.
 func computeVerdict(in RollupInput, a AggregateSignal) enums.Verdict {
-	return enums.VerdictPass
+	// Rule 1: observational + missing observations → fail (overrides all).
+	if a.Completeness != nil && len(a.Completeness.MissingObservations) > 0 {
+		return enums.VerdictFail
+	}
+
+	// Rule 4: single-shot → mirror the sole signal's verdict (clean term).
+	if in.OutputType == enums.OutputSingleShot && len(in.Signals) == 1 {
+		return in.Signals[0].Verdict
+	}
+
+	// Rule 5: severity ordering (clean termination).
+	// fail > warn > inconclusive > pass.
+	return severityVerdict(in.Signals)
+}
+
+func severityVerdict(signals []signalstub.Signal) enums.Verdict {
+	var hasWarn, hasInconclusive bool
+	for _, s := range signals {
+		switch s.Verdict {
+		case enums.VerdictFail:
+			return enums.VerdictFail
+		case enums.VerdictWarn:
+			hasWarn = true
+		case enums.VerdictInconclusive:
+			hasInconclusive = true
+		}
+	}
+	switch {
+	case hasWarn:
+		return enums.VerdictWarn
+	case hasInconclusive:
+		return enums.VerdictInconclusive
+	default:
+		return enums.VerdictPass
+	}
 }
 
 func computeConfidence(signals []signalstub.Signal, v enums.Verdict) float64 {

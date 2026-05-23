@@ -2,11 +2,13 @@ package signal
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/iurykrieger/lastro/internal/enums"
 )
@@ -294,5 +296,105 @@ func TestParseSignals_LineExceedsCap(t *testing.T) {
 	}
 	if !reflect.DeepEqual(ys[0].sig, Signal{}) {
 		t.Errorf("expected zero Signal on scan error, got %+v", ys[0].sig)
+	}
+}
+
+func TestParseSignals_StreamingBehavior(t *testing.T) {
+	// Verify the parser yields per-line as bytes arrive — it does not
+	// buffer the whole stream before yielding the first signal.
+	// Strategy: io.Pipe with a writer that sleeps between two writes;
+	// assert the second yield arrives meaningfully after the first.
+	pr, pw := io.Pipe()
+	t.Cleanup(func() { _ = pr.Close() })
+
+	line1 := []byte(`{"schema_version":"1.0.0","sensor_id":"build-create-order-sensor","use_case_id":"create-order-use-case","angle":"build","emitted_at":"2026-05-22T10:15:00Z","verdict":"pass","confidence":1.0,"evidence":{"expected":"a","actual":"a"}}` + "\n")
+	line2 := []byte(`{"schema_version":"1.0.0","sensor_id":"build-create-order-sensor","use_case_id":"create-order-use-case","angle":"build","emitted_at":"2026-05-22T10:16:00Z","verdict":"pass","confidence":1.0,"evidence":{"expected":"b","actual":"b"}}` + "\n")
+
+	const gap = 50 * time.Millisecond
+
+	go func() {
+		defer pw.Close()
+		_, _ = pw.Write(line1)
+		time.Sleep(gap)
+		_, _ = pw.Write(line2)
+	}()
+
+	type stamped struct {
+		sig Signal
+		err error
+		at  time.Time
+	}
+	var ys []stamped
+	for sig, err := range ParseSignals(pr) {
+		ys = append(ys, stamped{sig, err, time.Now()})
+	}
+
+	if len(ys) != 2 {
+		t.Fatalf("expected 2 yields, got %d", len(ys))
+	}
+	if ys[0].err != nil || ys[1].err != nil {
+		t.Fatalf("unexpected errors: %v, %v", ys[0].err, ys[1].err)
+	}
+	observed := ys[1].at.Sub(ys[0].at)
+	// Use a margin smaller than the gap to keep the test robust against
+	// scheduler jitter; if the parser buffers the whole stream, this
+	// gap collapses to ~0.
+	if observed < gap/2 {
+		t.Errorf("second yield arrived too quickly (gap=%v, observed=%v); parser may be buffering", gap, observed)
+	}
+}
+
+func TestParseSignals_EarlyCallerStop(t *testing.T) {
+	// Iterate mixed.jsonl, break after the first signal. Assert exactly
+	// one signal is observed — iteration honored the early stop.
+	f := openTestdata(t, "mixed.jsonl")
+
+	var got []Signal
+	for sig, err := range ParseSignals(f) {
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		got = append(got, sig)
+		break
+	}
+
+	if len(got) != 1 {
+		t.Fatalf("expected exactly 1 signal (caller stopped), got %d", len(got))
+	}
+}
+
+func TestParseSignals_IOError(t *testing.T) {
+	// io.Pipe + CloseWithError surfaces as a reader-level error.
+	// The parser yields one (Signal{}, error) and terminates.
+	pr, pw := io.Pipe()
+	t.Cleanup(func() { _ = pr.Close() })
+
+	line := []byte(`{"schema_version":"1.0.0","sensor_id":"build-create-order-sensor","use_case_id":"create-order-use-case","angle":"build","emitted_at":"2026-05-22T10:15:00Z","verdict":"pass","confidence":1.0,"evidence":{"expected":"a","actual":"a"}}` + "\n")
+
+	go func() {
+		_, _ = pw.Write(line)
+		_ = pw.CloseWithError(io.ErrUnexpectedEOF)
+	}()
+
+	type stamped struct {
+		sig Signal
+		err error
+	}
+	var ys []stamped
+	for sig, err := range ParseSignals(pr) {
+		ys = append(ys, stamped{sig, err})
+	}
+
+	if len(ys) != 2 {
+		t.Fatalf("expected 2 yields (one signal, one error), got %d", len(ys))
+	}
+	if ys[0].err != nil {
+		t.Errorf("first yield should be a clean signal, got err: %v", ys[0].err)
+	}
+	if ys[1].err == nil {
+		t.Fatal("second yield should be the I/O error, got nil")
+	}
+	if !strings.Contains(ys[1].err.Error(), "scan") {
+		t.Errorf("error should mention 'scan' wrapping, got: %v", ys[1].err)
 	}
 }

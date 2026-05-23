@@ -18,6 +18,9 @@ func validateIntrinsic(s Sensor) error {
 	if err := checkUniqueTopLevelUses(s); err != nil {
 		errs = append(errs, err)
 	}
+	if err := checkUniqueStepUses(s); err != nil {
+		errs = append(errs, err)
+	}
 	if len(errs) == 0 {
 		return nil
 	}
@@ -54,4 +57,26 @@ func checkUniqueTopLevelUses(s Sensor) error {
 		return nil
 	}
 	return fmt.Errorf("duplicate uses id(s): %v", dups)
+}
+
+func checkUniqueStepUses(s Sensor) error {
+	var errs []error
+	for _, st := range s.Steps {
+		seen := make(map[string]bool, len(st.Uses))
+		var dups []string
+		for _, id := range st.Uses {
+			if seen[id] {
+				dups = append(dups, id)
+				continue
+			}
+			seen[id] = true
+		}
+		if len(dups) > 0 {
+			errs = append(errs, fmt.Errorf("step %q: duplicate uses id(s): %v", st.ID, dups))
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return errors.Join(errs...)
 }

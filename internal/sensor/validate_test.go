@@ -47,6 +47,23 @@ func TestLoadSensor_DuplicateTopLevelUses(t *testing.T) {
 	}
 }
 
+func TestLoadSensor_DuplicateStepUses(t *testing.T) {
+	path := filepath.Join("testdata", "invalid", "duplicate-step-uses.yaml")
+	_, err := LoadSensor(path)
+	if err == nil {
+		t.Fatal("expected error for duplicate step-level uses, got nil")
+	}
+	if !errorsJoinContains(err, "duplicate uses id") {
+		t.Errorf("error did not mention duplicate uses id; got: %v", err)
+	}
+	if !errorsJoinContains(err, "probe") {
+		t.Errorf("error did not name the offending step 'probe'; got: %v", err)
+	}
+	if !errorsJoinContains(err, "order-input-fixture") {
+		t.Errorf("error did not name the duplicated fixture id; got: %v", err)
+	}
+}
+
 // errorsJoinContains walks errors.Join trees, returning true if any
 // wrapped error's message contains substr. Used so tests can assert
 // on a single rule's message inside a joined multi-rule error.

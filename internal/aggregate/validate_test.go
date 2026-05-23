@@ -77,3 +77,27 @@ func TestParseRejectsBadArithmetic(t *testing.T) {
 		t.Errorf("error should mention 'rollup' and 'sum': %v", err)
 	}
 }
+
+func TestParseRejectsPassWithHealHint(t *testing.T) {
+	// Inject a heal_hint into a pass-verdict aggregate. We do this by
+	// replacing the closing brace of the rollup block with rollup-close +
+	// a sibling heal_hint key.
+	bad := strings.Replace(
+		happyPathJSON,
+		`"inconclusive_count": 0
+  }
+}`,
+		`"inconclusive_count": 0
+  },
+  "heal_hint": {"summary": "x", "rationale": "y"}
+}`,
+		1,
+	)
+	_, err := ParseAggregate(strings.NewReader(bad))
+	if err == nil {
+		t.Fatal("expected error for pass with heal_hint, got nil")
+	}
+	if !strings.Contains(err.Error(), "heal_hint") {
+		t.Errorf("error should mention 'heal_hint': %v", err)
+	}
+}

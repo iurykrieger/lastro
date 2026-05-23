@@ -21,6 +21,9 @@ func validateIntrinsic(s Sensor) error {
 	if err := checkUniqueStepUses(s); err != nil {
 		errs = append(errs, err)
 	}
+	if err := checkNoSelfDependency(s); err != nil {
+		errs = append(errs, err)
+	}
 	if len(errs) == 0 {
 		return nil
 	}
@@ -79,4 +82,13 @@ func checkUniqueStepUses(s Sensor) error {
 		return nil
 	}
 	return errors.Join(errs...)
+}
+
+func checkNoSelfDependency(s Sensor) error {
+	for _, dep := range s.DependsOn {
+		if dep == s.ID {
+			return fmt.Errorf("depends_on contains own id (self-dependency): %q", s.ID)
+		}
+	}
+	return nil
 }

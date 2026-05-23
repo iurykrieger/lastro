@@ -64,6 +64,33 @@ func TestLoadSensor_DuplicateStepUses(t *testing.T) {
 	}
 }
 
+func TestLoadSensor_SelfDependency(t *testing.T) {
+	path := filepath.Join("testdata", "invalid", "self-dep.yaml")
+	_, err := LoadSensor(path)
+	if err == nil {
+		t.Fatal("expected error for self-dependency, got nil")
+	}
+	if !errorsJoinContains(err, "self-dependency") {
+		t.Errorf("error did not mention self-dependency; got: %v", err)
+	}
+}
+
+func TestLoadSensor_MultiViolation(t *testing.T) {
+	// File contains duplicate step ids AND self-dependency AND
+	// duplicate top-level uses — three rules fire, joined error
+	// must mention all three.
+	path := filepath.Join("testdata", "invalid", "multi-violation.yaml")
+	_, err := LoadSensor(path)
+	if err == nil {
+		t.Fatal("expected error for multi-violation file, got nil")
+	}
+	for _, want := range []string{"duplicate step id", "duplicate uses id", "self-dependency"} {
+		if !errorsJoinContains(err, want) {
+			t.Errorf("joined error missing %q; got: %v", want, err)
+		}
+	}
+}
+
 // errorsJoinContains walks errors.Join trees, returning true if any
 // wrapped error's message contains substr. Used so tests can assert
 // on a single rule's message inside a joined multi-rule error.

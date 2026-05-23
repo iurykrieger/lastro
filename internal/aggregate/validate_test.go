@@ -65,3 +65,15 @@ func TestParseRejectsWarnWithoutHealHint(t *testing.T) {
 		t.Fatal("expected error for warn without heal_hint, got nil")
 	}
 }
+
+func TestParseRejectsBadArithmetic(t *testing.T) {
+	// Replace pass_count: 1 with pass_count: 2 so the sum no longer equals total_signals: 1.
+	bad := strings.Replace(happyPathJSON, `"pass_count": 1`, `"pass_count": 2`, 1)
+	_, err := ParseAggregate(strings.NewReader(bad))
+	if err == nil {
+		t.Fatal("expected error for pass+warn+fail+inconclusive != total_signals, got nil")
+	}
+	if !strings.Contains(err.Error(), "rollup") || !strings.Contains(err.Error(), "sum") {
+		t.Errorf("error should mention 'rollup' and 'sum': %v", err)
+	}
+}

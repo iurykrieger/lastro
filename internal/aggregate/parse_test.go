@@ -71,3 +71,31 @@ func TestParseAggregateRoundTrip(t *testing.T) {
 		t.Errorf("round-trip mismatch:\n  first:  %+v\n  second: %+v", parsed, reparsed)
 	}
 }
+
+func TestParseAggregateRejectsWrongType(t *testing.T) {
+	bad := strings.Replace(happyPathJSON, `"type": "aggregate"`, `"type": "signal"`, 1)
+	_, err := ParseAggregate(strings.NewReader(bad))
+	if err == nil {
+		t.Fatal("expected error for wrong type discriminator, got nil")
+	}
+	if !strings.Contains(err.Error(), "type") {
+		t.Errorf("error should mention 'type': %v", err)
+	}
+}
+
+func TestParseAggregateRejectsMalformedJSON(t *testing.T) {
+	_, err := ParseAggregate(strings.NewReader(`{not json}`))
+	if err == nil {
+		t.Fatal("expected error for malformed JSON, got nil")
+	}
+	if !strings.Contains(err.Error(), "decode JSON") {
+		t.Errorf("error should mention 'decode JSON': %v", err)
+	}
+}
+
+func TestParseAggregateRejectsEmptyInput(t *testing.T) {
+	_, err := ParseAggregate(strings.NewReader(""))
+	if err == nil {
+		t.Fatal("expected error for empty input, got nil")
+	}
+}

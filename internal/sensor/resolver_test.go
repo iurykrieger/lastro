@@ -177,3 +177,75 @@ func TestResolveExecutionOrder_FiveNodeGraph(t *testing.T) {
 		}
 	}
 }
+
+func TestResolveExecutionOrder_TwoNodeCycle_TypedError(t *testing.T) {
+	// A ← B ← A : a cycle.
+	sensors := []Sensor{
+		{ID: "a", DependsOn: []string{"b"}},
+		{ID: "b", DependsOn: []string{"a"}},
+	}
+	_, err := ResolveExecutionOrder(sensors)
+	if err == nil {
+		t.Fatal("expected *ErrCycle, got nil")
+	}
+	var cyc *ErrCycle
+	if !errors.As(err, &cyc) {
+		t.Fatalf("expected *ErrCycle; got %T: %v", err, err)
+	}
+	if got := sortedSlice(cyc.InvolvedIDs); !equalStringSlices(got, []string{"a", "b"}) {
+		t.Errorf("InvolvedIDs: got %v, want [a b]", got)
+	}
+}
+
+func TestResolveExecutionOrder_ThreeNodeCycle_PlusInnocentBystander(t *testing.T) {
+	// Innocent bystander x has no edges. A -> B -> C -> A cycle.
+	// The cycle's involved ids are exactly {a, b, c}.
+	sensors := []Sensor{
+		{ID: "x"},
+		{ID: "a", DependsOn: []string{"c"}},
+		{ID: "b", DependsOn: []string{"a"}},
+		{ID: "c", DependsOn: []string{"b"}},
+	}
+	_, err := ResolveExecutionOrder(sensors)
+	if err == nil {
+		t.Fatal("expected *ErrCycle, got nil")
+	}
+	var cyc *ErrCycle
+	if !errors.As(err, &cyc) {
+		t.Fatalf("expected *ErrCycle; got %T: %v", err, err)
+	}
+	if got := sortedSlice(cyc.InvolvedIDs); !equalStringSlices(got, []string{"a", "b", "c"}) {
+		t.Errorf("InvolvedIDs: got %v, want [a b c]", got)
+	}
+	if containsString(cyc.InvolvedIDs, "x") {
+		t.Errorf("InvolvedIDs wrongly accuses innocent bystander 'x'; got %v", cyc.InvolvedIDs)
+	}
+}
+
+func sortedSlice(in []string) []string {
+	out := make([]string, len(in))
+	copy(out, in)
+	sort.Strings(out)
+	return out
+}
+
+func equalStringSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func containsString(haystack []string, needle string) bool {
+	for _, s := range haystack {
+		if s == needle {
+			return true
+		}
+	}
+	return false
+}

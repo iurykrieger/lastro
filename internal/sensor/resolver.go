@@ -21,6 +21,19 @@ func (e *ErrMissingDependency) Error() string {
 		e.Sensor, strings.Join(e.MissingIDs, ", "))
 }
 
+// ErrCycle is returned when DependsOn edges among the input sensors
+// form a cycle. InvolvedIDs lists every sensor still with non-zero
+// in-degree after Kahn's terminates — exactly the members of the
+// cycle's strongly-connected component(s).
+type ErrCycle struct {
+	InvolvedIDs []string
+}
+
+func (e *ErrCycle) Error() string {
+	return fmt.Sprintf("resolver: cycle involving sensor(s): %s",
+		strings.Join(e.InvolvedIDs, ", "))
+}
+
 // ResolveExecutionOrder returns sensors in a deterministic topological
 // order honoring DependsOn edges. Empty input returns an empty slice.
 // Unknown DependsOn ids yield *ErrMissingDependency; the next task
@@ -93,10 +106,14 @@ func ResolveExecutionOrder(sensors []Sensor) ([]Sensor, error) {
 	}
 
 	if len(result) != len(sensors) {
-		// Every sensor still with non-zero in-degree is in a cycle.
-		// Cycle reporting lands in Task 19; for now, return a placeholder
-		// error so the partial-implementation guard surfaces.
-		return nil, fmt.Errorf("resolver: cycle detected (typed error in next task)")
+		var stuck []string
+		for id, d := range inDegree {
+			if d > 0 {
+				stuck = append(stuck, id)
+			}
+		}
+		sort.Strings(stuck)
+		return nil, &ErrCycle{InvolvedIDs: stuck}
 	}
 	return result, nil
 }

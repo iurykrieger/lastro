@@ -376,13 +376,13 @@ func TestParseSignals_IOError(t *testing.T) {
 		_ = pw.CloseWithError(io.ErrUnexpectedEOF)
 	}()
 
-	type stamped struct {
+	type yielded struct {
 		sig Signal
 		err error
 	}
-	var ys []stamped
+	var ys []yielded
 	for sig, err := range ParseSignals(pr) {
-		ys = append(ys, stamped{sig, err})
+		ys = append(ys, yielded{sig, err})
 	}
 
 	if len(ys) != 2 {
@@ -396,5 +396,8 @@ func TestParseSignals_IOError(t *testing.T) {
 	}
 	if !strings.Contains(ys[1].err.Error(), "scan") {
 		t.Errorf("error should mention 'scan' wrapping, got: %v", ys[1].err)
+	}
+	if !reflect.DeepEqual(ys[1].sig, Signal{}) {
+		t.Errorf("expected zero Signal on I/O error, got %+v", ys[1].sig)
 	}
 }

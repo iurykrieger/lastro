@@ -32,6 +32,10 @@ func LoadSensor(path string) (Sensor, error) {
 		return Sensor{}, fmt.Errorf("sensor %s: deserialize: %w", path, err)
 	}
 
+	if err := validateIntrinsic(s); err != nil {
+		return Sensor{}, fmt.Errorf("sensor %s: intrinsic validation: %w", path, err)
+	}
+
 	return s, nil
 }
 

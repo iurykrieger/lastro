@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "type": "aggregate",
+  "sensor_id": "sensor-x",
+  "use_case_id": "uc-x",
+  "angle": "build",
+  "started_at": "2026-05-23T14:00:00Z",
+  "ended_at":   "2026-05-23T14:00:05Z",
+  "termination_reason": "completed",
+  "verdict": "fail",
+  "confidence": 1.0,
+  "rollup": {"total_signals": 1, "pass_count": 0, "warn_count": 0, "fail_count": 1, "inconclusive_count": 0},
+  "heal_hint": {"summary": "build failed", "rationale": "compiler error"}
+}

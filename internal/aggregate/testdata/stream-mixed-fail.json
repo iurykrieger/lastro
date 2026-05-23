@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "type": "aggregate",
+  "sensor_id": "sensor-x",
+  "use_case_id": "uc-x",
+  "angle": "unit-test",
+  "started_at": "2026-05-23T14:00:00Z",
+  "ended_at":   "2026-05-23T14:00:42Z",
+  "termination_reason": "completed",
+  "verdict": "fail",
+  "confidence": 0.9,
+  "rollup": {"total_signals": 700, "pass_count": 628, "warn_count": 2, "fail_count": 70, "inconclusive_count": 0},
+  "heal_hint": {"summary": "70 of 700 unit-test signals failed", "rationale": "see individual non-pass signals for per-record detail", "suggested_locus": [{"path": "src/x.go", "symbol": "F"}]}
+}

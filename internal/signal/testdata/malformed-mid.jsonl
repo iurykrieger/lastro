@@ -1,0 +1,3 @@
+{"schema_version":"1.0.0","sensor_id":"build-create-order-sensor","use_case_id":"create-order-use-case","angle":"build","emitted_at":"2026-05-22T10:15:00Z","verdict":"pass","confidence":1.0,"evidence":{"expected":"tsc exits 0","actual":"tsc exited 0"}}
+{this is not json
+{"schema_version":"1.0.0","sensor_id":"code-structure-create-order-sensor","use_case_id":"create-order-use-case","angle":"code-structure","emitted_at":"2026-05-22T10:17:15Z","verdict":"inconclusive","confidence":0.55,"evidence":{"expected":"Handler delegates to a service layer","actual":"Handler is mixed with business logic; LLM judgment uncertain"}}

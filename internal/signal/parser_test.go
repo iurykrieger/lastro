@@ -3,6 +3,7 @@ package signal
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/enums"
@@ -93,5 +94,114 @@ func TestParseSignals_MixedStream(t *testing.T) {
 	}
 	if got, want := sigs[2].Confidence, 0.55; got != want {
 		t.Errorf("sigs[2].Confidence = %v, want %v", got, want)
+	}
+}
+
+func TestParseSignals_MalformedMidStream(t *testing.T) {
+	f := openTestdata(t, "malformed-mid.jsonl")
+
+	type yielded struct {
+		sig Signal
+		err error
+	}
+	var ys []yielded
+	for sig, err := range ParseSignals(f) {
+		ys = append(ys, yielded{sig, err})
+	}
+
+	if len(ys) != 3 {
+		t.Fatalf("expected 3 yields, got %d: %+v", len(ys), ys)
+	}
+	if ys[0].err != nil {
+		t.Errorf("ys[0] should be a clean parse, got err: %v", ys[0].err)
+	}
+	if ys[1].err == nil {
+		t.Fatal("ys[1] should be an error yield, got err=nil")
+	}
+	if !strings.Contains(ys[1].err.Error(), "decode line") {
+		t.Errorf("ys[1].err should mention 'decode line', got: %v", ys[1].err)
+	}
+	if ys[1].sig.SensorID != "" || ys[1].sig.UseCaseID != "" || ys[1].sig.Evidence != nil {
+		t.Errorf("ys[1].sig should be the zero Signal, got %+v", ys[1].sig)
+	}
+	if ys[2].err != nil {
+		t.Errorf("ys[2] should be a clean parse, got err: %v", ys[2].err)
+	}
+}
+
+func TestParseSignals_SchemaInvalidMidStream(t *testing.T) {
+	// Three lines:
+	//   1. valid signal
+	//   2. valid JSON, but verdict=fail with no heal_hint (schema rule violation)
+	//   3. valid signal
+	stream := `{"schema_version":"1.0.0","sensor_id":"build-create-order-sensor","use_case_id":"create-order-use-case","angle":"build","emitted_at":"2026-05-22T10:15:00Z","verdict":"pass","confidence":1.0,"evidence":{"expected":"tsc exits 0","actual":"tsc exited 0"}}
+{"schema_version":"1.0.0","sensor_id":"bad-sensor","use_case_id":"create-order-use-case","angle":"unit-test","emitted_at":"2026-05-22T10:16:00Z","verdict":"fail","confidence":1.0,"evidence":{"expected":"x","actual":"y"}}
+{"schema_version":"1.0.0","sensor_id":"code-structure-create-order-sensor","use_case_id":"create-order-use-case","angle":"code-structure","emitted_at":"2026-05-22T10:17:15Z","verdict":"inconclusive","confidence":0.55,"evidence":{"expected":"Handler delegates to a service layer","actual":"Handler is mixed with business logic; LLM judgment uncertain"}}
+`
+
+	type yielded struct {
+		sig Signal
+		err error
+	}
+	var ys []yielded
+	for sig, err := range ParseSignals(strings.NewReader(stream)) {
+		ys = append(ys, yielded{sig, err})
+	}
+
+	if len(ys) != 3 {
+		t.Fatalf("expected 3 yields, got %d", len(ys))
+	}
+	if ys[0].err != nil {
+		t.Errorf("ys[0] should be clean, got: %v", ys[0].err)
+	}
+	if ys[1].err == nil {
+		t.Fatal("ys[1] should be schema error, got nil")
+	}
+	if !strings.Contains(ys[1].err.Error(), "schema") {
+		t.Errorf("ys[1].err should mention 'schema', got: %v", ys[1].err)
+	}
+	if !strings.Contains(ys[1].err.Error(), "heal_hint") {
+		t.Errorf("ys[1].err should mention 'heal_hint' (the missing field), got: %v", ys[1].err)
+	}
+	if ys[2].err != nil {
+		t.Errorf("ys[2] should be clean, got: %v", ys[2].err)
+	}
+}
+
+func TestParseSignals_TypedDecodeInvalidMidStream(t *testing.T) {
+	// Three lines:
+	//   1. valid signal
+	//   2. valid JSON, passes schema (string emitted_at), but bad timestamp shape
+	//      (jsonschema/v6 treats format:date-time as advisory, but
+	//       time.Time.UnmarshalJSON rejects "not-a-timestamp")
+	//   3. valid signal
+	stream := `{"schema_version":"1.0.0","sensor_id":"build-create-order-sensor","use_case_id":"create-order-use-case","angle":"build","emitted_at":"2026-05-22T10:15:00Z","verdict":"pass","confidence":1.0,"evidence":{"expected":"tsc exits 0","actual":"tsc exited 0"}}
+{"schema_version":"1.0.0","sensor_id":"build-create-order-sensor","use_case_id":"create-order-use-case","angle":"build","emitted_at":"not-a-timestamp","verdict":"pass","confidence":1.0,"evidence":{"expected":"x","actual":"y"}}
+{"schema_version":"1.0.0","sensor_id":"code-structure-create-order-sensor","use_case_id":"create-order-use-case","angle":"code-structure","emitted_at":"2026-05-22T10:17:15Z","verdict":"inconclusive","confidence":0.55,"evidence":{"expected":"Handler delegates to a service layer","actual":"Handler is mixed with business logic; LLM judgment uncertain"}}
+`
+
+	type yielded struct {
+		sig Signal
+		err error
+	}
+	var ys []yielded
+	for sig, err := range ParseSignals(strings.NewReader(stream)) {
+		ys = append(ys, yielded{sig, err})
+	}
+
+	if len(ys) != 3 {
+		t.Fatalf("expected 3 yields, got %d", len(ys))
+	}
+	if ys[0].err != nil {
+		t.Errorf("ys[0] should be clean, got: %v", ys[0].err)
+	}
+	if ys[1].err == nil {
+		t.Fatal("ys[1] should be typed-decode error, got nil")
+	}
+	if !strings.Contains(ys[1].err.Error(), "decode typed") {
+		t.Errorf("ys[1].err should mention 'decode typed', got: %v", ys[1].err)
+	}
+	if ys[2].err != nil {
+		t.Errorf("ys[2] should be clean, got: %v", ys[2].err)
 	}
 }

@@ -3,6 +3,7 @@ package signal
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -121,7 +122,7 @@ func TestParseSignals_MalformedMidStream(t *testing.T) {
 	if !strings.Contains(ys[1].err.Error(), "decode line") {
 		t.Errorf("ys[1].err should mention 'decode line', got: %v", ys[1].err)
 	}
-	if ys[1].sig.SensorID != "" || ys[1].sig.UseCaseID != "" || ys[1].sig.Evidence != nil {
+	if !reflect.DeepEqual(ys[1].sig, Signal{}) {
 		t.Errorf("ys[1].sig should be the zero Signal, got %+v", ys[1].sig)
 	}
 	if ys[2].err != nil {
@@ -163,6 +164,9 @@ func TestParseSignals_SchemaInvalidMidStream(t *testing.T) {
 	if !strings.Contains(ys[1].err.Error(), "heal_hint") {
 		t.Errorf("ys[1].err should mention 'heal_hint' (the missing field), got: %v", ys[1].err)
 	}
+	if !reflect.DeepEqual(ys[1].sig, Signal{}) {
+		t.Errorf("ys[1].sig should be the zero Signal on error, got %+v", ys[1].sig)
+	}
 	if ys[2].err != nil {
 		t.Errorf("ys[2] should be clean, got: %v", ys[2].err)
 	}
@@ -200,6 +204,9 @@ func TestParseSignals_TypedDecodeInvalidMidStream(t *testing.T) {
 	}
 	if !strings.Contains(ys[1].err.Error(), "decode typed") {
 		t.Errorf("ys[1].err should mention 'decode typed', got: %v", ys[1].err)
+	}
+	if !reflect.DeepEqual(ys[1].sig, Signal{}) {
+		t.Errorf("ys[1].sig should be the zero Signal on error, got %+v", ys[1].sig)
 	}
 	if ys[2].err != nil {
 		t.Errorf("ys[2] should be clean, got: %v", ys[2].err)

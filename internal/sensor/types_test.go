@@ -42,3 +42,22 @@ func TestStepHoldsIDRunAndUses(t *testing.T) {
 		t.Errorf("Step field round-trip failed: %+v", step)
 	}
 }
+
+// Compile-time interface assertion — proves the seam exists and is
+// stable. Implementing this fake forces breaking changes to the
+// interface to surface as build errors here.
+var _ UseCaseFixtureOwnership = (*compileTimeStubOwnership)(nil)
+
+type compileTimeStubOwnership struct{}
+
+func (*compileTimeStubOwnership) OwnedFixtureIDs(useCaseID string) []string {
+	return nil
+}
+
+func TestOwnedFixtureIDsContractAllowsNilReturn(t *testing.T) {
+	var owner UseCaseFixtureOwnership = &compileTimeStubOwnership{}
+	got := owner.OwnedFixtureIDs("anything")
+	if got != nil {
+		t.Errorf("stub: expected nil, got %v", got)
+	}
+}

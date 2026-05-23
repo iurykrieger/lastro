@@ -32,3 +32,13 @@ type Step struct {
 	Run  string   `json:"run"`
 	Uses []string `json:"uses,omitempty"` // Fixture ids (grounding invariant 2)
 }
+
+// UseCaseFixtureOwnership is the seam between this package and the
+// authoritative source of "which fixtures does use case X own."
+// Production code wires it over *usecase.UseCase.FixtureIDs; the
+// heal loop (which may not have a full UseCase in scope) can wire
+// it over fixture.Store.FixturesForUseCase. A nil return is treated
+// as an empty owned-set by ValidateAgainstFixtures.
+type UseCaseFixtureOwnership interface {
+	OwnedFixtureIDs(useCaseID string) []string
+}

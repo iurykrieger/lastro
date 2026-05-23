@@ -39,18 +39,19 @@ properties:
   verdict:
     type: string
     description: "Canonical source: schemas/enums/verdicts.yaml"
-    enum: [pass, fail, inconclusive]
+    enum: [pass, warn, fail, inconclusive]
   confidence:
     type: number
     minimum: 0
     maximum: 1
   rollup:
     type: object
-    required: [total_signals, pass_count, fail_count, inconclusive_count]
+    required: [total_signals, pass_count, warn_count, fail_count, inconclusive_count]
     additionalProperties: false
     properties:
       total_signals:       { type: integer, minimum: 0 }
       pass_count:          { type: integer, minimum: 0 }
+      warn_count:          { type: integer, minimum: 0 }
       fail_count:          { type: integer, minimum: 0 }
       inconclusive_count:  { type: integer, minimum: 0 }
   completeness:
@@ -69,7 +70,7 @@ properties:
 allOf:
   - if:
       properties:
-        verdict: { const: fail }
+        verdict: { enum: [fail, warn] }
     then:
       required: [heal_hint]
 

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/yaml"
 )
@@ -37,6 +39,54 @@ func LoadSensor(path string) (Sensor, error) {
 	}
 
 	return s, nil
+}
+
+// LoadDirectory loads every *.yaml / *.yml file directly inside the
+// given directory (non-recursive — sensors are flat per the framework's
+// convention) and returns a Store containing them.
+//
+// Per-file load errors abort the walk and bubble up with the offending
+// path. Duplicate-id errors name both source files so authors can
+// locate the collision quickly.
+func LoadDirectory(path string) (*Store, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil, fmt.Errorf("sensor dir %s: read: %w", path, err)
+	}
+
+	type loaded struct {
+		s    Sensor
+		from string
+	}
+	var sensors []loaded
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if !strings.HasSuffix(name, ".yaml") && !strings.HasSuffix(name, ".yml") {
+			continue
+		}
+		full := filepath.Join(path, name)
+		sn, err := LoadSensor(full)
+		if err != nil {
+			return nil, err // already path-decorated by LoadSensor
+		}
+		sensors = append(sensors, loaded{s: sn, from: full})
+	}
+
+	// Build the store. Catch duplicate ids here so the error can name both files.
+	seen := make(map[string]string, len(sensors))
+	bare := make([]Sensor, 0, len(sensors))
+	for _, l := range sensors {
+		if prior, dup := seen[l.s.ID]; dup {
+			return nil, fmt.Errorf("sensor: duplicate id %q in %s and %s", l.s.ID, prior, l.from)
+		}
+		seen[l.s.ID] = l.from
+		bare = append(bare, l.s)
+	}
+
+	return NewStore(bare...)
 }
 
 func validateAgainstSchema(jsonDoc []byte) error {

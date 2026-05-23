@@ -1,6 +1,7 @@
 package sensor
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -87,5 +88,31 @@ func TestStore_All_SortedByID(t *testing.T) {
 		if got[i].ID != w {
 			t.Errorf("All()[%d].ID = %q, want %q", i, got[i].ID, w)
 		}
+	}
+}
+
+func TestLoadDirectory_HappyPath(t *testing.T) {
+	dir := filepath.Join("..", "..", "schemas", "examples", "sensor")
+	store, err := LoadDirectory(dir)
+	if err != nil {
+		t.Fatalf("LoadDirectory: %v", err)
+	}
+	if len(store.All()) < 6 {
+		t.Errorf("LoadDirectory(%s): got %d sensors, want at least 6", dir, len(store.All()))
+	}
+}
+
+func TestLoadDirectory_DuplicateIDAcrossFiles_NamesBothPaths(t *testing.T) {
+	dir := filepath.Join("testdata", "duplicate-id")
+	_, err := LoadDirectory(dir)
+	if err == nil {
+		t.Fatal("expected duplicate-id error, got nil")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "duplicate") {
+		t.Errorf("error did not mention 'duplicate'; got: %v", err)
+	}
+	if !strings.Contains(msg, "a.yaml") || !strings.Contains(msg, "b.yaml") {
+		t.Errorf("error did not name both files a.yaml and b.yaml; got: %v", err)
 	}
 }

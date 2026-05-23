@@ -101,3 +101,39 @@ func TestValidate_FailWithHealHint_OK(t *testing.T) {
 		t.Fatalf("Validate on valid failing signal: %v", err)
 	}
 }
+
+func TestValidate_ConfidenceBelowZero(t *testing.T) {
+	sig := validSignal()
+	sig.Confidence = -0.1
+	err := Validate(sig)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "confidence") {
+		t.Errorf("expected error to mention 'confidence', got: %v", err)
+	}
+}
+
+func TestValidate_BadSchemaVersion(t *testing.T) {
+	sig := validSignal()
+	sig.SchemaVersion = "1.0"
+	err := Validate(sig)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "schema_version") && !strings.Contains(err.Error(), "pattern") {
+		t.Errorf("expected error to mention 'schema_version' or 'pattern', got: %v", err)
+	}
+}
+
+func TestValidate_NilEvidence(t *testing.T) {
+	sig := validSignal()
+	sig.Evidence = nil
+	err := Validate(sig)
+	if err == nil {
+		t.Fatal("expected error for nil Evidence (encodes as JSON null), got nil")
+	}
+	if !strings.Contains(err.Error(), "evidence") {
+		t.Errorf("expected error to mention 'evidence', got: %v", err)
+	}
+}

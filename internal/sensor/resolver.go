@@ -30,9 +30,7 @@ func ResolveExecutionOrder(sensors []Sensor) ([]Sensor, error) {
 		return []Sensor{}, nil
 	}
 
-	// Detect dangling edges up front so callers get a clean error
-	// class even when the dangling reference would otherwise be part
-	// of a would-be cycle.
+	// Dangling-edge pre-check (unchanged).
 	known := make(map[string]bool, len(sensors))
 	for _, s := range sensors {
 		known[s.ID] = true
@@ -50,15 +48,75 @@ func ResolveExecutionOrder(sensors []Sensor) ([]Sensor, error) {
 		}
 	}
 
-	// Trivial case: single sensor, no edges. Kahn's lands in Task 17.
-	if len(sensors) == 1 {
-		return []Sensor{sensors[0]}, nil
+	// Kahn's algorithm with deterministic id-sort tiebreak.
+	byID := make(map[string]Sensor, len(sensors))
+	inDegree := make(map[string]int, len(sensors))
+	adj := make(map[string][]string, len(sensors))
+	for _, s := range sensors {
+		byID[s.ID] = s
+		if _, ok := inDegree[s.ID]; !ok {
+			inDegree[s.ID] = 0
+		}
+	}
+	for _, s := range sensors {
+		for _, dep := range s.DependsOn {
+			adj[dep] = append(adj[dep], s.ID)
+			inDegree[s.ID]++
+		}
 	}
 
-	// Placeholder until Task 17: pass through, sorted by id for
-	// deterministic output. Tests in Task 17 will fail if this is left.
-	out := make([]Sensor, len(sensors))
-	copy(out, sensors)
-	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
-	return out, nil
+	// Initial queue: all zero-in-degree ids, sorted ascending.
+	queue := make([]string, 0)
+	for id, d := range inDegree {
+		if d == 0 {
+			queue = append(queue, id)
+		}
+	}
+	sort.Strings(queue)
+
+	result := make([]Sensor, 0, len(sensors))
+	for len(queue) > 0 {
+		head := queue[0]
+		queue = queue[1:]
+		result = append(result, byID[head])
+		// Decrement dependents; collect newly-zero ids for sorted re-insertion.
+		var ready []string
+		for _, dep := range adj[head] {
+			inDegree[dep]--
+			if inDegree[dep] == 0 {
+				ready = append(ready, dep)
+			}
+		}
+		if len(ready) > 0 {
+			queue = mergeSorted(queue, ready)
+		}
+	}
+
+	if len(result) != len(sensors) {
+		// Every sensor still with non-zero in-degree is in a cycle.
+		// Cycle reporting lands in Task 19; for now, return a placeholder
+		// error so the partial-implementation guard surfaces.
+		return nil, fmt.Errorf("resolver: cycle detected (typed error in next task)")
+	}
+	return result, nil
+}
+
+// mergeSorted inserts each newcomer into the already-sorted queue,
+// keeping the queue sorted ascending. Allocates a fresh slice.
+func mergeSorted(queue, newcomers []string) []string {
+	sort.Strings(newcomers)
+	merged := make([]string, 0, len(queue)+len(newcomers))
+	i, j := 0, 0
+	for i < len(queue) && j < len(newcomers) {
+		if queue[i] <= newcomers[j] {
+			merged = append(merged, queue[i])
+			i++
+		} else {
+			merged = append(merged, newcomers[j])
+			j++
+		}
+	}
+	merged = append(merged, queue[i:]...)
+	merged = append(merged, newcomers[j:]...)
+	return merged
 }

@@ -65,3 +65,78 @@ func sortedIDs(ss []Sensor) []string {
 	sort.Strings(out)
 	return out
 }
+
+func TestResolveExecutionOrder_LinearChain_TopoBeatsAlpha(t *testing.T) {
+	// Chain: z → m → a (z runs first; m depends on z; a depends on m)
+	// Topological: [z, m, a]. Alphabetical: [a, m, z] — these differ,
+	// which pins down that the resolver honors edges, not id-sort.
+	sensors := []Sensor{
+		{ID: "a", DependsOn: []string{"m"}},
+		{ID: "z"},
+		{ID: "m", DependsOn: []string{"z"}},
+	}
+	out, err := ResolveExecutionOrder(sensors)
+	if err != nil {
+		t.Fatalf("linear chain: %v", err)
+	}
+	got := ids(out)
+	want := []string{"z", "m", "a"}
+	if len(got) != len(want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	for i, w := range want {
+		if got[i] != w {
+			t.Fatalf("got %v, want %v", got, want)
+		}
+	}
+}
+
+func TestResolveExecutionOrder_DiamondWithIDSortTiebreak(t *testing.T) {
+	// Diamond with deliberately divergent id naming:
+	//   z has no deps               <- root
+	//   y depends on z              <- y and x both ready after z;
+	//   x depends on z                 id-sort tiebreak picks x first
+	//   a depends on y and x        <- leaf
+	// Topological + id-sort tiebreak: [z, x, y, a].
+	// Alphabetical-only: [a, x, y, z] — divergent.
+	sensors := []Sensor{
+		{ID: "a", DependsOn: []string{"y", "x"}},
+		{ID: "y", DependsOn: []string{"z"}},
+		{ID: "z"},
+		{ID: "x", DependsOn: []string{"z"}},
+	}
+	out, err := ResolveExecutionOrder(sensors)
+	if err != nil {
+		t.Fatalf("diamond: %v", err)
+	}
+	got := ids(out)
+	want := []string{"z", "x", "y", "a"}
+	for i, w := range want {
+		if got[i] != w {
+			t.Fatalf("got %v, want %v", got, want)
+		}
+	}
+}
+
+func TestResolveExecutionOrder_CrossUseCaseEdgesAllowed(t *testing.T) {
+	// Sensor z (uc-1) is depended on by sensor a (uc-2). The resolver
+	// does not care about UseCaseID — cross-use-case edges are legal
+	// at the structural layer (policy may reject them later, but
+	// that's E9 + Phase B's concern). Id naming keeps topo divergent
+	// from alphabetical.
+	sensors := []Sensor{
+		{ID: "a", UseCaseID: "uc-2", DependsOn: []string{"z"}},
+		{ID: "z", UseCaseID: "uc-1"},
+	}
+	out, err := ResolveExecutionOrder(sensors)
+	if err != nil {
+		t.Fatalf("cross-use-case edges: %v", err)
+	}
+	got := ids(out)
+	want := []string{"z", "a"}
+	for i, w := range want {
+		if got[i] != w {
+			t.Fatalf("got %v, want %v", got, want)
+		}
+	}
+}

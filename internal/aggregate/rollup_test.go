@@ -188,3 +188,34 @@ func TestRollupErrorTreatedLikeTimeout(t *testing.T) {
 		t.Errorf("Verdict = %q, want inconclusive", got.Verdict)
 	}
 }
+
+func TestRollupObservationalMissingOverridesPasses(t *testing.T) {
+	in := baseInput([]signalstub.Signal{sig(enums.VerdictPass), sig(enums.VerdictPass)})
+	in.Kind = enums.KindObservational
+	in.ExpectedObservations = []string{"a", "b", "c"}
+	in.ObservedKeys = []string{"a", "b"}
+	got, err := Rollup(in)
+	if got.Verdict != enums.VerdictFail && err == nil {
+		t.Errorf("Verdict = %q, want fail (missing 'c' overrides pass signals)", got.Verdict)
+	}
+	if got.Completeness == nil {
+		t.Fatal("Completeness must not be nil for observational sensors")
+	}
+	if len(got.Completeness.MissingObservations) != 1 || got.Completeness.MissingObservations[0] != "c" {
+		t.Errorf("MissingObservations = %v, want [c]", got.Completeness.MissingObservations)
+	}
+}
+
+func TestRollupObservationalCleanCoverageIsPass(t *testing.T) {
+	in := baseInput([]signalstub.Signal{sig(enums.VerdictPass)})
+	in.Kind = enums.KindObservational
+	in.ExpectedObservations = []string{"a"}
+	in.ObservedKeys = []string{"a"}
+	got, err := Rollup(in)
+	if err != nil {
+		t.Fatalf("Rollup: %v", err)
+	}
+	if got.Verdict != enums.VerdictPass {
+		t.Errorf("Verdict = %q, want pass", got.Verdict)
+	}
+}

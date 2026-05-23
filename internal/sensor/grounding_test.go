@@ -63,3 +63,84 @@ func loadHTTPManifest(t *testing.T) stack.StackManifest {
 	}
 	return m
 }
+
+// fakeOwner is the test-local UseCaseFixtureOwnership: a one-line
+// map keyed by use case id. Production wiring lives elsewhere (an
+// adapter over *usecase.UseCase.FixtureIDs).
+type fakeOwner map[string][]string
+
+func (f fakeOwner) OwnedFixtureIDs(useCaseID string) []string {
+	return f[useCaseID]
+}
+
+func TestValidateAgainstFixtures_AllRefsOwned(t *testing.T) {
+	owner := fakeOwner{
+		"uc-1": []string{"order-input-fixture", "order-output-fixture"},
+	}
+	s := Sensor{
+		ID:        "ok-sensor",
+		UseCaseID: "uc-1",
+		Steps: []Step{
+			{ID: "send", Run: "x", Uses: []string{"order-input-fixture"}},
+			{ID: "check", Run: "y", Uses: []string{"order-output-fixture"}},
+		},
+	}
+	if err := ValidateAgainstFixtures(s, owner); err != nil {
+		t.Errorf("ValidateAgainstFixtures: got %v, want nil", err)
+	}
+}
+
+func TestValidateAgainstFixtures_StepsWithoutUses_PassTrivially(t *testing.T) {
+	owner := fakeOwner{"uc-1": []string{"x"}}
+	s := Sensor{
+		ID:        "build-sensor",
+		UseCaseID: "uc-1",
+		Steps:     []Step{{ID: "compile", Run: "tsc"}},
+	}
+	if err := ValidateAgainstFixtures(s, owner); err != nil {
+		t.Errorf("step without Uses should pass trivially; got %v", err)
+	}
+}
+
+func TestValidateAgainstFixtures_TwoStepsWithUnknownFixtures(t *testing.T) {
+	owner := fakeOwner{"uc-1": []string{"known-fixture"}}
+	s := Sensor{
+		ID:        "bad-sensor",
+		UseCaseID: "uc-1",
+		Steps: []Step{
+			{ID: "first", Uses: []string{"ghost-fixture"}},
+			{ID: "second", Uses: []string{"known-fixture", "phantom-fixture"}},
+		},
+	}
+	err := ValidateAgainstFixtures(s, owner)
+	if err == nil {
+		t.Fatal("expected error for unowned fixtures, got nil")
+	}
+	for _, want := range []string{"first", "ghost-fixture", "second", "phantom-fixture"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("error did not mention %q; got: %v", want, err)
+		}
+	}
+	// known-fixture is valid — must NOT appear as a problem.
+	if strings.Contains(err.Error(), "unknown fixture \"known-fixture\"") {
+		t.Errorf("error wrongly accused known-fixture; got: %v", err)
+	}
+}
+
+func TestValidateAgainstFixtures_UnknownUseCase_FailsEveryStepWithUses(t *testing.T) {
+	owner := fakeOwner{} // owner returns nil for any use case id
+	s := Sensor{
+		ID:        "orphan-sensor",
+		UseCaseID: "nonexistent-uc",
+		Steps: []Step{
+			{ID: "send", Uses: []string{"x-fixture"}},
+		},
+	}
+	err := ValidateAgainstFixtures(s, owner)
+	if err == nil {
+		t.Fatal("expected error when owner returns nil owned-set, got nil")
+	}
+	if !strings.Contains(err.Error(), "x-fixture") {
+		t.Errorf("error did not mention x-fixture; got: %v", err)
+	}
+}

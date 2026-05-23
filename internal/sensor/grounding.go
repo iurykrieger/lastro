@@ -23,3 +23,36 @@ func ValidateAgainstStack(s Sensor, manifest stack.StackManifest) error {
 	}
 	return errors.Join(errs...)
 }
+
+// ValidateAgainstFixtures asserts that every fixture id referenced by
+// any step is in the set of fixtures the sensor's use case owns
+// (grounding invariant 2). Errors are reported per step, naming the
+// step id and every unknown fixture in that step.
+//
+// A nil return from owner.OwnedFixtureIDs (e.g., use case unknown) is
+// treated as the empty set, which causes every step with a fixture
+// reference to fail. That's intentional — a sensor pointing at a
+// missing use case should not ground silently.
+func ValidateAgainstFixtures(s Sensor, owner UseCaseFixtureOwnership) error {
+	owned := make(map[string]bool)
+	for _, id := range owner.OwnedFixtureIDs(s.UseCaseID) {
+		owned[id] = true
+	}
+
+	var errs []error
+	for _, st := range s.Steps {
+		var unknown []string
+		for _, id := range st.Uses {
+			if !owned[id] {
+				unknown = append(unknown, id)
+			}
+		}
+		if len(unknown) > 0 {
+			errs = append(errs, fmt.Errorf("step %q: unknown fixture(s) %v", st.ID, unknown))
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return errors.Join(errs...)
+}

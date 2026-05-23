@@ -29,7 +29,11 @@ type Signal struct {
 
 // Evidence is the open-shape evidence map. The schema documents three
 // well-known keys (expected, actual, fixture_id) and permits any other
-// key for sensor-specific data.
+// key for sensor-specific data. Callers constructing a Signal in Go
+// (e.g., E8 rollup inputs, test fixtures) must initialize Evidence to a
+// non-nil map; a nil Evidence encodes as JSON null and fails the
+// schema's `type: object` requirement. The parser always sets a
+// non-nil Evidence; this caveat applies only to direct Go construction.
 type Evidence map[string]any
 
 // Expected returns the value of the "expected" key. ok is true iff the

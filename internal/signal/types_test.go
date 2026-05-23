@@ -21,6 +21,19 @@ func TestEvidence_Expected(t *testing.T) {
 		if ok {
 			t.Errorf("expected ok=false, got true with value %v", v)
 		}
+		if v != nil {
+			t.Errorf("expected nil value, got %v", v)
+		}
+	})
+	t.Run("present_nil_value", func(t *testing.T) {
+		e := Evidence{"expected": nil}
+		v, ok := e.Expected()
+		if !ok {
+			t.Fatal("expected ok=true for nil value, got false")
+		}
+		if v != nil {
+			t.Errorf("expected nil value, got %v", v)
+		}
 	})
 }
 
@@ -40,6 +53,19 @@ func TestEvidence_Actual(t *testing.T) {
 		v, ok := e.Actual()
 		if ok {
 			t.Errorf("expected ok=false, got true with value %v", v)
+		}
+		if v != nil {
+			t.Errorf("expected nil value, got %v", v)
+		}
+	})
+	t.Run("present_nil_value", func(t *testing.T) {
+		e := Evidence{"actual": nil}
+		v, ok := e.Actual()
+		if !ok {
+			t.Fatal("expected ok=true for nil value, got false")
+		}
+		if v != nil {
+			t.Errorf("expected nil value, got %v", v)
 		}
 	})
 }
@@ -61,12 +87,18 @@ func TestEvidence_FixtureID(t *testing.T) {
 		if ok {
 			t.Errorf("expected ok=false for non-string value, got true with value %q", v)
 		}
+		if v != "" {
+			t.Errorf("expected empty string for wrong-type value, got %q", v)
+		}
 	})
 	t.Run("absent", func(t *testing.T) {
 		e := Evidence{}
 		v, ok := e.FixtureID()
 		if ok {
 			t.Errorf("expected ok=false, got true with value %q", v)
+		}
+		if v != "" {
+			t.Errorf("expected empty string, got %q", v)
 		}
 	})
 }

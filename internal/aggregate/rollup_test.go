@@ -60,3 +60,33 @@ func TestRollupCountsMatchVerdictDistribution(t *testing.T) {
 		t.Errorf("counts mismatch: %+v", got.Rollup)
 	}
 }
+
+func TestRollupConfidenceIsArithmeticMean(t *testing.T) {
+	s1 := sig(enums.VerdictPass)
+	s1.Confidence = 1.0
+	s2 := sig(enums.VerdictPass)
+	s2.Confidence = 0.5
+	in := baseInput([]signalstub.Signal{s1, s2})
+	got, err := Rollup(in)
+	if err != nil {
+		t.Fatalf("Rollup: %v", err)
+	}
+	if got.Confidence < 0.749999 || got.Confidence > 0.750001 {
+		t.Errorf("Confidence = %v, want ~0.75", got.Confidence)
+	}
+}
+
+func TestRollupEmptySignalsObservationalPassConfidence(t *testing.T) {
+	in := baseInput(nil)
+	in.Kind = enums.KindObservational
+	in.OutputType = enums.OutputStream
+	in.ExpectedObservations = []string{"a", "b"}
+	in.ObservedKeys = []string{"a", "b"}
+	got, err := Rollup(in)
+	if err != nil {
+		t.Fatalf("Rollup: %v", err)
+	}
+	if got.Confidence != 1.0 {
+		t.Errorf("Confidence = %v, want 1.0 for full-coverage observational with no signals", got.Confidence)
+	}
+}

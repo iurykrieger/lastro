@@ -172,13 +172,14 @@ type Verdict string
 
 const (
 	VerdictPass         Verdict = "pass"
+	VerdictWarn         Verdict = "warn"
 	VerdictFail         Verdict = "fail"
 	VerdictInconclusive Verdict = "inconclusive"
 )
 
 // AllVerdicts returns every Verdict in canonical (YAML) order.
 func AllVerdicts() []Verdict {
-	return []Verdict{VerdictPass, VerdictFail, VerdictInconclusive}
+	return []Verdict{VerdictPass, VerdictWarn, VerdictFail, VerdictInconclusive}
 }
 
 // IsValidVerdict reports whether s is one of the canonical Verdict values.

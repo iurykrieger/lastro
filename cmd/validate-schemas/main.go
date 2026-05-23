@@ -16,11 +16,13 @@ import (
 var entities = []string{
 	"stack-component", "entry-point", "use-case", "fixture",
 	"sensor", "signal", "aggregate-signal", "validation-policy",
+	"stack-manifest",
 }
 
 var enums = []string{
 	"validation-angles", "archetypes", "sensor-kinds", "sensor-natures",
 	"signal-output-types", "fixture-roles", "verdicts", "termination-reasons",
+	"stack-kinds",
 }
 
 const baseURL = "https://lastro.dev/harness/schemas/"

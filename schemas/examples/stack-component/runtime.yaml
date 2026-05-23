@@ -9,4 +9,6 @@ capabilities:
   - child-processes
   - native-tls
 detection_evidence:
-  - "package.json:engines.node"
+  - file: package.json
+    path: engines.node
+    value: ">=20"

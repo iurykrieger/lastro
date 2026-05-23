@@ -9,5 +9,9 @@ capabilities:
   - row-level-security
   - logical-replication
 detection_evidence:
-  - "docker-compose.yaml:services.db.image"
-  - "package.json:dependencies.pg"
+  - file: docker-compose.yaml
+    path: services.db.image
+    value: postgres:16
+  - file: package.json
+    path: dependencies.pg
+    value: ^8.11.0

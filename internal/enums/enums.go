@@ -1,5 +1,5 @@
 // Package enums provides typed constants and validators for the framework's
-// eight fixed enums, plus the canonical archetype × angle matrix.
+// nine fixed enums, plus the canonical archetype × angle matrix.
 //
 // The canonical source for every enum is YAML under schemas/enums/. Drift
 // between this package and that source is caught by drift_test.go.
@@ -212,6 +212,36 @@ func AllTerminationReasons() []TerminationReason {
 // IsValidTerminationReason reports whether s is one of the canonical TerminationReason values.
 func IsValidTerminationReason(s string) bool {
 	for _, v := range AllTerminationReasons() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}
+
+// StackKind is the classification of a detected StackComponent.
+type StackKind string
+
+const (
+	StackKindLibrary   StackKind = "library"
+	StackKindRuntime   StackKind = "runtime"
+	StackKindFramework StackKind = "framework"
+	StackKindDatastore StackKind = "datastore"
+	StackKindProtocol  StackKind = "protocol"
+	StackKindTool      StackKind = "tool"
+)
+
+// AllStackKinds returns every StackKind in canonical (YAML) order.
+func AllStackKinds() []StackKind {
+	return []StackKind{
+		StackKindLibrary, StackKindRuntime, StackKindFramework,
+		StackKindDatastore, StackKindProtocol, StackKindTool,
+	}
+}
+
+// IsValidStackKind reports whether s is one of the canonical StackKind values.
+func IsValidStackKind(s string) bool {
+	for _, v := range AllStackKinds() {
 		if string(v) == s {
 			return true
 		}

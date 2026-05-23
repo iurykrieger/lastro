@@ -321,3 +321,36 @@ func TestAppliesFalseWhenAngleNotInList(t *testing.T) {
 		}
 	}
 }
+
+func TestAllStackKindsReturnsCanonicalOrder(t *testing.T) {
+	got := AllStackKinds()
+	want := []StackKind{
+		StackKindLibrary, StackKindRuntime, StackKindFramework,
+		StackKindDatastore, StackKindProtocol, StackKindTool,
+	}
+	if len(got) != len(want) {
+		t.Fatalf("AllStackKinds length: got %d, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("AllStackKinds[%d]: got %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestIsValidStackKindAcceptsCanonical(t *testing.T) {
+	for _, v := range AllStackKinds() {
+		if !IsValidStackKind(string(v)) {
+			t.Errorf("IsValidStackKind(%q) = false; want true", v)
+		}
+	}
+}
+
+func TestIsValidStackKindRejectsUnknown(t *testing.T) {
+	cases := []string{"", "database", "LIBRARY", " tool", "service"}
+	for _, c := range cases {
+		if IsValidStackKind(c) {
+			t.Errorf("IsValidStackKind(%q) = true; want false", c)
+		}
+	}
+}

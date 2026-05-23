@@ -1,0 +1,20 @@
+schema_version: 1.0.0
+title: StackKind
+description: |
+  Classification of a detected StackComponent. Closed enum; new values
+  require a framework version bump. Values are kept in sync with the
+  inline enum in schemas/stack-component.yaml via the drift contract.
+
+values:
+  - id: library
+    purpose: "A reusable code module imported by application code (e.g., lodash, requests)"
+  - id: runtime
+    purpose: "The language runtime or virtual machine the application executes on (e.g., node, jvm, python)"
+  - id: framework
+    purpose: "An opinionated scaffold that inverts control of the application (e.g., nestjs, django, rails)"
+  - id: datastore
+    purpose: "Persistent storage the application reads or writes (e.g., postgres, redis, s3)"
+  - id: protocol
+    purpose: "A wire protocol or message format the application speaks (e.g., grpc, kafka, mqtt)"
+  - id: tool
+    purpose: "A build, packaging, or operational utility (e.g., docker, webpack, terraform)"

@@ -8,5 +8,8 @@ capabilities:
   - lint
   - autofix
 detection_evidence:
-  - "package.json:devDependencies.eslint"
-  - ".eslintrc.json"
+  - file: package.json
+    path: devDependencies.eslint
+    value: ^9.0.0
+  - file: .eslintrc.json
+    path: $

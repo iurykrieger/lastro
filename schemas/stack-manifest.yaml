@@ -1,0 +1,38 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/stack-manifest.yaml"
+title: StackManifest
+description: |
+  The full detected stack for a repository: its archetype plus the ordered
+  list of detected StackComponents. Produced by /detect-stack and consumed
+  by every other harness skill as the "toolbox" that grounds sensor
+  generation.
+
+type: object
+required: [schema_version, archetype, components]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  archetype:
+    type: string
+    description: |
+      The repository's archetype. Canonical source is
+      schemas/enums/archetypes.yaml; this inline enum stays in sync via the
+      drift contract.
+    enum:
+      - http-api
+      - event-consumer
+      - event-producer
+      - cli
+      - sdk
+      - library
+      - worker
+      - batch-job
+      - static-site
+  components:
+    type: array
+    minItems: 1
+    items:
+      $ref: "https://lastro.dev/harness/schemas/stack-component.yaml"

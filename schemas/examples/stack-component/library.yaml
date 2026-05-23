@@ -9,4 +9,6 @@ capabilities:
   - middleware
   - json-body-parsing
 detection_evidence:
-  - "package.json:dependencies.express"
+  - file: package.json
+    path: dependencies.express
+    value: ^4.18.0

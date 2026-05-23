@@ -82,6 +82,7 @@ func TestGoConstantsMatchYAML(t *testing.T) {
 		{"fixture-roles", stringify(AllFixtureRoles())},
 		{"verdicts", stringify(AllVerdicts())},
 		{"termination-reasons", stringify(AllTerminationReasons())},
+		{"stack-kinds", stringify(AllStackKinds())},
 	}
 	for _, c := range cases {
 		t.Run(c.yamlFile, func(t *testing.T) {
@@ -148,6 +149,7 @@ func TestInlineSchemaEnumsMatchYAML(t *testing.T) {
 	enumNames := []string{
 		"validation-angles", "archetypes", "sensor-kinds", "sensor-natures",
 		"signal-output-types", "fixture-roles", "verdicts", "termination-reasons",
+		"stack-kinds",
 	}
 	for _, name := range enumNames {
 		ef := readEnumFile(t, name)

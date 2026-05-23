@@ -13,6 +13,12 @@ import (
 //
 // HTML escaping is disabled because signals are not HTML contexts;
 // "<", ">", and "&" should round-trip without &lt;-style escapes.
+//
+// WriteSignal does not validate sig before encoding. Callers that
+// construct a Signal in Go (rather than having obtained it from
+// ParseSignals) should call Validate first if schema conformance is
+// required — for example, a Signal with a nil Evidence will encode as
+// JSON null and fail re-parsing.
 func WriteSignal(w io.Writer, sig Signal) error {
 	enc := json.NewEncoder(w)
 	enc.SetEscapeHTML(false)

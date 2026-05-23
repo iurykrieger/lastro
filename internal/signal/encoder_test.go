@@ -3,6 +3,7 @@ package signal
 import (
 	"bytes"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -54,5 +55,30 @@ func TestWriteSignal_WritesNewline(t *testing.T) {
 	data := buf.Bytes()
 	if len(data) == 0 || data[len(data)-1] != '\n' {
 		t.Errorf("WriteSignal output should end with '\\n', got: %q", data)
+	}
+}
+
+// TestWriteSignal_NoHTMLEscaping pins the encoder's SetEscapeHTML(false)
+// behavior. Signals are not HTML contexts, so characters like <, >, and
+// & must round-trip unchanged. Without this guard, json.NewEncoder
+// would emit &lt;, &gt;, &amp; by default.
+func TestWriteSignal_NoHTMLEscaping(t *testing.T) {
+	sig := validSignal()
+	sig.Evidence = Evidence{"expected": "<script>", "actual": "x & y > z"}
+
+	var buf bytes.Buffer
+	if err := WriteSignal(&buf, sig); err != nil {
+		t.Fatalf("WriteSignal: %v", err)
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "<script>") {
+		t.Errorf("expected output to contain literal '<script>', got: %s", out)
+	}
+	if !strings.Contains(out, "x & y > z") {
+		t.Errorf("expected output to contain literal 'x & y > z', got: %s", out)
+	}
+	if strings.Contains(out, `\u003c`) || strings.Contains(out, `\u003e`) || strings.Contains(out, `\u0026`) {
+		t.Errorf("WriteSignal HTML-escaped <, >, or & to Unicode escapes; got: %s", out)
 	}
 }

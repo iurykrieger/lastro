@@ -1,0 +1,13 @@
+# "not-an-angle" is not in the canonical ValidationAngle enum.
+schema_version: 1.0.0
+id: invalid-angle-sensor
+use_case_id: create-order-use-case
+angle: not-an-angle
+kind: assertion
+nature: computational
+output_type: single-shot
+uses:
+  - node
+steps:
+  - id: compile
+    run: "tsc --noEmit"

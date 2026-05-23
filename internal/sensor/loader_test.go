@@ -2,6 +2,7 @@ package sensor
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/enums"
@@ -46,5 +47,34 @@ func TestLoadSensor_MissingFile(t *testing.T) {
 	_, err := LoadSensor("does/not/exist.yaml")
 	if err == nil {
 		t.Fatal("expected error for missing file, got nil")
+	}
+}
+
+func TestLoadSensor_SchemaRejected(t *testing.T) {
+	cases := []struct {
+		name       string
+		file       string
+		wantSubstr string
+	}{
+		{"missing top-level uses", "missing-uses.yaml", "uses"},
+		{"empty steps array", "empty-steps.yaml", "steps"},
+		{"invalid angle value", "invalid-angle.yaml", "angle"},
+		{"malformed YAML", "malformed.yaml", "yaml"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			path := filepath.Join("testdata", "invalid", tc.file)
+			_, err := LoadSensor(path)
+			if err == nil {
+				t.Fatalf("expected error for %s, got nil", tc.file)
+			}
+			// Substring match is intentionally loose — we want the
+			// error to be informative, not exact. Each case names the
+			// failing aspect (field name or "yaml") in lowercase.
+			lower := strings.ToLower(err.Error())
+			if !strings.Contains(lower, tc.wantSubstr) {
+				t.Errorf("error did not mention %q; got: %v", tc.wantSubstr, err)
+			}
+		})
 	}
 }

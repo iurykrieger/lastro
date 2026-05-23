@@ -1,0 +1,14 @@
+# Unbalanced colons make this fail at the YAML parser, before
+# schema validation runs.
+schema_version: 1.0.0
+id: malformed-sensor
+use_case_id: create-order-use-case
+angle: build
+kind: assertion
+nature: computational
+output_type: single-shot
+uses:
+  - node
+steps:
+  - id: compile
+    run: "tsc

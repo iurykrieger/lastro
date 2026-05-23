@@ -33,6 +33,20 @@ func TestValidateIntrinsic_OnTypedSensorOK(t *testing.T) {
 	}
 }
 
+func TestLoadSensor_DuplicateTopLevelUses(t *testing.T) {
+	path := filepath.Join("testdata", "invalid", "duplicate-uses.yaml")
+	_, err := LoadSensor(path)
+	if err == nil {
+		t.Fatal("expected error for duplicate top-level uses, got nil")
+	}
+	if !errorsJoinContains(err, "duplicate uses id") {
+		t.Errorf("error did not mention duplicate uses id; got: %v", err)
+	}
+	if !errorsJoinContains(err, "node") {
+		t.Errorf("error did not name the duplicated id 'node'; got: %v", err)
+	}
+}
+
 // errorsJoinContains walks errors.Join trees, returning true if any
 // wrapped error's message contains substr. Used so tests can assert
 // on a single rule's message inside a joined multi-rule error.

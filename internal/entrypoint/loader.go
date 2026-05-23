@@ -3,6 +3,7 @@ package entrypoint
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"sigs.k8s.io/yaml"
 )
@@ -23,6 +24,17 @@ func LoadEntryPoint(raw []byte) (EntryPoint, error) {
 		return EntryPoint{}, fmt.Errorf("entrypoint: deserialize: %w", err)
 	}
 	return ep, nil
+}
+
+// LoadFromExample reads a YAML file (typically one of the canonical examples
+// under schemas/examples/entry-point/) and loads it as an EntryPoint. Test
+// convenience; not for runtime use.
+func LoadFromExample(path string) (EntryPoint, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return EntryPoint{}, fmt.Errorf("entrypoint: read %s: %w", path, err)
+	}
+	return LoadEntryPoint(raw)
 }
 
 func validateAgainstSchema(jsonDoc []byte) error {

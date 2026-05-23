@@ -31,3 +31,51 @@ func TestLoadEntryPoint_HTTPAPIExample(t *testing.T) {
 		t.Errorf("Spec[path] = %v, want /orders", got)
 	}
 }
+
+func TestLoadFromExample_AllArchetypes(t *testing.T) {
+	cases := []struct {
+		file     string
+		wantArch enums.Archetype
+		wantSpec map[string]any
+	}{
+		{
+			file:     "http-api.yaml",
+			wantArch: enums.ArchetypeHTTPAPI,
+			wantSpec: map[string]any{"method": "POST", "path": "/orders"},
+		},
+		{
+			file:     "event-consumer.yaml",
+			wantArch: enums.ArchetypeEventConsumer,
+		},
+		{file: "event-producer.yaml", wantArch: enums.ArchetypeEventProducer},
+		{file: "cli.yaml", wantArch: enums.ArchetypeCLI},
+		{file: "sdk.yaml", wantArch: enums.ArchetypeSDK},
+		{file: "library.yaml", wantArch: enums.ArchetypeLibrary},
+		{file: "worker.yaml", wantArch: enums.ArchetypeWorker},
+		{file: "batch-job.yaml", wantArch: enums.ArchetypeBatchJob},
+		{file: "static-site.yaml", wantArch: enums.ArchetypeStaticSite},
+	}
+	for _, tc := range cases {
+		t.Run(string(tc.wantArch), func(t *testing.T) {
+			path := filepath.Join("..", "..", "schemas", "examples", "entry-point", tc.file)
+			ep, err := LoadFromExample(path)
+			if err != nil {
+				t.Fatalf("LoadFromExample(%s): %v", path, err)
+			}
+			if ep.ID == "" {
+				t.Errorf("ID is empty")
+			}
+			if ep.Archetype != tc.wantArch {
+				t.Errorf("Archetype = %q, want %q", ep.Archetype, tc.wantArch)
+			}
+			if ep.Spec == nil {
+				t.Fatalf("Spec is nil")
+			}
+			for k, want := range tc.wantSpec {
+				if got, ok := ep.Spec[k]; !ok || got != want {
+					t.Errorf("Spec[%q] = (%v, %v), want (%v, true)", k, got, ok, want)
+				}
+			}
+		})
+	}
+}

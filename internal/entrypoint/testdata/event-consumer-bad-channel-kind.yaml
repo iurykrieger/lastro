@@ -1,0 +1,5 @@
+id: bad-channel
+archetype: event-consumer
+spec:
+  channel_kind: fanout
+  channel_name: orders.created

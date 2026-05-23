@@ -1,0 +1,4 @@
+id: bad-http
+archetype: http-api
+spec:
+  path: /x

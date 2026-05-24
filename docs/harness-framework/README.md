@@ -56,22 +56,23 @@ Each doc went through `/brainstorming` → design doc → `/writing-plans` → i
 
 Phase B implements the verbs that consume the Phase A entities: the runtime that executes sensors, the skills that produce them, the CLI that orchestrates user interaction, and the dogfood integration that proves the whole thing works.
 
-### Phase A lesson applied
+### Phase A lessons applied
 
-Phase A claimed "everyone parallel after the schema-freeze gate," but in practice several chunks discovered implicit dependencies on each other's work mid-flight. Phase B's decomposition makes parallel/sequential dependencies **explicit per chunk** (each doc names what it can run alongside and what it must wait for), and **every chunk doc opens with a mandatory branch-from-fresh-`main` instruction** so worktrees never start from stale or unmerged trees.
+1. Phase A claimed "everyone parallel after the schema-freeze gate," but several chunks discovered implicit dependencies mid-flight. Phase B's decomposition makes parallel/sequential dependencies **explicit per chunk** — each doc names what it can run alongside and what it must wait for — and **every chunk doc opens with a mandatory branch-from-fresh-`main` instruction** so worktrees never start from stale or unmerged trees.
+2. Phase A delivered substantially more than the original Phase B scope assumed. The first Phase B decomposition (PR #11) treated several primitives as new work, but Phase A had already shipped them under their owning entity packages (template under `usecase/`, DAG resolver under `sensor/`, per-sensor rollup + heal-hint synthesis under `aggregate/`, streaming parser under `signal/`, two-scope policy resolution under `policy/`). The pre-rebase B1 collapsed entirely; B2/B3 shrank. The current decomposition reflects this — every chunk doc lists what Phase A already delivered before describing what remains.
+3. **Skill architecture is LLM-led, not Go-led.** The three inferential skills (`/detect-stack`, `/detect-use-cases`, `/create-sensors`) do their inference in the slash-command prompt body. Their `scripts/` packages do only validation, persistence, and repair-prompt assembly — no archetype inference, no entry-point scanning, no sensor scaffolding in Go. The new B4 doc spells this out.
 
-### Phase B chunks (8 chunks, 4 layers)
+### Phase B chunks (7 chunks, 4 layers)
 
 | ID | Chunk | Doc | Layer |
 |---|---|---|---|
-| B1 | Runtime primitives | [`B1-runtime-primitives.md`](B1-runtime-primitives.md) | Runtime |
-| B2 | Composed runtime | [`B2-composed-runtime.md`](B2-composed-runtime.md) | Runtime |
-| B3 | Executor & lifecycle | [`B3-executor-lifecycle.md`](B3-executor-lifecycle.md) | Runtime |
-| B4 | Heal loop | [`B4-heal-loop.md`](B4-heal-loop.md) | Runtime |
-| B5 | Detection & generation skills | [`B5-detection-generation.md`](B5-detection-generation.md) | Skills (producer) |
-| B6 | Skill wrappers (execution + heal) | [`B6-skill-wrappers.md`](B6-skill-wrappers.md) | Skills (consumer) |
-| B7 | CLI (`cmd/harness`) | [`B7-cli.md`](B7-cli.md) | CLI |
-| B8 | Examples & dogfood self-validation | [`B8-examples-dogfood.md`](B8-examples-dogfood.md) | Integration |
+| B1 | Composed runtime (fixture binder + per-use-case aggregator) | [`B1-composed-runtime.md`](B1-composed-runtime.md) | Runtime |
+| B2 | Executor & lifecycle | [`B2-executor-lifecycle.md`](B2-executor-lifecycle.md) | Runtime |
+| B3 | Heal loop (orchestration only) | [`B3-heal-loop.md`](B3-heal-loop.md) | Runtime |
+| B4 | Detection & generation skills (LLM-driven) | [`B4-detection-generation.md`](B4-detection-generation.md) | Skills (producer) |
+| B5 | Skill wrappers (execution + heal) | [`B5-skill-wrappers.md`](B5-skill-wrappers.md) | Skills (consumer) |
+| B6 | CLI (`cmd/harness`) | [`B6-cli.md`](B6-cli.md) | CLI |
+| B7 | Examples & dogfood self-validation | [`B7-examples-dogfood.md`](B7-examples-dogfood.md) | Integration |
 
 ### Phase B dependency graph
 
@@ -80,53 +81,47 @@ Phase A claimed "everyone parallel after the schema-freeze gate," but in practic
                  |
    +-------------+--------------+
    |                            |
-   B1                          B5
-   runtime primitives          detection + generation
-   (template, policy,          (/detect-stack,
-    resolver, signalColl.)      /detect-use-cases,
-   |                            /create-sensors)
-   B2                          |
-   composed runtime            |  (B5 runs in parallel
-   (fixtureBinder,             |   with B1-B4 and B6/B7;
-    sensor + use-case agg.)    |   only consumes Phase A)
-   |                           |
-   B3                          |
-   executor + lifecycle        |
-   |                           |
-   +-----+----+----------------+
-         |    |
-        B4   B6   B7
-        heal skill CLI
-        loop wrap- (cmd/harness)
-             pers
-         \   |   /
-          \  |  /
-           \ | /
-            B8
-       examples + dogfood
-       (integration — needs all of B1-B7)
+   B1                          B4
+   composed runtime            detection + generation
+   (fixture binder,            (LLM-driven slash commands;
+    per-use-case agg.)          Go = validate + persist only)
+   |                            |
+   B2                           |
+   executor + lifecycle         |  (B4 runs in parallel with
+   |                            |   B1-B3 and B5/B6;
+   B3                           |   only consumes Phase A)
+   heal loop                    |
+   (orchestration only)         |
+   |                            |
+   +------+---------------------+
+          |         |
+         B5        B6
+         skill     CLI
+         wrappers  (cmd/harness)
+          \        /
+           \      /
+            \    /
+             B7
+        examples + dogfood
+        (integration — needs all of B1-B6)
 ```
 
 ### Phase B parallelism summary
 
-The key parallel opportunities and their gates:
-
 | Can run in parallel | Gate |
 |---|---|
-| B1 ∥ B5 | both start immediately after Phase A |
-| B2 ∥ B5 | B2 needs B1; B5 is independent |
-| B3 ∥ B5 | B3 needs B1+B2; B5 is independent |
-| B4 ∥ B5 ∥ B6 ∥ B7 | all four can run once their respective deps land |
-| B6's `/run-sensor`, `/start-sensor`, `/stop-sensor`, `/validate-use-case` | unblocked at B2+B3+B5; the fifth sub-skill `/heal` waits for B4 |
-| B7 ∥ B6 | sibling surfaces over the same Go runtime; can land independently |
+| B1 ∥ B4 | both start immediately after Phase A |
+| B2 ∥ B4 | B2 needs B1; B4 is independent |
+| B3 ∥ B4 ∥ B5 ∥ B6 | all four can run once their respective deps land |
+| B5's `/run-sensor`, `/start-sensor`, `/stop-sensor`, `/validate-use-case` | unblocked at B1+B2; the fifth sub-skill `/heal` additionally waits for B3 |
+| B6 ∥ B5 | sibling surfaces over the same Go runtime; land independently |
 
 **Sequential gates:**
-- B2 must run after B1.
-- B3 must run after B1 + B2.
-- B4 must run after B2 + B3.
-- B6 must run after B2 + B3 (full surface needs B4 too).
-- B7 must run after B2 + B3 + B5 (full surface needs B4 too).
-- B8 must run after B6 + B7 (integration).
+- B2 must run after B1 (fixture binder).
+- B3 must run after B1 + B2 (re-validation uses both).
+- B5 must run after B1 + B2 (full surface also needs B3 for `/heal`).
+- B6 must run after B1 + B2 + B4 (full surface also needs B3 for `harness heal`).
+- B7 must run after B5 + B6 (integration).
 
 ### Per-chunk contract for Phase B
 

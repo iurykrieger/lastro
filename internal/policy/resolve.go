@@ -68,6 +68,9 @@ func Resolve(global, local *ValidationPolicy) *EffectivePolicy {
 	return eff
 }
 
+// unionArchetypes returns the union of archetype keys across all sources,
+// emitted in enums.AllArchetypes() order. The fixed-order traversal gives
+// deterministic output regardless of map iteration order.
 func unionArchetypes(sources []policySource) []enums.Archetype {
 	seen := map[enums.Archetype]struct{}{}
 	for _, s := range sources {

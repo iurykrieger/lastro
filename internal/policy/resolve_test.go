@@ -134,7 +134,7 @@ func TestResolve_LocalIntroducesNewArchetype(t *testing.T) {
 	}
 }
 
-func TestResolve_GlobalDisablesLocalSilent(t *testing.T) {
+func TestResolve_InapplicableAngleSilentlyDropped(t *testing.T) {
 	global := &ValidationPolicy{
 		SchemaVersion: "1.0.0",
 		Scope:         ScopeGlobal,
@@ -154,5 +154,28 @@ func TestResolve_GlobalDisablesLocalSilent(t *testing.T) {
 	got := Resolve(global, local)
 	if _, present := got.PerArchetype[enums.ArchetypeCLI][enums.AngleE2ETest]; present {
 		t.Error("cli e2e-test should be absent (not applicable per E1 matrix)")
+	}
+}
+
+func TestResolve_GlobalDisablesLocalSilent(t *testing.T) {
+	global := &ValidationPolicy{
+		SchemaVersion: "1.0.0",
+		Scope:         ScopeGlobal,
+		PerArchetype: map[enums.Archetype]ArchetypeBlock{
+			enums.ArchetypeCLI: {
+				Obligatory: []enums.ValidationAngle{},
+				Optional:   []enums.ValidationAngle{},
+				Disabled:   []enums.ValidationAngle{enums.AngleBuild},
+			},
+		},
+	}
+	local := &ValidationPolicy{
+		SchemaVersion: "1.0.0",
+		Scope:         ScopeLocal,
+		PerArchetype:  map[enums.Archetype]ArchetypeBlock{}, // silent on cli
+	}
+	got := Resolve(global, local)
+	if got.PerArchetype[enums.ArchetypeCLI][enums.AngleBuild] != StatusDisabled {
+		t.Errorf("cli build = %q, want disabled (local silent on it)", got.PerArchetype[enums.ArchetypeCLI][enums.AngleBuild])
 	}
 }

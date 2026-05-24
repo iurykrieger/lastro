@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,14 +24,17 @@ import (
 var fakeSensorBin string
 
 func TestMain(m *testing.M) {
-	bin, err := buildFakeSensor()
-	if err != nil {
-		panic("build fakesensor: " + err.Error())
+	// Skip the build when we are the re-exec'd child; the binary path is
+	// passed via HARNESS_TEST_FAKE_SENSOR instead.
+	if os.Getenv("HARNESS_TEST_CHILD") != "1" {
+		bin, err := buildFakeSensor()
+		if err != nil {
+			panic("build fakesensor: " + err.Error())
+		}
+		fakeSensorBin = bin
+		defer os.Remove(bin)
 	}
-	fakeSensorBin = bin
-	code := m.Run()
-	_ = os.Remove(bin)
-	os.Exit(code)
+	os.Exit(m.Run())
 }
 
 func buildFakeSensor() (string, error) {
@@ -249,4 +253,91 @@ func TestStopSensor_FailWhenObservationMissing(t *testing.T) {
 	if agg.HealHint == nil {
 		t.Errorf("heal_hint is nil; want observational-missing hint")
 	}
+}
+
+func TestStopFromOtherProcess(t *testing.T) {
+	// Only run as the "parent" half here; the child half exits directly.
+	if os.Getenv("HARNESS_TEST_CHILD") == "1" {
+		t.Skip("invoked as child; will be re-entered via the child test")
+	}
+
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "obs-cross", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+		Uses: []string{"fake"},
+		Steps: []sensor.Step{{ID: "watch", Run: fakeSensorBin + " watch --emit k1 --interval 30ms"}},
+	}
+	lc := newTestLifecycle(t, []sensor.Sensor{s})
+
+	h, err := lc.StartSensor(context.Background(), s.ID, []string{"k1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = lc.StopSensor(context.Background(), h) })
+
+	time.Sleep(80 * time.Millisecond) // let one observation arrive
+
+	// Re-exec ourselves as the "child" run. The child looks the run up
+	// via the registry and calls StopSensor.
+	cmd := exec.Command(os.Args[0],
+		"-test.run", "TestStopFromOtherProcess_Child",
+		"-test.v",
+	)
+	cmd.Env = append(os.Environ(),
+		"HARNESS_TEST_CHILD=1",
+		"HARNESS_TEST_RUNTIME_ROOT="+lc.opts.RuntimeRoot,
+		"HARNESS_TEST_SENSOR_ID="+s.ID,
+		"HARNESS_TEST_RUN_ID="+h.RunID,
+		"HARNESS_TEST_FAKE_SENSOR="+fakeSensorBin,
+	)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("child invocation failed: %v\noutput:\n%s", err, out)
+	}
+	if !bytes.Contains(out, []byte("verdict=pass")) {
+		t.Errorf("child did not report verdict=pass; output:\n%s", out)
+	}
+}
+
+// TestStopFromOtherProcess_Child is the re-entrant half. It only runs
+// when HARNESS_TEST_CHILD=1, which the parent sets.
+func TestStopFromOtherProcess_Child(t *testing.T) {
+	if os.Getenv("HARNESS_TEST_CHILD") != "1" {
+		t.Skip("not invoked as child")
+	}
+	root := os.Getenv("HARNESS_TEST_RUNTIME_ROOT")
+	sensorID := os.Getenv("HARNESS_TEST_SENSOR_ID")
+	runID := os.Getenv("HARNESS_TEST_RUN_ID")
+	fake := os.Getenv("HARNESS_TEST_FAKE_SENSOR")
+
+	// Re-register the sensor so synthesizeOrphanAggregate can resolve.
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: sensorID, UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+		Uses: []string{"fake"},
+		Steps: []sensor.Step{{ID: "watch", Run: fake + " watch --emit k1"}},
+	}
+	store := &stubSensorStore{by: map[string]sensor.Sensor{s.ID: s}}
+	uc := &usecase.UseCase{ID: "lifecycle-uc"}
+	ex := rxexec.New(rxexec.Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+	})
+	lc := New(Options{
+		Sensors: store, Executor: ex, RuntimeRoot: root,
+		NewRunID: func() string { return "child-not-used" },
+		Version:  "test-child",
+	})
+	h, err := lc.LoadHandle(sensorID, runID)
+	if err != nil {
+		t.Fatalf("LoadHandle: %v", err)
+	}
+	agg, err := lc.StopSensor(context.Background(), h)
+	if err != nil {
+		t.Fatalf("StopSensor: %v", err)
+	}
+	// The parent greps for this exact substring in our stdout.
+	fmt.Printf("verdict=%s\n", agg.Verdict)
 }

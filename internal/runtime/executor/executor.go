@@ -35,6 +35,11 @@ type Options struct {
 // call Run as many times as needed.
 type Executor struct{ opts Options }
 
+// OptionsRef returns the Executor's Options. Used by Lifecycle to build
+// per-run Executors that share the same dependencies (Resolver,
+// FixtureStore, etc.) but install fresh OnStepStart hooks per call.
+func (e *Executor) OptionsRef() Options { return e.opts }
+
 // New creates an Executor wired with the given options. If opts.Now is
 // nil it defaults to time.Now. If opts.GroupSignaler is nil it defaults
 // to process.Default().

@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "type": "aggregate",
+  "sensor_id": "fake-pass-sensor",
+  "use_case_id": "fake-uc",
+  "angle": "build",
+  "started_at": "2026-05-24T10:00:00Z",
+  "ended_at": "2026-05-24T10:00:00Z",
+  "termination_reason": "completed",
+  "verdict": "pass",
+  "confidence": 1,
+  "rollup": {
+    "total_signals": 1,
+    "pass_count": 1,
+    "warn_count": 0,
+    "fail_count": 0,
+    "inconclusive_count": 0
+  }
+}

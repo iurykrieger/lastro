@@ -1,6 +1,10 @@
 package aggregator
 
 import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -484,6 +488,58 @@ func TestUseCase_Confidence_ZeroWhenNoSignals(t *testing.T) {
 	}
 	if v.Confidence != 0.0 {
 		t.Errorf("Confidence = %v, want 0.0", v.Confidence)
+	}
+}
+
+func TestUseCase_GoldenDeterminism(t *testing.T) {
+	uc := makeUseCase("uc-checkout", enums.ArchetypeHTTPAPI)
+	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI,
+		[]enums.ValidationAngle{enums.AngleBuild, enums.AngleUnitTest, enums.AngleE2ETest},
+		[]enums.ValidationAngle{enums.AngleSecurity}, 0.7)
+	signals := []aggregate.AggregateSignal{
+		makeSignal("uc-checkout", "s-build", enums.AngleBuild, enums.VerdictPass, 1.0),
+		makeSignal("uc-checkout", "s-unit", enums.AngleUnitTest, enums.VerdictPass, 1.0),
+		makeSignal("uc-checkout", "s-e2e", enums.AngleE2ETest, enums.VerdictFail, 0.95),
+		makeSignal("uc-checkout", "s-sec", enums.AngleSecurity, enums.VerdictWarn, 1.0),
+	}
+	sensors := []sensor.Sensor{
+		makeSensor("s-build", "uc-checkout", enums.AngleBuild, enums.NatureComputational),
+		makeSensor("s-unit", "uc-checkout", enums.AngleUnitTest, enums.NatureComputational),
+		makeSensor("s-e2e", "uc-checkout", enums.AngleE2ETest, enums.NatureInferential),
+		makeSensor("s-sec", "uc-checkout", enums.AngleSecurity, enums.NatureComputational),
+	}
+
+	v, err := UseCase(uc, enums.ArchetypeHTTPAPI, signals, sensors, pol)
+	if err != nil {
+		t.Fatalf("UseCase: %v", err)
+	}
+	gotJSON, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		t.Fatalf("MarshalIndent: %v", err)
+	}
+
+	goldenPath := filepath.Join("testdata", "golden_verdict.json")
+	wantJSON, err := os.ReadFile(goldenPath)
+	if err != nil {
+		t.Fatalf("read golden: %v\ngot:\n%s", err, string(gotJSON))
+	}
+	if !bytes.Equal(gotJSON, bytes.TrimRight(wantJSON, "\n")) {
+		t.Errorf("golden mismatch\ngot:\n%s\nwant:\n%s", string(gotJSON), string(wantJSON))
+	}
+
+	// Re-run 5 times to verify determinism within a process.
+	for i := 0; i < 5; i++ {
+		again, err := UseCase(uc, enums.ArchetypeHTTPAPI, signals, sensors, pol)
+		if err != nil {
+			t.Fatalf("re-run %d: %v", i, err)
+		}
+		againJSON, err := json.MarshalIndent(again, "", "  ")
+		if err != nil {
+			t.Fatalf("re-run %d marshal: %v", i, err)
+		}
+		if !bytes.Equal(gotJSON, againJSON) {
+			t.Fatalf("re-run %d JSON drifted", i)
+		}
 	}
 }
 

@@ -1,0 +1,37 @@
+{
+  "UseCaseID": "uc-checkout",
+  "Archetype": "http-api",
+  "Verdict": "fail",
+  "Confidence": 0.9879746835443037,
+  "ObligatorySatisfied": false,
+  "EvaluatedAngles": [
+    "security",
+    "build",
+    "unit-test",
+    "e2e-test"
+  ],
+  "FailingAngles": [
+    "e2e-test"
+  ],
+  "WarningAngles": [
+    "security"
+  ],
+  "HealHints": [
+    {
+      "Angle": "security",
+      "Verdict": "warn",
+      "Hint": {
+        "summary": "synthetic",
+        "rationale": ""
+      }
+    },
+    {
+      "Angle": "e2e-test",
+      "Verdict": "fail",
+      "Hint": {
+        "summary": "synthetic",
+        "rationale": ""
+      }
+    }
+  ]
+}

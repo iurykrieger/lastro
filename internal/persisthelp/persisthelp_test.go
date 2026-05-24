@@ -58,3 +58,23 @@ func TestAtomicWrite_CreatesParentDirs(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestAtomicWrite_CleansUpTmpOnRenameFailure(t *testing.T) {
+	dir := t.TempDir()
+	// Pre-create the target as a directory so Rename will fail
+	// (cannot rename a file over a non-empty directory).
+	target := filepath.Join(dir, "target")
+	if err := os.Mkdir(target, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(target, "sentinel"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	err := AtomicWrite(target, []byte("hello"))
+	if err == nil {
+		t.Fatal("AtomicWrite over a non-empty directory unexpectedly succeeded")
+	}
+	if _, statErr := os.Stat(target + ".tmp"); !os.IsNotExist(statErr) {
+		t.Fatalf(".tmp file not cleaned up: stat=%v", statErr)
+	}
+}

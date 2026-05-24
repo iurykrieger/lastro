@@ -69,6 +69,7 @@ func UseCase(
 
 	anyObligatoryFail := false
 	allObligatoryPassGrade := true
+	var weightSum, weightedSum float64
 
 	for _, angle := range enums.AllAngles() {
 		status, hasStatus := statuses[angle]
@@ -83,6 +84,17 @@ func UseCase(
 
 		nature := natureBySensorID[sig.SensorID]
 		effective := effectiveVerdict(sig, nature, pol.InferentialFloor)
+
+		// Accumulate weighted confidence using RAW sig.Confidence (spec §6.2 step 6).
+		// Floor demotion affects verdict only, not the confidence contribution.
+		var weight float64
+		if nature == enums.NatureComputational {
+			weight = 1.0
+		} else {
+			weight = sig.Confidence
+		}
+		weightSum += weight
+		weightedSum += weight * sig.Confidence
 
 		v.EvaluatedAngles = append(v.EvaluatedAngles, angle)
 
@@ -123,8 +135,11 @@ func UseCase(
 	}
 	v.ObligatorySatisfied = v.Verdict == enums.VerdictPass
 
-	// Confidence: weighted average using RAW signal.Confidence (floor demotion
-	// affects verdict only, not confidence). Implementation arrives in Task 13.
+	// Confidence: weighted average using RAW signal.Confidence (spec §6.2 step 6).
+	// Floor demotion affects verdict only, not the confidence contribution.
+	if weightSum > 0 {
+		v.Confidence = weightedSum / weightSum
+	}
 
 	return v, nil
 }

@@ -366,3 +366,123 @@ func TestUseCase_CanonicalAngleOrder(t *testing.T) {
 		}
 	}
 }
+
+// almostEqual returns true when a and b differ by at most tol.
+func almostEqual(a, b, tol float64) bool {
+	d := a - b
+	if d < 0 {
+		d = -d
+	}
+	return d <= tol
+}
+
+func TestUseCase_Confidence_AllComputationalPass(t *testing.T) {
+	uc := makeUseCase("uc", enums.ArchetypeHTTPAPI)
+	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI,
+		[]enums.ValidationAngle{enums.AngleBuild, enums.AngleUnitTest}, nil, 0.7)
+	signals := []aggregate.AggregateSignal{
+		makeSignal("uc", "s1", enums.AngleBuild, enums.VerdictPass, 1.0),
+		makeSignal("uc", "s2", enums.AngleUnitTest, enums.VerdictPass, 1.0),
+	}
+	sensors := []sensor.Sensor{
+		makeSensor("s1", "uc", enums.AngleBuild, enums.NatureComputational),
+		makeSensor("s2", "uc", enums.AngleUnitTest, enums.NatureComputational),
+	}
+	v, err := UseCase(uc, enums.ArchetypeHTTPAPI, signals, sensors, pol)
+	if err != nil {
+		t.Fatalf("UseCase: %v", err)
+	}
+	// weights: 1.0, 1.0. weighted sum: 1*1 + 1*1 = 2.0. total weight: 2.0. avg: 1.0.
+	if !almostEqual(v.Confidence, 1.0, 1e-9) {
+		t.Errorf("Confidence = %v, want 1.0", v.Confidence)
+	}
+}
+
+func TestUseCase_Confidence_MixedComputationalInferential(t *testing.T) {
+	// Worked example from spec §6.3 (second variant, fail not floor-demoted):
+	// build (comp, pass, 1.0): weight 1.0, value 1.0
+	// unit-test (comp, pass, 1.0): weight 1.0, value 1.0
+	// e2e-test (inf, fail, 0.95): weight 0.95, value 0.95
+	// security (inf, pass, 0.9): weight 0.9, value 0.9
+	// weight sum = 3.85, weighted sum = 1 + 1 + 0.9025 + 0.81 = 3.7125
+	// confidence ≈ 0.9642857...
+	uc := makeUseCase("uc", enums.ArchetypeHTTPAPI)
+	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI,
+		[]enums.ValidationAngle{enums.AngleBuild, enums.AngleUnitTest, enums.AngleE2ETest},
+		[]enums.ValidationAngle{enums.AngleSecurity}, 0.7)
+	signals := []aggregate.AggregateSignal{
+		makeSignal("uc", "s-build", enums.AngleBuild, enums.VerdictPass, 1.0),
+		makeSignal("uc", "s-unit", enums.AngleUnitTest, enums.VerdictPass, 1.0),
+		makeSignal("uc", "s-e2e", enums.AngleE2ETest, enums.VerdictFail, 0.95),
+		makeSignal("uc", "s-sec", enums.AngleSecurity, enums.VerdictPass, 0.9),
+	}
+	sensors := []sensor.Sensor{
+		makeSensor("s-build", "uc", enums.AngleBuild, enums.NatureComputational),
+		makeSensor("s-unit", "uc", enums.AngleUnitTest, enums.NatureComputational),
+		makeSensor("s-e2e", "uc", enums.AngleE2ETest, enums.NatureInferential),
+		makeSensor("s-sec", "uc", enums.AngleSecurity, enums.NatureInferential),
+	}
+	v, err := UseCase(uc, enums.ArchetypeHTTPAPI, signals, sensors, pol)
+	if err != nil {
+		t.Fatalf("UseCase: %v", err)
+	}
+	want := 3.7125 / 3.85
+	if !almostEqual(v.Confidence, want, 1e-9) {
+		t.Errorf("Confidence = %v, want %v", v.Confidence, want)
+	}
+	if v.Verdict != enums.VerdictFail {
+		t.Errorf("Verdict = %q, want fail (e2e-test confidence 0.95 >= floor 0.7)", v.Verdict)
+	}
+}
+
+func TestUseCase_Confidence_FloorDemotedSignalStillContributes(t *testing.T) {
+	// Worked example from spec §6.3 (first variant, fail floor-demoted):
+	// build (comp, pass, 1.0): weight 1.0
+	// unit-test (comp, pass, 1.0): weight 1.0
+	// e2e-test (inf, fail, 0.5): weight 0.5, demoted to inconclusive for verdict; still contributes confidence
+	// security (inf, pass, 0.9): weight 0.9
+	// weight sum = 3.4, weighted sum = 1 + 1 + 0.25 + 0.81 = 3.06
+	// confidence ≈ 0.9
+	uc := makeUseCase("uc", enums.ArchetypeHTTPAPI)
+	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI,
+		[]enums.ValidationAngle{enums.AngleBuild, enums.AngleUnitTest, enums.AngleE2ETest},
+		[]enums.ValidationAngle{enums.AngleSecurity}, 0.7)
+	signals := []aggregate.AggregateSignal{
+		makeSignal("uc", "s-build", enums.AngleBuild, enums.VerdictPass, 1.0),
+		makeSignal("uc", "s-unit", enums.AngleUnitTest, enums.VerdictPass, 1.0),
+		makeSignal("uc", "s-e2e", enums.AngleE2ETest, enums.VerdictFail, 0.5),
+		makeSignal("uc", "s-sec", enums.AngleSecurity, enums.VerdictPass, 0.9),
+	}
+	sensors := []sensor.Sensor{
+		makeSensor("s-build", "uc", enums.AngleBuild, enums.NatureComputational),
+		makeSensor("s-unit", "uc", enums.AngleUnitTest, enums.NatureComputational),
+		makeSensor("s-e2e", "uc", enums.AngleE2ETest, enums.NatureInferential),
+		makeSensor("s-sec", "uc", enums.AngleSecurity, enums.NatureInferential),
+	}
+	v, err := UseCase(uc, enums.ArchetypeHTTPAPI, signals, sensors, pol)
+	if err != nil {
+		t.Fatalf("UseCase: %v", err)
+	}
+	want := 3.06 / 3.4
+	if !almostEqual(v.Confidence, want, 1e-9) {
+		t.Errorf("Confidence = %v, want %v", v.Confidence, want)
+	}
+	if v.Verdict != enums.VerdictInconclusive {
+		t.Errorf("Verdict = %q, want inconclusive (e2e-test demoted)", v.Verdict)
+	}
+	if len(v.FailingAngles) != 0 {
+		t.Errorf("FailingAngles = %v, want [] (demoted)", v.FailingAngles)
+	}
+}
+
+func TestUseCase_Confidence_ZeroWhenNoSignals(t *testing.T) {
+	uc := makeUseCase("uc", enums.ArchetypeHTTPAPI)
+	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI, nil, nil, 0.7) // no obligatory, no optional
+	v, err := UseCase(uc, enums.ArchetypeHTTPAPI, nil, nil, pol)
+	if err != nil {
+		t.Fatalf("UseCase: %v", err)
+	}
+	if v.Confidence != 0.0 {
+		t.Errorf("Confidence = %v, want 0.0", v.Confidence)
+	}
+}

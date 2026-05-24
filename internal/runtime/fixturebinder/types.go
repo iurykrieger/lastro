@@ -1,6 +1,6 @@
 // Package fixturebinder writes a sensor step's fixture payloads to disk
 // and returns the environment variables a step command needs to read them.
-// See docs/harness-framework/plan.md §5 (fixture binding contract).
+// See docs/superpowers/specs/2026-05-24-b1-composed-runtime-design.md §5 (fixture binding contract).
 package fixturebinder
 
 // StepBinding is the resolved per-step view a sensor step's executor consumes.

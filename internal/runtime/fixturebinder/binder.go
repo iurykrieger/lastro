@@ -17,7 +17,7 @@ type Binder struct {
 
 // Bind resolves a step's `uses:` fixture ids against the use case's owned
 // fixtures, writes each payload to ScratchDir, and returns a StepBinding.
-// See spec §5 for the full behavior contract.
+// See the package doc for the spec reference.
 func (b *Binder) Bind(step sensor.Step, owningUseCase *usecase.UseCase, store fixture.FixtureStore) (StepBinding, error) {
 	binding := StepBinding{
 		Env:      map[string]string{},

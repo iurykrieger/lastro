@@ -25,15 +25,17 @@ func (p *EffectivePolicy) MarshalYAML() ([]byte, error) {
 		Disabled   []string `json:"disabled_angles"   yaml:"disabled_angles"`
 	}
 	type docOut struct {
-		SchemaVersion string              `json:"schema_version" yaml:"schema_version"`
-		ResolvedFrom  []string            `json:"resolved_from"  yaml:"resolved_from"`
-		PerArchetype  map[string]blockOut `json:"per_archetype"  yaml:"per_archetype"`
+		SchemaVersion    string              `json:"schema_version"    yaml:"schema_version"`
+		ResolvedFrom     []string            `json:"resolved_from"     yaml:"resolved_from"`
+		InferentialFloor float64             `json:"inferential_floor" yaml:"inferential_floor"`
+		PerArchetype     map[string]blockOut `json:"per_archetype"     yaml:"per_archetype"`
 	}
 
 	doc := docOut{
-		SchemaVersion: p.SchemaVersion,
-		ResolvedFrom:  append([]string{}, p.ResolvedFrom...),
-		PerArchetype:  map[string]blockOut{},
+		SchemaVersion:    p.SchemaVersion,
+		ResolvedFrom:     append([]string{}, p.ResolvedFrom...),
+		InferentialFloor: p.InferentialFloor,
+		PerArchetype:     map[string]blockOut{},
 	}
 
 	for arch, block := range p.PerArchetype {

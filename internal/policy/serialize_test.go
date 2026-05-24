@@ -114,3 +114,42 @@ func TestMarshalYAML_NilReceiver(t *testing.T) {
 		t.Errorf("MarshalYAML on nil receiver should return nil bytes, got %d bytes", len(out))
 	}
 }
+
+func TestMarshalYAML_EmitsInferentialFloor(t *testing.T) {
+	eff := &EffectivePolicy{
+		SchemaVersion:    SupportedSchemaVersion,
+		ResolvedFrom:     []string{"global"},
+		PerArchetype:     map[enums.Archetype]map[enums.ValidationAngle]AngleStatus{},
+		InferentialFloor: 0.65,
+	}
+	raw, err := eff.MarshalYAML()
+	if err != nil {
+		t.Fatalf("MarshalYAML: %v", err)
+	}
+	got := string(raw)
+	if !strings.Contains(got, "inferential_floor: 0.65") {
+		t.Errorf("output missing 'inferential_floor: 0.65':\n%s", got)
+	}
+}
+
+func TestMarshalYAML_FloorDeterministic(t *testing.T) {
+	eff := &EffectivePolicy{
+		SchemaVersion:    SupportedSchemaVersion,
+		ResolvedFrom:     []string{"global", "local"},
+		PerArchetype:     map[enums.Archetype]map[enums.ValidationAngle]AngleStatus{},
+		InferentialFloor: 0.7,
+	}
+	first, err := eff.MarshalYAML()
+	if err != nil {
+		t.Fatalf("first MarshalYAML: %v", err)
+	}
+	for i := 0; i < 10; i++ {
+		again, err := eff.MarshalYAML()
+		if err != nil {
+			t.Fatalf("iteration %d MarshalYAML: %v", i, err)
+		}
+		if !bytes.Equal(first, again) {
+			t.Fatalf("MarshalYAML output drifted between calls\nfirst:\n%s\niter %d:\n%s", string(first), i, string(again))
+		}
+	}
+}

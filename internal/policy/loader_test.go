@@ -50,13 +50,7 @@ func TestLoad_LocalExample(t *testing.T) {
 
 func loadTestdata(t *testing.T, name string) error {
 	t.Helper()
-	path := filepath.Join("testdata", name)
-	f, err := os.Open(path)
-	if err != nil {
-		t.Fatalf("open %s: %v", path, err)
-	}
-	defer f.Close()
-	_, err = Load(f)
+	_, err := loadValid(t, name)
 	return err
 }
 
@@ -94,6 +88,50 @@ func TestLoad_RejectsDuplicateInList(t *testing.T) {
 	msg := strings.ToLower(err.Error())
 	for _, want := range []string{"http-api", "build", "duplicate"} {
 		if !strings.Contains(msg, strings.ToLower(want)) {
+			t.Errorf("error %q missing %q", err.Error(), want)
+		}
+	}
+}
+
+func loadValid(t *testing.T, name string) (*ValidationPolicy, error) {
+	t.Helper()
+	path := filepath.Join("testdata", name)
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("open %s: %v", path, err)
+	}
+	defer f.Close()
+	return Load(f)
+}
+
+func TestLoad_AcceptsExplicitFloor(t *testing.T) {
+	p, err := loadValid(t, "floor-explicit.yaml")
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if p.InferentialFloor == nil {
+		t.Fatal("InferentialFloor should be non-nil when YAML sets it")
+	}
+	if *p.InferentialFloor != 0.85 {
+		t.Errorf("*InferentialFloor = %v, want 0.85", *p.InferentialFloor)
+	}
+}
+
+func TestLoad_OmittedFloorRemainsNil(t *testing.T) {
+	p := loadExample(t, "global.yaml")
+	if p.InferentialFloor != nil {
+		t.Errorf("global.yaml has no inferential_floor; InferentialFloor = %v, want nil", *p.InferentialFloor)
+	}
+}
+
+func TestLoad_RejectsOutOfRangeFloor(t *testing.T) {
+	err := loadTestdata(t, "floor-out-of-range.yaml")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	msg := strings.ToLower(err.Error())
+	for _, want := range []string{"inferential_floor", "maximum"} {
+		if !strings.Contains(msg, want) {
 			t.Errorf("error %q missing %q", err.Error(), want)
 		}
 	}

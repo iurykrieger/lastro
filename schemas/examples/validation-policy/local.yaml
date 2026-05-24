@@ -2,6 +2,7 @@
 # performance and pulls logs from optional into obligatory.
 schema_version: 1.0.0
 scope: local
+inferential_floor: 0.8
 per_archetype:
   http-api:
     obligatory_angles: [build, security, unit-test, e2e-test, contracts, logs]

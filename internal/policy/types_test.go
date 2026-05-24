@@ -75,3 +75,28 @@ func TestEffectivePolicyShape(t *testing.T) {
 		t.Errorf("round-trip status = %q, want obligatory", got)
 	}
 }
+
+func TestDefaultInferentialFloorIsSeventy(t *testing.T) {
+	if DefaultInferentialFloor != 0.7 {
+		t.Errorf("DefaultInferentialFloor = %v, want 0.7", DefaultInferentialFloor)
+	}
+}
+
+func TestValidationPolicyInferentialFloorIsNullable(t *testing.T) {
+	var p ValidationPolicy
+	if p.InferentialFloor != nil {
+		t.Errorf("zero ValidationPolicy.InferentialFloor = %v, want nil", *p.InferentialFloor)
+	}
+	v := 0.85
+	p.InferentialFloor = &v
+	if p.InferentialFloor == nil || *p.InferentialFloor != 0.85 {
+		t.Errorf("ValidationPolicy.InferentialFloor round-trip broken")
+	}
+}
+
+func TestEffectivePolicyHasFloorField(t *testing.T) {
+	e := EffectivePolicy{InferentialFloor: 0.42}
+	if e.InferentialFloor != 0.42 {
+		t.Errorf("EffectivePolicy.InferentialFloor = %v, want 0.42", e.InferentialFloor)
+	}
+}

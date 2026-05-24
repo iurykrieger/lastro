@@ -102,6 +102,31 @@ func TestValidate_FailWithHealHint_OK(t *testing.T) {
 	}
 }
 
+func TestValidate_WarnWithoutHealHint(t *testing.T) {
+	sig := validSignal()
+	sig.Verdict = enums.VerdictWarn
+	sig.HealHint = nil
+	err := Validate(sig)
+	if err == nil {
+		t.Fatal("expected error for warn without heal_hint, got nil")
+	}
+	if !strings.Contains(err.Error(), "heal_hint") {
+		t.Errorf("expected error to mention 'heal_hint', got: %v", err)
+	}
+}
+
+func TestValidate_WarnWithHealHint_OK(t *testing.T) {
+	sig := validSignal()
+	sig.Verdict = enums.VerdictWarn
+	sig.HealHint = &HealHint{
+		Summary:   "degraded latency",
+		Rationale: "p99 exceeded threshold but did not breach hard limit",
+	}
+	if err := Validate(sig); err != nil {
+		t.Fatalf("Validate on valid warning signal: %v", err)
+	}
+}
+
 func TestValidate_ConfidenceBelowZero(t *testing.T) {
 	sig := validSignal()
 	sig.Confidence = -0.1

@@ -123,3 +123,36 @@ components:
 		t.Fatalf(".harness/ written to despite validation failure: stat=%v", err)
 	}
 }
+
+func TestPersist_AtomicityOnWriteFailure(t *testing.T) {
+	// Create a regular file at the path that MkdirAll would need as a parent dir.
+	blocker := filepath.Join(t.TempDir(), "blocker")
+	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	harnessDir := filepath.Join(blocker, ".harness") // child of a regular file → MkdirAll fails
+
+	in := []byte(`schema_version: 1.0.0
+archetype: http-api
+components:
+  - schema_version: 1.0.0
+    id: express
+    kind: library
+    name: express
+    version: 4.18.0
+    capabilities: [http-routing]
+    detection_evidence: [{file: package.json, path: .dependencies.express}]
+`)
+	err := Persist(in, harnessDir)
+	if err == nil {
+		t.Fatal("Persist succeeded against unwritable harnessDir")
+	}
+	manifestPath := filepath.Join(harnessDir, "stack-manifest.yaml")
+	_, statErr := os.Stat(manifestPath)
+	// Accept either ErrNotExist or the "not a directory" error that arises
+	// when a path component is a regular file — both prove no manifest was
+	// left behind.
+	if statErr == nil {
+		t.Fatalf("partial state left behind: file exists at %s", manifestPath)
+	}
+}

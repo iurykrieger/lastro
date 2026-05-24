@@ -50,13 +50,7 @@ func TestLoad_LocalExample(t *testing.T) {
 
 func loadTestdata(t *testing.T, name string) error {
 	t.Helper()
-	path := filepath.Join("testdata", name)
-	f, err := os.Open(path)
-	if err != nil {
-		t.Fatalf("open %s: %v", path, err)
-	}
-	defer f.Close()
-	_, err = Load(f)
+	_, err := loadValid(t, name)
 	return err
 }
 

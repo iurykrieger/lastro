@@ -19,6 +19,13 @@ func UseCase(
 	sensors []sensor.Sensor,
 	pol *policy.EffectivePolicy,
 ) (UseCaseVerdict, error) {
+	if uc == nil {
+		return UseCaseVerdict{}, fmt.Errorf("aggregator: nil UseCase")
+	}
+	if pol == nil {
+		return UseCaseVerdict{}, fmt.Errorf("aggregator: nil EffectivePolicy")
+	}
+
 	// Step 1 — input validation: archetype scope, signal ownership, angle uniqueness.
 
 	if !archetypeInScope(uc, archetype) {

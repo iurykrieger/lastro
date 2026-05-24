@@ -135,6 +135,22 @@ func TestUseCase_MissingObligatorySignalReturnsError(t *testing.T) {
 	}
 }
 
+func TestUseCase_NilUseCaseReturnsError(t *testing.T) {
+	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI, []enums.ValidationAngle{enums.AngleBuild}, nil, 0.7)
+	_, err := UseCase(nil, enums.ArchetypeHTTPAPI, nil, nil, pol)
+	if err == nil || !strings.Contains(err.Error(), "nil UseCase") {
+		t.Errorf("err = %v, want 'nil UseCase'", err)
+	}
+}
+
+func TestUseCase_NilPolicyReturnsError(t *testing.T) {
+	uc := makeUseCase("uc", enums.ArchetypeHTTPAPI)
+	_, err := UseCase(uc, enums.ArchetypeHTTPAPI, nil, nil, nil)
+	if err == nil || !strings.Contains(err.Error(), "nil EffectivePolicy") {
+		t.Errorf("err = %v, want 'nil EffectivePolicy'", err)
+	}
+}
+
 func TestUseCase_AllObligatoryPass(t *testing.T) {
 	uc := makeUseCase("uc-login", enums.ArchetypeHTTPAPI)
 	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI,

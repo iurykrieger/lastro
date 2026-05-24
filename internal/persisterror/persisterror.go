@@ -26,8 +26,8 @@ const (
 // validator doesn't surface a path).
 type Error struct {
 	Kind       Kind           `json:"kind"`
-	EntityType string         `json:"entityType"`
-	EntityID   string         `json:"entityId,omitempty"`
+	EntityType string         `json:"entity_type"`
+	EntityID   string         `json:"entity_id,omitempty"`
 	File       string         `json:"file,omitempty"`
 	Path       string         `json:"path,omitempty"`
 	Value      any            `json:"value,omitempty"`

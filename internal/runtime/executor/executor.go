@@ -196,31 +196,9 @@ func toAggregateSignals(in []signal.Signal) []aggregate.Signal {
 			Verdict:       s.Verdict,
 			Confidence:    s.Confidence,
 			Evidence:      aggregate.Evidence(s.Evidence),
-			HealHint:      convertHealHint(s.HealHint),
+			HealHint:      aggregate.ConvertHealHint(s.HealHint),
 		}
 	}
 	return out
 }
 
-// convertHealHint copies a *signal.HealHint into a *aggregate.HealHint
-// (which aliases signalstub.HealHint). The two types have identical
-// shapes but are declared in different packages.
-func convertHealHint(h *signal.HealHint) *aggregate.HealHint {
-	if h == nil {
-		return nil
-	}
-	out := &aggregate.HealHint{
-		Summary:   h.Summary,
-		Rationale: h.Rationale,
-	}
-	if len(h.SuggestedLocus) > 0 {
-		out.SuggestedLocus = make([]aggregate.Locus, len(h.SuggestedLocus))
-		for j, l := range h.SuggestedLocus {
-			out.SuggestedLocus[j] = aggregate.Locus{
-				Path:   l.Path,
-				Symbol: l.Symbol,
-			}
-		}
-	}
-	return out
-}

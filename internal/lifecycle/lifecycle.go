@@ -475,7 +475,7 @@ func readSignalsJSONL(path string) ([]aggregate.Signal, error) {
 		out = append(out, aggregate.Signal{
 			SchemaVersion: sig.SchemaVersion, SensorID: sig.SensorID, UseCaseID: sig.UseCaseID,
 			Angle: sig.Angle, EmittedAt: sig.EmittedAt, Verdict: sig.Verdict, Confidence: sig.Confidence,
-			Evidence: aggregate.Evidence(sig.Evidence), HealHint: convertHealHint(sig.HealHint),
+			Evidence: aggregate.Evidence(sig.Evidence), HealHint: aggregate.ConvertHealHint(sig.HealHint),
 		})
 	}
 	return out, nil
@@ -502,23 +502,6 @@ func splitLines(b []byte) [][]byte {
 	}
 	if start < len(b) {
 		out = append(out, b[start:])
-	}
-	return out
-}
-
-// convertHealHint copies a *signal.HealHint into a *aggregate.HealHint
-// (which aliases signalstub.HealHint). The two types have identical
-// shapes but are declared in different packages.
-func convertHealHint(h *signal.HealHint) *aggregate.HealHint {
-	if h == nil {
-		return nil
-	}
-	out := &aggregate.HealHint{Summary: h.Summary, Rationale: h.Rationale}
-	if len(h.SuggestedLocus) > 0 {
-		out.SuggestedLocus = make([]aggregate.Locus, len(h.SuggestedLocus))
-		for i, l := range h.SuggestedLocus {
-			out.SuggestedLocus[i] = aggregate.Locus{Path: l.Path, Symbol: l.Symbol}
-		}
 	}
 	return out
 }

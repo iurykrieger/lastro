@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -51,9 +52,10 @@ func buildFakeSensor() (string, error) {
 	return out, nil
 }
 
-func isWindows() bool {
-	return strings.Contains(strings.ToLower(os.Getenv("OS")), "windows") || strings.HasSuffix(strings.ToLower(os.Getenv("ComSpec")), "cmd.exe")
-}
+// isWindows returns true if the current binary was built for Windows.
+// We use runtime.GOOS rather than environment variables because WSL
+// inherits OS=Windows_NT from the host shell despite running Linux.
+func isWindows() bool { return runtime.GOOS == "windows" }
 
 func TestRunAssertion_PassSingleStep(t *testing.T) {
 	uc := &usecase.UseCase{ID: "fake-uc"}

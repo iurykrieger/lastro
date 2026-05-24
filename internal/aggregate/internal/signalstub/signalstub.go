@@ -14,6 +14,9 @@ import (
 	"github.com/iurykrieger/lastro/internal/enums"
 )
 
+// Evidence is the open-shape evidence map carried by a Signal.
+type Evidence map[string]any
+
 // Locus identifies a code location the LLM should consider editing.
 type Locus struct {
 	Path   string `json:"path"`
@@ -39,6 +42,6 @@ type Signal struct {
 	EmittedAt     time.Time             `json:"emitted_at"`
 	Verdict       enums.Verdict         `json:"verdict"`
 	Confidence    float64               `json:"confidence"`
-	Evidence      map[string]any        `json:"evidence,omitempty"`
+	Evidence      Evidence              `json:"evidence,omitempty"`
 	HealHint      *HealHint             `json:"heal_hint,omitempty"`
 }

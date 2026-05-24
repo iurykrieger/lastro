@@ -63,6 +63,6 @@ var _ FixtureStore = (*compileTimeStubStore)(nil)
 
 type compileTimeStubStore struct{}
 
-func (*compileTimeStubStore) LookupFixture(string) (Fixture, bool)  { return Fixture{}, false }
-func (*compileTimeStubStore) FixturesForUseCase(string) []Fixture   { return nil }
-func (*compileTimeStubStore) All() []Fixture                        { return nil }
+func (*compileTimeStubStore) LookupFixture(string) (Fixture, bool) { return Fixture{}, false }
+func (*compileTimeStubStore) FixturesForUseCase(string) []Fixture  { return nil }
+func (*compileTimeStubStore) All() []Fixture                       { return nil }

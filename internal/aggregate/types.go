@@ -26,6 +26,14 @@ type HealHint = signalstub.HealHint
 // Locus is re-exported alongside HealHint.
 type Locus = signalstub.Locus
 
+// Signal is re-exported from signalstub so consumers outside this
+// package can construct RollupInput.Signals without importing the
+// stub package directly (Go internal-package rules forbid it).
+type Signal = signalstub.Signal
+
+// Evidence is re-exported alongside Signal.
+type Evidence = signalstub.Evidence
+
 // AggregateSignal is the terminal record emitted by every sensor run.
 type AggregateSignal struct {
 	SchemaVersion     string                  `json:"schema_version"`

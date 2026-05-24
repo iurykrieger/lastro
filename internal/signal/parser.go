@@ -42,7 +42,7 @@ func ParseSignals(r io.Reader) iter.Seq2[Signal, error] {
 			if len(line) == 0 {
 				continue
 			}
-			sig, err := decodeAndValidateLine(line)
+			sig, err := DecodeLine(line)
 			if !yield(sig, err) {
 				return
 			}
@@ -53,11 +53,12 @@ func ParseSignals(r io.Reader) iter.Seq2[Signal, error] {
 	}
 }
 
-// decodeAndValidateLine runs the per-line three-phase pipeline:
-// 1) JSON decode into a generic interface, 2) JSON Schema validation,
-// 3) typed decode into a Signal. Any phase failure returns the zero
-// Signal and a wrapped error.
-func decodeAndValidateLine(line []byte) (Signal, error) {
+// DecodeLine runs the per-line three-phase pipeline used by ParseSignals
+// for one JSON Lines record: JSON decode → schema validation → typed
+// decode. Returns the zero Signal and a wrapped error on any phase
+// failure. Exposed so streaming consumers (e.g., the executor) can
+// interleave decoding with their own per-line bookkeeping.
+func DecodeLine(line []byte) (Signal, error) {
 	var instance any
 	if err := json.Unmarshal(line, &instance); err != nil {
 		return Signal{}, fmt.Errorf("signal: decode line: %w", err)

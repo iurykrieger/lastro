@@ -1,7 +1,7 @@
 package policy
 
 import (
-	"sort"
+	"slices"
 
 	"github.com/iurykrieger/lastro/internal/enums"
 )
@@ -29,8 +29,8 @@ func (p *EffectivePolicy) AnglesFor(a enums.Archetype) (obligatory, optional []e
 			optional = append(optional, angle)
 		}
 	}
-	sort.Slice(obligatory, func(i, j int) bool { return obligatory[i] < obligatory[j] })
-	sort.Slice(optional, func(i, j int) bool { return optional[i] < optional[j] })
+	slices.Sort(obligatory)
+	slices.Sort(optional)
 	return
 }
 

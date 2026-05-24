@@ -36,7 +36,7 @@ func TestAnglesFor_ReturnsSortedObligatoryAndOptional(t *testing.T) {
 	}
 }
 
-func TestAnglesFor_ExcludesDisabledAndUnset(t *testing.T) {
+func TestAnglesFor_ExcludesDisabled(t *testing.T) {
 	p := effectiveFixture()
 	obligatory, optional := p.AnglesFor(enums.ArchetypeHTTPAPI)
 	for _, a := range obligatory {
@@ -48,6 +48,41 @@ func TestAnglesFor_ExcludesDisabledAndUnset(t *testing.T) {
 		if a == enums.AngleE2ETest {
 			t.Error("disabled angle e2e-test must not appear in optional")
 		}
+	}
+}
+
+func TestAnglesFor_ExcludesUnsetWithinConfiguredArchetype(t *testing.T) {
+	p := effectiveFixture()
+	// AngleContracts is applicable to http-api per E1, but the fixture
+	// does not configure it — it should appear in neither output slice.
+	obligatory, optional := p.AnglesFor(enums.ArchetypeHTTPAPI)
+	for _, a := range obligatory {
+		if a == enums.AngleContracts {
+			t.Error("unset angle contracts must not appear in obligatory")
+		}
+	}
+	for _, a := range optional {
+		if a == enums.AngleContracts {
+			t.Error("unset angle contracts must not appear in optional")
+		}
+	}
+}
+
+func TestAnglesFor_NilReceiver(t *testing.T) {
+	var p *EffectivePolicy
+	obl, opt := p.AnglesFor(enums.ArchetypeHTTPAPI)
+	if obl == nil || opt == nil {
+		t.Fatal("nil receiver must return empty slices, not nil")
+	}
+	if len(obl) != 0 || len(opt) != 0 {
+		t.Errorf("nil receiver must return empty slices, got obl=%v opt=%v", obl, opt)
+	}
+}
+
+func TestStatus_NilReceiver(t *testing.T) {
+	var p *EffectivePolicy
+	if got := p.Status(enums.ArchetypeHTTPAPI, enums.AngleBuild); got != "" {
+		t.Errorf("nil receiver Status = %q, want %q", got, "")
 	}
 }
 

@@ -249,3 +249,30 @@ func containsString(haystack []string, needle string) bool {
 	}
 	return false
 }
+
+func TestResolveExecutionOrder_Determinism100Runs(t *testing.T) {
+	// Same diamond as TestResolveExecutionOrder_DiamondWithIDSortTiebreak.
+	// Repeating 100 times shakes loose any map-iteration nondeterminism
+	// that survived the explicit sort path.
+	input := []Sensor{
+		{ID: "a", DependsOn: []string{"y", "x"}},
+		{ID: "y", DependsOn: []string{"z"}},
+		{ID: "z"},
+		{ID: "x", DependsOn: []string{"z"}},
+	}
+	first, err := ResolveExecutionOrder(input)
+	if err != nil {
+		t.Fatalf("run 0: %v", err)
+	}
+	want := ids(first)
+	for run := 1; run < 100; run++ {
+		out, err := ResolveExecutionOrder(input)
+		if err != nil {
+			t.Fatalf("run %d: %v", run, err)
+		}
+		got := ids(out)
+		if !equalStringSlices(got, want) {
+			t.Fatalf("run %d: got %v, want %v", run, got, want)
+		}
+	}
+}

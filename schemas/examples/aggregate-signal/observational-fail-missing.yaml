@@ -12,6 +12,7 @@ confidence: 1.0
 rollup:
   total_signals: 2
   pass_count: 2
+  warn_count: 0
   fail_count: 0
   inconclusive_count: 0
 completeness:

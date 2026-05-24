@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "type": "aggregate",
+  "sensor_id": "sensor-x",
+  "use_case_id": "uc-x",
+  "angle": "code-structure",
+  "started_at": "2026-05-23T14:00:00Z",
+  "ended_at":   "2026-05-23T14:00:42Z",
+  "termination_reason": "completed",
+  "verdict": "warn",
+  "confidence": 1.0,
+  "rollup": {"total_signals": 120, "pass_count": 117, "warn_count": 3, "fail_count": 0, "inconclusive_count": 0},
+  "heal_hint": {"summary": "3 warnings across 120 code-structure signals", "rationale": "see individual non-pass signals for per-record detail"}
+}

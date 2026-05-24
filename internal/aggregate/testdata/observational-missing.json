@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "type": "aggregate",
+  "sensor_id": "sensor-x",
+  "use_case_id": "uc-x",
+  "angle": "logs",
+  "started_at": "2026-05-23T14:00:00Z",
+  "ended_at":   "2026-05-23T14:00:30Z",
+  "termination_reason": "stopped",
+  "verdict": "fail",
+  "confidence": 1.0,
+  "rollup": {"total_signals": 2, "pass_count": 2, "warn_count": 0, "fail_count": 0, "inconclusive_count": 0},
+  "completeness": {"expected_observations": ["a", "b", "c"], "missing_observations": ["c"]},
+  "heal_hint": {"summary": "logs sensor missing 1 of 3 expected observations: c", "rationale": "the sensor did not observe one or more required events; the corresponding code path likely failed silently or is missing instrumentation"}
+}

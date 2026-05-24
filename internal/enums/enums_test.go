@@ -192,7 +192,7 @@ func TestIsValidFixtureRoleRejectsUnknown(t *testing.T) {
 
 func TestAllVerdictsReturnsCanonicalOrder(t *testing.T) {
 	got := AllVerdicts()
-	want := []Verdict{VerdictPass, VerdictFail, VerdictInconclusive}
+	want := []Verdict{VerdictPass, VerdictWarn, VerdictFail, VerdictInconclusive}
 	if len(got) != len(want) {
 		t.Fatalf("AllVerdicts length: got %d, want %d", len(got), len(want))
 	}

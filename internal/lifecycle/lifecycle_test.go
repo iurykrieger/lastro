@@ -1,6 +1,7 @@
 package lifecycle
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/iurykrieger/lastro/internal/entrypoint"
 	"github.com/iurykrieger/lastro/internal/enums"
@@ -132,3 +134,59 @@ type emptyStore struct{}
 func (emptyStore) LookupFixture(id string) (fixture.Fixture, bool) { return fixture.Fixture{}, false }
 func (emptyStore) FixturesForUseCase(uc string) []fixture.Fixture  { return nil }
 func (emptyStore) All() []fixture.Fixture                          { return nil }
+
+func TestStartSensor_ObservationalEmitsAndAppearsInRegistry(t *testing.T) {
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "obs-pass", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+		Uses: []string{"fake"},
+		Steps: []sensor.Step{
+			{ID: "watch", Run: fakeSensorBin + " watch --emit order-received --emit order-validated --emit order-persisted --interval 30ms"},
+		},
+	}
+	lc := newTestLifecycle(t, []sensor.Sensor{s})
+
+	h, err := lc.StartSensor(context.Background(), s.ID, []string{"order-received", "order-validated", "order-persisted"})
+	if err != nil {
+		t.Fatalf("StartSensor: %v", err)
+	}
+	if h == nil || h.RunID == "" {
+		t.Fatalf("nil handle / empty RunID")
+	}
+
+	// Registry should now show one entry.
+	entries, _ := lc.registry.List()
+	if len(entries) != 1 || entries[0].SensorID != s.ID {
+		t.Errorf("registry entries = %+v, want 1 for %q", entries, s.ID)
+	}
+
+	t.Cleanup(func() {
+		_, _ = lc.StopSensor(context.Background(), h)
+	})
+
+	// Wait briefly for signals.jsonl to accumulate.
+	signalsPath := filepath.Join(h.RunDir, "signals.jsonl")
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if b, err := os.ReadFile(signalsPath); err == nil && bytes.Count(b, []byte{'\n'}) >= 3 {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Errorf("signals.jsonl did not accumulate 3 lines within deadline")
+}
+
+func TestStartSensor_ErrAssertionSensor(t *testing.T) {
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "assertion-only", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake"},
+		Steps: []sensor.Step{{ID: "only", Run: fakeSensorBin + " signal pass"}},
+	}
+	lc := newTestLifecycle(t, []sensor.Sensor{s})
+
+	_, err := lc.StartSensor(context.Background(), s.ID, nil)
+	if !errors.Is(err, ErrAssertionSensor) {
+		t.Errorf("err = %v, want ErrAssertionSensor", err)
+	}
+}

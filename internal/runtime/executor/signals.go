@@ -102,7 +102,10 @@ func (j *jsonlWriter) WriteLine(b []byte) error {
 	if _, err := j.w.Write([]byte{'\n'}); err != nil {
 		return err
 	}
-	return nil
+	// Flush after every line so that observational sensors (which remain
+	// running while the caller polls the file) write signals incrementally
+	// rather than buffering until Close.
+	return j.w.Flush()
 }
 
 func (j *jsonlWriter) Close() error {

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
+	"github.com/iurykrieger/lastro/internal/enums"
 	"github.com/iurykrieger/lastro/internal/runtime/executor"
 	"github.com/iurykrieger/lastro/internal/runtime/process"
 	"github.com/iurykrieger/lastro/internal/sensor"
@@ -186,6 +187,154 @@ func (l *Lifecycle) RunSensor(
 		_ = encErr
 	}
 	return agg, nil
+}
+
+// StartSensor spawns an observational sensor and returns a Handle
+// immediately. Returns ErrAssertionSensor if called on a kind:assertion
+// sensor. The watcher subprocess is detached from ctx (only StopSensor
+// or an OS signal can terminate it) so the caller process is free to
+// exit.
+func (l *Lifecycle) StartSensor(
+	ctx context.Context,
+	sensorID string,
+	expectedObs []string,
+) (*Handle, error) {
+	s, ok := l.opts.Sensors.Lookup(sensorID)
+	if !ok {
+		return nil, ErrSensorNotFound
+	}
+	if s.Kind != enums.KindObservational {
+		return nil, ErrAssertionSensor
+	}
+
+	runID := l.opts.NewRunID()
+	runDir := runDirPath(l.opts.RuntimeRoot, sensorID, runID)
+	if err := os.MkdirAll(runDir, 0o700); err != nil {
+		return nil, fmt.Errorf("lifecycle: mkdir runDir: %w", err)
+	}
+
+	_, _ = l.pruneDead()
+
+	key := runKey{SensorID: sensorID, RunID: runID}
+	stopCh := make(chan struct{})
+	doneCh := make(chan struct{})
+	entry := &runEntry{stopCh: stopCh, doneCh: doneCh}
+
+	l.mu.Lock()
+	l.inflight[key] = entry
+	l.mu.Unlock()
+
+	// Buffered to avoid blocking the executor's hook goroutine.
+	startedCh := make(chan struct{}, 1)
+	startErrCh := make(chan error, 1)
+
+	registered := false
+	onStart := func(stepIdx, pid, pgid int) {
+		h := &Handle{
+			SensorID: sensorID, RunID: runID, RunDir: runDir,
+			PID: pid, PGID: pgid, StartedAt: l.opts.Now(),
+			ExpectedObservations: expectedObs,
+			HarnessPID:           os.Getpid(),
+			HarnessVersion:       l.opts.Version,
+			GOOS:                 runtime.GOOS,
+		}
+		entry.handle = h
+		if !registered {
+			if err := l.registry.Append(*h); err != nil {
+				select {
+				case startErrCh <- err:
+				default:
+				}
+				return
+			}
+			registered = true
+			select {
+			case startedCh <- struct{}{}:
+			default:
+			}
+		} else {
+			_ = l.registry.UpdatePID(sensorID, runID, pid, pgid)
+		}
+	}
+
+	// Detached context: the spawning caller's ctx must NOT cancel the
+	// watcher. Inherit only Values, not cancellation.
+	detached := context.WithoutCancel(ctx)
+
+	exec := executor.New(executor.Options{
+		RepoRoot:      l.opts.Executor.OptionsRef().RepoRoot,
+		Resolver:      l.opts.Executor.OptionsRef().Resolver,
+		FixtureStore:  l.opts.Executor.OptionsRef().FixtureStore,
+		UseCaseLookup: l.opts.Executor.OptionsRef().UseCaseLookup,
+		Now:           l.opts.Executor.OptionsRef().Now,
+		Shell:         l.opts.Executor.OptionsRef().Shell,
+		GroupSignaler: l.opts.Signaler,
+		OnStepStart:   onStart,
+	})
+
+	go func() {
+		defer close(doneCh)
+		defer func() {
+			l.mu.Lock()
+			delete(l.inflight, key)
+			l.mu.Unlock()
+			_ = l.registry.Remove(sensorID, runID)
+		}()
+
+		agg, err := exec.Run(detached, s, runDir, expectedObs, stopCh)
+		entry.agg = agg
+		entry.err = err
+		_ = writeAggregateJSON(filepath.Join(runDir, "aggregate.json"), agg)
+	}()
+
+	// Wait until either the first step has spawned (registry entry
+	// written) or an early error fires.
+	select {
+	case <-startedCh:
+	case err := <-startErrCh:
+		// Best effort: signal the watcher to terminate.
+		close(stopCh)
+		<-doneCh
+		return nil, err
+	case <-time.After(10 * time.Second):
+		close(stopCh)
+		<-doneCh
+		return nil, fmt.Errorf("lifecycle: StartSensor timed out waiting for child spawn")
+	case <-ctx.Done():
+		close(stopCh)
+		<-doneCh
+		return nil, ctx.Err()
+	}
+
+	hCopy := *entry.handle
+	return &hCopy, nil
+}
+
+// StopSensor is a temporary stub; Task 17 replaces this with the full
+// cross-process implementation. The stub closes the stop channel and waits
+// for the run goroutine to exit, then returns whatever aggregate the
+// goroutine produced.
+func (l *Lifecycle) StopSensor(ctx context.Context, h *Handle) (aggregate.AggregateSignal, error) {
+	if h == nil {
+		return aggregate.AggregateSignal{}, fmt.Errorf("lifecycle: nil Handle")
+	}
+	l.mu.Lock()
+	entry, ok := l.inflight[runKey{SensorID: h.SensorID, RunID: h.RunID}]
+	l.mu.Unlock()
+	if !ok {
+		return aggregate.AggregateSignal{}, ErrSensorNotFound
+	}
+	select {
+	case <-entry.stopCh:
+	default:
+		close(entry.stopCh)
+	}
+	select {
+	case <-entry.doneCh:
+	case <-ctx.Done():
+		return aggregate.AggregateSignal{}, ctx.Err()
+	}
+	return entry.agg, entry.err
 }
 
 // pruneDead removes registry entries whose PIDs are no longer alive.

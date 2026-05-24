@@ -157,15 +157,24 @@ func (e *BindError) Unwrap() error { return e.Cause }
 ```go
 package aggregator // internal/runtime/aggregator/usecase
 
+// AngleHint pairs a non-pass verdict with its angle and heal hint.
+// Used to surface warn and fail signals from one use case in one slice.
+type AngleHint struct {
+    Angle   enums.ValidationAngle
+    Verdict enums.Verdict        // either warn or fail (never pass or inconclusive)
+    Hint    aggregate.HealHint
+}
+
 type UseCaseVerdict struct {
     UseCaseID           string
     Archetype           enums.Archetype
-    Verdict             enums.Verdict           // pass | fail | inconclusive
+    Verdict             enums.Verdict           // pass | fail | inconclusive (use-case level; warn lives only at signal level)
     Confidence          float64                  // weighted average, [0.0, 1.0]
-    ObligatorySatisfied bool                     // true iff Verdict == pass
+    ObligatorySatisfied bool                     // true iff every obligatory effective verdict in {pass, warn}
     EvaluatedAngles     []enums.ValidationAngle  // every obligatory+optional angle that contributed
-    FailingAngles       []enums.ValidationAngle  // subset whose post-floor verdict = fail
-    HealHints           []aggregate.HealHint     // parallel to FailingAngles
+    FailingAngles       []enums.ValidationAngle  // angles whose post-floor verdict == fail (canonical order)
+    WarningAngles       []enums.ValidationAngle  // angles whose post-floor verdict == warn (canonical order)
+    HealHints           []AngleHint              // one per fail + warn, in canonical angle order
 }
 
 func UseCase(
@@ -178,6 +187,8 @@ func UseCase(
 ```
 
 `sensors` is passed as an argument rather than threading `Nature` into the `AggregateSignal` schema — E8 is frozen and B5 (the caller) already has these in scope. The aggregator builds a `map[sensorID]enums.SensorNature` internally.
+
+**Why warn is signal-level only:** E8's brainstorm introduced `warn` as a "pass-grade outcome with concerns worth addressing." At the use-case level, warn collapses into pass for verdict gating (warn never fails a use case), but the affected angles are surfaced via `WarningAngles` so the heal loop can still propose fixes for non-blocking issues. The use-case verdict enum stays `{pass, fail, inconclusive}` per plan §6.3 — no plan amendment required.
 
 ### 6.2 Algorithm
 
@@ -199,26 +210,30 @@ func UseCase(
        - if not found AND status == optional:
            skip silently (optional angles need not produce a signal)
 
-3. Walk signals in enums.AllValidationAngles() canonical order.
+3. Walk signals in enums.AllAngles() canonical order.
    For each (signal, status):
    - if status == disabled: skip (defensive)
    - look up Nature via sensors -> map[sensor-id]Nature
    - compute effective_verdict:
        if Nature == inferential AND signal.Confidence < pol.InferentialFloor:
            effective_verdict = inconclusive
+           (applies uniformly: low-confidence inferential warn AND fail both become inconclusive)
        else:
            effective_verdict = signal.Verdict
    - append signal.Angle to EvaluatedAngles
    - if effective_verdict == fail:
        append signal.Angle to FailingAngles
-       append *signal.HealHint to HealHints
-       (HealHint must be non-nil per E8's invariant: AggregateSignal with verdict=fail
-        carries a HealHint; aggregator validates this and returns an error if violated)
+       append AngleHint{Angle, fail, *signal.HealHint} to HealHints
+   - else if effective_verdict == warn:
+       append signal.Angle to WarningAngles
+       append AngleHint{Angle, warn, *signal.HealHint} to HealHints
+   (For both warn and fail, signal.HealHint must be non-nil per E8's invariant.
+    The aggregator validates this and returns an error if violated.)
 
-4. Verdict (plan §6.3):
+4. Verdict (plan §6.3; warn is pass-grade at the use-case level):
    - if any obligatory signal's effective_verdict == fail:
        Verdict = fail
-   - else if every obligatory signal's effective_verdict == pass:
+   - else if every obligatory signal's effective_verdict in {pass, warn}:
        Verdict = pass
    - else:
        Verdict = inconclusive
@@ -347,7 +362,7 @@ B1's tests use `t.TempDir()` for `ScratchDir`. The on-disk layout above is a B2 
 
 - `fixturebinder.Bind`: `BoundIDs` sorted ascending; file contents are byte-equal to `Fixture.Payload`. `Env` and `Files` map iteration order is not part of the contract — callers don't depend on it.
 - `aggregator.UseCase`:
-  - Signals walked in `enums.AllValidationAngles()` order.
+  - Signals walked in `enums.AllAngles()` order.
   - `EvaluatedAngles`, `FailingAngles`, `HealHints` produced in canonical angle order; `HealHints[i]` always corresponds to `FailingAngles[i]`.
   - Confidence computed with stable accumulation: build `sum(weight*value)` and `sum(weight)` first, then divide once. No successive divisions.
   - JSON-marshaled `UseCaseVerdict` is byte-identical across runs given identical inputs.
@@ -365,7 +380,10 @@ B1's tests use `t.TempDir()` for `ScratchDir`. The on-disk layout above is a B2 
 | `aggregator/usecase` | 3 obligatory all pass | `Verdict=pass`, `ObligatorySatisfied=true`, `FailingAngles=[]` |
 | `aggregator/usecase` | 1 obligatory fail | `Verdict=fail`, `FailingAngles` populated, `HealHints` non-empty |
 | `aggregator/usecase` | only optional fails | `Verdict=pass`, `FailingAngles` populated with the optional angle |
-| `aggregator/usecase` | inferential signal below floor | effective verdict = inconclusive; not propagated as pass/fail |
+| `aggregator/usecase` | obligatory warn (computational) | `Verdict=pass`, `ObligatorySatisfied=true`, `WarningAngles` populated, `HealHints` has one entry with `Verdict=warn` |
+| `aggregator/usecase` | obligatory warn + obligatory fail | `Verdict=fail`, `FailingAngles` and `WarningAngles` both populated |
+| `aggregator/usecase` | inferential signal below floor (verdict=fail) | effective verdict = inconclusive; not in FailingAngles |
+| `aggregator/usecase` | inferential signal below floor (verdict=warn) | effective verdict = inconclusive; not in WarningAngles |
 | `aggregator/usecase` | mixed computational + inferential | weighted confidence matches hand-calculated value (§6.3 worked example) |
 | `aggregator/usecase` | duplicate angle signal | error `"duplicate-angle-signal"` |
 | `aggregator/usecase` | signal foreign to use case | error `"signal-foreign-use-case"` |

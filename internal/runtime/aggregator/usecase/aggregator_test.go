@@ -486,3 +486,32 @@ func TestUseCase_Confidence_ZeroWhenNoSignals(t *testing.T) {
 		t.Errorf("Confidence = %v, want 0.0", v.Confidence)
 	}
 }
+
+func TestUseCase_FailSignalWithNilHealHintReturnsError(t *testing.T) {
+	uc := makeUseCase("uc", enums.ArchetypeHTTPAPI)
+	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI,
+		[]enums.ValidationAngle{enums.AngleBuild}, nil, 0.7)
+	// Hand-construct a fail signal WITHOUT a HealHint (bypassing makeSignal's auto-fill).
+	sig := aggregate.AggregateSignal{
+		SchemaVersion: "1.0.0", Type: aggregate.TypeAggregate,
+		SensorID: "s1", UseCaseID: "uc",
+		Angle:             enums.AngleBuild,
+		StartedAt:         time.Unix(1, 0),
+		EndedAt:           time.Unix(2, 0),
+		TerminationReason: enums.TerminationCompleted,
+		Verdict:           enums.VerdictFail,
+		Confidence:        1.0,
+		HealHint:          nil,
+	}
+	sensors := []sensor.Sensor{makeSensor("s1", "uc", enums.AngleBuild, enums.NatureComputational)}
+	_, err := UseCase(uc, enums.ArchetypeHTTPAPI, []aggregate.AggregateSignal{sig}, sensors, pol)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	msg := err.Error()
+	for _, want := range []string{"heal_hint", "build", "fail"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("err = %q, missing %q", msg, want)
+		}
+	}
+}

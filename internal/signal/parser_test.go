@@ -397,6 +397,9 @@ func TestDecodeLine_SchemaViolation(t *testing.T) {
 	if !strings.Contains(err.Error(), "schema") {
 		t.Errorf("error = %v, want substring 'schema'", err)
 	}
+	if !strings.Contains(err.Error(), "verdict") {
+		t.Errorf("error = %v, want substring 'verdict' (the missing required field)", err)
+	}
 }
 
 func TestParseSignals_IOError(t *testing.T) {

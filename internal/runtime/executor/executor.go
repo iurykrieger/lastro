@@ -108,6 +108,23 @@ func (e *Executor) Run(
 		allSignals = append(allSignals, toAggregateSignals(outcome.Signals)...)
 		observedKeys = append(observedKeys, outcome.ObservationKeys...)
 
+		// Context cancellation / timeout / external stop takes priority over
+		// any scan or exit error: when the OS kills the child, the pipe closes
+		// with an error that looks like a structural failure but is actually a
+		// clean shutdown.
+		switch {
+		case outcome.StoppedExternally:
+			termReason = enums.TerminationStopped
+		case errors.Is(outcome.CtxErr, context.DeadlineExceeded):
+			termReason = enums.TerminationTimeout
+			stepErr = outcome.CtxErr
+		case errors.Is(outcome.CtxErr, context.Canceled):
+			termReason = enums.TerminationStopped
+		}
+		if termReason != enums.TerminationCompleted {
+			break
+		}
+
 		// Structural error (template/spawn/binder) → halt with error.
 		// Exception: if signals were already collected, a scan error on
 		// stdout is a spurious pipe-close race (the process exited and the
@@ -119,20 +136,10 @@ func (e *Executor) Run(
 			break
 		}
 
-		// External stop or context cancel → halt with appropriate reason.
-		switch {
-		case outcome.StoppedExternally:
-			termReason = enums.TerminationStopped
-		case errors.Is(outcome.CtxErr, context.DeadlineExceeded):
-			termReason = enums.TerminationTimeout
-			stepErr = outcome.CtxErr
-		case errors.Is(outcome.CtxErr, context.Canceled):
-			termReason = enums.TerminationStopped
-		case outcome.ExitErr != nil && len(outcome.Signals) == 0:
+		// Non-zero exit without any signals emitted → crash.
+		if outcome.ExitErr != nil && len(outcome.Signals) == 0 {
 			termReason = enums.TerminationError
 			stepErr = fmt.Errorf("%w: %v", ErrStepCrashed, outcome.ExitErr)
-		}
-		if termReason != enums.TerminationCompleted {
 			break
 		}
 	}
@@ -159,6 +166,9 @@ func (e *Executor) Run(
 	// Crash-hint patch: if error termination produced an aggregate with
 	// no heal hint, synthesize one from raw.log.
 	if termReason == enums.TerminationError && agg.HealHint == nil && stepErr != nil {
+		// Flush the buffered rawLog writer before reading the file so that
+		// the stderr lines captured by pumpStderr are visible to synthesizeCrashHint.
+		_ = rl.Flush()
 		agg.HealHint = synthesizeCrashHint(rawPath, stepErr)
 	}
 

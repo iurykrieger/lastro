@@ -52,6 +52,20 @@ func (r *rawLog) WriteAnnotated(stepIdx int, stream string, content []byte) {
 	fmt.Fprintf(r.w, "[%s step-%02d %s] %s\n", ts, stepIdx, stream, content)
 }
 
+// Flush writes any buffered data to the underlying file without closing it.
+// Call before reading raw.log during the same Run (e.g. before synthesizeCrashHint).
+func (r *rawLog) Flush() error {
+	if r == nil {
+		return nil
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.f == nil {
+		return nil
+	}
+	return r.w.Flush()
+}
+
 // Close flushes the buffer and closes the file. Safe to call multiple times.
 func (r *rawLog) Close() error {
 	if r == nil {

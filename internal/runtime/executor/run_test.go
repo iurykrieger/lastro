@@ -156,3 +156,99 @@ type emptyStore struct{}
 func (emptyStore) LookupFixture(id string) (fixture.Fixture, bool) { return fixture.Fixture{}, false }
 func (emptyStore) FixturesForUseCase(uc string) []fixture.Fixture  { return nil }
 func (emptyStore) All() []fixture.Fixture                          { return nil }
+
+func TestRunAssertion_ContextCancellationKillsChild(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "slow-sensor", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{{ID: "slow", Run: fakeSensorBin + " sleep 5s"}},
+	}
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(150 * time.Millisecond)
+		cancel()
+	}()
+	start := time.Now()
+	agg, err := ex.Run(ctx, s, t.TempDir(), nil, nil)
+	elapsed := time.Since(start)
+
+	if err != nil {
+		t.Fatalf("Run returned error (should still complete with verdict): %v", err)
+	}
+	if elapsed > 2*time.Second {
+		t.Errorf("Run took %v; should have aborted quickly after cancel", elapsed)
+	}
+	if agg.TerminationReason != enums.TerminationStopped {
+		t.Errorf("termination_reason = %q, want stopped", agg.TerminationReason)
+	}
+}
+
+func TestRunAssertion_TimeoutReports(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "slow-sensor", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{{ID: "slow", Run: fakeSensorBin + " sleep 5s"}},
+	}
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+	agg, err := ex.Run(ctx, s, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.TerminationReason != enums.TerminationTimeout {
+		t.Errorf("termination_reason = %q, want timeout", agg.TerminationReason)
+	}
+}
+
+func TestRunAssertion_CrashedStepSynthesizesHint(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "crash-sensor", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{ID: "boom", Run: fakeSensorBin + ` crash --exit-code 2 --stderr "could not connect to redis"`},
+		},
+	}
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+
+	agg, err := ex.Run(context.Background(), s, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.TerminationReason != enums.TerminationError {
+		t.Errorf("termination_reason = %q, want error", agg.TerminationReason)
+	}
+	if agg.HealHint == nil {
+		t.Fatalf("heal_hint is nil; want synthesized hint")
+	}
+	if !strings.Contains(agg.HealHint.Rationale, "could not connect to redis") {
+		t.Errorf("heal_hint.rationale missing stderr: %q", agg.HealHint.Rationale)
+	}
+}

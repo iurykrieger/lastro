@@ -48,8 +48,6 @@ components:
 	if m.SchemaVersion != "1.0.0" {
 		t.Fatalf("SchemaVersion=%q, want 1.0.0 (no prior file to bump from)", m.SchemaVersion)
 	}
-	_ = errors.New          // keep errors import valid until Task 3.4 adds errors.As
-	_ = persisterror.Error{} // keep persisterror import valid until Task 3.4
 }
 
 func TestPersist_ExistingFile_BumpsSchemaVersion(t *testing.T) {
@@ -92,5 +90,36 @@ components:
 	_ = yaml.Unmarshal(out, &m)
 	if m.SchemaVersion != "1.0.8" {
 		t.Fatalf("SchemaVersion=%q, want 1.0.8 (prior 1.0.7 + 1)", m.SchemaVersion)
+	}
+}
+
+func TestPersist_RejectsBadArchetype(t *testing.T) {
+	dir := t.TempDir()
+	in := []byte(`schema_version: 1.0.0
+archetype: not-a-real-archetype
+components:
+  - schema_version: 1.0.0
+    id: x
+    kind: library
+    name: x
+    version: 1.0.0
+    capabilities: [c]
+    detection_evidence: [{file: f, path: p}]
+`)
+	err := Persist(in, dir)
+	if err == nil {
+		t.Fatal("Persist accepted unknown archetype")
+	}
+	var pe *persisterror.Error
+	if !errors.As(err, &pe) {
+		t.Fatalf("error is not *persisterror.Error: %T", err)
+	}
+	// The exact Kind depends on whether the schema or programmatic check
+	// fires first; both are acceptable signals of a bad archetype.
+	if pe.Kind != persisterror.SchemaViolation && pe.Kind != persisterror.UnknownEnumValue {
+		t.Fatalf("Kind=%q, want SchemaViolation or UnknownEnumValue", pe.Kind)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "stack-manifest.yaml")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf(".harness/ written to despite validation failure: stat=%v", err)
 	}
 }

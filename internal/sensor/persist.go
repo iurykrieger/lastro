@@ -147,17 +147,6 @@ func loadStackOrErr(harnessDir, sensorID string) (stack.StackManifest, error) {
 				Message:    fmt.Sprintf("stack-manifest not found at %s", path),
 			}
 		}
-		// stack.Load wraps os.ErrNotExist as "read <path>: open <path>: ..."
-		// which doesn't unwrap to os.ErrNotExist via errors.Unwrap. Use
-		// os.IsNotExist on the raw error as a belt-and-suspenders check.
-		if os.IsNotExist(err) {
-			return stack.StackManifest{}, &persisterror.Error{
-				Kind:       persisterror.MissingDependency,
-				EntityType: "sensor",
-				EntityID:   sensorID,
-				Message:    fmt.Sprintf("stack-manifest not found at %s", path),
-			}
-		}
 		return stack.StackManifest{}, &persisterror.Error{
 			Kind:       persisterror.SchemaViolation,
 			EntityType: "sensor",

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/persisterror"
@@ -296,22 +297,39 @@ steps:
 	}
 
 	// Quick check: the written file must contain "1.0.5".
-	import_check := string(written)
-	if !contains(import_check, "1.0.5") {
+	got := string(written)
+	if !strings.Contains(got, "1.0.5") {
 		t.Fatalf("expected schema_version 1.0.5 in written file, got:\n%s", written)
 	}
 }
 
-// contains is a minimal helper to avoid importing strings in this file.
-func contains(s, sub string) bool {
-	return len(s) >= len(sub) && (s == sub || len(s) > 0 && containsHelper(s, sub))
-}
+func TestPersist_MissingDependency_MissingStackManifest(t *testing.T) {
+	dir := t.TempDir() // empty — no stack-manifest.yaml
 
-func containsHelper(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
+	s := []byte(`schema_version: 1.0.0
+id: s-x
+use_case_id: create-order
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: [express]
+steps:
+  - id: probe
+    run: noop
+`)
+	err := Persist(s, dir)
+	if err == nil {
+		t.Fatal("expected MissingDependency, got nil")
 	}
-	return false
+	var pe *persisterror.Error
+	if !errors.As(err, &pe) {
+		t.Fatalf("expected *persisterror.Error, got %T: %v", err, err)
+	}
+	if pe.Kind != persisterror.MissingDependency {
+		t.Fatalf("Kind=%q, want %q", pe.Kind, persisterror.MissingDependency)
+	}
+	if _, statErr := os.Stat(filepath.Join(dir, "sensors", "s-x.yaml")); !os.IsNotExist(statErr) {
+		t.Fatalf("sensor file written despite missing stack manifest: stat=%v", statErr)
+	}
 }

@@ -363,6 +363,42 @@ func TestParseSignals_EarlyCallerStop(t *testing.T) {
 	}
 }
 
+func TestDecodeLine_Valid(t *testing.T) {
+	line := []byte(`{"schema_version":"1.0.0","sensor_id":"s","use_case_id":"uc","angle":"build","emitted_at":"2026-05-24T10:00:00Z","verdict":"pass","confidence":1,"evidence":{}}`)
+	sig, err := DecodeLine(line)
+	if err != nil {
+		t.Fatalf("DecodeLine: %v", err)
+	}
+	if sig.SensorID != "s" {
+		t.Errorf("SensorID = %q, want %q", sig.SensorID, "s")
+	}
+	if sig.Verdict != enums.VerdictPass {
+		t.Errorf("Verdict = %q, want %q", sig.Verdict, enums.VerdictPass)
+	}
+}
+
+func TestDecodeLine_BadJSON(t *testing.T) {
+	_, err := DecodeLine([]byte(`{not json`))
+	if err == nil {
+		t.Fatalf("expected decode error, got nil")
+	}
+	if !strings.Contains(err.Error(), "decode line") {
+		t.Errorf("error = %v, want substring 'decode line'", err)
+	}
+}
+
+func TestDecodeLine_SchemaViolation(t *testing.T) {
+	// Missing required `verdict`.
+	line := []byte(`{"schema_version":"1.0.0","sensor_id":"s","use_case_id":"uc","angle":"build","emitted_at":"2026-05-24T10:00:00Z","confidence":1,"evidence":{}}`)
+	_, err := DecodeLine(line)
+	if err == nil {
+		t.Fatalf("expected schema error, got nil")
+	}
+	if !strings.Contains(err.Error(), "schema") {
+		t.Errorf("error = %v, want substring 'schema'", err)
+	}
+}
+
 func TestParseSignals_IOError(t *testing.T) {
 	// io.Pipe + CloseWithError surfaces as a reader-level error.
 	// The parser yields one (Signal{}, error) and terminates.

@@ -1,0 +1,7 @@
+schema_version: 9.9.9
+scope: global
+per_archetype:
+  cli:
+    obligatory_angles: [build]
+    optional_angles:   []
+    disabled_angles:   []

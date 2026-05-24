@@ -1,0 +1,7 @@
+schema_version: 1.0.0
+scope: global
+per_archetype:
+  cli:
+    obligatory_angles: [not-a-real-angle]
+    optional_angles:   []
+    disabled_angles:   []

@@ -98,3 +98,30 @@ func TestLoad_RejectsDuplicateInList(t *testing.T) {
 		}
 	}
 }
+
+func TestLoad_RejectsSchemaViolations(t *testing.T) {
+	cases := []struct {
+		name    string
+		file    string
+		wantSub string
+	}{
+		{"missing schema_version", "missing-schema-version.yaml", "schema_version"},
+		{"unsupported schema_version", "unsupported-schema-version.yaml", "schema_version"},
+		{"unknown scope", "unknown-scope.yaml", "scope"},
+		{"unknown archetype", "unknown-archetype.yaml", "frobnicator"},
+		{"unknown angle", "unknown-angle.yaml", "obligatory_angles"},
+		{"unknown top-level field", "unknown-top-field.yaml", "inherits_from"},
+		{"unknown block field", "unknown-block-field.yaml", "obligatorY_angles"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := loadTestdata(t, tc.file)
+			if err == nil {
+				t.Fatalf("expected error, got nil")
+			}
+			if !strings.Contains(strings.ToLower(err.Error()), strings.ToLower(tc.wantSub)) {
+				t.Errorf("error %q missing %q", err.Error(), tc.wantSub)
+			}
+		})
+	}
+}

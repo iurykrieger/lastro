@@ -11,8 +11,6 @@ import (
 )
 
 // LoadFixture loads, validates, and (partially) parses a fixture YAML file.
-// Payload parsing is integrated in Task 14.
-//
 // Errors are wrapped with the file path and the failing phase for easy
 // diagnosis.
 func LoadFixture(path string) (Fixture, error) {
@@ -20,22 +18,32 @@ func LoadFixture(path string) (Fixture, error) {
 	if err != nil {
 		return Fixture{}, fmt.Errorf("fixture %s: read: %w", path, err)
 	}
+	fx, err := LoadFixtureBytes(raw)
+	if err != nil {
+		return Fixture{}, fmt.Errorf("fixture %s: %w", path, err)
+	}
+	return fx, nil
+}
 
+// LoadFixtureBytes validates, deserializes, and payload-parses a fixture YAML
+// document from an in-memory byte slice. It is the inner implementation used
+// by LoadFixture and by fixture.Persist.
+func LoadFixtureBytes(raw []byte) (Fixture, error) {
 	// Phase 1: YAML → JSON normalization.
 	asJSON, err := yaml.YAMLToJSON(raw)
 	if err != nil {
-		return Fixture{}, fmt.Errorf("fixture %s: yaml-to-json: %w", path, err)
+		return Fixture{}, fmt.Errorf("yaml-to-json: %w", err)
 	}
 
 	// Phase 2: JSON Schema validation.
 	if err := validateAgainstSchema(asJSON); err != nil {
-		return Fixture{}, fmt.Errorf("fixture %s: schema validation: %w", path, err)
+		return Fixture{}, fmt.Errorf("schema validation: %w", err)
 	}
 
 	// Phase 3: deserialize into typed Fixture.
 	var fx Fixture
 	if err := json.Unmarshal(asJSON, &fx); err != nil {
-		return Fixture{}, fmt.Errorf("fixture %s: deserialize: %w", path, err)
+		return Fixture{}, fmt.Errorf("deserialize: %w", err)
 	}
 
 	// Phase 3b: Payload field is a string in YAML — extract it raw.
@@ -45,14 +53,14 @@ func LoadFixture(path string) (Fixture, error) {
 		Payload string `json:"payload"`
 	}
 	if err := json.Unmarshal(asJSON, &rawPayload); err != nil {
-		return Fixture{}, fmt.Errorf("fixture %s: extract payload: %w", path, err)
+		return Fixture{}, fmt.Errorf("extract payload: %w", err)
 	}
 	fx.Payload = []byte(rawPayload.Payload)
 
 	// Phase 4: eager payload parse (dispatched on content_type).
 	parsed, err := parsePayload(fx.ContentType, fx.Payload)
 	if err != nil {
-		return Fixture{}, fmt.Errorf("fixture %s: parse payload: %w", path, err)
+		return Fixture{}, fmt.Errorf("parse payload: %w", err)
 	}
 	fx.Parsed = parsed
 

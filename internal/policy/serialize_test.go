@@ -103,3 +103,14 @@ func TestMarshalYAML_RoundTripIntoLoadFails(t *testing.T) {
 		t.Fatal("Load(MarshalYAML(effective)) succeeded; should have failed (effective dumps are not re-ingestable)")
 	}
 }
+
+func TestMarshalYAML_NilReceiver(t *testing.T) {
+	var p *EffectivePolicy
+	out, err := p.MarshalYAML()
+	if err == nil {
+		t.Fatal("MarshalYAML on nil receiver should return an error")
+	}
+	if out != nil {
+		t.Errorf("MarshalYAML on nil receiver should return nil bytes, got %d bytes", len(out))
+	}
+}

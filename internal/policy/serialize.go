@@ -16,6 +16,9 @@ import (
 // The output intentionally cannot be loaded back through Load. Source
 // policies are human-authored; effective dumps are derived artifacts.
 func (p *EffectivePolicy) MarshalYAML() ([]byte, error) {
+	if p == nil {
+		return nil, fmt.Errorf("policy: marshal effective: nil receiver")
+	}
 	type blockOut struct {
 		Obligatory []string `json:"obligatory_angles" yaml:"obligatory_angles"`
 		Optional   []string `json:"optional_angles"   yaml:"optional_angles"`

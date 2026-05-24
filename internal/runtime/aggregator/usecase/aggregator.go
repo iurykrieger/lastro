@@ -51,16 +51,92 @@ func UseCase(
 		}
 	}
 
-	// Verdict + confidence computation arrives in Task 12.
-	return UseCaseVerdict{
+	// Step 3 — walk signals in canonical order, applying floor demotion and recording outcomes.
+
+	natureBySensorID := make(map[string]enums.SensorNature, len(sensors))
+	for _, s := range sensors {
+		natureBySensorID[s.ID] = s.Nature
+	}
+
+	v := UseCaseVerdict{
 		UseCaseID:       uc.ID,
 		Archetype:       archetype,
-		Verdict:         enums.VerdictInconclusive,
 		EvaluatedAngles: []enums.ValidationAngle{},
 		FailingAngles:   []enums.ValidationAngle{},
 		WarningAngles:   []enums.ValidationAngle{},
 		HealHints:       []AngleHint{},
-	}, nil
+	}
+
+	anyObligatoryFail := false
+	allObligatoryPassGrade := true
+
+	for _, angle := range enums.AllAngles() {
+		status, hasStatus := statuses[angle]
+		if !hasStatus || status == policy.StatusDisabled {
+			continue
+		}
+		sig, hasSig := signalByAngle[angle]
+		if !hasSig {
+			// status == optional with no signal: skip.
+			continue
+		}
+
+		nature := natureBySensorID[sig.SensorID]
+		effective := effectiveVerdict(sig, nature, pol.InferentialFloor)
+
+		v.EvaluatedAngles = append(v.EvaluatedAngles, angle)
+
+		switch effective {
+		case enums.VerdictFail:
+			if sig.HealHint == nil {
+				return UseCaseVerdict{}, fmt.Errorf("aggregator: signal angle=%q verdict=fail but heal_hint is nil (E8 invariant violated)", angle)
+			}
+			v.FailingAngles = append(v.FailingAngles, angle)
+			v.HealHints = append(v.HealHints, AngleHint{Angle: angle, Verdict: enums.VerdictFail, Hint: *sig.HealHint})
+			if status == policy.StatusObligatory {
+				anyObligatoryFail = true
+			}
+		case enums.VerdictWarn:
+			if sig.HealHint == nil {
+				return UseCaseVerdict{}, fmt.Errorf("aggregator: signal angle=%q verdict=warn but heal_hint is nil (E8 invariant violated)", angle)
+			}
+			v.WarningAngles = append(v.WarningAngles, angle)
+			v.HealHints = append(v.HealHints, AngleHint{Angle: angle, Verdict: enums.VerdictWarn, Hint: *sig.HealHint})
+		case enums.VerdictInconclusive:
+			if status == policy.StatusObligatory {
+				allObligatoryPassGrade = false
+			}
+		case enums.VerdictPass:
+			// pass-grade; nothing to surface.
+		}
+	}
+
+	// Step 4 — verdict per plan §6.3.
+
+	switch {
+	case anyObligatoryFail:
+		v.Verdict = enums.VerdictFail
+	case allObligatoryPassGrade:
+		v.Verdict = enums.VerdictPass
+	default:
+		v.Verdict = enums.VerdictInconclusive
+	}
+	v.ObligatorySatisfied = v.Verdict == enums.VerdictPass
+
+	// Confidence: weighted average using RAW signal.Confidence (floor demotion
+	// affects verdict only, not confidence). Implementation arrives in Task 13.
+
+	return v, nil
+}
+
+// effectiveVerdict returns the post-floor-demotion verdict for a signal.
+// Inferential signals with confidence below the floor are demoted to inconclusive,
+// regardless of whether the raw verdict is fail or warn.
+func effectiveVerdict(sig aggregate.AggregateSignal, nature enums.SensorNature, floor float64) enums.Verdict {
+	if nature == enums.NatureInferential && sig.Confidence < floor {
+		return enums.VerdictInconclusive
+	}
+	return sig.Verdict
 }
 
 func archetypeInScope(uc *usecase.UseCase, arch enums.Archetype) bool {

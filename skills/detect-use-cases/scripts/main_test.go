@@ -130,6 +130,31 @@ func TestDetectUseCases_UseCase_HappyPath_WithFixtureOnDisk(t *testing.T) {
 	}
 }
 
+func TestMain_MissingFlag_ExitsOne(t *testing.T) {
+	_, serr, code := runScript(t)
+	if code != 1 {
+		t.Fatalf("exit=%d, want 1", code)
+	}
+	if !strings.Contains(serr, "--file") {
+		t.Fatalf("stderr=%q should mention --file", serr)
+	}
+}
+
+func TestMain_InvalidType_ExitsOne(t *testing.T) {
+	dir := t.TempDir()
+	input := filepath.Join(dir, "in.yaml")
+	if err := os.WriteFile(input, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, serr, code := runScript(t, "--type", "bogus", "--file", input)
+	if code != 1 {
+		t.Fatalf("exit=%d, want 1", code)
+	}
+	if !strings.Contains(serr, "--type") {
+		t.Fatalf("stderr=%q should mention --type", serr)
+	}
+}
+
 func TestDetectUseCases_UseCase_RejectsMissingFixture_ExitsTwoWithJSON(t *testing.T) {
 	dir := t.TempDir()
 	harness := filepath.Join(dir, ".harness")

@@ -125,6 +125,16 @@ steps:
     uses: [fx-req]
 `
 
+func TestMain_MissingFlag_ExitsOne(t *testing.T) {
+	_, serr, code := runScript(t)
+	if code != 1 {
+		t.Fatalf("exit=%d, want 1", code)
+	}
+	if !strings.Contains(serr, "--file") {
+		t.Fatalf("stderr=%q should mention --file", serr)
+	}
+}
+
 func TestCreateSensors_HappyPath(t *testing.T) {
 	dir := t.TempDir()
 	harness := filepath.Join(dir, ".harness")

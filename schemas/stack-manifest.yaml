@@ -8,13 +8,23 @@ description: |
   generation.
 
 type: object
-required: [schema_version, archetype, components]
+required: [schema_version, archetype, applicable_angles, components]
 additionalProperties: false
 
 properties:
   schema_version:
     type: string
     pattern: "^\\d+\\.\\d+\\.\\d+$"
+  applicable_angles:
+    type: array
+    minItems: 1
+    items:
+      type: string
+    description: |
+      Derived field. Populated by stack.Persist from the manifest's
+      archetype via internal/enums.ApplicableAngles[archetype]. The
+      canonical source of truth is schemas/enums/archetypes.yaml's
+      per-value applicable_angles list. Never authored by the LLM.
   archetype:
     type: string
     description: |

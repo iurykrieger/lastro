@@ -3,6 +3,7 @@
 package process
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -58,6 +59,10 @@ func (posixSignaler) IsAlive(pid int, startedAt time.Time) bool {
 	}
 	// kill(pid, 0) tests existence without actually signaling.
 	if err := syscall.Kill(pid, 0); err != nil {
+		if errors.Is(err, syscall.EPERM) {
+			// Process exists but we can't signal it — still alive.
+			return true
+		}
 		return false
 	}
 	if runtime.GOOS != "linux" {
@@ -67,9 +72,10 @@ func (posixSignaler) IsAlive(pid int, startedAt time.Time) bool {
 	return procStartTimeMatches(pid, startedAt)
 }
 
-// procStartTimeMatches reads /proc/<pid>/stat field 22 (starttime in
-// clock ticks since boot) and compares it against startedAt within a
-// 2-second tolerance.
+// procStartTimeMatches reads /proc/<pid>/stat field 22 (1-based kernel
+// /proc(5) numbering; index 19 in the post-comm substring) — the
+// starttime in clock ticks since boot — and compares it against
+// startedAt within a 2-second tolerance.
 func procStartTimeMatches(pid int, startedAt time.Time) bool {
 	data, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
 	if err != nil {
@@ -116,7 +122,7 @@ func readBootTime() (time.Time, error) {
 		}
 		sec, err := strconv.ParseInt(strings.TrimSpace(strings.TrimPrefix(line, "btime ")), 10, 64)
 		if err != nil {
-			return time.Time{}, err
+			return time.Time{}, fmt.Errorf("process: parse btime: %w", err)
 		}
 		return time.Unix(sec, 0), nil
 	}

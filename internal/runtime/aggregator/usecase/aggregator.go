@@ -19,6 +19,8 @@ func UseCase(
 	sensors []sensor.Sensor,
 	pol *policy.EffectivePolicy,
 ) (UseCaseVerdict, error) {
+	// Step 1 — input validation: archetype scope, signal ownership, angle uniqueness.
+
 	if !archetypeInScope(uc, archetype) {
 		return UseCaseVerdict{}, fmt.Errorf("aggregator: archetype-not-in-scope: %q is not in use case %q archetype_scope", archetype, uc.ID)
 	}
@@ -37,9 +39,11 @@ func UseCase(
 		signalByAngle[s.Angle] = s
 	}
 
+	// Step 2 — resolve angle statuses; verify obligatory coverage.
+
 	statuses := pol.PerArchetype[archetype]
-	for angle, status := range statuses {
-		if status != policy.StatusObligatory {
+	for _, angle := range enums.AllAngles() {
+		if statuses[angle] != policy.StatusObligatory {
 			continue
 		}
 		if _, ok := signalByAngle[angle]; !ok {

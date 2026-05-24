@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/iurykrieger/lastro/internal/fixture"
+	"github.com/iurykrieger/lastro/internal/persisthelp"
 	"github.com/iurykrieger/lastro/internal/persisterror"
 )
 
@@ -51,7 +52,7 @@ func Persist(content []byte, harnessDir string) error {
 	}
 
 	targetPath := filepath.Join(harnessDir, "use-cases", uc.ID+".yaml")
-	bumped, err := bumpSchemaVersion(targetPath, uc.SchemaVersion)
+	bumped, err := persisthelp.BumpSchemaVersion(targetPath, uc.SchemaVersion)
 	if err != nil {
 		return &persisterror.Error{
 			Kind:       persisterror.SchemaViolation,
@@ -71,7 +72,7 @@ func Persist(content []byte, harnessDir string) error {
 			Message:    fmt.Sprintf("marshal: %v", err),
 		}
 	}
-	if err := atomicWrite(targetPath, out); err != nil {
+	if err := persisthelp.AtomicWrite(targetPath, out); err != nil {
 		return &persisterror.Error{
 			Kind:       persisterror.SchemaViolation,
 			EntityType: "use-case",
@@ -169,45 +170,3 @@ func walkErrors(err error, fn func(error)) {
 	fn(err)
 }
 
-// --- helpers inline-copied from internal/stack/persist.go ---
-// (Phase 5 Task 5.4 extracts these to internal/persisthelp.)
-
-func bumpSchemaVersion(targetPath, input string) (string, error) {
-	existing, err := os.ReadFile(targetPath)
-	if errors.Is(err, os.ErrNotExist) {
-		return input, nil
-	}
-	if err != nil {
-		return "", err
-	}
-	var head struct {
-		SchemaVersion string `json:"schema_version" yaml:"schema_version"`
-	}
-	if err := yaml.Unmarshal(existing, &head); err != nil {
-		return "", fmt.Errorf("parse existing schema_version: %w", err)
-	}
-	if head.SchemaVersion == "" {
-		return input, nil
-	}
-	return bumpPatch(head.SchemaVersion)
-}
-
-func bumpPatch(v string) (string, error) {
-	var maj, min, patch int
-	n, err := fmt.Sscanf(v, "%d.%d.%d", &maj, &min, &patch)
-	if err != nil || n != 3 {
-		return "", fmt.Errorf("not a semver: %q", v)
-	}
-	return fmt.Sprintf("%d.%d.%d", maj, min, patch+1), nil
-}
-
-func atomicWrite(targetPath string, content []byte) error {
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
-		return err
-	}
-	tmp := targetPath + ".tmp"
-	if err := os.WriteFile(tmp, content, 0o644); err != nil {
-		return err
-	}
-	return os.Rename(tmp, targetPath)
-}

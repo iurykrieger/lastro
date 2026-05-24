@@ -1,7 +1,7 @@
-# ValidationPolicy example — repo scope, inherits from org, drops performance for http-api.
+# ValidationPolicy example — local scope, narrows http-api away from
+# performance and pulls logs from optional into obligatory.
 schema_version: 1.0.0
-scope: repo
-inherits_from: acme-org-policy
+scope: local
 per_archetype:
   http-api:
     obligatory_angles: [build, security, unit-test, e2e-test, contracts, logs]

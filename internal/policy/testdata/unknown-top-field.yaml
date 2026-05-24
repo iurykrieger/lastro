@@ -1,0 +1,8 @@
+schema_version: 1.0.0
+scope: global
+inherits_from: legacy-policy-id
+per_archetype:
+  cli:
+    obligatory_angles: [build]
+    optional_angles:   []
+    disabled_angles:   []

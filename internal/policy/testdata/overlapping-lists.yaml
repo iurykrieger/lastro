@@ -1,0 +1,7 @@
+schema_version: 1.0.0
+scope: global
+per_archetype:
+  http-api:
+    obligatory_angles: [build, logs]
+    optional_angles:   []
+    disabled_angles:   [logs]

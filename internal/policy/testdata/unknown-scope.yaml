@@ -1,0 +1,7 @@
+schema_version: 1.0.0
+scope: effective
+per_archetype:
+  cli:
+    obligatory_angles: [build]
+    optional_angles:   []
+    disabled_angles:   []

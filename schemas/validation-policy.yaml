@@ -3,7 +3,9 @@ $id: "https://lastro.dev/harness/schemas/validation-policy.yaml"
 title: ValidationPolicy
 description: |
   Per-archetype declaration of which validation angles are obligatory,
-  optional, or disabled. Resolution order: repo overrides org overrides global.
+  optional, or disabled. Two scopes compose with per-(archetype, angle)
+  override granularity: local > global. Multi-level upstream composition
+  is delegated to callers (pre-merge into a single global).
 
 type: object
 required: [schema_version, scope, per_archetype]
@@ -15,9 +17,7 @@ properties:
     pattern: "^\\d+\\.\\d+\\.\\d+$"
   scope:
     type: string
-    enum: [org, global, repo]
-  inherits_from:
-    $ref: "#/$defs/Id"
+    enum: [global, local]
   per_archetype:
     type: object
     additionalProperties:
@@ -32,11 +32,6 @@ properties:
       enum: [http-api, event-consumer, event-producer, cli, sdk, library, worker, batch-job, static-site]
 
 $defs:
-  Id:
-    type: string
-    pattern: "^[a-z][a-z0-9-]*$"
-    minLength: 1
-    maxLength: 128
   AngleList:
     type: array
     items:

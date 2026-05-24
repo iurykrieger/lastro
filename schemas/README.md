@@ -74,7 +74,6 @@ Schemas validate form only; existence is a **runtime** concern.
 | `UseCase.entry_points[].id` | (local — unique within the UseCase) | — |
 | `UseCase.entry_points[].archetype` | enum: archetypes | 1 |
 | `UseCase.archetype_scope[]` | enum: archetypes | 1..N |
-| `ValidationPolicy.inherits_from` | ValidationPolicy | 0..1 |
 
 ## 5. Enums
 

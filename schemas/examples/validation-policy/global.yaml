@@ -9,4 +9,4 @@ per_archetype:
   cli:
     obligatory_angles: [build, security, contracts]
     optional_angles:   [unit-test, logs]
-    disabled_angles:   [e2e-test, database]
+    disabled_angles:   [code-structure]

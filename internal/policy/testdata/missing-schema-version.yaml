@@ -1,0 +1,6 @@
+scope: global
+per_archetype:
+  cli:
+    obligatory_angles: [build]
+    optional_angles:   []
+    disabled_angles:   []

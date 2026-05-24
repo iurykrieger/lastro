@@ -1,0 +1,8 @@
+# e2e-test is not applicable to library per E1's applicable-angle matrix.
+schema_version: 1.0.0
+scope: global
+per_archetype:
+  library:
+    obligatory_angles: [build, e2e-test]
+    optional_angles:   []
+    disabled_angles:   []

@@ -2,10 +2,13 @@ package policy
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
 	"sigs.k8s.io/yaml"
+
+	"github.com/iurykrieger/lastro/internal/enums"
 )
 
 // Load parses a single ValidationPolicy from a YAML stream. The pipeline
@@ -52,5 +55,29 @@ func validateAgainstSchema(jsonDoc []byte) error {
 // validateSemantics enforces loader rules 5 (applicable-angle matrix) and
 // 6 (disjoint lists). Filled in by Tasks 6 and 7.
 func validateSemantics(p *ValidationPolicy) error {
-	return nil
+	var errs []error
+	for arch, block := range p.PerArchetype {
+		errs = append(errs, checkApplicableAngles(arch, block)...)
+	}
+	return errors.Join(errs...)
+}
+
+func checkApplicableAngles(arch enums.Archetype, block ArchetypeBlock) []error {
+	var errs []error
+	lists := []struct {
+		name   string
+		angles []enums.ValidationAngle
+	}{
+		{"obligatory_angles", block.Obligatory},
+		{"optional_angles", block.Optional},
+		{"disabled_angles", block.Disabled},
+	}
+	for _, l := range lists {
+		for _, a := range l.angles {
+			if !enums.Applies(arch, a) {
+				errs = append(errs, fmt.Errorf("archetype %q list %s: angle %q is not applicable", arch, l.name, a))
+			}
+		}
+	}
+	return errs
 }

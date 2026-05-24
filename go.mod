@@ -4,6 +4,8 @@ go 1.24.2
 
 require (
 	github.com/clbanning/mxj/v2 v2.7.0
+	github.com/oklog/ulid/v2 v2.1.1
+	github.com/rogpeppe/go-internal v1.14.1
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	golang.org/x/sys v0.28.0
 	sigs.k8s.io/yaml v1.6.0

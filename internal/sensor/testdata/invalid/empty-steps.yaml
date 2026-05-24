@@ -1,0 +1,11 @@
+# steps must have at least one entry (schema minItems: 1).
+schema_version: 1.0.0
+id: empty-steps-sensor
+use_case_id: create-order-use-case
+angle: build
+kind: assertion
+nature: computational
+output_type: single-shot
+uses:
+  - node
+steps: []

@@ -1,0 +1,12 @@
+schema_version: 1.0.0
+id: shared-sensor-id
+use_case_id: create-order-use-case
+angle: build
+kind: assertion
+nature: computational
+output_type: single-shot
+uses:
+  - node
+steps:
+  - id: compile-b
+    run: "echo from b"

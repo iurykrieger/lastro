@@ -1,0 +1,11 @@
+# uses field omitted — schema marks it required.
+schema_version: 1.0.0
+id: missing-uses-sensor
+use_case_id: create-order-use-case
+angle: build
+kind: assertion
+nature: computational
+output_type: single-shot
+steps:
+  - id: compile
+    run: "tsc --noEmit"

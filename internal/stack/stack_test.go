@@ -511,3 +511,17 @@ func TestLintCapabilitiesReturnsEmptyWhenAllKnown(t *testing.T) {
 		t.Errorf("len = %d, want 0; warnings = %+v", len(got), got)
 	}
 }
+
+func TestLoadBytes_RoundTripsExample(t *testing.T) {
+	b, err := os.ReadFile("../../schemas/examples/stack-manifest/http-api.yaml")
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	m, err := LoadBytes(b)
+	if err != nil {
+		t.Fatalf("LoadBytes: %v", err)
+	}
+	if m.Archetype != enums.ArchetypeHTTPAPI {
+		t.Fatalf("Archetype=%q, want http-api", m.Archetype)
+	}
+}

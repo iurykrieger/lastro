@@ -1,0 +1,79 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/signal.yaml"
+title: Signal
+description: |
+  Semantically rich, structured JSON record emitted by a sensor. Never raw
+  logs. Every failing signal carries a heal_hint that the LLM can act on.
+
+type: object
+required: [schema_version, sensor_id, use_case_id, angle, emitted_at, verdict, confidence, evidence]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  sensor_id:
+    $ref: "#/$defs/Id"
+  use_case_id:
+    $ref: "#/$defs/Id"
+  angle:
+    type: string
+    description: "Canonical source: schemas/enums/validation-angles.yaml"
+    enum: [security, build, code-structure, unit-test, e2e-test,
+           contracts, logs, metrics, database, performance]
+  emitted_at:
+    type: string
+    format: date-time
+  verdict:
+    type: string
+    description: "Canonical source: schemas/enums/verdicts.yaml"
+    enum: [pass, fail, inconclusive]
+  confidence:
+    type: number
+    minimum: 0
+    maximum: 1
+  evidence:
+    type: object
+    additionalProperties: true
+    properties:
+      expected: {}
+      actual:   {}
+      fixture_id:
+        $ref: "#/$defs/Id"
+  heal_hint:
+    $ref: "#/$defs/HealHint"
+
+allOf:
+  - if:
+      properties:
+        verdict: { const: fail }
+    then:
+      required: [heal_hint]
+
+$defs:
+  Id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*$"
+    minLength: 1
+    maxLength: 128
+  HealHint:
+    type: object
+    required: [summary, rationale]
+    additionalProperties: false
+    properties:
+      summary:
+        type: string
+        minLength: 1
+      suggested_locus:
+        type: array
+        items:
+          type: object
+          required: [path]
+          additionalProperties: false
+          properties:
+            path:   { type: string, minLength: 1 }
+            symbol: { type: string }
+      rationale:
+        type: string
+        minLength: 1

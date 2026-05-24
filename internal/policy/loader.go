@@ -52,12 +52,14 @@ func validateAgainstSchema(jsonDoc []byte) error {
 	return s.Validate(instance)
 }
 
-// validateSemantics enforces loader rules 5 (applicable-angle matrix) and
-// 6 (disjoint lists). Filled in by Tasks 6 and 7.
+// validateSemantics enforces loader rules 5 (applicable-angle matrix),
+// 6 (disjoint lists), and 7 (no duplicates within a list).
 func validateSemantics(p *ValidationPolicy) error {
 	var errs []error
 	for arch, block := range p.PerArchetype {
 		errs = append(errs, checkApplicableAngles(arch, block)...)
+		errs = append(errs, checkDuplicates(arch, block)...)
+		errs = append(errs, checkDisjoint(arch, block)...)
 	}
 	return errors.Join(errs...)
 }
@@ -76,6 +78,53 @@ func checkApplicableAngles(arch enums.Archetype, block ArchetypeBlock) []error {
 		for _, a := range l.angles {
 			if !enums.Applies(arch, a) {
 				errs = append(errs, fmt.Errorf("archetype %q list %s: angle %q is not applicable", arch, l.name, a))
+			}
+		}
+	}
+	return errs
+}
+
+func checkDuplicates(arch enums.Archetype, block ArchetypeBlock) []error {
+	var errs []error
+	lists := []struct {
+		name   string
+		angles []enums.ValidationAngle
+	}{
+		{"obligatory_angles", block.Obligatory},
+		{"optional_angles", block.Optional},
+		{"disabled_angles", block.Disabled},
+	}
+	for _, l := range lists {
+		seen := make(map[enums.ValidationAngle]struct{}, len(l.angles))
+		for _, a := range l.angles {
+			if _, dup := seen[a]; dup {
+				errs = append(errs, fmt.Errorf("archetype %q list %s: duplicate angle %q", arch, l.name, a))
+				continue
+			}
+			seen[a] = struct{}{}
+		}
+	}
+	return errs
+}
+
+func checkDisjoint(arch enums.Archetype, block ArchetypeBlock) []error {
+	var errs []error
+	pairs := []struct {
+		aName, bName string
+		a, b         []enums.ValidationAngle
+	}{
+		{"obligatory_angles", "optional_angles", block.Obligatory, block.Optional},
+		{"obligatory_angles", "disabled_angles", block.Obligatory, block.Disabled},
+		{"optional_angles", "disabled_angles", block.Optional, block.Disabled},
+	}
+	for _, p := range pairs {
+		in := make(map[enums.ValidationAngle]struct{}, len(p.a))
+		for _, a := range p.a {
+			in[a] = struct{}{}
+		}
+		for _, b := range p.b {
+			if _, ok := in[b]; ok {
+				errs = append(errs, fmt.Errorf("archetype %q lists %s and %s overlap on angle %q", arch, p.aName, p.bName, b))
 			}
 		}
 	}

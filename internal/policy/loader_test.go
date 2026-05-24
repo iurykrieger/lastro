@@ -72,3 +72,29 @@ func TestLoad_RejectsInapplicableAngle(t *testing.T) {
 		}
 	}
 }
+
+func TestLoad_RejectsOverlappingLists(t *testing.T) {
+	err := loadTestdata(t, "overlapping-lists.yaml")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	msg := strings.ToLower(err.Error())
+	for _, want := range []string{"http-api", "logs", "overlap"} {
+		if !strings.Contains(msg, strings.ToLower(want)) {
+			t.Errorf("error %q missing %q", err.Error(), want)
+		}
+	}
+}
+
+func TestLoad_RejectsDuplicateInList(t *testing.T) {
+	err := loadTestdata(t, "duplicate-in-list.yaml")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	msg := strings.ToLower(err.Error())
+	for _, want := range []string{"http-api", "build", "duplicate"} {
+		if !strings.Contains(msg, strings.ToLower(want)) {
+			t.Errorf("error %q missing %q", err.Error(), want)
+		}
+	}
+}

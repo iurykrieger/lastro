@@ -107,8 +107,8 @@ func TestStatus_ReturnsConfiguredValues(t *testing.T) {
 		{enums.ArchetypeHTTPAPI, enums.AngleBuild, StatusObligatory},
 		{enums.ArchetypeHTTPAPI, enums.AnglePerformance, StatusOptional},
 		{enums.ArchetypeHTTPAPI, enums.AngleE2ETest, StatusDisabled},
-		{enums.ArchetypeHTTPAPI, enums.AngleContracts, ""},  // unset
-		{enums.ArchetypeCLI, enums.AngleBuild, ""},          // unconfigured archetype
+		{enums.ArchetypeHTTPAPI, enums.AngleContracts, ""}, // unset
+		{enums.ArchetypeCLI, enums.AngleBuild, ""},         // unconfigured archetype
 	}
 	for _, tc := range cases {
 		got := p.Status(tc.arch, tc.angle)

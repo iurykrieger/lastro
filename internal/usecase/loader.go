@@ -66,4 +66,3 @@ func parseLines(lines []string) [][]template.Segment {
 	}
 	return out
 }
-

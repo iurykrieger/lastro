@@ -162,7 +162,7 @@ func TestRunAssertion_ContextCancellationKillsChild(t *testing.T) {
 	s := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: "slow-sensor", UseCaseID: "fake-uc",
 		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
-		Uses: []string{"fake-stack"},
+		Uses:  []string{"fake-stack"},
 		Steps: []sensor.Step{{ID: "slow", Run: fakeSensorBin + " sleep 5s"}},
 	}
 	ex := New(Options{
@@ -198,7 +198,7 @@ func TestRunAssertion_TimeoutReports(t *testing.T) {
 	s := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: "slow-sensor", UseCaseID: "fake-uc",
 		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
-		Uses: []string{"fake-stack"},
+		Uses:  []string{"fake-stack"},
 		Steps: []sensor.Step{{ID: "slow", Run: fakeSensorBin + " sleep 5s"}},
 	}
 	ex := New(Options{

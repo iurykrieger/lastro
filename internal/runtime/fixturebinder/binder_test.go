@@ -76,7 +76,7 @@ func (s *stubStore) LookupFixture(id string) (fixture.Fixture, bool) {
 	return f, ok
 }
 func (s *stubStore) FixturesForUseCase(string) []fixture.Fixture { return nil }
-func (s *stubStore) All() []fixture.Fixture                       { return nil }
+func (s *stubStore) All() []fixture.Fixture                      { return nil }
 
 func newStubStore(t *testing.T, fs ...fixture.Fixture) *stubStore {
 	t.Helper()

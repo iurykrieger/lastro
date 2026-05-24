@@ -44,11 +44,11 @@ func WrapSensorStore(s *sensor.Store) SensorStore { return sensorStoreAdapter{s:
 type Options struct {
 	Sensors     SensorStore
 	Executor    *executor.Executor
-	RuntimeRoot string               // typically <repo>/.harness/runtime
-	NewRunID    func() string        // optional; defaults to ULID
-	Now         func() time.Time     // optional; defaults to time.Now
-	GracePeriod time.Duration        // optional; defaults to 5s
-	Version     string               // harness version recorded in Handles
+	RuntimeRoot string                // typically <repo>/.harness/runtime
+	NewRunID    func() string         // optional; defaults to ULID
+	Now         func() time.Time      // optional; defaults to time.Now
+	GracePeriod time.Duration         // optional; defaults to 5s
+	Version     string                // harness version recorded in Handles
 	Signaler    process.GroupSignaler // optional; defaults to process.Default()
 }
 

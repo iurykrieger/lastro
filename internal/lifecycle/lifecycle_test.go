@@ -184,7 +184,7 @@ func TestStartSensor_ErrAssertionSensor(t *testing.T) {
 	s := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: "assertion-only", UseCaseID: "lifecycle-uc",
 		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
-		Uses: []string{"fake"},
+		Uses:  []string{"fake"},
 		Steps: []sensor.Step{{ID: "only", Run: fakeSensorBin + " signal pass"}},
 	}
 	lc := newTestLifecycle(t, []sensor.Sensor{s})
@@ -199,7 +199,7 @@ func TestStopSensor_InProcessFastPath(t *testing.T) {
 	s := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: "obs-stop", UseCaseID: "lifecycle-uc",
 		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
-		Uses: []string{"fake"},
+		Uses:  []string{"fake"},
 		Steps: []sensor.Step{{ID: "watch", Run: fakeSensorBin + " watch --emit k1 --interval 20ms"}},
 	}
 	lc := newTestLifecycle(t, []sensor.Sensor{s})
@@ -232,7 +232,7 @@ func TestStopSensor_FailWhenObservationMissing(t *testing.T) {
 	s := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: "obs-missing", UseCaseID: "lifecycle-uc",
 		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
-		Uses: []string{"fake"},
+		Uses:  []string{"fake"},
 		Steps: []sensor.Step{{ID: "watch", Run: fakeSensorBin + " watch --emit k1 --interval 20ms"}},
 	}
 	lc := newTestLifecycle(t, []sensor.Sensor{s})
@@ -264,7 +264,7 @@ func TestStopFromOtherProcess(t *testing.T) {
 	s := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: "obs-cross", UseCaseID: "lifecycle-uc",
 		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
-		Uses: []string{"fake"},
+		Uses:  []string{"fake"},
 		Steps: []sensor.Step{{ID: "watch", Run: fakeSensorBin + " watch --emit k1 --interval 30ms"}},
 	}
 	lc := newTestLifecycle(t, []sensor.Sensor{s})
@@ -314,7 +314,7 @@ func TestStopFromOtherProcess_Child(t *testing.T) {
 	s := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: sensorID, UseCaseID: "lifecycle-uc",
 		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
-		Uses: []string{"fake"},
+		Uses:  []string{"fake"},
 		Steps: []sensor.Step{{ID: "watch", Run: fake + " watch --emit k1"}},
 	}
 	store := &stubSensorStore{by: map[string]sensor.Sensor{s.ID: s}}

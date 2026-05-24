@@ -18,15 +18,6 @@ properties:
   scope:
     type: string
     enum: [global, local]
-  inferential_floor:
-    type: number
-    minimum: 0.0
-    maximum: 1.0
-    description: |
-      Minimum confidence below which an inferential sensor's verdict is
-      treated as inconclusive when computing the use-case verdict.
-      Defaults to 0.7 when omitted at every scope. Computational sensors
-      are unaffected.
   per_archetype:
     type: object
     additionalProperties:
@@ -39,6 +30,15 @@ properties:
         disabled_angles:   { $ref: "#/$defs/AngleList" }
     propertyNames:
       enum: [http-api, event-consumer, event-producer, cli, sdk, library, worker, batch-job, static-site]
+  inferential_floor:
+    type: number
+    minimum: 0.0
+    maximum: 1.0
+    description: |
+      Minimum confidence below which an inferential sensor's verdict is
+      treated as inconclusive when computing the use-case verdict.
+      Defaults to 0.7 when omitted at every scope. Computational sensors
+      are unaffected.
 
 $defs:
   AngleList:

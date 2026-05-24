@@ -1,0 +1,12 @@
+schema_version: 1.0.0
+id: lifecycle-assertion-pass
+use_case_id: lifecycle-uc
+angle: build
+kind: assertion
+nature: computational
+output_type: single-shot
+uses:
+  - fake
+steps:
+  - id: only
+    run: "FAKESENSOR signal pass"

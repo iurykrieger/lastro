@@ -190,3 +190,63 @@ func TestStartSensor_ErrAssertionSensor(t *testing.T) {
 		t.Errorf("err = %v, want ErrAssertionSensor", err)
 	}
 }
+
+func TestStopSensor_InProcessFastPath(t *testing.T) {
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "obs-stop", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+		Uses: []string{"fake"},
+		Steps: []sensor.Step{{ID: "watch", Run: fakeSensorBin + " watch --emit k1 --interval 20ms"}},
+	}
+	lc := newTestLifecycle(t, []sensor.Sensor{s})
+
+	h, err := lc.StartSensor(context.Background(), s.ID, []string{"k1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(80 * time.Millisecond) // let it emit the one observation
+
+	agg, err := lc.StopSensor(context.Background(), h)
+	if err != nil {
+		t.Fatalf("StopSensor: %v", err)
+	}
+	if agg.TerminationReason != enums.TerminationStopped {
+		t.Errorf("termination_reason = %q, want stopped", agg.TerminationReason)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (observation arrived)", agg.Verdict)
+	}
+
+	entries, _ := lc.ListRunning()
+	if len(entries) != 0 {
+		t.Errorf("ListRunning after Stop = %d, want 0", len(entries))
+	}
+}
+
+func TestStopSensor_FailWhenObservationMissing(t *testing.T) {
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "obs-missing", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+		Uses: []string{"fake"},
+		Steps: []sensor.Step{{ID: "watch", Run: fakeSensorBin + " watch --emit k1 --interval 20ms"}},
+	}
+	lc := newTestLifecycle(t, []sensor.Sensor{s})
+
+	h, err := lc.StartSensor(context.Background(), s.ID, []string{"k1", "k2-never-arrives"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(80 * time.Millisecond)
+
+	agg, err := lc.StopSensor(context.Background(), h)
+	if err != nil {
+		t.Fatalf("StopSensor: %v", err)
+	}
+	if agg.Verdict != enums.VerdictFail {
+		t.Errorf("verdict = %q, want fail (missing observation)", agg.Verdict)
+	}
+	if agg.HealHint == nil {
+		t.Errorf("heal_hint is nil; want observational-missing hint")
+	}
+}

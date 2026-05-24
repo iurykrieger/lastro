@@ -3,6 +3,7 @@ package lifecycle
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 	"github.com/iurykrieger/lastro/internal/runtime/executor"
 	"github.com/iurykrieger/lastro/internal/runtime/process"
 	"github.com/iurykrieger/lastro/internal/sensor"
+	"github.com/iurykrieger/lastro/internal/signal"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -310,31 +312,215 @@ func (l *Lifecycle) StartSensor(
 	return &hCopy, nil
 }
 
-// StopSensor is a temporary stub; Task 17 replaces this with the full
-// cross-process implementation. The stub closes the stop channel and waits
-// for the run goroutine to exit, then returns whatever aggregate the
-// goroutine produced.
+// StopSensor terminates the sensor identified by h. In-process fast
+// path: closes the stop channel and waits for the run goroutine. Cross-
+// process path: signals the recorded PID via process.GroupSignaler.
 func (l *Lifecycle) StopSensor(ctx context.Context, h *Handle) (aggregate.AggregateSignal, error) {
 	if h == nil {
 		return aggregate.AggregateSignal{}, fmt.Errorf("lifecycle: nil Handle")
 	}
+	key := runKey{SensorID: h.SensorID, RunID: h.RunID}
+
+	// Fast path: same process owns the run.
 	l.mu.Lock()
-	entry, ok := l.inflight[runKey{SensorID: h.SensorID, RunID: h.RunID}]
+	entry, inflight := l.inflight[key]
 	l.mu.Unlock()
+	if inflight {
+		select {
+		case <-entry.stopCh: // already closed
+		default:
+			close(entry.stopCh)
+		}
+		select {
+		case <-entry.doneCh:
+		case <-ctx.Done():
+			return aggregate.AggregateSignal{}, ctx.Err()
+		}
+		if entry.err != nil {
+			return aggregate.AggregateSignal{}, entry.err
+		}
+		return entry.agg, nil
+	}
+
+	// Cross-process path: locate via registry.
+	regEntry, ok, err := l.registry.Find(h.SensorID, h.RunID)
+	if err != nil {
+		return aggregate.AggregateSignal{}, err
+	}
+	if !ok {
+		// Already terminated: try to read aggregate.json.
+		if agg, ok := readAggregateJSON(filepath.Join(h.RunDir, "aggregate.json")); ok {
+			return agg, nil
+		}
+		return aggregate.AggregateSignal{}, ErrSensorNotFound
+	}
+
+	// Liveness + start-time check.
+	if !l.opts.Signaler.IsAlive(regEntry.PID, regEntry.StartedAt) {
+		_ = l.registry.Remove(h.SensorID, h.RunID)
+		return aggregate.AggregateSignal{}, ErrSensorOrphaned
+	}
+
+	// SIGTERM the group.
+	if err := l.opts.Signaler.SignalGroup(regEntry.PID, regEntry.PGID, process.SignalTerm); err != nil {
+		return aggregate.AggregateSignal{}, fmt.Errorf("lifecycle: SignalGroup SIGTERM: %w", err)
+	}
+
+	// Poll for aggregate.json up to gracePeriod, then SIGKILL.
+	aggPath := filepath.Join(h.RunDir, "aggregate.json")
+	deadline := time.Now().Add(l.opts.GracePeriod)
+	for time.Now().Before(deadline) {
+		if agg, ok := readAggregateJSON(aggPath); ok {
+			return agg, nil
+		}
+		select {
+		case <-ctx.Done():
+			return aggregate.AggregateSignal{}, ctx.Err()
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
+	_ = l.opts.Signaler.SignalGroup(regEntry.PID, regEntry.PGID, process.SignalKill)
+
+	// Wait a little more for aggregate.json after KILL.
+	hardDeadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(hardDeadline) {
+		if agg, ok := readAggregateJSON(aggPath); ok {
+			return agg, nil
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// Last-resort orphan recovery: synthesize aggregate from signals.jsonl.
+	return l.synthesizeOrphanAggregate(h, regEntry)
+}
+
+// synthesizeOrphanAggregate is the recovery path when the host process
+// of a watcher died before writing aggregate.json. It reads any decoded
+// signals from <runDir>/signals.jsonl and runs aggregate.Rollup with
+// termination_reason=stopped.
+func (l *Lifecycle) synthesizeOrphanAggregate(h *Handle, entry Handle) (aggregate.AggregateSignal, error) {
+	sigs, err := readSignalsJSONL(filepath.Join(h.RunDir, "signals.jsonl"))
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return aggregate.AggregateSignal{}, err
+	}
+	s, ok := l.opts.Sensors.Lookup(h.SensorID)
 	if !ok {
 		return aggregate.AggregateSignal{}, ErrSensorNotFound
 	}
-	select {
-	case <-entry.stopCh:
-	default:
-		close(entry.stopCh)
+	agg, err := aggregate.Rollup(aggregate.RollupInput{
+		Signals:              sigs,
+		SensorID:             s.ID,
+		UseCaseID:            s.UseCaseID,
+		Angle:                s.Angle,
+		Kind:                 s.Kind,
+		OutputType:           s.OutputType,
+		StartedAt:            entry.StartedAt,
+		EndedAt:              l.opts.Now(),
+		TerminationReason:    enums.TerminationStopped,
+		ExpectedObservations: h.ExpectedObservations,
+		ObservedKeys:         observationKeysFromSignals(sigs),
+	})
+	if err != nil {
+		return aggregate.AggregateSignal{}, err
 	}
-	select {
-	case <-entry.doneCh:
-	case <-ctx.Done():
-		return aggregate.AggregateSignal{}, ctx.Err()
+	_ = writeAggregateJSON(filepath.Join(h.RunDir, "aggregate.json"), agg)
+	_ = l.registry.Remove(h.SensorID, h.RunID)
+	return agg, nil
+}
+
+// ListRunning returns a snapshot of all in-flight registry entries.
+func (l *Lifecycle) ListRunning() ([]Handle, error) {
+	return l.registry.List()
+}
+
+// LoadHandle reconstructs a Handle from the registry for cross-process
+// callers (e.g., `harness stop-sensor`).
+func (l *Lifecycle) LoadHandle(sensorID, runID string) (*Handle, error) {
+	h, ok, err := l.registry.Find(sensorID, runID)
+	if err != nil {
+		return nil, err
 	}
-	return entry.agg, entry.err
+	if !ok {
+		return nil, ErrSensorNotFound
+	}
+	return &h, nil
+}
+
+func readAggregateJSON(path string) (aggregate.AggregateSignal, bool) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return aggregate.AggregateSignal{}, false
+	}
+	var agg aggregate.AggregateSignal
+	if err := jsonDecode(b, &agg); err != nil {
+		return aggregate.AggregateSignal{}, false
+	}
+	return agg, true
+}
+
+func readSignalsJSONL(path string) ([]aggregate.Signal, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var out []aggregate.Signal
+	for _, line := range splitLines(b) {
+		if len(line) == 0 {
+			continue
+		}
+		sig, err := signal.DecodeLine(line)
+		if err != nil {
+			continue
+		}
+		out = append(out, aggregate.Signal{
+			SchemaVersion: sig.SchemaVersion, SensorID: sig.SensorID, UseCaseID: sig.UseCaseID,
+			Angle: sig.Angle, EmittedAt: sig.EmittedAt, Verdict: sig.Verdict, Confidence: sig.Confidence,
+			Evidence: aggregate.Evidence(sig.Evidence), HealHint: convertHealHint(sig.HealHint),
+		})
+	}
+	return out, nil
+}
+
+func observationKeysFromSignals(sigs []aggregate.Signal) []string {
+	var out []string
+	for _, s := range sigs {
+		if k, ok := s.Evidence["observation_key"].(string); ok && k != "" {
+			out = append(out, k)
+		}
+	}
+	return out
+}
+
+func splitLines(b []byte) [][]byte {
+	var out [][]byte
+	start := 0
+	for i := 0; i < len(b); i++ {
+		if b[i] == '\n' {
+			out = append(out, b[start:i])
+			start = i + 1
+		}
+	}
+	if start < len(b) {
+		out = append(out, b[start:])
+	}
+	return out
+}
+
+// convertHealHint copies a *signal.HealHint into a *aggregate.HealHint
+// (which aliases signalstub.HealHint). The two types have identical
+// shapes but are declared in different packages.
+func convertHealHint(h *signal.HealHint) *aggregate.HealHint {
+	if h == nil {
+		return nil
+	}
+	out := &aggregate.HealHint{Summary: h.Summary, Rationale: h.Rationale}
+	if len(h.SuggestedLocus) > 0 {
+		out.SuggestedLocus = make([]aggregate.Locus, len(h.SuggestedLocus))
+		for i, l := range h.SuggestedLocus {
+			out.SuggestedLocus[i] = aggregate.Locus{Path: l.Path, Symbol: l.Symbol}
+		}
+	}
+	return out
 }
 
 // pruneDead removes registry entries whose PIDs are no longer alive.

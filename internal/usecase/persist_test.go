@@ -11,6 +11,60 @@ import (
 	"github.com/iurykrieger/lastro/internal/persisterror"
 )
 
+func TestPersist_TemplateResolution_RejectsUnresolvableToken(t *testing.T) {
+	dir := t.TempDir()
+	fxDir := filepath.Join(dir, "fixtures")
+	if err := os.MkdirAll(fxDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	fxYAMLContent := []byte(`schema_version: 1.0.0
+id: fx-req
+use_case_id: create-order
+role: input
+content_type: application/json
+payload: |
+  {}
+binding:
+  channel: http
+  selector: {method: POST, path: /orders}
+source_refs: [{path: src/x.ts, symbol: "y"}]
+`)
+	if err := os.WriteFile(filepath.Join(fxDir, "fx-req.yaml"), fxYAMLContent, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	uc := []byte(`schema_version: 2.0.0
+id: create-order
+title: Create order
+archetype_scope: [http-api]
+entry_points:
+  - id: create-order-endpoint
+    archetype: http-api
+    spec: {method: POST, path: /orders}
+given:
+  - "Request matching {{fixtures.fx-req}} is constructed"
+when:
+  - "Client invokes {{entry_points.nonexistent}}"
+then:
+  - "Endpoint returns success"
+fixture_ids: [fx-req]
+`)
+	err := Persist(uc, dir)
+	if err == nil {
+		t.Fatal("expected TemplateResolution failure, got nil")
+	}
+	var pe *persisterror.Error
+	if !errors.As(err, &pe) {
+		t.Fatalf("expected *persisterror.Error, got %T: %v", err, err)
+	}
+	if pe.Kind != persisterror.TemplateResolution {
+		t.Fatalf("Kind=%q, want %q (full error: %v)", pe.Kind, persisterror.TemplateResolution, err)
+	}
+	if _, statErr := os.Stat(filepath.Join(dir, "use-cases", "create-order.yaml")); !os.IsNotExist(statErr) {
+		t.Fatalf("use-case file written despite TemplateResolution failure: stat=%v", statErr)
+	}
+}
+
 // fxYAML is a minimal valid fixture used across Persist tests.
 // ID uses kebab-case per ^[a-z][a-z0-9-]*$ entity id pattern.
 const fxYAML = `schema_version: 1.0.0

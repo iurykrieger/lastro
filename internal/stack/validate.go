@@ -9,6 +9,15 @@ import (
 	"github.com/iurykrieger/lastro/internal/enums"
 )
 
+// supportedMajorMinor is the "major.minor" prefix this validator accepts.
+// Persist patch-bumps schema_version on every re-emit, so validators must
+// tolerate any patch within the supported major.minor.
+const supportedMajorMinor = "1.0"
+
+func schemaVersionCompatible(v string) bool {
+	return strings.HasPrefix(v, supportedMajorMinor+".")
+}
+
 // idPattern mirrors $defs.Id in schemas/stack-component.yaml.
 var idPattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 
@@ -18,9 +27,9 @@ var idPattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 func (c StackComponent) Validate() error {
 	var problems []string
 
-	if c.SchemaVersion != SchemaVersion {
+	if !schemaVersionCompatible(c.SchemaVersion) {
 		problems = append(problems,
-			fmt.Sprintf("schema_version: got %q, want %q", c.SchemaVersion, SchemaVersion))
+			fmt.Sprintf("schema_version: got %q, want major.minor.patch matching %s.x", c.SchemaVersion, supportedMajorMinor))
 	}
 	if c.ID == "" {
 		problems = append(problems, "id: required")
@@ -73,9 +82,9 @@ func (c StackComponent) Validate() error {
 func (m StackManifest) Validate() error {
 	var problems []string
 
-	if m.SchemaVersion != SchemaVersion {
+	if !schemaVersionCompatible(m.SchemaVersion) {
 		problems = append(problems,
-			fmt.Sprintf("schema_version: got %q, want %q", m.SchemaVersion, SchemaVersion))
+			fmt.Sprintf("schema_version: got %q, want major.minor.patch matching %s.x", m.SchemaVersion, supportedMajorMinor))
 	}
 	if m.Archetype == "" {
 		problems = append(problems, "archetype: required")

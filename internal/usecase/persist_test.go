@@ -176,6 +176,44 @@ fixture_ids: [fx-missing-fixture]
 	}
 }
 
+func TestPersist_AtomicityOnWriteFailure(t *testing.T) {
+	// Create a regular file at the path MkdirAll would need as a parent dir.
+	blocker := filepath.Join(t.TempDir(), "blocker")
+	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// harnessDir is a child of a regular file — MkdirAll(use-cases/) will fail.
+	harnessDir := filepath.Join(blocker, "inner")
+
+	// Pre-seed a valid fixture so Persist can pass fixture validation before
+	// it attempts the directory write.
+	fxDir := filepath.Join(harnessDir, "fixtures")
+	_ = os.MkdirAll(fxDir, 0o755) // will fail — blocker is a file; that's OK
+	// Since we cannot write the fixture dir, use a use-case with no fixture
+	// references so Persist reaches the write step before failing.
+	uc := []byte(`schema_version: 2.0.0
+id: create-order
+title: Create order
+archetype_scope: [http-api]
+entry_points:
+  - id: ep1
+    archetype: http-api
+    spec: {method: POST, path: /orders}
+given: ["g"]
+when: ["w"]
+then: ["t"]
+`)
+	err := Persist(uc, harnessDir)
+	if err == nil {
+		t.Fatal("Persist succeeded against unwritable harnessDir")
+	}
+	ucPath := filepath.Join(harnessDir, "use-cases", "create-order.yaml")
+	_, statErr := os.Stat(ucPath)
+	if statErr == nil {
+		t.Fatalf("partial state left behind: file exists at %s", ucPath)
+	}
+}
+
 func TestPersist_BumpsExisting(t *testing.T) {
 	dir := setupFxDir(t)
 

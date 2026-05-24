@@ -102,6 +102,42 @@ source_refs:
 	}
 }
 
+func TestPersist_AtomicityOnWriteFailure(t *testing.T) {
+	// Create a regular file at the path MkdirAll would need as a parent dir.
+	blocker := filepath.Join(t.TempDir(), "blocker")
+	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// harnessDir is a child of a regular file — MkdirAll(fixtures/) will fail.
+	harnessDir := filepath.Join(blocker, "inner")
+
+	in := []byte(`schema_version: 1.0.0
+id: fx-blocked
+use_case_id: uc-x
+role: input
+content_type: application/json
+payload: |
+  {}
+binding:
+  channel: http
+  selector:
+    method: POST
+    path: /x
+source_refs:
+  - path: src/x.ts
+    symbol: x
+`)
+	err := Persist(in, harnessDir)
+	if err == nil {
+		t.Fatal("Persist succeeded against unwritable harnessDir")
+	}
+	fixturePath := filepath.Join(harnessDir, "fixtures", "fx-blocked.yaml")
+	_, statErr := os.Stat(fixturePath)
+	if statErr == nil {
+		t.Fatalf("partial state left behind: file exists at %s", fixturePath)
+	}
+}
+
 func TestPersist_RejectsMalformedJSONPayload(t *testing.T) {
 	dir := t.TempDir()
 	// content_type says JSON, but payload is unparseable.

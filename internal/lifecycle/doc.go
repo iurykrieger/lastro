@@ -10,5 +10,4 @@ package lifecycle
 
 import (
 	_ "github.com/oklog/ulid/v2"
-	_ "github.com/rogpeppe/go-internal/lockedfile"
 )

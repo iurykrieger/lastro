@@ -28,7 +28,7 @@ properties:
   verdict:
     type: string
     description: "Canonical source: schemas/enums/verdicts.yaml"
-    enum: [pass, fail, inconclusive]
+    enum: [pass, warn, fail, inconclusive]
   confidence:
     type: number
     minimum: 0
@@ -47,7 +47,7 @@ properties:
 allOf:
   - if:
       properties:
-        verdict: { const: fail }
+        verdict: { enum: [fail, warn] }
     then:
       required: [heal_hint]
 

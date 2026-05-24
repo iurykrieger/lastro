@@ -172,3 +172,83 @@ func TestBind_BoundIDsDeterministicAcrossCalls(t *testing.T) {
 		}
 	}
 }
+
+func TestBind_FixtureNotFound(t *testing.T) {
+	b := &Binder{ScratchDir: t.TempDir()}
+	uc := &usecase.UseCase{ID: "uc-login", FixtureIDs: []string{"missing"}}
+	step := sensor.Step{Uses: []string{"missing"}}
+	store := newStubStore(t)
+
+	_, err := b.Bind(step, uc, store)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	be, ok := err.(*BindError)
+	if !ok {
+		t.Fatalf("err = %T, want *BindError", err)
+	}
+	if be.Code != "fixture-not-found" {
+		t.Errorf("Code = %q, want fixture-not-found", be.Code)
+	}
+	if be.FixtureID != "missing" {
+		t.Errorf("FixtureID = %q, want missing", be.FixtureID)
+	}
+}
+
+func TestBind_FixtureNotOwned(t *testing.T) {
+	b := &Binder{ScratchDir: t.TempDir()}
+	uc := &usecase.UseCase{ID: "uc-login", FixtureIDs: []string{"login-basic"}}
+	step := sensor.Step{Uses: []string{"foreign-fixture"}}
+	foreignFx := makeFixture(t, "foreign-fixture", "uc-other", "application/json", []byte(`{}`))
+	store := newStubStore(t, foreignFx)
+
+	_, err := b.Bind(step, uc, store)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	be, ok := err.(*BindError)
+	if !ok {
+		t.Fatalf("err = %T, want *BindError", err)
+	}
+	if be.Code != "fixture-not-owned" {
+		t.Errorf("Code = %q, want fixture-not-owned", be.Code)
+	}
+	if be.FixtureID != "foreign-fixture" {
+		t.Errorf("FixtureID = %q, want foreign-fixture", be.FixtureID)
+	}
+	if be.UseCaseID != "uc-login" {
+		t.Errorf("UseCaseID = %q, want uc-login", be.UseCaseID)
+	}
+}
+
+func TestBind_WriteFailed(t *testing.T) {
+	// Make ScratchDir unwritable by pointing it at a path whose parent is a regular file.
+	scratch := t.TempDir()
+	parent := filepath.Join(scratch, "not-a-dir")
+	if err := os.WriteFile(parent, []byte("x"), 0o600); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	b := &Binder{ScratchDir: parent}
+	fx := makeFixture(t, "x", "uc", "application/json", []byte(`{}`))
+	uc := &usecase.UseCase{ID: "uc", FixtureIDs: []string{"x"}}
+	step := sensor.Step{Uses: []string{"x"}}
+	store := newStubStore(t, fx)
+
+	_, err := b.Bind(step, uc, store)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	be, ok := err.(*BindError)
+	if !ok {
+		t.Fatalf("err = %T, want *BindError", err)
+	}
+	if be.Code != "write-failed" {
+		t.Errorf("Code = %q, want write-failed", be.Code)
+	}
+	if be.Cause == nil {
+		t.Error("Cause = nil, want underlying error")
+	}
+	if !strings.Contains(be.Error(), "write-failed") {
+		t.Errorf("Error() = %q, missing 'write-failed'", be.Error())
+	}
+}

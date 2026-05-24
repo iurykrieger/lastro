@@ -104,7 +104,7 @@ func bumpSchemaVersion(targetPath, input string) (string, error) {
 		return "", err
 	}
 	var head struct {
-		SchemaVersion string `yaml:"schema_version"`
+		SchemaVersion string `json:"schema_version" yaml:"schema_version"`
 	}
 	if err := yaml.Unmarshal(existing, &head); err != nil {
 		return "", fmt.Errorf("parse existing schema_version: %w", err)

@@ -33,9 +33,10 @@ func Resolve(global, local *ValidationPolicy) *EffectivePolicy {
 	}
 
 	eff := &EffectivePolicy{
-		SchemaVersion: SupportedSchemaVersion,
-		ResolvedFrom:  resolvedFrom,
-		PerArchetype:  map[enums.Archetype]map[enums.ValidationAngle]AngleStatus{},
+		SchemaVersion:    SupportedSchemaVersion,
+		ResolvedFrom:     resolvedFrom,
+		PerArchetype:     map[enums.Archetype]map[enums.ValidationAngle]AngleStatus{},
+		InferentialFloor: resolveFloor(sources),
 	}
 
 	archetypes := unionArchetypes(sources)
@@ -94,4 +95,17 @@ func containsAngle(list []enums.ValidationAngle, target enums.ValidationAngle) b
 		}
 	}
 	return false
+}
+
+// resolveFloor walks sources in order (global, local) and returns the last
+// non-nil InferentialFloor encountered. Falls back to DefaultInferentialFloor
+// when every source leaves the field nil.
+func resolveFloor(sources []policySource) float64 {
+	out := DefaultInferentialFloor
+	for _, s := range sources {
+		if s.pol.InferentialFloor != nil {
+			out = *s.pol.InferentialFloor
+		}
+	}
+	return out
 }

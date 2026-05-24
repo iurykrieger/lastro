@@ -179,3 +179,48 @@ func TestResolve_GlobalDisablesLocalSilent(t *testing.T) {
 		t.Errorf("cli build = %q, want disabled (local silent on it)", got.PerArchetype[enums.ArchetypeCLI][enums.AngleBuild])
 	}
 }
+
+func floatPtr(v float64) *float64 { return &v }
+
+func TestResolve_FloorBothNilUsesDefault(t *testing.T) {
+	g := &ValidationPolicy{SchemaVersion: "1.0.0", Scope: ScopeGlobal, PerArchetype: map[enums.Archetype]ArchetypeBlock{}}
+	l := &ValidationPolicy{SchemaVersion: "1.0.0", Scope: ScopeLocal, PerArchetype: map[enums.Archetype]ArchetypeBlock{}}
+	eff := Resolve(g, l)
+	if eff.InferentialFloor != DefaultInferentialFloor {
+		t.Errorf("InferentialFloor = %v, want %v", eff.InferentialFloor, DefaultInferentialFloor)
+	}
+}
+
+func TestResolve_FloorGlobalSet_LocalNil(t *testing.T) {
+	g := &ValidationPolicy{SchemaVersion: "1.0.0", Scope: ScopeGlobal, PerArchetype: map[enums.Archetype]ArchetypeBlock{}, InferentialFloor: floatPtr(0.5)}
+	l := &ValidationPolicy{SchemaVersion: "1.0.0", Scope: ScopeLocal, PerArchetype: map[enums.Archetype]ArchetypeBlock{}}
+	eff := Resolve(g, l)
+	if eff.InferentialFloor != 0.5 {
+		t.Errorf("InferentialFloor = %v, want 0.5", eff.InferentialFloor)
+	}
+}
+
+func TestResolve_FloorLocalSet_GlobalNil(t *testing.T) {
+	g := &ValidationPolicy{SchemaVersion: "1.0.0", Scope: ScopeGlobal, PerArchetype: map[enums.Archetype]ArchetypeBlock{}}
+	l := &ValidationPolicy{SchemaVersion: "1.0.0", Scope: ScopeLocal, PerArchetype: map[enums.Archetype]ArchetypeBlock{}, InferentialFloor: floatPtr(0.9)}
+	eff := Resolve(g, l)
+	if eff.InferentialFloor != 0.9 {
+		t.Errorf("InferentialFloor = %v, want 0.9", eff.InferentialFloor)
+	}
+}
+
+func TestResolve_FloorBothSet_LocalWins(t *testing.T) {
+	g := &ValidationPolicy{SchemaVersion: "1.0.0", Scope: ScopeGlobal, PerArchetype: map[enums.Archetype]ArchetypeBlock{}, InferentialFloor: floatPtr(0.5)}
+	l := &ValidationPolicy{SchemaVersion: "1.0.0", Scope: ScopeLocal, PerArchetype: map[enums.Archetype]ArchetypeBlock{}, InferentialFloor: floatPtr(0.9)}
+	eff := Resolve(g, l)
+	if eff.InferentialFloor != 0.9 {
+		t.Errorf("InferentialFloor = %v, want 0.9 (local wins)", eff.InferentialFloor)
+	}
+}
+
+func TestResolve_NilNil_FloorIsDefault(t *testing.T) {
+	eff := Resolve(nil, nil)
+	if eff.InferentialFloor != DefaultInferentialFloor {
+		t.Errorf("Resolve(nil,nil).InferentialFloor = %v, want %v", eff.InferentialFloor, DefaultInferentialFloor)
+	}
+}

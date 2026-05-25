@@ -1,0 +1,18 @@
+{
+  "name": "lastro-harness",
+  "version": "0.1.0",
+  "description": "Use-case-driven validation framework. Detects an application's archetype and stack, derives use cases with fixtures, and generates angle-specific sensors that validate behavior. Provides /detect-stack, /detect-use-cases, and /create-sensors.",
+  "author": {
+    "name": "Iury Krieger",
+    "email": "iury.krieger@gmail.com"
+  },
+  "repository": "https://github.com/iurykrieger/lastro",
+  "license": "MIT",
+  "keywords": [
+    "validation",
+    "use-cases",
+    "sensors",
+    "stack-detection",
+    "harness"
+  ]
+}

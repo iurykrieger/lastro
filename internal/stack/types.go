@@ -38,11 +38,13 @@ func (e EvidenceRef) String() string {
 }
 
 // StackManifest is the full detected manifest for a repository: the
-// archetype plus the ordered list of detected StackComponents.
+// archetype, applicable validation angles (derived from archetype), plus
+// the ordered list of detected StackComponents.
 type StackManifest struct {
-	SchemaVersion string           `json:"schema_version" yaml:"schema_version"`
-	Archetype     enums.Archetype  `json:"archetype" yaml:"archetype"`
-	Components    []StackComponent `json:"components" yaml:"components"`
+	SchemaVersion    string                  `json:"schema_version" yaml:"schema_version"`
+	Archetype        enums.Archetype         `json:"archetype" yaml:"archetype"`
+	ApplicableAngles []enums.ValidationAngle `json:"applicable_angles" yaml:"applicable_angles"`
+	Components       []StackComponent        `json:"components" yaml:"components"`
 
 	// byID is built by the loader and never marshalled. It backs ByID and
 	// is the place duplicate-id detection lands.

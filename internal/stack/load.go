@@ -53,29 +53,41 @@ func compileSchemas() (manifest *jsonschema.Schema, component *jsonschema.Schema
 	return manifest, component, nil
 }
 
-// Load reads, JSON-Schema-validates, unmarshals, programmatically validates,
-// and indexes a stack manifest YAML file. It is the canonical entrypoint.
+// Load reads, JSON-Schema-validates, unmarshals, programmatically
+// validates, and indexes a stack manifest YAML file. It is the canonical
+// entrypoint for file-based callers; LoadBytes is the entrypoint for
+// in-memory callers (e.g., Persist's pre-write validation).
 func Load(path string) (StackManifest, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return StackManifest{}, fmt.Errorf("read %s: %w", path, err)
 	}
+	m, err := LoadBytes(b)
+	if err != nil {
+		return StackManifest{}, fmt.Errorf("%s: %w", path, err)
+	}
+	return m, nil
+}
+
+// LoadBytes validates and unmarshals an in-memory stack manifest. Same
+// pipeline as Load minus the os.ReadFile step.
+func LoadBytes(b []byte) (StackManifest, error) {
 	manifestSch, _, err := compileSchemas()
 	if err != nil {
 		return StackManifest{}, err
 	}
 	if err := validateAgainstSchema(b, manifestSch); err != nil {
-		return StackManifest{}, fmt.Errorf("%s: %w", path, err)
+		return StackManifest{}, err
 	}
 	var m StackManifest
 	if err := yaml.Unmarshal(b, &m); err != nil {
-		return StackManifest{}, fmt.Errorf("unmarshal %s: %w", path, err)
+		return StackManifest{}, fmt.Errorf("unmarshal: %w", err)
 	}
 	if err := m.Validate(); err != nil {
-		return StackManifest{}, fmt.Errorf("%s: %w", path, err)
+		return StackManifest{}, err
 	}
 	if err := m.buildIndex(); err != nil {
-		return StackManifest{}, fmt.Errorf("%s: %w", path, err)
+		return StackManifest{}, err
 	}
 	return m, nil
 }

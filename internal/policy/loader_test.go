@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -134,6 +135,32 @@ func TestLoad_RejectsOutOfRangeFloor(t *testing.T) {
 		if !strings.Contains(msg, want) {
 			t.Errorf("error %q missing %q", err.Error(), want)
 		}
+	}
+}
+
+func TestLoader_RejectsOutOfRangeMaxHealIterations(t *testing.T) {
+	f, err := os.Open("testdata/max-heal-iterations-out-of-range.yaml")
+	if err != nil { t.Fatal(err) }
+	defer f.Close()
+	_, err = Load(f)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+	if !errors.Is(err, ErrMaxHealIterationsOutOfRange) {
+		t.Errorf("error = %v, want errors.Is(_, ErrMaxHealIterationsOutOfRange)", err)
+	}
+}
+
+func TestLoader_AcceptsValidMaxHealIterations(t *testing.T) {
+	f, err := os.Open("testdata/max-heal-iterations-valid.yaml")
+	if err != nil { t.Fatal(err) }
+	defer f.Close()
+	p, err := Load(f)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if p.MaxHealIterations == nil || *p.MaxHealIterations != 5 {
+		t.Errorf("MaxHealIterations = %v, want pointer to 5", p.MaxHealIterations)
 	}
 }
 

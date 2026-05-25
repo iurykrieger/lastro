@@ -11,10 +11,16 @@ import (
 	"github.com/iurykrieger/lastro/internal/enums"
 )
 
+// ErrMaxHealIterationsOutOfRange is returned by Load when a source
+// validation-policy declares max_heal_iterations outside [0, 20].
+var ErrMaxHealIterationsOutOfRange = errors.New("policy: max_heal_iterations out of range [0, 20]")
+
 // Load parses a single ValidationPolicy from a YAML stream. The pipeline
-// is read → YAML→JSON normalize → JSON Schema validate → json.Unmarshal →
-// semantic validation. Semantic checks (applicable-angle matrix, disjoint
-// lists) live in validateSemantics.
+// is read → YAML→JSON normalize → json.Unmarshal → JSON Schema validate →
+// semantic validation. Both schema and semantic checks always run after a
+// successful unmarshal so callers receive typed errors (e.g.
+// ErrMaxHealIterationsOutOfRange) even when the JSON Schema also catches the
+// violation.
 func Load(r io.Reader) (*ValidationPolicy, error) {
 	raw, err := io.ReadAll(r)
 	if err != nil {
@@ -24,9 +30,6 @@ func Load(r io.Reader) (*ValidationPolicy, error) {
 	if err != nil {
 		return nil, fmt.Errorf("policy: yaml-to-json: %w", err)
 	}
-	if err := validateAgainstSchema(asJSON); err != nil {
-		return nil, fmt.Errorf("policy: schema validation: %w", err)
-	}
 	var p ValidationPolicy
 	if err := json.Unmarshal(asJSON, &p); err != nil {
 		return nil, fmt.Errorf("policy: deserialize: %w", err)
@@ -34,8 +37,15 @@ func Load(r io.Reader) (*ValidationPolicy, error) {
 	if p.SchemaVersion != SupportedSchemaVersion {
 		return nil, fmt.Errorf("policy: schema_version %q not supported (want %q)", p.SchemaVersion, SupportedSchemaVersion)
 	}
-	if err := validateSemantics(&p); err != nil {
-		return nil, fmt.Errorf("policy: semantic validation: %w", err)
+	var validationErrs []error
+	if schemaErr := validateAgainstSchema(asJSON); schemaErr != nil {
+		validationErrs = append(validationErrs, fmt.Errorf("schema validation: %w", schemaErr))
+	}
+	if semanticErr := validateSemantics(&p); semanticErr != nil {
+		validationErrs = append(validationErrs, semanticErr)
+	}
+	if joined := errors.Join(validationErrs...); joined != nil {
+		return nil, fmt.Errorf("policy: %w", joined)
 	}
 	return &p, nil
 }
@@ -53,13 +63,20 @@ func validateAgainstSchema(jsonDoc []byte) error {
 }
 
 // validateSemantics enforces loader rules 5 (applicable-angle matrix),
-// 6 (disjoint lists), and 7 (no duplicates within a list).
+// 6 (disjoint lists), 7 (no duplicates within a list), and the
+// MaxHealIterations range check (0..20).
 func validateSemantics(p *ValidationPolicy) error {
 	var errs []error
 	for arch, block := range p.PerArchetype {
 		errs = append(errs, checkApplicableAngles(arch, block)...)
 		errs = append(errs, checkDuplicates(arch, block)...)
 		errs = append(errs, checkDisjoint(arch, block)...)
+	}
+	if p.MaxHealIterations != nil {
+		v := *p.MaxHealIterations
+		if v < 0 || v > 20 {
+			errs = append(errs, fmt.Errorf("%w: got %d", ErrMaxHealIterationsOutOfRange, v))
+		}
 	}
 	return errors.Join(errs...)
 }

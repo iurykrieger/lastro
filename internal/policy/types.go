@@ -17,6 +17,10 @@ const SupportedSchemaVersion = "1.0.0"
 // inferential_floor. Plan §10.3 default.
 const DefaultInferentialFloor = 0.7
 
+// DefaultMaxHealIterations is applied by Resolve when no scope sets
+// max_heal_iterations. Spec §10 / source chunk §10.4.
+const DefaultMaxHealIterations = 3
+
 // Scope is the closed two-value enum for a source ValidationPolicy.
 // EffectivePolicy has no Scope — it is the merged result of one or both.
 type Scope string
@@ -38,6 +42,12 @@ type ValidationPolicy struct {
 	// 0.0" (non-nil pointer to 0.0). Resolve fills in DefaultInferentialFloor
 	// only when every source scope leaves it nil.
 	InferentialFloor *float64 `json:"inferential_floor,omitempty" yaml:"inferential_floor,omitempty"`
+	// MaxHealIterations is the cap on heal-loop iterations before a failing
+	// use case is reported as exhausted. Nullable so callers can distinguish
+	// "field omitted" (nil) from "explicitly 0" (non-nil pointer to 0, which
+	// disables heal). Resolve fills DefaultMaxHealIterations when every source
+	// scope leaves it nil.
+	MaxHealIterations *int `json:"max_heal_iterations,omitempty" yaml:"max_heal_iterations,omitempty"`
 }
 
 // ArchetypeBlock is a per-archetype declaration of which angles are
@@ -58,6 +68,8 @@ type EffectivePolicy struct {
 	PerArchetype  map[enums.Archetype]map[enums.ValidationAngle]AngleStatus `json:"-"              yaml:"-"`
 	// InferentialFloor is the resolved floor — always populated post-Resolve.
 	InferentialFloor float64 `json:"inferential_floor" yaml:"inferential_floor"`
+	// MaxHealIterations is the resolved cap — always populated post-Resolve.
+	MaxHealIterations int `json:"max_heal_iterations" yaml:"max_heal_iterations"`
 }
 
 // AngleStatus is one of obligatory / optional / disabled. The zero value

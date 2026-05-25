@@ -155,4 +155,3 @@ func collectPaths(plan EditPlan) []string {
 	}
 	return out
 }
-

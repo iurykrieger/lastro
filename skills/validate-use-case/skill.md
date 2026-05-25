@@ -27,11 +27,16 @@ emit it on stdout. Writes `verdict.json` under `.harness/runtime/`.
 
 ## Exit codes
 
+The exit code is the worst of (a) the `UseCaseVerdict.verdict` and (b)
+the worst individual `AggregateSignal.verdict` across all sensors.
+Promotion to the worst sensor verdict prevents an empty/vacuous policy
+(no obligatory angles) from silently hiding sensor-level failures.
+
 | Code | Meaning |
 |---|---|
-| 0 | `UseCaseVerdict.verdict == pass` |
-| 1 | `UseCaseVerdict.verdict == fail` |
-| 2 | `UseCaseVerdict.verdict == inconclusive` |
+| 0 | All sensors passed AND `UseCaseVerdict.verdict == pass` |
+| 1 | `UseCaseVerdict.verdict == fail` OR any sensor returned `verdict == fail` |
+| 2 | `UseCaseVerdict.verdict == inconclusive` OR any sensor was inconclusive (and none failed) |
 | 3 | Script-level error (use case not found, cycle, runner error) |
 
 ## Outputs

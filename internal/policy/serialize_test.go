@@ -132,6 +132,23 @@ func TestMarshalYAML_EmitsInferentialFloor(t *testing.T) {
 	}
 }
 
+func TestMarshalYAML_EmitsMaxHealIterations(t *testing.T) {
+	eff := &EffectivePolicy{
+		SchemaVersion:     SupportedSchemaVersion,
+		ResolvedFrom:      []string{"global"},
+		PerArchetype:      map[enums.Archetype]map[enums.ValidationAngle]AngleStatus{},
+		MaxHealIterations: 3,
+	}
+	raw, err := eff.MarshalYAML()
+	if err != nil {
+		t.Fatalf("MarshalYAML: %v", err)
+	}
+	got := string(raw)
+	if !strings.Contains(got, "max_heal_iterations: 3") {
+		t.Errorf("output missing 'max_heal_iterations: 3':\n%s", got)
+	}
+}
+
 func TestMarshalYAML_FloorDeterministic(t *testing.T) {
 	eff := &EffectivePolicy{
 		SchemaVersion:    SupportedSchemaVersion,

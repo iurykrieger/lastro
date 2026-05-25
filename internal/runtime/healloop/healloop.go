@@ -2,6 +2,7 @@ package healloop
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/enums"
@@ -54,10 +55,99 @@ func Run(
 	cfg Config,
 ) (HealResult, error) {
 	if verdict.Verdict == enums.VerdictPass {
-		return HealResult{
-			Status:       StatusHealed,
-			FinalVerdict: verdict,
-		}, nil
+		return HealResult{Status: StatusHealed, FinalVerdict: verdict}, nil
 	}
-	return HealResult{}, nil
+
+	var attempts []Attempt
+	for i := 1; i <= cfg.MaxIterations; i++ {
+		promptIn := PromptInput{
+			Verdict: verdict,
+			Hints:   verdict.HealHints,
+			History: attempts,
+		}
+
+		plan, err := llm.Propose(ctx, promptIn)
+		if err != nil {
+			return HealResult{
+				Status:         StatusAbandoned,
+				IterationsUsed: i - 1,
+				Attempts:       attempts,
+				FinalVerdict:   verdict,
+				Err:            err,
+			}, nil
+		}
+
+		paths := collectPaths(plan)
+		handle, err := tx.Snapshot(ctx, paths)
+		if err != nil {
+			return HealResult{}, err
+		}
+
+		if err := handle.Apply(plan); err != nil {
+			if rErr := handle.Revert(); rErr != nil {
+				return HealResult{}, joinErrs(err, rErr)
+			}
+			return HealResult{}, err
+		}
+
+		newVerdict, err := rev.Revalidate(ctx, verdict.UseCaseID)
+		if err != nil {
+			if rErr := handle.Revert(); rErr != nil {
+				return HealResult{}, joinErrs(err, rErr)
+			}
+			return HealResult{}, err
+		}
+
+		if newVerdict.Verdict == enums.VerdictPass {
+			commitErr := handle.Commit()
+			attempts = append(attempts, Attempt{Iteration: i, Plan: plan, Verdict: newVerdict, Reverted: false})
+			return HealResult{
+				Status:         StatusHealed,
+				IterationsUsed: i,
+				Attempts:       attempts,
+				FinalVerdict:   newVerdict,
+				Err:            commitErr,
+			}, nil
+		}
+
+		revertErr := handle.Revert()
+		attempts = append(attempts, Attempt{Iteration: i, Plan: plan, Verdict: newVerdict, Reverted: true})
+		if revertErr != nil {
+			return HealResult{
+				Status:         StatusExhausted,
+				IterationsUsed: i,
+				Attempts:       attempts,
+				FinalVerdict:   verdict,
+				Err:            revertErr,
+			}, nil
+		}
+	}
+
+	return HealResult{
+		Status:         StatusExhausted,
+		IterationsUsed: cfg.MaxIterations,
+		Attempts:       attempts,
+		FinalVerdict:   verdict,
+	}, nil
+}
+
+// collectPaths flattens an EditPlan into the list of file paths it touches.
+// Deduplicated, order preserved by first appearance.
+func collectPaths(plan EditPlan) []string {
+	seen := make(map[string]struct{}, len(plan.Files))
+	out := make([]string, 0, len(plan.Files))
+	for _, f := range plan.Files {
+		if _, ok := seen[f.Path]; ok {
+			continue
+		}
+		seen[f.Path] = struct{}{}
+		out = append(out, f.Path)
+	}
+	return out
+}
+
+// joinErrs is a tiny wrapper around errors.Join so callers in this file
+// stay readable.
+func joinErrs(a, b error) error {
+	return errors.Join(a, b)
 }

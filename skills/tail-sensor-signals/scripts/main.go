@@ -35,7 +35,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, cwd string) i
 	fs := flag.NewFlagSet("tail-sensor-signals", flag.ContinueOnError)
 	fs.SetOutput(io.Discard) // suppress default error spam; we handle errors ourselves
 	follow := fs.Bool("follow", false, "tail new signals as they arrive")
-	since := fs.Int("since", 0, "skip the first N lines (1-indexed; 0 = no skip)")
+	since := fs.Int("since", 0, "start emitting at line N (1-indexed; 0 = from the beginning)")
 	if err := fs.Parse(args[2:]); err != nil {
 		skillio.EmitError(stderr, "bad-argv", err.Error(), nil)
 		return skillio.ExitScriptError

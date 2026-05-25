@@ -7,8 +7,9 @@ import (
 	usecase "github.com/iurykrieger/lastro/internal/runtime/aggregator/usecase"
 )
 
-// Config gathers the runtime knobs Run needs. MaxIterations is required;
-// pass policy.EffectivePolicy.MaxHealIterations.
+// Config gathers the runtime knobs Run needs. MaxIterations should be set
+// from policy.EffectivePolicy.MaxHealIterations; zero is valid and short-
+// circuits Run to StatusExhausted with no LLM call.
 type Config struct {
 	// MaxIterations caps how many Propose/Apply/Revalidate cycles Run
 	// performs before returning StatusExhausted. 0 disables heal.

@@ -52,7 +52,9 @@ type EditPlan struct {
 }
 
 // Attempt records one iteration of the loop. The successful attempt has
-// Reverted=false; all entries in History have Reverted=true.
+// Reverted=false; all other entries in HealResult.Attempts (and every
+// entry in PromptInput.History, which is a snapshot of prior attempts)
+// have Reverted=true.
 type Attempt struct {
 	Iteration int
 	Plan      EditPlan
@@ -108,8 +110,10 @@ type Revalidator interface {
 	Revalidate(ctx context.Context, useCaseID string) (usecase.UseCaseVerdict, error)
 }
 
-// SensorLookup returns the sensors that belong to a use case. *sensor.Store
-// satisfies it via the ForUseCase method (adapted at the construction site).
+// SensorLookup returns the sensors that belong to a use case. The concrete
+// *sensor.Store does NOT directly satisfy this interface — its method is
+// named ForUseCase. An adapter must be wired at the construction site, the
+// same way internal/lifecycle wraps *sensor.Store as SensorStore.
 type SensorLookup interface {
 	SensorsForUseCase(useCaseID string) []sensor.Sensor
 }

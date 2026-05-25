@@ -84,6 +84,16 @@ func Run(
 			}, nil
 		}
 
+		if len(plan.Files) == 0 {
+			return HealResult{
+				Status:         StatusAbandoned,
+				IterationsUsed: i - 1,
+				Attempts:       attempts,
+				FinalVerdict:   verdict,
+				Err:            ErrLLMEmptyPlan,
+			}, nil
+		}
+
 		paths := collectPaths(plan)
 		handle, err := tx.Snapshot(ctx, paths)
 		if err != nil {

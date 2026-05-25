@@ -6,6 +6,7 @@ import (
 
 	"github.com/iurykrieger/lastro/internal/enums"
 	usecase "github.com/iurykrieger/lastro/internal/runtime/aggregator/usecase"
+	upkg "github.com/iurykrieger/lastro/internal/usecase"
 )
 
 func TestRun_HealsOnFirstIteration_WhenLLMProposesValidEdit(t *testing.T) {
@@ -19,11 +20,12 @@ func TestRun_HealsOnFirstIteration_WhenLLMProposesValidEdit(t *testing.T) {
 		Archetype: enums.Archetype("http-api"),
 		Verdict:   enums.VerdictPass,
 	}
+	uc := &upkg.UseCase{ID: "uc-1"}
 	llm := &stubLLM{plans: []EditPlan{{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "// fixed"}}}}}
 	rev := &stubRevalidator{verdicts: []usecase.UseCaseVerdict{passing}}
 	tx := &stubTransactor{}
 
-	res, err := Run(context.Background(), failing, llm, tx, rev, Config{MaxIterations: 3})
+	res, err := Run(context.Background(), uc, failing, llm, tx, rev, Config{MaxIterations: 3})
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -59,8 +61,9 @@ func TestRun_ShortCircuits_WhenInputAlreadyPassing(t *testing.T) {
 		Archetype: enums.Archetype("http-api"),
 		Verdict:   enums.VerdictPass,
 	}
+	uc := &upkg.UseCase{ID: "uc-1"}
 	llm := &stubLLM{}
-	res, err := Run(context.Background(), verdict, llm, &stubTransactor{}, &stubRevalidator{}, Config{MaxIterations: 3})
+	res, err := Run(context.Background(), uc, verdict, llm, &stubTransactor{}, &stubRevalidator{}, Config{MaxIterations: 3})
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}

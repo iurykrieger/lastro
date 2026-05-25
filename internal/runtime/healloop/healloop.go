@@ -7,6 +7,7 @@ import (
 
 	"github.com/iurykrieger/lastro/internal/enums"
 	usecase "github.com/iurykrieger/lastro/internal/runtime/aggregator/usecase"
+	upkg "github.com/iurykrieger/lastro/internal/usecase"
 )
 
 // Config gathers the runtime knobs Run needs. MaxIterations should be set
@@ -42,12 +43,17 @@ type HealResult struct {
 // Run drives the heal loop. See spec §6 for the algorithm and §11 for the
 // exit matrix.
 //
+// useCase is the in-scope use case object; it is forwarded into every
+// PromptInput so the LLMClient can inspect given/when/then text and
+// fixture IDs without a separate lookup.
+//
 // Run takes ownership of the working tree for the duration of the call:
 // edits are applied and either committed (on heal) or reverted (on every
 // failing iteration). On bare-error return, the working tree state depends
 // on whether a snapshot was taken — see the matrix.
 func Run(
 	ctx context.Context,
+	useCase *upkg.UseCase,
 	verdict usecase.UseCaseVerdict,
 	llm LLMClient,
 	tx Transactor,
@@ -61,6 +67,7 @@ func Run(
 	var attempts []Attempt
 	for i := 1; i <= cfg.MaxIterations; i++ {
 		promptIn := PromptInput{
+			UseCase: useCase,
 			Verdict: verdict,
 			Hints:   verdict.HealHints,
 			History: attempts,
@@ -85,7 +92,7 @@ func Run(
 
 		if err := handle.Apply(plan); err != nil {
 			if rErr := handle.Revert(); rErr != nil {
-				return HealResult{}, joinErrs(err, rErr)
+				return HealResult{}, errors.Join(err, rErr)
 			}
 			return HealResult{}, err
 		}
@@ -93,7 +100,7 @@ func Run(
 		newVerdict, err := rev.Revalidate(ctx, verdict.UseCaseID)
 		if err != nil {
 			if rErr := handle.Revert(); rErr != nil {
-				return HealResult{}, joinErrs(err, rErr)
+				return HealResult{}, errors.Join(err, rErr)
 			}
 			return HealResult{}, err
 		}
@@ -113,6 +120,9 @@ func Run(
 		revertErr := handle.Revert()
 		attempts = append(attempts, Attempt{Iteration: i, Plan: plan, Verdict: newVerdict, Reverted: true})
 		if revertErr != nil {
+			// Spec §11 row 8: Revert() failure on a failing iteration exits early
+			// with StatusExhausted and the revert error surfaced in HealResult.Err.
+			// The working tree is dirty; the caller must surface that to the user.
 			return HealResult{
 				Status:         StatusExhausted,
 				IterationsUsed: i,
@@ -146,8 +156,3 @@ func collectPaths(plan EditPlan) []string {
 	return out
 }
 
-// joinErrs is a tiny wrapper around errors.Join so callers in this file
-// stay readable.
-func joinErrs(a, b error) error {
-	return errors.Join(a, b)
-}

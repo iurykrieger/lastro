@@ -4,11 +4,13 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/iurykrieger/lastro/lib/skillio"
 	"github.com/iurykrieger/lastro/lib/skillruntime"
@@ -54,9 +56,11 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, cwd string) i
 	signalsPath := filepath.Join(skillio.HarnessDir(repoRoot), "runtime", sensorID, runID, "signals.jsonl")
 
 	if *follow {
-		// Implemented in Task 14.
-		skillio.EmitError(stderr, "not-implemented", "--follow is implemented in the next task", nil)
-		return skillio.ExitScriptError
+		if err := followLoop(signalsPath, *since, sensorID, runID, skillio.HarnessDir(repoRoot), stdout); err != nil {
+			skillio.EmitError(stderr, "follow-failed", err.Error(), map[string]any{"path": signalsPath})
+			return skillio.ExitScriptError
+		}
+		return skillio.ExitPass
 	}
 
 	if _, err := snapshot(signalsPath, *since, stdout); err != nil {
@@ -94,4 +98,78 @@ func snapshot(path string, since int, stdout io.Writer) (int, error) {
 		emitted++
 	}
 	return emitted, scanner.Err()
+}
+
+// followLoop tails signalsPath: emits existing lines (after `since`), then
+// polls for new bytes every 200ms until the sensor leaves
+// running_sensors.json AND no new bytes have arrived for 1s.
+func followLoop(signalsPath string, since int, sensorID, runID, harnessDir string, stdout io.Writer) error {
+	// First emit the existing snapshot.
+	if _, err := snapshot(signalsPath, since, stdout); err != nil {
+		return err
+	}
+
+	// Reopen for incremental reads.
+	f, err := os.Open(signalsPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	// Seek to end of what snapshot already emitted.
+	if _, err := f.Seek(0, io.SeekEnd); err != nil {
+		return err
+	}
+
+	const pollInterval = 200 * time.Millisecond
+	const quietWindow = 1 * time.Second
+	registryPath := filepath.Join(harnessDir, "runtime", "running_sensors.json")
+	// Initialize to now so the quiet-window check is relative to when we
+	// started tailing, not to the zero time (which would cause immediate exit).
+	lastEmittedAt := time.Now()
+	reader := bufio.NewReader(f)
+	for {
+		line, err := reader.ReadString('\n')
+		if len(line) > 0 {
+			if _, werr := stdout.Write([]byte(line)); werr != nil {
+				return werr
+			}
+			lastEmittedAt = time.Now()
+		}
+		if err == nil {
+			continue
+		}
+		if err != io.EOF {
+			return err
+		}
+		// EOF: decide whether to keep waiting.
+		alive := isSensorInRegistry(registryPath, sensorID, runID)
+		if !alive && time.Since(lastEmittedAt) > quietWindow {
+			return nil
+		}
+		time.Sleep(pollInterval)
+	}
+}
+
+// isSensorInRegistry returns true if running_sensors.json contains an
+// entry for (sensorID, runID). Missing file or parse error → false.
+func isSensorInRegistry(path, sensorID, runID string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+	var doc struct {
+		Entries []struct {
+			SensorID string `json:"sensor_id"`
+			RunID    string `json:"run_id"`
+		} `json:"entries"`
+	}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return false
+	}
+	for _, e := range doc.Entries {
+		if e.SensorID == sensorID && e.RunID == runID {
+			return true
+		}
+	}
+	return false
 }

@@ -143,26 +143,15 @@ steps:
 	if !strings.Contains(handle, ":") {
 		t.Errorf("handle missing colon: %q", handle)
 	}
-	// Verify the run-id portion (after the colon) is ULID-shaped; the
-	// sensor-id portion uses the sensor's slug id (e.g. "test-obs"), not a
-	// ULID, so we only parse the run-id half here. FormatHandle is tested
-	// separately in lib/skillruntime.
-	parts := strings.SplitN(handle, ":", 2)
-	if len(parts) != 2 {
-		t.Fatalf("handle has no colon: %q", handle)
+	sensorID, runID, perr := skillruntime.ParseHandle(handle)
+	if perr != nil {
+		t.Fatalf("handle does not parse: %v (%q)", perr, handle)
 	}
-	if _, _, perr := skillruntime.ParseHandle(handle); perr == nil {
-		// ParseHandle validates ULID shape for both halves. If sensor IDs
-		// were ULID-shaped this would pass; with slug IDs it will return an
-		// error, which is expected. We just want the sensor-id prefix and
-		// a valid run-id.
-		_ = perr
+	if sensorID != "test-obs" {
+		t.Errorf("handle sensor-id = %q, want %q", sensorID, "test-obs")
 	}
-	if parts[0] != "test-obs" {
-		t.Errorf("handle sensor-id prefix = %q, want %q", parts[0], "test-obs")
-	}
-	if len(parts[1]) != 26 {
-		t.Errorf("handle run-id length = %d, want 26", len(parts[1]))
+	if len(runID) != 26 {
+		t.Errorf("handle run-id length = %d, want 26", len(runID))
 	}
 	// Cleanup: the watcher continues running after start-sensor returns;
 	// kill it so the test doesn't leak processes.

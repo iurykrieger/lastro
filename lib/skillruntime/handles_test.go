@@ -6,48 +6,69 @@ import (
 )
 
 const (
-	validULID1 = "01HMG12RX9N6Z8WJ3D6PNHVQXC"
-	validULID2 = "01HMG12RXATAFM4N0F0X5Y4SGE"
+	validSensorID = "my-sensor-id"
+	validULID     = "01HMG12RX9N6Z8WJ3D6PNHVQXC"
 )
 
 func TestParseHandle_OK(t *testing.T) {
-	sensorID, runID, err := ParseHandle(validULID1 + ":" + validULID2)
+	sensorID, runID, err := ParseHandle(validSensorID + ":" + validULID)
 	if err != nil {
 		t.Fatalf("ParseHandle: %v", err)
 	}
-	if sensorID != validULID1 {
-		t.Errorf("sensorID = %q, want %q", sensorID, validULID1)
+	if sensorID != validSensorID {
+		t.Errorf("sensorID = %q, want %q", sensorID, validSensorID)
 	}
-	if runID != validULID2 {
-		t.Errorf("runID = %q, want %q", runID, validULID2)
+	if runID != validULID {
+		t.Errorf("runID = %q, want %q", runID, validULID)
 	}
 }
 
 func TestParseHandle_NoColon(t *testing.T) {
-	_, _, err := ParseHandle(validULID1)
+	_, _, err := ParseHandle(validSensorID)
 	if err == nil || !strings.Contains(err.Error(), "missing ':'") {
 		t.Errorf("expected missing-colon error, got %v", err)
 	}
 }
 
-func TestParseHandle_WrongLength(t *testing.T) {
-	_, _, err := ParseHandle("short:" + validULID2)
+func TestParseHandle_SensorIDStartsWithDigit(t *testing.T) {
+	_, _, err := ParseHandle("1bad:" + validULID)
 	if err == nil {
-		t.Errorf("expected error on short sensor id")
+		t.Errorf("expected error on sensor id starting with digit")
 	}
 }
 
-func TestParseHandle_NonULIDChars(t *testing.T) {
-	bad := strings.Repeat("?", 26)
-	_, _, err := ParseHandle(bad + ":" + validULID2)
+func TestParseHandle_SensorIDUppercase(t *testing.T) {
+	_, _, err := ParseHandle("Bad:" + validULID)
 	if err == nil {
-		t.Errorf("expected error on non-ULID chars")
+		t.Errorf("expected error on uppercase sensor id")
+	}
+}
+
+func TestParseHandle_SensorIDEmpty(t *testing.T) {
+	_, _, err := ParseHandle(":" + validULID)
+	if err == nil {
+		t.Errorf("expected error on empty sensor id")
+	}
+}
+
+func TestParseHandle_RunIDWrongLength(t *testing.T) {
+	_, _, err := ParseHandle(validSensorID + ":short")
+	if err == nil {
+		t.Errorf("expected error on short run id")
+	}
+}
+
+func TestParseHandle_RunIDNonULIDChars(t *testing.T) {
+	bad := strings.Repeat("?", 26)
+	_, _, err := ParseHandle(validSensorID + ":" + bad)
+	if err == nil {
+		t.Errorf("expected error on non-ULID chars in run id")
 	}
 }
 
 func TestFormatHandle(t *testing.T) {
-	got := FormatHandle(validULID1, validULID2)
-	want := validULID1 + ":" + validULID2
+	got := FormatHandle(validSensorID, validULID)
+	want := validSensorID + ":" + validULID
 	if got != want {
 		t.Errorf("FormatHandle = %q, want %q", got, want)
 	}

@@ -13,7 +13,7 @@ import (
 
 // ErrMaxHealIterationsOutOfRange is returned by Load when a source
 // validation-policy declares max_heal_iterations outside [0, 20].
-var ErrMaxHealIterationsOutOfRange = errors.New("policy: max_heal_iterations out of range [0, 20]")
+var ErrMaxHealIterationsOutOfRange = errors.New("max_heal_iterations out of range [0, 20]")
 
 // Load parses a single ValidationPolicy from a YAML stream. The pipeline
 // is read → YAML→JSON normalize → json.Unmarshal → JSON Schema validate →
@@ -42,7 +42,7 @@ func Load(r io.Reader) (*ValidationPolicy, error) {
 		validationErrs = append(validationErrs, fmt.Errorf("schema validation: %w", schemaErr))
 	}
 	if semanticErr := validateSemantics(&p); semanticErr != nil {
-		validationErrs = append(validationErrs, semanticErr)
+		validationErrs = append(validationErrs, fmt.Errorf("semantic validation: %w", semanticErr))
 	}
 	if joined := errors.Join(validationErrs...); joined != nil {
 		return nil, fmt.Errorf("policy: %w", joined)

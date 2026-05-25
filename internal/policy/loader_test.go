@@ -138,11 +138,8 @@ func TestLoad_RejectsOutOfRangeFloor(t *testing.T) {
 	}
 }
 
-func TestLoader_RejectsOutOfRangeMaxHealIterations(t *testing.T) {
-	f, err := os.Open("testdata/max-heal-iterations-out-of-range.yaml")
-	if err != nil { t.Fatal(err) }
-	defer f.Close()
-	_, err = Load(f)
+func TestLoad_RejectsOutOfRangeMaxHealIterations(t *testing.T) {
+	err := loadTestdata(t, "max-heal-iterations-out-of-range.yaml")
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -151,11 +148,8 @@ func TestLoader_RejectsOutOfRangeMaxHealIterations(t *testing.T) {
 	}
 }
 
-func TestLoader_AcceptsValidMaxHealIterations(t *testing.T) {
-	f, err := os.Open("testdata/max-heal-iterations-valid.yaml")
-	if err != nil { t.Fatal(err) }
-	defer f.Close()
-	p, err := Load(f)
+func TestLoad_AcceptsValidMaxHealIterations(t *testing.T) {
+	p, err := loadValid(t, "max-heal-iterations-valid.yaml")
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}

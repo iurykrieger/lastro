@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/iurykrieger/lastro/internal/enums"
 	usecase "github.com/iurykrieger/lastro/internal/runtime/aggregator/usecase"
 )
 
@@ -52,6 +53,11 @@ func Run(
 	rev Revalidator,
 	cfg Config,
 ) (HealResult, error) {
-	// Implementation lands in Phase 3.
+	if verdict.Verdict == enums.VerdictPass {
+		return HealResult{
+			Status:       StatusHealed,
+			FinalVerdict: verdict,
+		}, nil
+	}
 	return HealResult{}, nil
 }

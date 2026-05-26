@@ -29,7 +29,5 @@ func newHealCmd(ctx context.Context, cfg *Config) *cobra.Command {
 	cmd.Flags().StringVar(&runID, "run-id", "", "pin a specific run id (requires --sensor)")
 	cmd.Flags().BoolVar(&allFailing, "all-failing", false, "scan .harness/runtime/ and heal every failing aggregate")
 	cmd.Flags().IntVar(&maxItersInt, "max-iterations", 0, "per-sensor iteration cap (0 = use policy default)")
-	// Mark as unused for the stub phase to silence linters; real wiring lands with B6.3.
-	_ = errors.New
 	return cmd
 }

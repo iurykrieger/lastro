@@ -170,3 +170,28 @@ func TestGitTransactor_Commit_DropsStashKeepsEdits(t *testing.T) {
 		t.Errorf("stash list still contains harness-heal entry:\n%s", out)
 	}
 }
+
+func TestGitTransactor_DeletesCreatedFiles_OnRevert(t *testing.T) {
+	requireGit(t)
+	dir := gitTempRepo(t)
+	mustExec(t, dir, "git", "commit", "-q", "--allow-empty", "-m", "init")
+
+	tx := &gitTransactor{repoRoot: dir}
+	handle, err := tx.Snapshot(context.Background(), []string{"new.txt"})
+	if err != nil {
+		t.Fatalf("Snapshot: %v", err)
+	}
+
+	// Create the file post-snapshot.
+	if err := os.WriteFile(filepath.Join(dir, "new.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := handle.Revert(); err != nil {
+		t.Fatalf("Revert: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, "new.txt")); !os.IsNotExist(err) {
+		t.Errorf("expected file removed, got err=%v", err)
+	}
+}

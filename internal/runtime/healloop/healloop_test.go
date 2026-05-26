@@ -416,6 +416,35 @@ func TestRun_HealedButCommitFails_RecordsErr(t *testing.T) {
 	}
 }
 
+func TestRun_ReturnsBareError_WhenRevalidateFails(t *testing.T) {
+	failing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictFail,
+	}
+	uc := &upkg.UseCase{ID: "uc-1"}
+	llm := &stubLLM{plans: []EditPlan{{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "x"}}}}}
+	rev := &stubRevalidator{err: errStub}
+	tx := &stubTransactor{}
+
+	res, err := Run(context.Background(), uc, failing, llm, tx, rev, Config{MaxIterations: 3})
+	if err == nil {
+		t.Fatalf("expected bare error, got nil")
+	}
+	if !errors.Is(err, errStub) {
+		t.Errorf("err = %v, want errors.Is(_, errStub)", err)
+	}
+	if res.Status != "" {
+		t.Errorf("Status = %q, want zero value", res.Status)
+	}
+	if !tx.snapshots[0].applied {
+		t.Errorf("Apply must be called before Revalidate")
+	}
+	if !tx.snapshots[0].reverted {
+		t.Errorf("Revalidate-failure path must call Revert")
+	}
+}
+
 func TestRun_Abandons_WhenEditPlanContainsEscapingPath(t *testing.T) {
 	failing := usecase.UseCaseVerdict{
 		UseCaseID: "uc-1",

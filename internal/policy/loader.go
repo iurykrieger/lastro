@@ -13,6 +13,9 @@ import (
 
 // ErrMaxHealIterationsOutOfRange is returned by Load when a source
 // validation-policy declares max_heal_iterations outside [0, 20].
+// The "policy: " prefix in the user-visible error string is added by
+// Load's outer wrap; it is intentionally omitted from this sentinel
+// to avoid "policy: policy: ..." duplication.
 var ErrMaxHealIterationsOutOfRange = errors.New("max_heal_iterations out of range [0, 20]")
 
 // Load parses a single ValidationPolicy from a YAML stream. The pipeline

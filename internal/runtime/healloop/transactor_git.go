@@ -217,7 +217,7 @@ func stashRefBySHA(ctx context.Context, repoRoot, sha string) (string, error) {
 			return parts[0], nil
 		}
 	}
-	return "", fmt.Errorf("stash SHA %s not found in stash list", sha)
+	return "", fmt.Errorf("healloop: stash SHA %s not found in stash list", sha)
 }
 
 // runGit shells out to `git -C <repoRoot> <args>` and returns combined output.

@@ -53,6 +53,10 @@ type HealResult struct {
 // edits are applied and either committed (on heal) or reverted (on every
 // failing iteration). On bare-error return, the working tree state depends
 // on whether a snapshot was taken — see the matrix.
+//
+// Ctx cancellation is checked at the top of each iteration and after Propose
+// returns. On cancellation, Run returns (HealResult{}, ctx.Err()) immediately
+// with no further working-tree changes.
 func Run(
 	ctx context.Context,
 	useCase *upkg.UseCase,

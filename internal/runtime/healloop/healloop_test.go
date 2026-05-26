@@ -260,6 +260,9 @@ func TestRun_PropagatesCtxCancellation(t *testing.T) {
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("err = %v, want errors.Is(_, context.Canceled)", err)
 	}
+	if len(tx.snapshots) != 0 {
+		t.Errorf("snapshots = %d, want 0 (cancellation before Snapshot)", len(tx.snapshots))
+	}
 }
 
 func TestRun_ReturnsBareError_WhenSnapshotFails(t *testing.T) {
@@ -315,6 +318,9 @@ func TestRun_ReturnsBareError_WhenApplyFails(t *testing.T) {
 	if !tx.snapshots[0].reverted {
 		t.Errorf("snapshot was not reverted; Apply-failure path must call Revert")
 	}
+	if !tx.snapshots[0].applied {
+		t.Errorf("Apply was not called; expected Apply before Revert on apply-failure path")
+	}
 }
 
 func TestRun_ReturnsExhaustedEarly_WhenRevertFails(t *testing.T) {
@@ -325,6 +331,8 @@ func TestRun_ReturnsExhaustedEarly_WhenRevertFails(t *testing.T) {
 	}
 	llm := &stubLLM{plans: []EditPlan{{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "x"}}}}}
 	rev := &stubRevalidator{verdicts: []usecase.UseCaseVerdict{failing, failing, failing}}
+	// revertErrs[i] = i-th iteration's Revert error. Iter 1 reverts cleanly,
+	// iter 2's revert fails → loop exits early before iter 3 runs.
 	tx := &stubTransactor{revertErrs: []error{nil, errStub, nil}}
 	uc := &upkg.UseCase{ID: "uc-1"}
 

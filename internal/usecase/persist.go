@@ -9,8 +9,8 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/iurykrieger/lastro/internal/fixture"
-	"github.com/iurykrieger/lastro/internal/persisthelp"
 	"github.com/iurykrieger/lastro/internal/persisterror"
+	"github.com/iurykrieger/lastro/internal/persisthelp"
 )
 
 // Persist validates an LLM-emitted use-case YAML against the on-disk
@@ -169,4 +169,3 @@ func walkErrors(err error, fn func(error)) {
 	}
 	fn(err)
 }
-

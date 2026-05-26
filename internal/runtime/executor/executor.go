@@ -201,4 +201,3 @@ func toAggregateSignals(in []signal.Signal) []aggregate.Signal {
 	}
 	return out
 }
-

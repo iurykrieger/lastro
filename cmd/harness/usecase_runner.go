@@ -8,7 +8,10 @@ import (
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/policy"
+	aggregator "github.com/iurykrieger/lastro/internal/runtime/aggregator/usecase"
 	"github.com/iurykrieger/lastro/internal/sensor"
+	"github.com/iurykrieger/lastro/internal/usecase"
 )
 
 // SensorRunner is the minimal seam the use-case runner needs from
@@ -134,4 +137,78 @@ func inconclusiveFromError(s sensor.Sensor, err error) aggregate.AggregateSignal
 			Rationale: "lifecycle.RunSensor returned a non-nil error; verdict demoted to inconclusive",
 		},
 	}
+}
+
+// UseCaseRunResult bundles the per-sensor AggregateSignals with the
+// rolled-up UseCaseVerdict. Renderers consume both — sensors for the
+// per-angle breakdown, verdict for the aggregate state.
+type UseCaseRunResult struct {
+	Verdict aggregator.UseCaseVerdict
+	Sensors []aggregate.AggregateSignal
+}
+
+// RunUseCase orchestrates the full per-use-case validation pipeline:
+//   1. Filter the sensor store to sensors owned by this use case.
+//   2. Run them via wavefront layers (assertion sensors only in v1;
+//      observational support tracked under the same handler set).
+//   3. Aggregate via internal/runtime/aggregator/usecase.UseCase.
+//
+// Returns the use-case verdict plus the per-sensor AggregateSignal
+// slice so the renderer can show both.
+func RunUseCase(
+	ctx context.Context,
+	runner SensorRunner,
+	arts *HarnessArtifacts,
+	useCaseID string,
+) (UseCaseRunResult, error) {
+	uc, ok := arts.UseCases[useCaseID]
+	if !ok {
+		return UseCaseRunResult{}, fmt.Errorf("use case %q not found", useCaseID)
+	}
+	// Filter sensors owned by this use case.
+	var owned []sensor.Sensor
+	for _, s := range arts.Sensors.All() {
+		if s.UseCaseID == useCaseID {
+			owned = append(owned, s)
+		}
+	}
+	if len(owned) == 0 {
+		return UseCaseRunResult{}, fmt.Errorf("no sensors found for use case %q", useCaseID)
+	}
+
+	// observationKeys: future feature; empty in v1.
+	signals, err := runUseCaseSensors(ctx, runner, owned, nil)
+	if err != nil {
+		return UseCaseRunResult{}, err
+	}
+
+	// Pick the archetype the use case carries (first scope entry — the
+	// resolver assumes one archetype per use case in v1; multi-archetype
+	// scopes pick the first applicable).
+	if len(uc.ArchetypeScope) == 0 {
+		return UseCaseRunResult{}, fmt.Errorf("use case %q has empty archetype_scope", useCaseID)
+	}
+	archetype := uc.ArchetypeScope[0]
+
+	verdict, err := aggregateUseCase(uc, archetype, signals, owned, arts.Policy)
+	if err != nil {
+		return UseCaseRunResult{}, fmt.Errorf("aggregate: %w", err)
+	}
+
+	return UseCaseRunResult{
+		Verdict: verdict,
+		Sensors: signals,
+	}, nil
+}
+
+// aggregateUseCase is a thin wrapper over aggregator.UseCase that
+// exists only to keep imports localized to this file.
+func aggregateUseCase(
+	uc *usecase.UseCase,
+	archetype enums.Archetype,
+	signals []aggregate.AggregateSignal,
+	sensors []sensor.Sensor,
+	pol *policy.EffectivePolicy,
+) (aggregator.UseCaseVerdict, error) {
+	return aggregator.UseCase(uc, archetype, signals, sensors, pol)
 }

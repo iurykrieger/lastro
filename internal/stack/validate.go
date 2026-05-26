@@ -9,6 +9,15 @@ import (
 	"github.com/iurykrieger/lastro/internal/enums"
 )
 
+// supportedMajorMinor is the "major.minor" prefix this validator accepts.
+// Persist patch-bumps schema_version on every re-emit, so validators must
+// tolerate any patch within the supported major.minor.
+const supportedMajorMinor = "1.0"
+
+func schemaVersionCompatible(v string) bool {
+	return strings.HasPrefix(v, supportedMajorMinor+".")
+}
+
 // idPattern mirrors $defs.Id in schemas/stack-component.yaml.
 var idPattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 
@@ -18,9 +27,9 @@ var idPattern = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
 func (c StackComponent) Validate() error {
 	var problems []string
 
-	if c.SchemaVersion != SchemaVersion {
+	if !schemaVersionCompatible(c.SchemaVersion) {
 		problems = append(problems,
-			fmt.Sprintf("schema_version: got %q, want %q", c.SchemaVersion, SchemaVersion))
+			fmt.Sprintf("schema_version: got %q, want major.minor.patch matching %s.x", c.SchemaVersion, supportedMajorMinor))
 	}
 	if c.ID == "" {
 		problems = append(problems, "id: required")
@@ -73,14 +82,27 @@ func (c StackComponent) Validate() error {
 func (m StackManifest) Validate() error {
 	var problems []string
 
-	if m.SchemaVersion != SchemaVersion {
+	if !schemaVersionCompatible(m.SchemaVersion) {
 		problems = append(problems,
-			fmt.Sprintf("schema_version: got %q, want %q", m.SchemaVersion, SchemaVersion))
+			fmt.Sprintf("schema_version: got %q, want major.minor.patch matching %s.x", m.SchemaVersion, supportedMajorMinor))
 	}
 	if m.Archetype == "" {
 		problems = append(problems, "archetype: required")
 	} else if !enums.IsValidArchetype(string(m.Archetype)) {
 		problems = append(problems, fmt.Sprintf("archetype: %q is not a recognized Archetype", m.Archetype))
+	}
+	if len(m.ApplicableAngles) == 0 {
+		problems = append(problems, "applicable_angles: at least one required")
+	} else if m.Archetype != "" && enums.IsValidArchetype(string(m.Archetype)) {
+		// applicable_angles must match the canonical archetype × angle matrix
+		// in internal/enums. Persist is the only legitimate writer of this
+		// field, so any mismatch is a programmer/loader bug, not user input.
+		want := enums.ApplicableAngles[m.Archetype]
+		if !angleSetEqual(m.ApplicableAngles, want) {
+			problems = append(problems,
+				fmt.Sprintf("applicable_angles: got %v, want %v (canonical list for archetype %q)",
+					m.ApplicableAngles, want, m.Archetype))
+		}
 	}
 	if len(m.Components) == 0 {
 		problems = append(problems, "components: at least one required")
@@ -100,4 +122,23 @@ func (m StackManifest) Validate() error {
 		return nil
 	}
 	return errors.New("StackManifest invalid: " + strings.Join(problems, "; "))
+}
+
+// angleSetEqual reports whether two slices of ValidationAngle contain the
+// same elements (order-independent). Used to validate that applicable_angles
+// matches the canonical archetype × angle matrix.
+func angleSetEqual(a, b []enums.ValidationAngle) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	seen := make(map[enums.ValidationAngle]bool, len(b))
+	for _, v := range b {
+		seen[v] = true
+	}
+	for _, v := range a {
+		if !seen[v] {
+			return false
+		}
+	}
+	return true
 }

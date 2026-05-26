@@ -19,23 +19,33 @@ func LoadSensor(path string) (Sensor, error) {
 	if err != nil {
 		return Sensor{}, fmt.Errorf("sensor %s: read: %w", path, err)
 	}
+	s, err := LoadSensorBytes(raw)
+	if err != nil {
+		return Sensor{}, fmt.Errorf("sensor %s: %w", path, err)
+	}
+	return s, nil
+}
 
+// LoadSensorBytes validates, deserializes, and intrinsically validates a
+// sensor YAML document from an in-memory byte slice. It is the inner
+// implementation used by LoadSensor and by sensor.Persist.
+func LoadSensorBytes(raw []byte) (Sensor, error) {
 	asJSON, err := yaml.YAMLToJSON(raw)
 	if err != nil {
-		return Sensor{}, fmt.Errorf("sensor %s: yaml->json: %w", path, err)
+		return Sensor{}, fmt.Errorf("yaml->json: %w", err)
 	}
 
 	if err := validateAgainstSchema(asJSON); err != nil {
-		return Sensor{}, fmt.Errorf("sensor %s: schema validation: %w", path, err)
+		return Sensor{}, fmt.Errorf("schema validation: %w", err)
 	}
 
 	var s Sensor
 	if err := json.Unmarshal(asJSON, &s); err != nil {
-		return Sensor{}, fmt.Errorf("sensor %s: deserialize: %w", path, err)
+		return Sensor{}, fmt.Errorf("deserialize: %w", err)
 	}
 
 	if err := validateIntrinsic(s); err != nil {
-		return Sensor{}, fmt.Errorf("sensor %s: intrinsic validation: %w", path, err)
+		return Sensor{}, fmt.Errorf("intrinsic validation: %w", err)
 	}
 
 	return s, nil

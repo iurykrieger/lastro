@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/yaml"
 
@@ -9,10 +10,10 @@ import (
 	"github.com/iurykrieger/lastro/internal/usecase/template"
 )
 
-// supportedSchemaVersion is the only schema_version this loader accepts.
-// Mismatch produces USECASE_SCHEMA_VERSION_UNSUPPORTED. The frozen
-// schemas/use-case.yaml is at 2.0.0.
-const supportedSchemaVersion = "2.0.0"
+// supportedMajorMinor is the "major.minor" prefix this loader accepts.
+// Persist patch-bumps schema_version on every re-emit; the loader
+// tolerates any patch in the supported major.minor.
+const supportedMajorMinor = "2.0"
 
 // Load deserializes a use-case YAML, parses every template line, and
 // runs Validate. Returns the fully-validated *UseCase or a non-nil
@@ -23,10 +24,10 @@ func Load(data []byte, store fixture.FixtureStore) (*UseCase, error) {
 		return nil, err
 	}
 
-	if uc.SchemaVersion != supportedSchemaVersion {
+	if !strings.HasPrefix(uc.SchemaVersion, supportedMajorMinor+".") {
 		return nil, &ValidationError{
 			Code:    "USECASE_SCHEMA_VERSION_UNSUPPORTED",
-			Message: "schema_version " + uc.SchemaVersion + " is not supported (want " + supportedSchemaVersion + ")",
+			Message: "schema_version " + uc.SchemaVersion + " is not supported (want " + supportedMajorMinor + ".x)",
 		}
 	}
 

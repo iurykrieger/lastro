@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/iurykrieger/lastro/internal/enums"
 )
 
 func TestEvidenceRefStringRendersFileColonPath(t *testing.T) {
@@ -198,6 +200,12 @@ func validManifest() StackManifest {
 	return StackManifest{
 		SchemaVersion: SchemaVersion,
 		Archetype:     "http-api",
+		ApplicableAngles: []enums.ValidationAngle{
+			enums.AngleSecurity, enums.AngleBuild, enums.AngleCodeStructure,
+			enums.AngleUnitTest, enums.AngleE2ETest, enums.AngleContracts,
+			enums.AngleLogs, enums.AngleMetrics, enums.AngleDatabase,
+			enums.AnglePerformance,
+		},
 		Components: []StackComponent{
 			validComponent(),
 			{
@@ -212,6 +220,20 @@ func validManifest() StackManifest {
 				},
 			},
 		},
+	}
+}
+
+func TestLoad_PopulatesApplicableAngles(t *testing.T) {
+	m, err := Load(repoPath(t, "schemas/examples/stack-manifest/http-api.yaml"))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if len(m.ApplicableAngles) == 0 {
+		t.Fatal("ApplicableAngles is empty after Load")
+	}
+	wantFirst := enums.AngleSecurity
+	if m.ApplicableAngles[0] != wantFirst {
+		t.Fatalf("ApplicableAngles[0]=%q, want %q", m.ApplicableAngles[0], wantFirst)
 	}
 }
 
@@ -264,6 +286,7 @@ func TestLoadAllGoldenStackComponents(t *testing.T) {
 func TestLoadRejectsDuplicateIDs(t *testing.T) {
 	yaml := `schema_version: 1.0.0
 archetype: http-api
+applicable_angles: [security, build, code-structure, unit-test, e2e-test, contracts, logs, metrics, database, performance]
 components:
   - schema_version: 1.0.0
     id: express
@@ -486,5 +509,19 @@ func TestLintCapabilitiesReturnsEmptyWhenAllKnown(t *testing.T) {
 	got := m.LintCapabilities(known)
 	if len(got) != 0 {
 		t.Errorf("len = %d, want 0; warnings = %+v", len(got), got)
+	}
+}
+
+func TestLoadBytes_RoundTripsExample(t *testing.T) {
+	b, err := os.ReadFile("../../schemas/examples/stack-manifest/http-api.yaml")
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	m, err := LoadBytes(b)
+	if err != nil {
+		t.Fatalf("LoadBytes: %v", err)
+	}
+	if m.Archetype != enums.ArchetypeHTTPAPI {
+		t.Fatalf("Archetype=%q, want http-api", m.Archetype)
 	}
 }

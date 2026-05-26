@@ -1,7 +1,6 @@
 package healloop
 
 import (
-	"os/exec"
 	"testing"
 )
 
@@ -16,11 +15,9 @@ func TestDefaultTransactor_ReturnsGitWhenInGitRepo(t *testing.T) {
 }
 
 func TestDefaultTransactor_ReturnsFileWhenNotInGitRepo(t *testing.T) {
-	if _, err := exec.LookPath("git"); err != nil {
-		// We need git absent or repoRoot outside any git repo. Use a temp
-		// dir that's not git-initialized; even with git installed, this
-		// should fall back to file mode.
-	}
+	// t.TempDir() resolves to /tmp (Linux) or a system temp directory that is
+	// not a git work tree. DefaultTransactor must fall back to fileTransactor
+	// whether or not git is installed.
 	dir := t.TempDir()
 	tx := DefaultTransactor(dir)
 	if _, ok := tx.(*fileTransactor); !ok {

@@ -36,7 +36,11 @@ type gitTxHandle struct {
 // Apply delegates the same filesystem write semantics as fileTxHandle.Apply.
 // Defined on gitTxHandle so the TxHandle interface is satisfied without taking
 // a dependency on fileTxHandle's internal map state.
+// The mutex is held for the full I/O loop; see TxHandle's contract for
+// the concurrency rules.
 func (h *gitTxHandle) Apply(plan EditPlan) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	for _, f := range plan.Files {
 		abs := filepath.Join(h.repoRoot, f.Path)
 		switch f.Op {
@@ -80,8 +84,30 @@ func (t *gitTransactor) Snapshot(ctx context.Context, paths []string) (TxHandle,
 	// Compose a uniquely identifiable stash message.
 	msg := fmt.Sprintf("harness-heal-%s", ulid.MustNew(ulid.Now(), rand.Reader))
 
-	args := append([]string{"stash", "push", "-u", "-m", msg, "--"}, paths...)
-	out, err := runGit(ctx, t.repoRoot, args...)
+	// Only pass paths that already exist to `git stash push`. Non-existent
+	// paths (tracked in h.created) aren't tracked by git yet, so including
+	// them makes git exit 1 with "did not match any files" even though the
+	// stash for existing paths succeeds. We don't need to stash non-existent
+	// files — Revert will simply delete them.
+	var existingPaths []string
+	for _, p := range paths {
+		if _, isNew := h.created[p]; !isNew {
+			existingPaths = append(existingPaths, p)
+		}
+	}
+
+	var out string
+	var err error
+	if len(existingPaths) > 0 {
+		args := append([]string{"stash", "push", "-u", "-m", msg, "--"}, existingPaths...)
+		out, err = runGit(ctx, t.repoRoot, args...)
+	} else {
+		// Nothing existing to stash; treat as "no local changes to save".
+		out = "No local changes to save"
+	}
+	if err != nil {
+		return nil, fmt.Errorf("healloop: git stash push: %w; output: %s", err, out)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("healloop: git stash push: %w; output: %s", err, out)
 	}
@@ -110,16 +136,20 @@ func (h *gitTxHandle) Revert() error {
 	ctx := context.Background()
 	var errs []error
 
-	// 1. Discard working-tree changes to tracked target paths.
-	if len(h.paths) > 0 {
-		args := append([]string{"checkout", "HEAD", "--"}, h.paths...)
+	// 1. Discard working-tree changes to tracked target paths only.
+	//    Mixing tracked + created paths makes `git checkout HEAD --` fail
+	//    with "did not match any file" AND skip restoring the tracked ones.
+	//    Split paths into tracked-only and run checkout against that subset.
+	var tracked []string
+	for _, p := range h.paths {
+		if _, isNew := h.created[p]; !isNew {
+			tracked = append(tracked, p)
+		}
+	}
+	if len(tracked) > 0 {
+		args := append([]string{"checkout", "HEAD", "--"}, tracked...)
 		if out, err := runGit(ctx, h.repoRoot, args...); err != nil {
-			// `git checkout HEAD --` fails for paths that aren't tracked.
-			// That's fine for files in `created`. Soldier on; we still
-			// need to delete those.
-			if !strings.Contains(out, "did not match any file") {
-				errs = append(errs, fmt.Errorf("healloop: git checkout HEAD: %w; output: %s", err, out))
-			}
+			errs = append(errs, fmt.Errorf("healloop: git checkout HEAD: %w; output: %s", err, out))
 		}
 	}
 
@@ -179,7 +209,7 @@ func stashRefBySHA(ctx context.Context, repoRoot, sha string) (string, error) {
 	//   stash@{0} <commit-sha>
 	out, err := runGit(ctx, repoRoot, "stash", "list", "--format=%gd %H")
 	if err != nil {
-		return "", fmt.Errorf("list stash: %w; output: %s", err, out)
+		return "", fmt.Errorf("healloop: list stash: %w; output: %s", err, out)
 	}
 	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
 		if line == "" {

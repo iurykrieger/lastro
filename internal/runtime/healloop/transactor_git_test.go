@@ -171,6 +171,53 @@ func TestGitTransactor_Commit_DropsStashKeepsEdits(t *testing.T) {
 	}
 }
 
+func TestGitTransactor_Revert_RestoresMixedTrackedAndCreatedPaths(t *testing.T) {
+	requireGit(t)
+	dir := gitTempRepo(t)
+	trackedPath := filepath.Join(dir, "tracked.txt")
+	if err := os.WriteFile(trackedPath, []byte("orig\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mustExec(t, dir, "git", "add", "tracked.txt")
+	mustExec(t, dir, "git", "commit", "-q", "-m", "init")
+
+	// Dirty the tracked file before snapshot so stash has something to capture.
+	if err := os.WriteFile(trackedPath, []byte("dirty\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	tx := &gitTransactor{repoRoot: dir}
+	handle, err := tx.Snapshot(context.Background(), []string{"tracked.txt", "new.txt"})
+	if err != nil {
+		t.Fatalf("Snapshot: %v", err)
+	}
+
+	// Apply edits to both: modify tracked, create new.
+	if err := os.WriteFile(trackedPath, []byte("healed-tracked\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "new.txt"), []byte("healed-new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := handle.Revert(); err != nil {
+		t.Fatalf("Revert: %v", err)
+	}
+
+	// Tracked file must be restored to its pre-snapshot dirty state.
+	got, err := os.ReadFile(trackedPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "dirty\n" {
+		t.Errorf("tracked content = %q, want %q", got, "dirty\n")
+	}
+	// Created file must be gone.
+	if _, err := os.Stat(filepath.Join(dir, "new.txt")); !os.IsNotExist(err) {
+		t.Errorf("expected new.txt removed, got err=%v", err)
+	}
+}
+
 func TestGitTransactor_DeletesCreatedFiles_OnRevert(t *testing.T) {
 	requireGit(t)
 	dir := gitTempRepo(t)

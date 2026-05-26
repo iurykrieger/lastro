@@ -343,6 +343,71 @@ func TestRun_ReturnsExhaustedEarly_WhenRevertFails(t *testing.T) {
 	}
 }
 
+func TestRun_AttemptsCarryRevertedFlag(t *testing.T) {
+	failing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictFail,
+	}
+	passing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictPass,
+	}
+	llm := &stubLLM{plans: []EditPlan{
+		{Files: []EditFile{{Path: "a.go", Op: OpWrite, Content: "1"}}},
+		{Files: []EditFile{{Path: "b.go", Op: OpWrite, Content: "2"}}},
+	}}
+	rev := &stubRevalidator{verdicts: []usecase.UseCaseVerdict{failing, passing}}
+	tx := &stubTransactor{}
+	uc := &upkg.UseCase{ID: "uc-1"}
+
+	res, err := Run(context.Background(), uc, failing, llm, tx, rev, Config{MaxIterations: 3})
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if res.Status != StatusHealed || res.IterationsUsed != 2 {
+		t.Fatalf("Status=%q IterationsUsed=%d; want healed/2", res.Status, res.IterationsUsed)
+	}
+	if len(res.Attempts) != 2 {
+		t.Fatalf("Attempts = %d, want 2", len(res.Attempts))
+	}
+	if !res.Attempts[0].Reverted {
+		t.Errorf("Attempts[0].Reverted = false, want true (this attempt failed)")
+	}
+	if res.Attempts[1].Reverted {
+		t.Errorf("Attempts[1].Reverted = true, want false (this attempt succeeded)")
+	}
+}
+
+func TestRun_HealedButCommitFails_RecordsErr(t *testing.T) {
+	failing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictFail,
+	}
+	passing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictPass,
+	}
+	llm := &stubLLM{plans: []EditPlan{{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "x"}}}}}
+	rev := &stubRevalidator{verdicts: []usecase.UseCaseVerdict{passing}}
+	tx := &stubTransactor{commitErrs: []error{errStub}}
+	uc := &upkg.UseCase{ID: "uc-1"}
+
+	res, err := Run(context.Background(), uc, failing, llm, tx, rev, Config{MaxIterations: 3})
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if res.Status != StatusHealed {
+		t.Errorf("Status = %q, want %q (Commit failure does not demote heal status)", res.Status, StatusHealed)
+	}
+	if !errors.Is(res.Err, errStub) {
+		t.Errorf("Err = %v, want errors.Is(_, errStub)", res.Err)
+	}
+}
+
 func TestRun_Abandons_WhenEditPlanContainsEscapingPath(t *testing.T) {
 	failing := usecase.UseCaseVerdict{
 		UseCaseID: "uc-1",

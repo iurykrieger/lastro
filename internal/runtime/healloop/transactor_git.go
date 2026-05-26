@@ -108,9 +108,6 @@ func (t *gitTransactor) Snapshot(ctx context.Context, paths []string) (TxHandle,
 	if err != nil {
 		return nil, fmt.Errorf("healloop: git stash push: %w; output: %s", err, out)
 	}
-	if err != nil {
-		return nil, fmt.Errorf("healloop: git stash push: %w; output: %s", err, out)
-	}
 
 	// If there was nothing to stash, `git stash push` exits 0 and prints
 	// "No local changes to save". Detect this and leave stashSHA empty.

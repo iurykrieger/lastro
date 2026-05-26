@@ -218,6 +218,41 @@ func TestGitTransactor_Revert_RestoresMixedTrackedAndCreatedPaths(t *testing.T) 
 	}
 }
 
+func TestGitTransactor_Snapshot_SkipsStash_WhenAllPathsAreNew(t *testing.T) {
+	requireGit(t)
+	dir := gitTempRepo(t)
+	mustExec(t, dir, "git", "commit", "-q", "--allow-empty", "-m", "init")
+
+	tx := &gitTransactor{repoRoot: dir}
+	handle, err := tx.Snapshot(context.Background(), []string{"alpha.txt", "beta.txt"})
+	if err != nil {
+		t.Fatalf("Snapshot: %v", err)
+	}
+	h, ok := handle.(*gitTxHandle)
+	if !ok {
+		t.Fatalf("handle type = %T, want *gitTxHandle", handle)
+	}
+	if h.stashSHA != "" {
+		t.Errorf("stashSHA = %q, want empty (no existing paths → no stash)", h.stashSHA)
+	}
+
+	// Create both files; Revert should remove them and stash apply/drop should
+	// be no-ops since stashSHA is empty.
+	for _, p := range []string{"alpha.txt", "beta.txt"} {
+		if err := os.WriteFile(filepath.Join(dir, p), []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := handle.Revert(); err != nil {
+		t.Fatalf("Revert: %v", err)
+	}
+	for _, p := range []string{"alpha.txt", "beta.txt"} {
+		if _, err := os.Stat(filepath.Join(dir, p)); !os.IsNotExist(err) {
+			t.Errorf("expected %s removed, got err=%v", p, err)
+		}
+	}
+}
+
 func TestGitTransactor_DeletesCreatedFiles_OnRevert(t *testing.T) {
 	requireGit(t)
 	dir := gitTempRepo(t)

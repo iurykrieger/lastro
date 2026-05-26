@@ -2,6 +2,7 @@ package healloop
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
@@ -71,8 +72,8 @@ func TestLifecycleRevalidator_ReturnsErrUseCaseNotFound_OnUnknownID(t *testing.T
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
-	if err != ErrUseCaseNotFound {
-		t.Errorf("err = %v, want ErrUseCaseNotFound", err)
+	if !errors.Is(err, ErrUseCaseNotFound) {
+		t.Errorf("err = %v, want errors.Is(_, ErrUseCaseNotFound)", err)
 	}
 	if len(runner.called) != 0 {
 		t.Errorf("RunSensor called %v times, want 0", len(runner.called))

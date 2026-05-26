@@ -317,6 +317,32 @@ func TestRun_ReturnsBareError_WhenApplyFails(t *testing.T) {
 	}
 }
 
+func TestRun_ReturnsExhaustedEarly_WhenRevertFails(t *testing.T) {
+	failing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictFail,
+	}
+	llm := &stubLLM{plans: []EditPlan{{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "x"}}}}}
+	rev := &stubRevalidator{verdicts: []usecase.UseCaseVerdict{failing, failing, failing}}
+	tx := &stubTransactor{revertErrs: []error{nil, errStub, nil}}
+	uc := &upkg.UseCase{ID: "uc-1"}
+
+	res, err := Run(context.Background(), uc, failing, llm, tx, rev, Config{MaxIterations: 3})
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if res.Status != StatusExhausted {
+		t.Errorf("Status = %q, want %q", res.Status, StatusExhausted)
+	}
+	if !errors.Is(res.Err, errStub) {
+		t.Errorf("Err = %v, want errors.Is(_, errStub)", res.Err)
+	}
+	if res.IterationsUsed != 2 {
+		t.Errorf("IterationsUsed = %d, want 2 (loop exited early on iter 2's revert failure)", res.IterationsUsed)
+	}
+}
+
 func TestRun_Abandons_WhenEditPlanContainsEscapingPath(t *testing.T) {
 	failing := usecase.UseCaseVerdict{
 		UseCaseID: "uc-1",

@@ -72,3 +72,53 @@ func TestGitTransactor_RestoresViaStashApply(t *testing.T) {
 		t.Errorf("file content = %q, want %q (pre-snapshot dirty state restored)", got, "dirty\n")
 	}
 }
+
+func TestGitTransactor_PreservesUnrelatedDirtyState(t *testing.T) {
+	requireGit(t)
+	dir := gitTempRepo(t)
+	target := filepath.Join(dir, "target.txt")
+	unrelated := filepath.Join(dir, "unrelated.txt")
+	if err := os.WriteFile(target, []byte("orig\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(unrelated, []byte("orig\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mustExec(t, dir, "git", "add", ".")
+	mustExec(t, dir, "git", "commit", "-q", "-m", "init")
+
+	// Dirty the unrelated file.
+	if err := os.WriteFile(unrelated, []byte("UNRELATED-DIRTY\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	tx := &gitTransactor{repoRoot: dir}
+	handle, err := tx.Snapshot(context.Background(), []string{"target.txt"})
+	if err != nil {
+		t.Fatalf("Snapshot: %v", err)
+	}
+
+	// Touch target.
+	if err := os.WriteFile(target, []byte("healed\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := handle.Revert(); err != nil {
+		t.Fatalf("Revert: %v", err)
+	}
+
+	got, err := os.ReadFile(unrelated)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "UNRELATED-DIRTY\n" {
+		t.Errorf("unrelated content = %q, want %q (unrelated dirty state must survive)", got, "UNRELATED-DIRTY\n")
+	}
+	gotTarget, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(gotTarget) != "orig\n" {
+		t.Errorf("target content = %q, want %q", gotTarget, "orig\n")
+	}
+}

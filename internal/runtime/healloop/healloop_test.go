@@ -177,6 +177,12 @@ func TestRun_Abandons_WhenLLMReturnsEmptyPlan(t *testing.T) {
 	if len(tx.snapshots) != 0 {
 		t.Errorf("snapshots = %d, want 0", len(tx.snapshots))
 	}
+	if llm.calls != 1 {
+		t.Errorf("llm.calls = %d, want 1", llm.calls)
+	}
+	if res.IterationsUsed != 0 {
+		t.Errorf("IterationsUsed = %d, want 0", res.IterationsUsed)
+	}
 }
 
 func TestRun_Abandons_WhenEditPlanContainsEscapingPath(t *testing.T) {
@@ -212,6 +218,12 @@ func TestRun_Abandons_WhenEditPlanContainsEscapingPath(t *testing.T) {
 			}
 			if len(tx.snapshots) != 0 {
 				t.Errorf("snapshots = %d, want 0", len(tx.snapshots))
+			}
+			if llm.calls != 1 {
+				t.Errorf("llm.calls = %d, want 1", llm.calls)
+			}
+			if res.IterationsUsed != 0 {
+				t.Errorf("IterationsUsed = %d, want 0", res.IterationsUsed)
 			}
 		})
 	}

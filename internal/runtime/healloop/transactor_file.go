@@ -18,6 +18,10 @@ type fileTransactor struct {
 
 // fileTxHandle records the original bytes and "did not exist" status per
 // path. Revert restores or deletes accordingly. Commit is a no-op.
+//
+// Path safety: the transactor trusts that path arguments are repo-relative
+// and free of "..". Run.validatePaths is the gatekeeper. The transactor
+// itself does not re-validate.
 type fileTxHandle struct {
 	repoRoot string
 	mu       sync.Mutex
@@ -55,6 +59,10 @@ func (t *fileTransactor) Snapshot(_ context.Context, paths []string) (TxHandle, 
 // Apply writes (or deletes) every EditFile in plan under repoRoot. Returns
 // the first error encountered; on error, the caller is expected to Revert.
 // Missing parent directories are created with 0o755.
+//
+// The mutex is held for the full I/O loop so a concurrent Revert cannot
+// race with partially-applied state. Callers must not invoke Apply and
+// Revert/Commit from different goroutines while Apply is in flight.
 func (h *fileTxHandle) Apply(plan EditPlan) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -82,6 +90,9 @@ func (h *fileTxHandle) Apply(plan EditPlan) error {
 // Revert writes originals back and deletes paths that did not exist
 // at snapshot time. Errors are joined; partial revert is reported but
 // other paths are still processed.
+//
+// The mutex is held for the full I/O loop; see the Apply comment for the
+// concurrency contract.
 func (h *fileTxHandle) Revert() error {
 	h.mu.Lock()
 	defer h.mu.Unlock()

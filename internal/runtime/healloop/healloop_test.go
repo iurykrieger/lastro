@@ -262,6 +262,61 @@ func TestRun_PropagatesCtxCancellation(t *testing.T) {
 	}
 }
 
+func TestRun_ReturnsBareError_WhenSnapshotFails(t *testing.T) {
+	failing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictFail,
+	}
+	llm := &stubLLM{plans: []EditPlan{{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "x"}}}}}
+	rev := &stubRevalidator{verdicts: []usecase.UseCaseVerdict{failing}}
+	tx := &stubTransactor{snapErr: errStub}
+	uc := &upkg.UseCase{ID: "uc-1"}
+
+	res, err := Run(context.Background(), uc, failing, llm, tx, rev, Config{MaxIterations: 3})
+	if err == nil {
+		t.Fatalf("expected bare error, got nil")
+	}
+	if !errors.Is(err, errStub) {
+		t.Errorf("err = %v, want errors.Is(_, errStub)", err)
+	}
+	if res.Status != "" {
+		t.Errorf("Status = %q, want zero value", res.Status)
+	}
+	if rev.calls != 0 {
+		t.Errorf("rev.calls = %d, want 0", rev.calls)
+	}
+}
+
+func TestRun_ReturnsBareError_WhenApplyFails(t *testing.T) {
+	failing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictFail,
+	}
+	llm := &stubLLM{plans: []EditPlan{{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "x"}}}}}
+	rev := &stubRevalidator{verdicts: []usecase.UseCaseVerdict{failing}}
+	tx := &stubTransactor{applyErrs: []error{errStub}}
+	uc := &upkg.UseCase{ID: "uc-1"}
+
+	res, err := Run(context.Background(), uc, failing, llm, tx, rev, Config{MaxIterations: 3})
+	if err == nil {
+		t.Fatalf("expected bare error, got nil")
+	}
+	if !errors.Is(err, errStub) {
+		t.Errorf("err = %v, want errors.Is(_, errStub)", err)
+	}
+	if res.Status != "" {
+		t.Errorf("Status = %q, want zero value", res.Status)
+	}
+	if rev.calls != 0 {
+		t.Errorf("rev.calls = %d, want 0 (revalidate skipped when Apply fails)", rev.calls)
+	}
+	if !tx.snapshots[0].reverted {
+		t.Errorf("snapshot was not reverted; Apply-failure path must call Revert")
+	}
+}
+
 func TestRun_Abandons_WhenEditPlanContainsEscapingPath(t *testing.T) {
 	failing := usecase.UseCaseVerdict{
 		UseCaseID: "uc-1",

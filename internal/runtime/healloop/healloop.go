@@ -68,6 +68,9 @@ func Run(
 
 	var attempts []Attempt
 	for i := 1; i <= cfg.MaxIterations; i++ {
+		if err := ctx.Err(); err != nil {
+			return HealResult{}, err
+		}
 		promptIn := PromptInput{
 			UseCase: useCase,
 			Verdict: verdict,
@@ -84,6 +87,9 @@ func Run(
 				FinalVerdict:   verdict,
 				Err:            err,
 			}, nil
+		}
+		if err := ctx.Err(); err != nil {
+			return HealResult{}, err
 		}
 
 		if len(plan.Files) == 0 {

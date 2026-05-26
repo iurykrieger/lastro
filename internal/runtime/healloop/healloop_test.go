@@ -235,6 +235,33 @@ func TestRun_HealsOnIteration2_WithHistoryInPrompt(t *testing.T) {
 	}
 }
 
+func TestRun_PropagatesCtxCancellation(t *testing.T) {
+	failing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictFail,
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	llm := &stubLLM{
+		plans: []EditPlan{{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "x"}}}},
+		onCall: func(_ PromptInput) {
+			// Cancel after Propose returns; before Snapshot is checked.
+			cancel()
+		},
+	}
+	rev := &stubRevalidator{verdicts: []usecase.UseCaseVerdict{failing}}
+	tx := &stubTransactor{}
+	uc := &upkg.UseCase{ID: "uc-1"}
+
+	_, err := Run(ctx, uc, failing, llm, tx, rev, Config{MaxIterations: 3})
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("err = %v, want errors.Is(_, context.Canceled)", err)
+	}
+}
+
 func TestRun_Abandons_WhenEditPlanContainsEscapingPath(t *testing.T) {
 	failing := usecase.UseCaseVerdict{
 		UseCaseID: "uc-1",

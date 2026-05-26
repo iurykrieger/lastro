@@ -185,6 +185,56 @@ func TestRun_Abandons_WhenLLMReturnsEmptyPlan(t *testing.T) {
 	}
 }
 
+func TestRun_HealsOnIteration2_WithHistoryInPrompt(t *testing.T) {
+	failing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictFail,
+	}
+	passing := usecase.UseCaseVerdict{
+		UseCaseID: "uc-1",
+		Archetype: enums.Archetype("http-api"),
+		Verdict:   enums.VerdictPass,
+	}
+	planA := EditPlan{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "// attempt A"}}}
+	planB := EditPlan{Files: []EditFile{{Path: "src/foo.go", Op: OpWrite, Content: "// attempt B"}}}
+
+	var historyOnCall2 []Attempt
+	llm := &stubLLM{
+		plans: []EditPlan{planA, planB},
+		onCall: func(in PromptInput) {
+			// Capture history on the second call.
+			if len(in.History) > 0 {
+				historyOnCall2 = append([]Attempt(nil), in.History...)
+			}
+		},
+	}
+	rev := &stubRevalidator{verdicts: []usecase.UseCaseVerdict{failing, passing}}
+	tx := &stubTransactor{}
+	uc := &upkg.UseCase{ID: "uc-1"}
+
+	res, err := Run(context.Background(), uc, failing, llm, tx, rev, Config{MaxIterations: 3})
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if res.Status != StatusHealed || res.IterationsUsed != 2 {
+		t.Fatalf("Status=%q IterationsUsed=%d; want healed/2", res.Status, res.IterationsUsed)
+	}
+	if len(historyOnCall2) != 1 {
+		t.Fatalf("History on call 2 length = %d, want 1", len(historyOnCall2))
+	}
+	if historyOnCall2[0].Iteration != 1 {
+		t.Errorf("History[0].Iteration = %d, want 1", historyOnCall2[0].Iteration)
+	}
+	if !historyOnCall2[0].Reverted {
+		t.Errorf("History[0].Reverted = false, want true")
+	}
+	if historyOnCall2[0].Plan.Files[0].Content != "// attempt A" {
+		t.Errorf("History[0].Plan content = %q, want %q",
+			historyOnCall2[0].Plan.Files[0].Content, "// attempt A")
+	}
+}
+
 func TestRun_Abandons_WhenEditPlanContainsEscapingPath(t *testing.T) {
 	failing := usecase.UseCaseVerdict{
 		UseCaseID: "uc-1",

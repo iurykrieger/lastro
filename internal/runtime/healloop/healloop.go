@@ -3,6 +3,8 @@ package healloop
 import (
 	"context"
 	"errors"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/enums"
@@ -94,6 +96,16 @@ func Run(
 			}, nil
 		}
 
+		if err := validatePaths(plan); err != nil {
+			return HealResult{
+				Status:         StatusAbandoned,
+				IterationsUsed: i - 1,
+				Attempts:       attempts,
+				FinalVerdict:   verdict,
+				Err:            err,
+			}, nil
+		}
+
 		paths := collectPaths(plan)
 		handle, err := tx.Snapshot(ctx, paths)
 		if err != nil {
@@ -164,4 +176,22 @@ func collectPaths(plan EditPlan) []string {
 		out = append(out, f.Path)
 	}
 	return out
+}
+
+// validatePaths rejects EditPlan paths that are empty, absolute, or escape
+// the repo root via "..". Uses filepath.Clean to normalize before checking.
+func validatePaths(plan EditPlan) error {
+	for _, f := range plan.Files {
+		if f.Path == "" {
+			return ErrInvalidEditPath
+		}
+		if filepath.IsAbs(f.Path) {
+			return ErrInvalidEditPath
+		}
+		clean := filepath.ToSlash(filepath.Clean(f.Path))
+		if clean == ".." || strings.HasPrefix(clean, "../") {
+			return ErrInvalidEditPath
+		}
+	}
+	return nil
 }

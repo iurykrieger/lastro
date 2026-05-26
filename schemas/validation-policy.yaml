@@ -39,6 +39,13 @@ properties:
       treated as inconclusive when computing the use-case verdict.
       Defaults to 0.7 when omitted at every scope. Computational sensors
       are unaffected.
+  max_heal_iterations:
+    type: integer
+    minimum: 0
+    maximum: 20
+    description: |
+      Cap on heal-loop iterations before a failing use case is reported as
+      exhausted. Defaults to 3 when omitted at every scope. 0 disables heal.
 
 $defs:
   AngleList:

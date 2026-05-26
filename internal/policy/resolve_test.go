@@ -224,3 +224,30 @@ func TestResolve_NilNil_FloorIsDefault(t *testing.T) {
 		t.Errorf("Resolve(nil,nil).InferentialFloor = %v, want %v", eff.InferentialFloor, DefaultInferentialFloor)
 	}
 }
+
+func TestResolve_MaxHealIterations_DefaultsTo3_WhenUnset(t *testing.T) {
+	eff := Resolve(nil, nil)
+	if eff.MaxHealIterations != DefaultMaxHealIterations {
+		t.Errorf("MaxHealIterations = %d, want %d", eff.MaxHealIterations, DefaultMaxHealIterations)
+	}
+}
+
+func TestResolve_MaxHealIterations_GlobalSet_LocalUnset(t *testing.T) {
+	five := 5
+	eff := Resolve(&ValidationPolicy{SchemaVersion: SupportedSchemaVersion, Scope: ScopeGlobal, MaxHealIterations: &five}, nil)
+	if eff.MaxHealIterations != 5 {
+		t.Errorf("MaxHealIterations = %d, want 5", eff.MaxHealIterations)
+	}
+}
+
+func TestResolve_MaxHealIterations_LocalOverridesGlobal(t *testing.T) {
+	five := 5
+	eight := 8
+	eff := Resolve(
+		&ValidationPolicy{SchemaVersion: SupportedSchemaVersion, Scope: ScopeGlobal, MaxHealIterations: &five},
+		&ValidationPolicy{SchemaVersion: SupportedSchemaVersion, Scope: ScopeLocal, MaxHealIterations: &eight},
+	)
+	if eff.MaxHealIterations != 8 {
+		t.Errorf("MaxHealIterations = %d, want 8", eff.MaxHealIterations)
+	}
+}

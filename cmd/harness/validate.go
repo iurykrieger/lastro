@@ -329,10 +329,3 @@ func buildValidateResult(results []UseCaseRunResult) any {
 		"summary":  s,
 	}
 }
-
-// renderValidateText is the text-mode renderer. Task 19 replaces this
-// placeholder with the full glyph-aware implementation.
-func renderValidateText(w io.Writer, r *RunResult) error {
-	_, err := fmt.Fprintln(w, "validate complete (text renderer pending Task 19)")
-	return err
-}

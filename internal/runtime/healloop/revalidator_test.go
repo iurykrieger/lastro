@@ -7,6 +7,7 @@ import (
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/policy"
 	"github.com/iurykrieger/lastro/internal/sensor"
 	upkg "github.com/iurykrieger/lastro/internal/usecase"
 )
@@ -36,32 +37,59 @@ type stubUseCaseLookup struct {
 func (s *stubUseCaseLookup) Lookup(_ string) (*upkg.UseCase, bool) { return s.uc, s.uc != nil }
 
 func TestLifecycleRevalidator_SkipsObservational_CarriesForwardSignals(t *testing.T) {
-	t.Skip("blocked on real *usecase.UseCase + *policy.EffectivePolicy fixtures; covered by integration tests in B5")
-	// The unit-test version asserts on (a) which sensor IDs RunSensor was
-	// called with and (b) that the observational signal was passed through
-	// to aggregator.UseCase. The full assertion requires a real
-	// *upkg.UseCase + EffectivePolicy that mark one angle obligatory. That
-	// fixture lives in B5's integration suite; here we just verify the
-	// shape compiles and the skip codepath runs.
-
 	// Sensors: one assertion (build angle), one observational (logs angle).
-	assertionSensor := sensor.Sensor{ID: "s-assert", Kind: enums.KindAssertion, Angle: enums.AngleBuild}
-	observationalSensor := sensor.Sensor{ID: "s-obs", Kind: enums.KindObservational, Angle: enums.AngleLogs}
-
-	runner := &stubSensorRunner{signals: map[string]aggregate.AggregateSignal{
-		"s-assert": {SensorID: "s-assert", Angle: enums.AngleBuild, Verdict: enums.VerdictPass},
-	}}
-	sensors := &stubSensorLookup{sensors: []sensor.Sensor{assertionSensor, observationalSensor}}
-	ucs := &stubUseCaseLookup{uc: &upkg.UseCase{ID: "uc-1", ArchetypeScope: []enums.Archetype{"http-api"}}}
-	original := map[string]aggregate.AggregateSignal{
-		"s-obs": {SensorID: "s-obs", Angle: enums.AngleLogs, Verdict: enums.VerdictPass},
+	assertionSensor := sensor.Sensor{
+		ID:     "s-assert",
+		Kind:   enums.KindAssertion,
+		Angle:  enums.AngleBuild,
+		Nature: enums.NatureComputational,
+	}
+	observationalSensor := sensor.Sensor{
+		ID:     "s-obs",
+		Kind:   enums.KindObservational,
+		Angle:  enums.AngleLogs,
+		Nature: enums.NatureComputational,
 	}
 
-	rev := newLifecycleRevalidator(runner, sensors, ucs, nil, original, enums.Archetype("http-api"))
-	_, _ = rev.Revalidate(context.Background(), "uc-1")
+	runner := &stubSensorRunner{signals: map[string]aggregate.AggregateSignal{
+		"s-assert": {SensorID: "s-assert", UseCaseID: "uc-1", Angle: enums.AngleBuild, Verdict: enums.VerdictPass, Confidence: 1.0},
+	}}
+	sensors := &stubSensorLookup{sensors: []sensor.Sensor{assertionSensor, observationalSensor}}
+	uc := &upkg.UseCase{
+		ID:             "uc-1",
+		SchemaVersion:  "1.0.0",
+		Title:          "test",
+		ArchetypeScope: []enums.Archetype{enums.Archetype("http-api")},
+	}
+	ucs := &stubUseCaseLookup{uc: uc}
+	original := map[string]aggregate.AggregateSignal{
+		"s-obs": {SensorID: "s-obs", UseCaseID: "uc-1", Angle: enums.AngleLogs, Verdict: enums.VerdictPass, Confidence: 1.0},
+	}
+	pol := &policy.EffectivePolicy{
+		SchemaVersion: "1.0.0",
+		PerArchetype: map[enums.Archetype]map[enums.ValidationAngle]policy.AngleStatus{
+			enums.Archetype("http-api"): {
+				enums.AngleBuild: policy.StatusObligatory,
+				enums.AngleLogs:  policy.StatusObligatory,
+			},
+		},
+		InferentialFloor:  0.7,
+		MaxHealIterations: 3,
+	}
 
+	rev := newLifecycleRevalidator(runner, sensors, ucs, pol, original, enums.Archetype("http-api"))
+	verdict, err := rev.Revalidate(context.Background(), "uc-1")
+	if err != nil {
+		t.Fatalf("Revalidate: %v", err)
+	}
+
+	// Only the assertion sensor should have been run; the observational one is skipped.
 	if len(runner.called) != 1 || runner.called[0] != "s-assert" {
 		t.Errorf("RunSensor called for = %v, want [s-assert]", runner.called)
+	}
+	// The aggregated verdict should pass (both obligatory angles covered with pass signals).
+	if verdict.Verdict != enums.VerdictPass {
+		t.Errorf("Verdict = %q, want pass", verdict.Verdict)
 	}
 }
 

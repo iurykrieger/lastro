@@ -11,6 +11,7 @@ import (
 
 	"github.com/iurykrieger/lastro/internal/fixture"
 	"github.com/iurykrieger/lastro/internal/stack"
+	"github.com/iurykrieger/lastro/internal/usecase"
 )
 
 // buildFakeSkill builds the testdata/fakeskill stub into a temp dir
@@ -124,5 +125,28 @@ func TestStackManifestLoads_HttpApi(t *testing.T) {
 func TestFixturesLoad_HttpApi(t *testing.T) {
 	if _, err := fixture.LoadDirectory("../http-api-sample/.harness/fixtures"); err != nil {
 		t.Fatalf("load fixtures: %v", err)
+	}
+}
+
+func TestUseCasesLoad_HttpApi(t *testing.T) {
+	fs, err := fixture.LoadDirectory("../http-api-sample/.harness/fixtures")
+	if err != nil {
+		t.Fatalf("fixtures: %v", err)
+	}
+	entries, err := os.ReadDir("../http-api-sample/.harness/use-cases")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) == 0 {
+		t.Fatal("no use cases")
+	}
+	for _, e := range entries {
+		data, err := os.ReadFile(filepath.Join("../http-api-sample/.harness/use-cases", e.Name()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := usecase.Load(data, fs); err != nil {
+			t.Fatalf("load %s: %v", e.Name(), err)
+		}
 	}
 }

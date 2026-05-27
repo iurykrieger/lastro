@@ -295,6 +295,30 @@ func TestCriterion5_ValidateExecution_HappyPath(t *testing.T) {
 	}
 }
 
+// TestCriterion5_ValidateExecution_FailingPath — plan §11.5 (failure shape).
+// ValidateAll on the broken sample returns exactly one failing use case —
+// uc-create-order-bad-input — with a non-nil HealHint.
+func TestCriterion5_ValidateExecution_FailingPath(t *testing.T) {
+	abs, _ := filepath.Abs("./http-api-sample-broken")
+	_ = os.RemoveAll(filepath.Join(abs, ".harness", "reports"))
+
+	report, err := validator.ValidateAll(validateCtx(t), abs, skills)
+	if err != nil {
+		t.Fatalf("ValidateAll: %v", err)
+	}
+	failed := report.Failed()
+	if len(failed) != 1 {
+		t.Fatalf("want exactly 1 failure, got %d: %+v", len(failed), failed)
+	}
+	if failed[0].UseCaseID != "uc-create-order-bad-input" {
+		t.Fatalf("want failing use case = uc-create-order-bad-input, got %s", failed[0].UseCaseID)
+	}
+	if failed[0].HealHint == nil {
+		t.Fatalf("want non-nil HealHint on failure")
+	}
+	t.Logf("heal hint: %+v", failed[0].HealHint)
+}
+
 // TestCriterion4_SensorGrounding — plan §11.4.
 // Every sensor's top-level uses references valid stack components, and
 // every step-level uses references fixtures owned by the sensor's use case.

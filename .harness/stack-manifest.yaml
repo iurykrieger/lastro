@@ -1,0 +1,60 @@
+# Framework's own stack manifest — dogfood subject.
+# Bootstrap version: hand-curated during B7 implementation. Future
+# iterations will regenerate via /detect-stack.
+schema_version: 1.0.0
+archetype: cli
+applicable_angles:
+  - security
+  - build
+  - code-structure
+  - unit-test
+  - contracts
+  - logs
+components:
+  - schema_version: 1.0.0
+    id: go-stdlib
+    kind: runtime
+    name: go
+    version: "1.24"
+    capabilities:
+      - cli-entrypoint
+      - json-encoding
+      - testing
+    detection_evidence:
+      - file: go.mod
+        path: go
+        value: "1.24.2"
+  - schema_version: 1.0.0
+    id: cobra
+    kind: framework
+    name: github.com/spf13/cobra
+    version: 1.8.1
+    capabilities:
+      - cli-subcommands
+      - flag-parsing
+    detection_evidence:
+      - file: go.mod
+        path: require
+        value: github.com/spf13/cobra v1.8.1
+  - schema_version: 1.0.0
+    id: jsonschema
+    kind: library
+    name: github.com/santhosh-tekuri/jsonschema/v6
+    version: 6.0.2
+    capabilities:
+      - schema-validation
+    detection_evidence:
+      - file: go.mod
+        path: require
+        value: github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
+  - schema_version: 1.0.0
+    id: sigs-yaml
+    kind: library
+    name: sigs.k8s.io/yaml
+    version: 1.6.0
+    capabilities:
+      - yaml-encoding
+    detection_evidence:
+      - file: go.mod
+        path: require
+        value: sigs.k8s.io/yaml v1.6.0

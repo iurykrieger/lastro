@@ -8,6 +8,9 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/iurykrieger/lastro/internal/fixture"
+	"github.com/iurykrieger/lastro/internal/stack"
 )
 
 // buildFakeSkill builds the testdata/fakeskill stub into a temp dir
@@ -106,4 +109,20 @@ func TestValidateAllPropagatesScriptError(t *testing.T) {
 		t.Fatalf("ValidateAll: want error on skill exit 3, got nil")
 	}
 	t.Cleanup(func() { _ = os.RemoveAll(filepath.Join(sample, ".harness", "reports")) })
+}
+
+// Gate tests for the http-api-sample's .harness/ artifacts. These run
+// in the regular (untagged) test pass so any schema drift between the
+// sample's YAML and the entity loaders is caught immediately.
+
+func TestStackManifestLoads_HttpApi(t *testing.T) {
+	if _, err := stack.Load("../http-api-sample/.harness/stack-manifest.yaml"); err != nil {
+		t.Fatalf("load: %v", err)
+	}
+}
+
+func TestFixturesLoad_HttpApi(t *testing.T) {
+	if _, err := fixture.LoadDirectory("../http-api-sample/.harness/fixtures"); err != nil {
+		t.Fatalf("load fixtures: %v", err)
+	}
 }

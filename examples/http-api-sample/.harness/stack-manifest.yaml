@@ -1,0 +1,39 @@
+# http-api-sample stack manifest
+schema_version: 1.0.0
+archetype: http-api
+applicable_angles:
+  - security
+  - build
+  - code-structure
+  - unit-test
+  - e2e-test
+  - contracts
+  - logs
+  - metrics
+  - database
+  - performance
+components:
+  - schema_version: 1.0.0
+    id: go-stdlib
+    kind: runtime
+    name: go
+    version: "1.24"
+    capabilities:
+      - http-server
+      - json-encoding
+    detection_evidence:
+      - file: go.mod
+        path: go
+        value: "1.24"
+  - schema_version: 1.0.0
+    id: net-http
+    kind: framework
+    name: net/http
+    version: stdlib
+    capabilities:
+      - http-routing
+      - request-handling
+    detection_evidence:
+      - file: main.go
+        path: imports
+        value: net/http

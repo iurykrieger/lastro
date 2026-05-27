@@ -1,0 +1,16 @@
+schema_version: 1.0.0
+id: valid-order-payload
+use_case_id: uc-create-order-success
+role: input
+content_type: application/json
+payload: |
+  {"item":"gizmo"}
+binding:
+  channel: http
+  selector:
+    method: POST
+    path: /orders
+source_refs:
+  - path: handlers.go
+    symbol: CreateOrderHandler
+    reason: "matches OrderInput struct"

@@ -1,0 +1,13 @@
+schema_version: 2.0.0
+id: uc-bravo
+title: bravo
+archetype_scope: [cli]
+entry_points:
+  - id: ep-bravo
+    archetype: cli
+    spec:
+      command: bravo
+given: ["x"]
+when: ["y"]
+then: ["z"]
+fixture_ids: []

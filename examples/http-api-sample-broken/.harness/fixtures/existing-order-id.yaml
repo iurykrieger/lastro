@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+id: existing-order-id
+use_case_id: uc-get-order
+role: input
+content_type: text/plain
+payload: "1"
+binding:
+  channel: http
+  selector:
+    method: GET
+    path: /orders/{id}
+source_refs:
+  - path: main.go
+    symbol: NewStore
+    reason: "seeded order id 1 in main()"

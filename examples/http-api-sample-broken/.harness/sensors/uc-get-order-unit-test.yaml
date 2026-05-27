@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+id: uc-get-order-unit-test
+use_case_id: uc-get-order
+angle: unit-test
+kind: assertion
+nature: computational
+output_type: single-shot
+
+uses:
+  - go-stdlib
+
+steps:
+  - id: probe
+    uses: [existing-order-id]
+    run: "true"

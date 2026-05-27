@@ -1,10 +1,11 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
 	"net/http"
 )
 
+// GetOrderHandler returns an HTTP handler that retrieves an order by id.
 func GetOrderHandler(s *Store) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
@@ -18,6 +19,8 @@ func GetOrderHandler(s *Store) http.Handler {
 	})
 }
 
+// CreateOrderHandler returns an HTTP handler that creates a new order.
+// BUG: missing validation branch — invalid input falls through to 201.
 func CreateOrderHandler(s *Store) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body OrderInput

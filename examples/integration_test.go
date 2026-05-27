@@ -295,6 +295,52 @@ func TestCriterion5_ValidateExecution_HappyPath(t *testing.T) {
 	}
 }
 
+// TestCriterion7_FixtureReuseAcrossAngles — plan §11.7.
+// For each sample, at least one fixture id appears in step-level uses
+// of ≥2 sensors of the same use case whose angles differ.
+func TestCriterion7_FixtureReuseAcrossAngles(t *testing.T) {
+	for _, dir := range sampleDirs {
+		t.Run(filepath.Base(dir), func(t *testing.T) {
+			store, err := sensor.LoadDirectory(filepath.Join(dir, ".harness", "sensors"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			// byUC: useCaseID -> fixtureID -> set of distinct angles.
+			byUC := map[string]map[string]map[string]struct{}{}
+			for _, s := range store.All() {
+				if _, ok := byUC[s.UseCaseID]; !ok {
+					byUC[s.UseCaseID] = map[string]map[string]struct{}{}
+				}
+				for _, step := range s.Steps {
+					for _, fid := range step.Uses {
+						if _, ok := byUC[s.UseCaseID][fid]; !ok {
+							byUC[s.UseCaseID][fid] = map[string]struct{}{}
+						}
+						byUC[s.UseCaseID][fid][string(s.Angle)] = struct{}{}
+					}
+				}
+			}
+			for uc, fixs := range byUC {
+				for fid, angles := range fixs {
+					if len(angles) >= 2 {
+						t.Logf("reuse found in %s: fixture %s across angles %v", uc, fid, mapKeys(angles))
+						return
+					}
+				}
+			}
+			t.Fatalf("no fixture is reused across ≥2 angles in any use case for %s", dir)
+		})
+	}
+}
+
+func mapKeys(m map[string]struct{}) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	return out
+}
+
 // TestCriterion5_ValidateExecution_FailingPath — plan §11.5 (failure shape).
 // ValidateAll on the broken sample returns exactly one failing use case —
 // uc-create-order-bad-input — with a non-nil HealHint.

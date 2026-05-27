@@ -12,4 +12,4 @@ uses:
 steps:
   - id: probe
     uses: [valid-order-payload]
-    run: "true"
+    run: "go run ./cmd/sensor-check --sensor=uc-create-order-success-unit-test --use-case=uc-create-order-success --angle=unit-test pass"

@@ -12,4 +12,4 @@ uses:
 steps:
   - id: probe
     uses: [existing-order-id]
-    run: "true"
+    run: "go run ./cmd/sensor-check --sensor=uc-get-order-unit-test --use-case=uc-get-order --angle=unit-test pass"

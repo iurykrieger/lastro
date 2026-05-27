@@ -10,9 +10,21 @@ import (
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/fixture"
+	"github.com/iurykrieger/lastro/internal/sensor"
 	"github.com/iurykrieger/lastro/internal/stack"
 	"github.com/iurykrieger/lastro/internal/usecase"
 )
+
+// fixtureStoreOwner adapts a fixture.Store to sensor.UseCaseFixtureOwnership.
+type fixtureStoreOwner struct{ store *fixture.Store }
+
+func (o fixtureStoreOwner) OwnedFixtureIDs(useCaseID string) []string {
+	var ids []string
+	for _, fx := range o.store.FixturesForUseCase(useCaseID) {
+		ids = append(ids, fx.ID)
+	}
+	return ids
+}
 
 // buildFakeSkill builds the testdata/fakeskill stub into a temp dir
 // and returns the absolute path to the binary.
@@ -125,6 +137,30 @@ func TestStackManifestLoads_HttpApi(t *testing.T) {
 func TestFixturesLoad_HttpApi(t *testing.T) {
 	if _, err := fixture.LoadDirectory("../http-api-sample/.harness/fixtures"); err != nil {
 		t.Fatalf("load fixtures: %v", err)
+	}
+}
+
+func TestSensorsLoadAndGround_HttpApi(t *testing.T) {
+	sm, err := stack.Load("../http-api-sample/.harness/stack-manifest.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fs, err := fixture.LoadDirectory("../http-api-sample/.harness/fixtures")
+	if err != nil {
+		t.Fatal(err)
+	}
+	store, err := sensor.LoadDirectory("../http-api-sample/.harness/sensors")
+	if err != nil {
+		t.Fatalf("load sensors: %v", err)
+	}
+	owner := fixtureStoreOwner{store: fs}
+	for _, s := range store.All() {
+		if err := sensor.ValidateAgainstStack(s, sm); err != nil {
+			t.Errorf("sensor %s grounding (stack): %v", s.ID, err)
+		}
+		if err := sensor.ValidateAgainstFixtures(s, owner); err != nil {
+			t.Errorf("sensor %s grounding (fixtures): %v", s.ID, err)
+		}
 	}
 }
 

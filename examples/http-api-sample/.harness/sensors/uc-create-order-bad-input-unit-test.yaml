@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+id: uc-create-order-bad-input-unit-test
+use_case_id: uc-create-order-bad-input
+angle: unit-test
+kind: assertion
+nature: computational
+output_type: single-shot
+
+uses:
+  - go-stdlib
+
+steps:
+  - id: probe
+    uses: [invalid-order-payload]
+    run: "true"

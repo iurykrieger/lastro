@@ -275,6 +275,26 @@ func TestCriterion3_TemplateResolution(t *testing.T) {
 	}
 }
 
+// TestCriterion5_ValidateExecution_HappyPath — plan §11.5.
+// ValidateAll on passing samples returns AllPassed().
+func TestCriterion5_ValidateExecution_HappyPath(t *testing.T) {
+	for _, dir := range []string{"./http-api-sample", "./cli-sample"} {
+		t.Run(filepath.Base(dir), func(t *testing.T) {
+			abs, _ := filepath.Abs(dir)
+			_ = os.RemoveAll(filepath.Join(abs, ".harness", "reports"))
+
+			report, err := validator.ValidateAll(validateCtx(t), abs, skills)
+			if err != nil {
+				t.Fatalf("ValidateAll: %v", err)
+			}
+			if !report.AllPassed() {
+				t.Fatalf("not all passed: summary=%+v failed=%+v", report.Summary, report.Failed())
+			}
+			t.Logf("report: %s/.harness/reports/%s/report.json", abs, report.RunID)
+		})
+	}
+}
+
 // TestCriterion4_SensorGrounding — plan §11.4.
 // Every sensor's top-level uses references valid stack components, and
 // every step-level uses references fixtures owned by the sensor's use case.

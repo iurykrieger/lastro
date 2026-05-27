@@ -13,4 +13,4 @@ uses:
 steps:
   - id: probe
     uses: [name]
-    run: "true"
+    run: "go run ./cmd/sensor-check --sensor=uc-greet-by-name-build --use-case=uc-greet-by-name --angle=build pass"

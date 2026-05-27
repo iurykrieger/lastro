@@ -1,0 +1,14 @@
+schema_version: 1.0.0
+id: name
+use_case_id: uc-greet-by-name
+role: input
+content_type: text/plain
+payload: "World"
+binding:
+  channel: cli-args
+  selector:
+    flag: --name
+source_refs:
+  - path: main.go
+    symbol: greet
+    reason: "command flag --name is the input channel"

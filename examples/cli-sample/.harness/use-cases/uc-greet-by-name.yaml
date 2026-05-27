@@ -1,0 +1,25 @@
+schema_version: 2.0.0
+id: uc-greet-by-name
+title: "User greets by name via the greet subcommand"
+archetype_scope: [cli]
+
+entry_points:
+  - id: greet-subcommand
+    archetype: cli
+    spec:
+      command: "cli-sample greet"
+
+given:
+  - "The user has a name {{fixtures.name}}"
+when:
+  - "The user invokes {{entry_points.greet-subcommand}} with --name set"
+then:
+  - "stdout contains 'Hello, '"
+  - "exit code is 0"
+
+source_refs:
+  - path: main.go
+    symbol: greet
+    reason: "detected from cobra subcommand registration"
+
+fixture_ids: [name]

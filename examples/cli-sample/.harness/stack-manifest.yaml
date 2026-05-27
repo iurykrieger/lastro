@@ -1,0 +1,33 @@
+schema_version: 1.0.0
+archetype: cli
+applicable_angles:
+  - security
+  - build
+  - code-structure
+  - unit-test
+  - contracts
+  - logs
+components:
+  - schema_version: 1.0.0
+    id: go-stdlib
+    kind: runtime
+    name: go
+    version: "1.24"
+    capabilities:
+      - cli-entrypoint
+    detection_evidence:
+      - file: go.mod
+        path: go
+        value: "1.24"
+  - schema_version: 1.0.0
+    id: cobra
+    kind: framework
+    name: github.com/spf13/cobra
+    version: 1.8.1
+    capabilities:
+      - cli-subcommands
+      - flag-parsing
+    detection_evidence:
+      - file: go.mod
+        path: require
+        value: github.com/spf13/cobra v1.8.1

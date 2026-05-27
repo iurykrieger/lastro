@@ -164,6 +164,37 @@ func TestSensorsLoadAndGround_HttpApi(t *testing.T) {
 	}
 }
 
+func TestCliSampleHarnessLoads(t *testing.T) {
+	sm, err := stack.Load("../cli-sample/.harness/stack-manifest.yaml")
+	if err != nil {
+		t.Fatalf("stack: %v", err)
+	}
+	fs, err := fixture.LoadDirectory("../cli-sample/.harness/fixtures")
+	if err != nil {
+		t.Fatalf("fixtures: %v", err)
+	}
+	ucData, err := os.ReadFile("../cli-sample/.harness/use-cases/uc-greet-by-name.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := usecase.Load(ucData, fs); err != nil {
+		t.Fatalf("use case: %v", err)
+	}
+	store, err := sensor.LoadDirectory("../cli-sample/.harness/sensors")
+	if err != nil {
+		t.Fatalf("sensors: %v", err)
+	}
+	owner := fixtureStoreOwner{store: fs}
+	for _, s := range store.All() {
+		if err := sensor.ValidateAgainstStack(s, sm); err != nil {
+			t.Errorf("sensor %s grounding (stack): %v", s.ID, err)
+		}
+		if err := sensor.ValidateAgainstFixtures(s, owner); err != nil {
+			t.Errorf("sensor %s grounding (fixtures): %v", s.ID, err)
+		}
+	}
+}
+
 func TestUseCasesLoad_HttpApi(t *testing.T) {
 	fs, err := fixture.LoadDirectory("../http-api-sample/.harness/fixtures")
 	if err != nil {

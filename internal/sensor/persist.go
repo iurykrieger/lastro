@@ -18,16 +18,21 @@ import (
 // Persist validates an LLM-emitted sensor YAML against the on-disk
 // stack-manifest, fixtures, and use-cases under harnessDir, patch-bumps
 // its schema_version against any prior on-disk version, and atomically
-// writes it to <harnessDir>/sensors/<id>.yaml.
+// writes it to the per-scope location:
+//
+//   - scope: core    → <harnessDir>/sensors/core/<id>.yaml
+//   - scope: use-case → <harnessDir>/sensors/<use_case_id>/<id>.yaml
 //
 // Returns a *persisterror.Error on validation failure; nothing is
 // written. Cross-entity checks (in order):
 //
 //	(a) stack-manifest.yaml exists; sensor's top-level uses: ⊆ that
 //	    manifest's components[*].id (Grounding via ValidateAgainstStack).
+//	    Applies to ALL sensors.
 //	(b) sensor.angle ∈ stack-manifest.applicable_angles.
 //	(c) use-cases/<sensor.use_case_id>.yaml exists.
 //	(d) each step's uses: ⊆ fixtures whose use_case_id matches sensor's.
+//	    (b)–(d) apply only to scope: use-case sensors.
 func Persist(content []byte, harnessDir string) error {
 	s, err := LoadSensorBytes(content)
 	if err != nil {
@@ -52,44 +57,49 @@ func Persist(content []byte, harnessDir string) error {
 		}
 	}
 
-	// (b) Angle must be in manifest's applicable_angles.
-	if !angleInList(s.Angle, manifest.ApplicableAngles) {
-		return &persisterror.Error{
-			Kind:       persisterror.AngleNotApplicable,
-			EntityType: "sensor",
-			EntityID:   s.ID,
-			Message: fmt.Sprintf("angle %q is not in stack-manifest.applicable_angles %v",
-				s.Angle, manifest.ApplicableAngles),
+	// (b)-(d) are use-case-scoped. Core sensors are repo-level: no angle
+	// applicability check (they legitimately carry environment and any
+	// angle), no use-case existence check, no fixture binding.
+	if s.Scope != enums.ScopeCore {
+		// (b) Angle must be in manifest's applicable_angles.
+		if !angleInList(s.Angle, manifest.ApplicableAngles) {
+			return &persisterror.Error{
+				Kind:       persisterror.AngleNotApplicable,
+				EntityType: "sensor",
+				EntityID:   s.ID,
+				Message: fmt.Sprintf("angle %q is not in stack-manifest.applicable_angles %v",
+					s.Angle, manifest.ApplicableAngles),
+			}
 		}
-	}
 
-	// (c) Use-case must exist on disk.
-	ucPath := filepath.Join(harnessDir, "use-cases", s.UseCaseID+".yaml")
-	if _, err := os.Stat(ucPath); errors.Is(err, os.ErrNotExist) {
-		return &persisterror.Error{
-			Kind:       persisterror.MissingDependency,
-			EntityType: "sensor",
-			EntityID:   s.ID,
-			Message:    fmt.Sprintf("use-case %q not found at %s", s.UseCaseID, ucPath),
+		// (c) Use-case must exist on disk.
+		ucPath := filepath.Join(harnessDir, "use-cases", s.UseCaseID+".yaml")
+		if _, err := os.Stat(ucPath); errors.Is(err, os.ErrNotExist) {
+			return &persisterror.Error{
+				Kind:       persisterror.MissingDependency,
+				EntityType: "sensor",
+				EntityID:   s.ID,
+				Message:    fmt.Sprintf("use-case %q not found at %s", s.UseCaseID, ucPath),
+			}
 		}
-	}
 
-	// (d) Step uses ⊆ fixtures with matching use_case_id.
-	store, err := loadFixtureStoreOrEmpty(filepath.Join(harnessDir, "fixtures"))
-	if err != nil {
-		return &persisterror.Error{
-			Kind:       persisterror.FixtureBinding,
-			EntityType: "sensor",
-			EntityID:   s.ID,
-			Message:    fmt.Sprintf("load fixtures: %v", err),
+		// (d) Step uses ⊆ fixtures with matching use_case_id.
+		store, err := loadFixtureStoreOrEmpty(filepath.Join(harnessDir, "fixtures"))
+		if err != nil {
+			return &persisterror.Error{
+				Kind:       persisterror.FixtureBinding,
+				EntityType: "sensor",
+				EntityID:   s.ID,
+				Message:    fmt.Sprintf("load fixtures: %v", err),
+			}
 		}
-	}
-	if err := ValidateAgainstFixtures(s, fixtureOwner{store: store, useCaseID: s.UseCaseID}); err != nil {
-		return &persisterror.Error{
-			Kind:       persisterror.FixtureBinding,
-			EntityType: "sensor",
-			EntityID:   s.ID,
-			Message:    err.Error(),
+		if err := ValidateAgainstFixtures(s, fixtureOwner{store: store, useCaseID: s.UseCaseID}); err != nil {
+			return &persisterror.Error{
+				Kind:       persisterror.FixtureBinding,
+				EntityType: "sensor",
+				EntityID:   s.ID,
+				Message:    err.Error(),
+			}
 		}
 	}
 
@@ -103,7 +113,14 @@ func Persist(content []byte, harnessDir string) error {
 			Message:    fmt.Sprintf("re-parse for bump: %v", err),
 		}
 	}
-	targetPath := filepath.Join(harnessDir, "sensors", s.ID+".yaml")
+
+	// Per-scope target directory: core -> sensors/core/, use-case -> sensors/<use_case_id>/.
+	subdir := s.UseCaseID
+	if s.Scope == enums.ScopeCore {
+		subdir = "core"
+	}
+	sensorsDir := filepath.Join(harnessDir, "sensors", subdir)
+	targetPath := filepath.Join(sensorsDir, s.ID+".yaml")
 	bumped, err := persisthelp.BumpSchemaVersion(targetPath, s.SchemaVersion)
 	if err != nil {
 		return &persisterror.Error{

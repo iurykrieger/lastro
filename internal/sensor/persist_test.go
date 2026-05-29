@@ -93,7 +93,7 @@ func TestPersist_NewFile_AllInvariantsSatisfied(t *testing.T) {
 	if err := Persist(happySensorYAML, dir); err != nil {
 		t.Fatalf("Persist: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(dir, "sensors", "s-create-order-e2e.yaml")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, "sensors", "create-order", "s-create-order-e2e.yaml")); err != nil {
 		t.Fatalf("sensor not written: %v", err)
 	}
 }
@@ -264,8 +264,8 @@ steps:
 func TestPersist_BumpsExisting(t *testing.T) {
 	dir := seedHappyPath(t, t.TempDir())
 
-	// Pre-seed an existing sensor with schema_version 1.0.4.
-	sensorDir := filepath.Join(dir, "sensors")
+	// Pre-seed an existing sensor with schema_version 1.0.4 at the per-use-case path.
+	sensorDir := filepath.Join(dir, "sensors", "create-order")
 	if err := os.MkdirAll(sensorDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -300,6 +300,59 @@ steps:
 	got := string(written)
 	if !strings.Contains(got, "1.0.5") {
 		t.Fatalf("expected schema_version 1.0.5 in written file, got:\n%s", written)
+	}
+}
+
+func TestPersist_CoreSensorWritesToCoreFolder(t *testing.T) {
+	// seedHappyPath provides a stack-manifest with build in applicable_angles
+	// but NOT environment — the core sensor must be accepted regardless
+	// because checks (b)(c)(d) are skipped for scope: core.
+	dir := seedHappyPath(t, t.TempDir())
+	content := []byte(`schema_version: 1.0.0
+id: run-dev
+scope: core
+angle: environment
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: boot
+    run: "make dev"
+`)
+	if err := Persist(content, dir); err != nil {
+		t.Fatalf("persist core: %v", err)
+	}
+	got := filepath.Join(dir, "sensors", "core", "run-dev.yaml")
+	if _, err := os.Stat(got); err != nil {
+		t.Fatalf("expected core sensor at %s: %v", got, err)
+	}
+}
+
+func TestPersist_UseCaseSensorWritesToUseCaseFolder(t *testing.T) {
+	// seedHappyPath provides a stack-manifest with build in applicable_angles
+	// and a use-case "create-order". We persist a use-case sensor with no
+	// step uses to avoid fixture-binding complexity.
+	dir := seedHappyPath(t, t.TempDir())
+	content := []byte(`schema_version: 1.0.0
+id: create-order-build
+scope: use-case
+use_case_id: create-order
+angle: build
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: compile
+    run: "go build ./..."
+`)
+	if err := Persist(content, dir); err != nil {
+		t.Fatalf("persist use-case: %v", err)
+	}
+	got := filepath.Join(dir, "sensors", "create-order", "create-order-build.yaml")
+	if _, err := os.Stat(got); err != nil {
+		t.Fatalf("expected use-case sensor at %s: %v", got, err)
 	}
 }
 

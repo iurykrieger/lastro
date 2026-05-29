@@ -154,7 +154,7 @@ func TestCreateSensors_HappyPath(t *testing.T) {
 	if sout != "" {
 		t.Fatalf("expected empty stdout on success, got %q", sout)
 	}
-	if _, err := os.Stat(filepath.Join(harness, "sensors", "s-create-order-e2e.yaml")); err != nil {
+	if _, err := os.Stat(filepath.Join(harness, "sensors", "create-order", "s-create-order-e2e.yaml")); err != nil {
 		t.Fatalf("sensor not written: %v", err)
 	}
 }

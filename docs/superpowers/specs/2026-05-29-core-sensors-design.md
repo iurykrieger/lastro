@@ -36,14 +36,20 @@ In:
   `environment` value to the angle enum.
 - `schemas/enums/validation-angles.yaml`: add `environment` (canonical source for the new enum value).
 - Update the `00-schema-freeze.md` gate to record the schema change **before** any Go code lands.
+- `internal/enums/`: add `AngleEnvironment` constant and include it in `AllAngles()` (the `drift_test.go`
+  guard at line 77 asserts `AllAngles()` equals the YAML enum — it breaks otherwise); add a `SensorScope`
+  enum (`core | use-case`) with its own drift fixture if a `sensor-scopes.yaml` enum file is introduced
+  (see §11 Q1). **Do NOT add `environment` to `ApplicableAngles`** (see decision #11).
 - `internal/sensor/`: `Scope` field + type, conditional intrinsic validators, slug-uniqueness invariant,
   loader walking the new folder layout, store indexing by scope.
 - New skill `/create-core-sensors`: emits core sensors from the stack manifest alone (one per applicable
   angle + `environment` primitives), wiring the intra-core DAG.
 - `/create-sensors <uc>`: resolves and wires `depends_on` from each use-case angle sensor to the core sensor
   of the same angle (resolution **by angle**, not by name pattern).
-- `/validate-use-case`: replace the "cross-use-case ignored" gather rule with "use case's own sensors +
-  transitive `depends_on` closure into `core` scope".
+- `/validate-use-case` gather — **two sites** filter by `use_case_id` today and both must change:
+  `skills/validate-use-case/scripts/main.go` (~line 80, `b.Sensors.ForUseCase(useCaseID)`) and
+  `cmd/harness/usecase_runner.go` (~line 170, `Sensors.All()` filtered by `s.UseCaseID == useCaseID`).
+  Replace each with "use case's own sensors + transitive `depends_on` closure into `core` scope".
 - Folder-layout migration: use-case sensors → `.harness/sensors/<usecase-id>/`, core sensors →
   `.harness/sensors/core/`.
 - Tests for every touched `internal/` package; dogfood run.
@@ -69,6 +75,7 @@ Out:
 | 8 | **`/validate-use-case` includes `core`-scope sensors reachable via the `depends_on` closure** (use-case→core and core→core edges). use-case→use-case edges stay out. | Reverts to the E6 Q4 *global-DAG* recommendation, bounded to `core` scope, so it enables core roots without re-introducing the cross-use-case coupling B5 deliberately avoided. The `internal/sensor` resolver already allows cross-edges (E6 spec decision #8); only the B5 *gather* rule changes. |
 | 9 | **IDs are meaningful slugs, no mechanical prefix** (`s-`/`base-`). Generator must guarantee **global** slug uniqueness (depends_on references global ids). | User preference. Core: `run-dev`, `build`, `database-query`. Use-case: embed `<usecase-id>` in the slug for uniqueness, e.g. `create-card-charge-e2e-test`. |
 | 10 | **Folder layout:** use-case sensors in `.harness/sensors/<usecase-id>/<slug>.yaml`; core sensors in `.harness/sensors/core/<slug>.yaml`. | Replaces today's flat `.harness/sensors/*.yaml`. Makes the `validate-use-case` gather trivial: read `<uc>/` + `core/`. Requires migrating persist/loader/gather. |
+| 11 | **`environment` is core-only: it is NOT added to `ApplicableAngles`, and the angle-applicability check applies only to `scope: use-case` sensors.** | `internal/enums/archetype_angles.go` `ApplicableAngles` drives `/create-sensors`' `angle_not_applicable` rejection. Adding `environment` there would make `/create-sensors` emit unwanted per-use-case `environment` sensors. Keeping it out, **and** scoping the applicability check to `use-case` sensors, lets core sensors carry `environment` (and any applicable angle) without tripping the check. |
 
 ## 5. Schema changes
 
@@ -122,7 +129,12 @@ intentionally absent.
   unique by the `s-<uc>-<angle>` convention; the no-prefix convention makes this an explicit check).
 - Loader walks `.harness/sensors/**` (one level of subfolders: `<usecase-id>/` and `core/`) instead of a flat
   directory. `Store` indexes `byScope` in addition to `byUseCase`.
-- `ResolveExecutionOrder` is unchanged (it already operates on the global slice and allows cross-edges).
+- `ResolveExecutionOrder` is unchanged (it already operates on the global slice and allows cross-edges —
+  E6 design decision #8). The gather rule itself does **not** live in `internal/sensor`; it lives in the two
+  call sites named in §3 (`skills/validate-use-case/scripts/main.go`, `cmd/harness/usecase_runner.go`). Note
+  this change is **load-bearing**, not cosmetic: today, gathering only `ForUseCase` sensors while a use-case
+  sensor carries a `depends_on` into a core sensor would make `ResolveExecutionOrder`'s dangling-edge
+  pre-check fail and exit 3 (`scheduler-failed`). The closure-based gather is what keeps the edge resolvable.
 
 ## 7. Generation
 
@@ -191,8 +203,11 @@ needs #21/#23.
    Recommendation: generator decides per stack manifest; both shapes supported by the schema.
 3. **Does the schema-freeze gate treat adding an enum value + a conditional-required field as a freeze
    change requiring sign-off?** It touches a frozen schema → yes, record in `00-schema-freeze.md` first.
-4. **Migration of existing `.harness/sensors/*.yaml`** (if any on disk) into per-use-case folders — in-place
-   move vs regenerate. Tie to plan §10's clean-vs-in-place migration question.
+4. **Migration of existing `.harness/sensors/*.yaml` into per-use-case folders — not hypothetical.** Real
+   flat files exist on disk today: `.harness/sensors/uc-harness-validate-use-case-build.yaml` and
+   `.harness/sensors/uc-harness-validate-use-case-unit-test.yaml` (the dogfood sensors). The plan must pick a
+   concrete handling — in-place move into `.harness/sensors/<usecase-id>/` vs regenerate — and the loader must
+   tolerate the transition. Tie to plan §10's clean-vs-in-place migration question.
 
 ## 12. Acceptance criteria
 

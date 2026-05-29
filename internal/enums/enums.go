@@ -250,3 +250,26 @@ func IsValidStackKind(s string) bool {
 	}
 	return false
 }
+
+// SensorScope is whether a sensor is repo-level (core) or bound to a use case.
+type SensorScope string
+
+const (
+	ScopeCore    SensorScope = "core"
+	ScopeUseCase SensorScope = "use-case"
+)
+
+// AllSensorScopes returns every SensorScope in canonical (YAML) order.
+func AllSensorScopes() []SensorScope {
+	return []SensorScope{ScopeCore, ScopeUseCase}
+}
+
+// IsValidSensorScope reports whether s is one of the canonical SensorScope values.
+func IsValidSensorScope(s string) bool {
+	for _, v := range AllSensorScopes() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}

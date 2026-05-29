@@ -1,0 +1,12 @@
+schema_version: 1.0.0
+title: SensorScope
+description: |
+  Whether a sensor is bound to a single use case or is a repo-level
+  precondition shared across use cases. Core sensors carry no use_case_id
+  and form the roots of the depends_on DAG.
+
+values:
+  - id: core
+    purpose: "Repo-level, use-case-agnostic. No use_case_id. DAG root."
+  - id: use-case
+    purpose: "Bound to one use case via use_case_id. Default when scope is omitted."

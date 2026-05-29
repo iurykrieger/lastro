@@ -123,6 +123,47 @@ func TestLoadSensor_AllGoldenExamples(t *testing.T) {
 	}
 }
 
+func TestLoadDirectory_FolderedAndFlat(t *testing.T) {
+	dir := t.TempDir()
+	// legacy flat use-case sensor
+	writeSensor(t, filepath.Join(dir, "oc-build.yaml"), "oc-build", "use-case", "order-create", "build")
+	// foldered use-case sensor
+	if err := os.MkdirAll(filepath.Join(dir, "order-create"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeSensor(t, filepath.Join(dir, "order-create", "oc-e2e.yaml"), "oc-e2e", "use-case", "order-create", "e2e-test")
+	// foldered core sensor
+	if err := os.MkdirAll(filepath.Join(dir, "core"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeSensor(t, filepath.Join(dir, "core", "run-dev.yaml"), "run-dev", "core", "", "environment")
+
+	st, err := LoadDirectory(dir)
+	if err != nil {
+		t.Fatalf("load dir: %v", err)
+	}
+	if len(st.All()) != 3 {
+		t.Fatalf("want 3 sensors, got %d", len(st.All()))
+	}
+	if len(st.ForScope(enums.ScopeCore)) != 1 {
+		t.Fatalf("want 1 core sensor")
+	}
+}
+
+// writeSensor writes a minimal valid sensor YAML to path.
+func writeSensor(t *testing.T, path, id, scope, useCase, angle string) {
+	t.Helper()
+	var ucLine string
+	if useCase != "" {
+		ucLine = "use_case_id: " + useCase + "\n"
+	}
+	body := "schema_version: 1.0.0\nid: " + id + "\nscope: " + scope + "\n" + ucLine +
+		"angle: " + angle + "\nkind: assertion\nnature: computational\noutput_type: single-shot\nuses: []\nsteps:\n  - id: s\n    run: \"echo ok\"\n"
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestLoadSensor_DefaultsScopeToUseCase(t *testing.T) {
 	yaml := []byte(`schema_version: 1.0.0
 id: order-create-build

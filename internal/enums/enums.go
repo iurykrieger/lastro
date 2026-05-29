@@ -1,5 +1,5 @@
 // Package enums provides typed constants and validators for the framework's
-// nine fixed enums, plus the canonical archetype × angle matrix.
+// ten fixed enums, plus the canonical archetype × angle matrix.
 //
 // The canonical source for every enum is YAML under schemas/enums/. Drift
 // between this package and that source is caught by drift_test.go.

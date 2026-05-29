@@ -12,9 +12,9 @@ import (
 // sorted by id ascending so consumers get deterministic output.
 type Store struct {
 	byID         map[string]Sensor
-	byUseCase    map[string][]string              // useCaseID -> sorted []ID
-	byScope      map[enums.SensorScope][]string   // scope -> sorted []ID
-	allSortedIDs []string                         // sorted []ID across all sensors
+	byUseCase    map[string][]string            // useCaseID -> sorted []ID
+	byScope      map[enums.SensorScope][]string // scope -> sorted []ID
+	allSortedIDs []string                       // sorted []ID across all sensors
 }
 
 // NewStore builds a Store from the given sensors. Returns an error if

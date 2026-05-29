@@ -1,11 +1,11 @@
 // Package enums provides typed constants and validators for the framework's
-// nine fixed enums, plus the canonical archetype × angle matrix.
+// ten fixed enums, plus the canonical archetype × angle matrix.
 //
 // The canonical source for every enum is YAML under schemas/enums/. Drift
 // between this package and that source is caught by drift_test.go.
 package enums
 
-// ValidationAngle is one of the ten facets a sensor can validate.
+// ValidationAngle is one of the eleven facets a sensor can validate.
 type ValidationAngle string
 
 const (
@@ -19,6 +19,7 @@ const (
 	AngleMetrics       ValidationAngle = "metrics"
 	AngleDatabase      ValidationAngle = "database"
 	AnglePerformance   ValidationAngle = "performance"
+	AngleEnvironment   ValidationAngle = "environment"
 )
 
 // AllAngles returns every ValidationAngle in canonical (YAML) order.
@@ -26,7 +27,7 @@ func AllAngles() []ValidationAngle {
 	return []ValidationAngle{
 		AngleSecurity, AngleBuild, AngleCodeStructure, AngleUnitTest,
 		AngleE2ETest, AngleContracts, AngleLogs, AngleMetrics,
-		AngleDatabase, AnglePerformance,
+		AngleDatabase, AnglePerformance, AngleEnvironment,
 	}
 }
 
@@ -243,6 +244,29 @@ func AllStackKinds() []StackKind {
 // IsValidStackKind reports whether s is one of the canonical StackKind values.
 func IsValidStackKind(s string) bool {
 	for _, v := range AllStackKinds() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}
+
+// SensorScope is whether a sensor is repo-level (core) or bound to a use case.
+type SensorScope string
+
+const (
+	ScopeCore    SensorScope = "core"
+	ScopeUseCase SensorScope = "use-case"
+)
+
+// AllSensorScopes returns every SensorScope in canonical (YAML) order.
+func AllSensorScopes() []SensorScope {
+	return []SensorScope{ScopeCore, ScopeUseCase}
+}
+
+// IsValidSensorScope reports whether s is one of the canonical SensorScope values.
+func IsValidSensorScope(s string) bool {
+	for _, v := range AllSensorScopes() {
 		if string(v) == s {
 			return true
 		}

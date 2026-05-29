@@ -1,7 +1,7 @@
 schema_version: 1.0.0
 title: ValidationAngle
 description: |
-  The ten facets a sensor can validate. Angles are extensible only by
+  The eleven facets a sensor can validate. Angles are extensible only by
   framework version bump; users control which apply via ValidationPolicy.
 
 values:
@@ -25,3 +25,5 @@ values:
     purpose: "Data writes and migrations match expectations"
   - id: performance
     purpose: "Latency, throughput, and resource ceilings"
+  - id: environment
+    purpose: "Repo-level environment preconditions: app boot, datastore reachability (core sensors only)"

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/iurykrieger/lastro/internal/enums"
 	"sigs.k8s.io/yaml"
 )
 
@@ -44,6 +45,10 @@ func LoadSensorBytes(raw []byte) (Sensor, error) {
 		return Sensor{}, fmt.Errorf("deserialize: %w", err)
 	}
 
+	if s.Scope == "" {
+		s.Scope = enums.ScopeUseCase
+	}
+
 	if err := validateIntrinsic(s); err != nil {
 		return Sensor{}, fmt.Errorf("intrinsic validation: %w", err)
 	}
@@ -51,9 +56,11 @@ func LoadSensorBytes(raw []byte) (Sensor, error) {
 	return s, nil
 }
 
-// LoadDirectory loads every *.yaml / *.yml file directly inside the
-// given directory (non-recursive — sensors are flat per the framework's
-// convention) and returns a Store containing them.
+// LoadDirectory loads every *.yaml / *.yml sensor file from the given
+// directory and from each of its immediate subdirectories (one level deep).
+// It tolerates both the legacy flat layout (sensors directly in path) and
+// the structured layout that stores use-case sensors under
+// path/<usecase-id>/ and core sensors under path/core/.
 //
 // Per-file load errors abort the walk and bubble up with the offending
 // path. Duplicate-id errors name both source files so authors can
@@ -69,20 +76,41 @@ func LoadDirectory(path string) (*Store, error) {
 		from string
 	}
 	var sensors []loaded
+
+	collect := func(dir string, files []os.DirEntry) error {
+		for _, e := range files {
+			if e.IsDir() {
+				continue
+			}
+			name := e.Name()
+			if !strings.HasSuffix(name, ".yaml") && !strings.HasSuffix(name, ".yml") {
+				continue
+			}
+			full := filepath.Join(dir, name)
+			sn, err := LoadSensor(full)
+			if err != nil {
+				return err // already path-decorated by LoadSensor
+			}
+			sensors = append(sensors, loaded{s: sn, from: full})
+		}
+		return nil
+	}
+
+	if err := collect(path, entries); err != nil {
+		return nil, err
+	}
 	for _, e := range entries {
-		if e.IsDir() {
+		if !e.IsDir() {
 			continue
 		}
-		name := e.Name()
-		if !strings.HasSuffix(name, ".yaml") && !strings.HasSuffix(name, ".yml") {
-			continue
-		}
-		full := filepath.Join(path, name)
-		sn, err := LoadSensor(full)
+		sub := filepath.Join(path, e.Name())
+		subEntries, err := os.ReadDir(sub)
 		if err != nil {
-			return nil, err // already path-decorated by LoadSensor
+			return nil, fmt.Errorf("sensor subdir %s: read: %w", sub, err)
 		}
-		sensors = append(sensors, loaded{s: sn, from: full})
+		if err := collect(sub, subEntries); err != nil {
+			return nil, err
+		}
 	}
 
 	// Build the store. Catch duplicate ids here so the error can name both files.

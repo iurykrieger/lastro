@@ -3,6 +3,8 @@ package sensor
 import (
 	"errors"
 	"fmt"
+
+	"github.com/iurykrieger/lastro/internal/enums"
 )
 
 // validateIntrinsic runs every post-schema invariant on s and returns
@@ -22,6 +24,9 @@ func validateIntrinsic(s Sensor) error {
 		errs = append(errs, err)
 	}
 	if err := checkNoSelfDependency(s); err != nil {
+		errs = append(errs, err)
+	}
+	if err := checkScopeConsistency(s); err != nil {
 		errs = append(errs, err)
 	}
 	if len(errs) == 0 {
@@ -88,6 +93,20 @@ func checkNoSelfDependency(s Sensor) error {
 	for _, dep := range s.DependsOn {
 		if dep == s.ID {
 			return fmt.Errorf("depends_on contains own id (self-dependency): %q", s.ID)
+		}
+	}
+	return nil
+}
+
+func checkScopeConsistency(s Sensor) error {
+	switch s.Scope {
+	case enums.ScopeCore:
+		if s.UseCaseID != "" {
+			return fmt.Errorf("scope=core forbids use_case_id (got %q)", s.UseCaseID)
+		}
+	case enums.ScopeUseCase, "": // "" treated as use-case (loader defaults it)
+		if s.UseCaseID == "" {
+			return fmt.Errorf("scope=use-case requires use_case_id")
 		}
 	}
 	return nil

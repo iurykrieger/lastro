@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/iurykrieger/lastro/internal/enums"
 )
 
 func TestLoadSensor_DuplicateStepID(t *testing.T) {
@@ -88,6 +90,32 @@ func TestLoadSensor_MultiViolation(t *testing.T) {
 		if !errorsJoinContains(err, want) {
 			t.Errorf("joined error missing %q; got: %v", want, err)
 		}
+	}
+}
+
+func TestValidateIntrinsic_CoreScopeForbidsUseCaseID(t *testing.T) {
+	s := Sensor{
+		ID: "run-dev", Scope: enums.ScopeCore, UseCaseID: "order-create",
+		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Steps: []Step{{ID: "boot", Run: "make dev"}},
+	}
+	err := validateIntrinsic(s)
+	if err == nil || !strings.Contains(err.Error(), "core") {
+		t.Fatalf("expected core-scope use_case_id error, got %v", err)
+	}
+}
+
+func TestValidateIntrinsic_UseCaseScopeRequiresUseCaseID(t *testing.T) {
+	s := Sensor{
+		ID: "x-build", Scope: enums.ScopeUseCase, UseCaseID: "",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Steps: []Step{{ID: "c", Run: "go build ./..."}},
+	}
+	err := validateIntrinsic(s)
+	if err == nil || !strings.Contains(err.Error(), "use_case_id") {
+		t.Fatalf("expected missing use_case_id error, got %v", err)
 	}
 }
 

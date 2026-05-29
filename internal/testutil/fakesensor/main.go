@@ -61,6 +61,13 @@ func emit(rec signalRec) {
 	}
 	enc := json.NewEncoder(os.Stdout)
 	_ = enc.Encode(rec)
+	// Give the executor's pumpStdout goroutine time to drain the pipe
+	// before cmd.Wait() closes the read end. Without this, fast-exiting
+	// sensors race the scanner ("file already closed" → 0 signals →
+	// spurious inconclusive verdict). Same workaround the dogfood
+	// sensors apply via `sleep 0.1`. Keep brief to avoid slowing the
+	// dozens of executor/lifecycle tests that use this helper.
+	time.Sleep(20 * time.Millisecond)
 }
 
 func main() {

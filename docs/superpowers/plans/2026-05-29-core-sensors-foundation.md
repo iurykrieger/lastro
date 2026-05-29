@@ -266,16 +266,19 @@ Append an `allOf` block at the top level of `schemas/sensor.yaml` (sibling to `p
 ```yaml
 allOf:
   - if:
-      properties: { scope: { const: use-case } }
+      anyOf:
+        - not: { required: [scope] }
+        - properties: { scope: { const: use-case } }
     then:
       required: [use_case_id]
   - if:
       properties: { scope: { const: core } }
+      required: [scope]
     then:
       not: { required: [use_case_id] }
 ```
 
-Note: when `scope` is omitted, the first `if` matches vacuously (no `scope` property to contradict `const: use-case`), so `use_case_id` is required — preserving backward compatibility.
+Note: the `if` clauses guard explicitly on scope **presence**. JSON Schema `properties` is vacuously true when the key is absent, so a naive `properties: {scope: {const: use-case}}` would ALSO match a scope-less sensor — and the second branch's `properties: {scope: {const: core}}` would match it too, firing both contradictory `then`s and breaking every existing (scope-less, `use_case_id`-bearing) sensor. The `anyOf` + `required: [scope]` guards make branch 1 fire when scope is absent-or-use-case and branch 2 fire only when scope is explicitly `core`.
 
 - [ ] **Step 3: Run the enum drift test to verify it stays green**
 

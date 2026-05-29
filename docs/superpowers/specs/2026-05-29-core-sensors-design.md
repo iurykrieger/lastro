@@ -93,16 +93,22 @@ properties:
            contracts, logs, metrics, database, performance, environment]   # + environment
   # ... existing fields unchanged ...
 
-# Conditional requirement via if/then:
+# Conditional requirement via if/then. NOTE: the `if` clauses guard explicitly on
+# scope presence, because JSON Schema `properties` is vacuously true when the key is
+# absent — a naive `properties: {scope: {const: use-case}}` would also match a
+# scope-less sensor and let BOTH branches fire, contradicting each other.
 allOf:
   - if:
-      properties: { scope: { const: use-case } }
+      anyOf:
+        - not: { required: [scope] }                 # scope omitted (defaults to use-case)
+        - properties: { scope: { const: use-case } }
     then:
       required: [use_case_id]
   - if:
       properties: { scope: { const: core } }
+      required: [scope]                              # only when scope is explicitly core
     then:
-      not: { required: [use_case_id] }     # use_case_id forbidden for core scope
+      not: { required: [use_case_id] }               # use_case_id forbidden for core scope
 ```
 
 `required` at the top level drops `use_case_id` (now conditional) but keeps `schema_version, id, angle, kind,

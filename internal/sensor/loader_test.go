@@ -1,12 +1,14 @@
 package sensor
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/enums"
+	"sigs.k8s.io/yaml"
 )
 
 func TestLoadSensor_BuildExample(t *testing.T) {
@@ -80,6 +82,13 @@ func TestLoadSensor_SchemaRejected(t *testing.T) {
 	}
 }
 
+// minimalScopeProbe is used only by TestLoadSensor_AllGoldenExamples to
+// detect a sensor's scope before the full Sensor struct gains a Scope field
+// (Task 6). Once Sensor.Scope is added, callers can use s.Scope instead.
+type minimalScopeProbe struct {
+	Scope string `json:"scope"`
+}
+
 func TestLoadSensor_AllGoldenExamples(t *testing.T) {
 	dir := filepath.Join("..", "..", "schemas", "examples", "sensor")
 	entries, err := os.ReadDir(dir)
@@ -103,8 +112,28 @@ func TestLoadSensor_AllGoldenExamples(t *testing.T) {
 			if s.ID == "" {
 				t.Errorf("loaded sensor has empty ID")
 			}
-			if s.UseCaseID == "" {
-				t.Errorf("loaded sensor has empty UseCaseID")
+			// use_case_id is required for use-case-scoped sensors but must
+			// be absent for core-scoped sensors. Probe the raw YAML for scope
+			// so this check remains correct before Sensor.Scope is added
+			// (Task 6 will let callers use s.Scope directly).
+			raw, readErr := os.ReadFile(filepath.Join(dir, name))
+			if readErr != nil {
+				t.Fatalf("re-read %s: %v", name, readErr)
+			}
+			asJSON, convErr := yaml.YAMLToJSON(raw)
+			if convErr != nil {
+				t.Fatalf("yaml->json %s: %v", name, convErr)
+			}
+			var probe minimalScopeProbe
+			if jsonErr := json.Unmarshal(asJSON, &probe); jsonErr != nil {
+				t.Fatalf("probe scope %s: %v", name, jsonErr)
+			}
+			isCore := probe.Scope == "core"
+			if !isCore && s.UseCaseID == "" {
+				t.Errorf("use-case-scoped sensor has empty UseCaseID")
+			}
+			if isCore && s.UseCaseID != "" {
+				t.Errorf("core-scoped sensor must not have UseCaseID, got %q", s.UseCaseID)
 			}
 			if len(s.Steps) == 0 {
 				t.Errorf("loaded sensor has no steps")

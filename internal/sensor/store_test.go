@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/iurykrieger/lastro/internal/enums"
 )
 
 func TestNewStore_HappyPath(t *testing.T) {
@@ -99,6 +101,35 @@ func TestLoadDirectory_HappyPath(t *testing.T) {
 	}
 	if len(store.All()) < 6 {
 		t.Errorf("LoadDirectory(%s): got %d sensors, want at least 6", dir, len(store.All()))
+	}
+}
+
+func TestStore_ForScope(t *testing.T) {
+	core := Sensor{ID: "run-dev", Scope: enums.ScopeCore, Angle: enums.AngleEnvironment,
+		Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Steps: []Step{{ID: "b", Run: "make dev"}}}
+	uc := Sensor{ID: "oc-build", Scope: enums.ScopeUseCase, UseCaseID: "order-create", Angle: enums.AngleBuild,
+		Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Steps: []Step{{ID: "c", Run: "go build ./..."}}}
+	st, err := NewStore(core, uc)
+	if err != nil {
+		t.Fatalf("new store: %v", err)
+	}
+	got := st.ForScope(enums.ScopeCore)
+	if len(got) != 1 || got[0].ID != "run-dev" {
+		t.Fatalf("ForScope(core): got %+v", got)
+	}
+	if len(st.ForScope(enums.ScopeUseCase)) != 1 {
+		t.Fatalf("ForScope(use-case): want 1")
+	}
+}
+
+func TestStore_DuplicateIDRejected(t *testing.T) {
+	a := Sensor{ID: "dup", Scope: enums.ScopeCore, Angle: enums.AngleBuild,
+		Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Steps: []Step{{ID: "s", Run: "x"}}}
+	if _, err := NewStore(a, a); err == nil {
+		t.Fatal("expected duplicate-id error")
 	}
 }
 

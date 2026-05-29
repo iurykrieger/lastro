@@ -1,0 +1,16 @@
+schema_version: 1.0.0
+id: uc-greet-by-name-build
+use_case_id: uc-greet-by-name
+angle: build
+kind: assertion
+nature: computational
+output_type: single-shot
+
+uses:
+  - go-stdlib
+  - cobra
+
+steps:
+  - id: probe
+    uses: [name]
+    run: "go run ./cmd/sensor-check --sensor=uc-greet-by-name-build --use-case=uc-greet-by-name --angle=build pass"

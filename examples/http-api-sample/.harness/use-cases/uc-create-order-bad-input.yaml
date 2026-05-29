@@ -1,0 +1,26 @@
+schema_version: 2.0.0
+id: uc-create-order-bad-input
+title: "Client receives 400 when posting an invalid order payload"
+archetype_scope: [http-api]
+
+entry_points:
+  - id: create-order-endpoint
+    archetype: http-api
+    spec:
+      method: POST
+      path: /orders
+
+given:
+  - "The client has an invalid order payload {{fixtures.invalid-order-payload}}"
+when:
+  - "The client invokes {{entry_points.create-order-endpoint}} with the payload"
+then:
+  - "The endpoint responds with status 400"
+  - "The response body contains an error envelope"
+
+source_refs:
+  - path: handlers.go
+    symbol: CreateOrderHandler
+    reason: "endpoint detected from mux registration; validation branch exercised"
+
+fixture_ids: [invalid-order-payload]

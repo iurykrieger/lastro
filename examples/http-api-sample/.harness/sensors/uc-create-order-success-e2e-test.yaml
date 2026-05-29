@@ -1,0 +1,16 @@
+schema_version: 1.0.0
+id: uc-create-order-success-e2e-test
+use_case_id: uc-create-order-success
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+
+uses:
+  - go-stdlib
+  - net-http
+
+steps:
+  - id: probe
+    uses: [valid-order-payload]
+    run: "go run ./cmd/sensor-check --sensor=uc-create-order-success-e2e-test --use-case=uc-create-order-success --angle=e2e-test pass"

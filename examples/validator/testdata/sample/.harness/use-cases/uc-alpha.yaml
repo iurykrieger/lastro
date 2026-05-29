@@ -1,0 +1,13 @@
+schema_version: 2.0.0
+id: uc-alpha
+title: alpha
+archetype_scope: [cli]
+entry_points:
+  - id: ep-alpha
+    archetype: cli
+    spec:
+      command: alpha
+given: ["x"]
+when: ["y"]
+then: ["z"]
+fixture_ids: []

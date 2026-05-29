@@ -1,0 +1,14 @@
+schema_version: 1.0.0
+id: sample-harness-tree
+use_case_id: uc-harness-validate-use-case
+role: input
+content_type: text/plain
+payload: "a valid .harness/ tree with stack-manifest, use-cases, fixtures, sensors"
+binding:
+  channel: cli-args
+  selector:
+    flag: --use-case
+source_refs:
+  - path: cmd/harness/validate.go
+    symbol: newValidateCmd
+    reason: "validate subcommand consumes a .harness/ tree under --repo-root"

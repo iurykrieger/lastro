@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+id: uc-create-order-success-unit-test
+use_case_id: uc-create-order-success
+angle: unit-test
+kind: assertion
+nature: computational
+output_type: single-shot
+
+uses:
+  - go-stdlib
+
+steps:
+  - id: probe
+    uses: [valid-order-payload]
+    run: "go run ./cmd/sensor-check --sensor=uc-create-order-success-unit-test --use-case=uc-create-order-success --angle=unit-test pass"

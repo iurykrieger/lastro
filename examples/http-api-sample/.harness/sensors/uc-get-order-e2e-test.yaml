@@ -1,0 +1,16 @@
+schema_version: 1.0.0
+id: uc-get-order-e2e-test
+use_case_id: uc-get-order
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+
+uses:
+  - go-stdlib
+  - net-http
+
+steps:
+  - id: probe
+    uses: [existing-order-id]
+    run: "go run ./cmd/sensor-check --sensor=uc-get-order-e2e-test --use-case=uc-get-order --angle=e2e-test pass"

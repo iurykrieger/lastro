@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+id: uc-greet-by-name-unit-test
+use_case_id: uc-greet-by-name
+angle: unit-test
+kind: assertion
+nature: computational
+output_type: single-shot
+
+uses:
+  - go-stdlib
+
+steps:
+  - id: probe
+    uses: [name]
+    run: "go run ./cmd/sensor-check --sensor=uc-greet-by-name-unit-test --use-case=uc-greet-by-name --angle=unit-test pass"

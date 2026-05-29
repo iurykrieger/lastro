@@ -1,0 +1,16 @@
+schema_version: 1.0.0
+id: invalid-order-payload
+use_case_id: uc-create-order-bad-input
+role: input
+content_type: application/json
+payload: |
+  {}
+binding:
+  channel: http
+  selector:
+    method: POST
+    path: /orders
+source_refs:
+  - path: handlers.go
+    symbol: CreateOrderHandler
+    reason: "exercises missing-field branch"

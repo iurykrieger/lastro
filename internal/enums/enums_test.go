@@ -7,7 +7,7 @@ func TestAllAnglesReturnsCanonicalOrder(t *testing.T) {
 	want := []ValidationAngle{
 		AngleSecurity, AngleBuild, AngleCodeStructure, AngleUnitTest,
 		AngleE2ETest, AngleContracts, AngleLogs, AngleMetrics,
-		AngleDatabase, AnglePerformance,
+		AngleDatabase, AnglePerformance, AngleEnvironment,
 	}
 	if len(got) != len(want) {
 		t.Fatalf("AllAngles length: got %d, want %d", len(got), len(want))

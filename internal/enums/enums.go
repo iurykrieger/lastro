@@ -5,7 +5,7 @@
 // between this package and that source is caught by drift_test.go.
 package enums
 
-// ValidationAngle is one of the ten facets a sensor can validate.
+// ValidationAngle is one of the eleven facets a sensor can validate.
 type ValidationAngle string
 
 const (
@@ -19,6 +19,7 @@ const (
 	AngleMetrics       ValidationAngle = "metrics"
 	AngleDatabase      ValidationAngle = "database"
 	AnglePerformance   ValidationAngle = "performance"
+	AngleEnvironment   ValidationAngle = "environment"
 )
 
 // AllAngles returns every ValidationAngle in canonical (YAML) order.
@@ -26,7 +27,7 @@ func AllAngles() []ValidationAngle {
 	return []ValidationAngle{
 		AngleSecurity, AngleBuild, AngleCodeStructure, AngleUnitTest,
 		AngleE2ETest, AngleContracts, AngleLogs, AngleMetrics,
-		AngleDatabase, AnglePerformance,
+		AngleDatabase, AnglePerformance, AngleEnvironment,
 	}
 }
 

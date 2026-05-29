@@ -25,3 +25,5 @@ values:
     purpose: "Data writes and migrations match expectations"
   - id: performance
     purpose: "Latency, throughput, and resource ceilings"
+  - id: environment
+    purpose: "Repo-level environment preconditions: app boot, datastore reachability (core sensors only)"

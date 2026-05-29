@@ -125,6 +125,10 @@ intentionally absent.
   - `scope: use-case` && `use_case_id == ""` → error.
   - `scope: core` && `use_case_id != ""` → error.
   - existing self-dependency check unchanged.
+- **Scope the `angle_not_applicable` check to `use-case` sensors.** It lives in the shared `Persist` path at
+  `internal/sensor/persist.go:56` (`angleInList(s.Angle, manifest.ApplicableAngles)`), which both
+  `/create-sensors` and the new `/create-core-sensors` route through. Per decision #11, core sensors bypass
+  it (they legitimately carry `environment` and angles regardless of the use-case applicability matrix).
 - **Slug-uniqueness invariant** enforced at `Store` build time: duplicate global `id` → error (today ids were
   unique by the `s-<uc>-<angle>` convention; the no-prefix convention makes this an explicit check).
 - Loader walks `.harness/sensors/**` (one level of subfolders: `<usecase-id>/` and `core/`) instead of a flat
@@ -207,7 +211,8 @@ needs #21/#23.
    flat files exist on disk today: `.harness/sensors/uc-harness-validate-use-case-build.yaml` and
    `.harness/sensors/uc-harness-validate-use-case-unit-test.yaml` (the dogfood sensors). The plan must pick a
    concrete handling — in-place move into `.harness/sensors/<usecase-id>/` vs regenerate — and the loader must
-   tolerate the transition. Tie to plan §10's clean-vs-in-place migration question.
+   tolerate the transition, with a test covering a half-migrated state (flat + foldered coexisting). Tie to
+   plan §10's clean-vs-in-place migration question.
 
 ## 12. Acceptance criteria
 

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/iurykrieger/lastro/internal/enums"
 	"sigs.k8s.io/yaml"
 )
 
@@ -42,6 +43,10 @@ func LoadSensorBytes(raw []byte) (Sensor, error) {
 	var s Sensor
 	if err := json.Unmarshal(asJSON, &s); err != nil {
 		return Sensor{}, fmt.Errorf("deserialize: %w", err)
+	}
+
+	if s.Scope == "" {
+		s.Scope = enums.ScopeUseCase
 	}
 
 	if err := validateIntrinsic(s); err != nil {

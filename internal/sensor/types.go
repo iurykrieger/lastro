@@ -15,7 +15,8 @@ import "github.com/iurykrieger/lastro/internal/enums"
 type Sensor struct {
 	SchemaVersion string                 `json:"schema_version"`
 	ID            string                 `json:"id"`
-	UseCaseID     string                 `json:"use_case_id"`
+	Scope         enums.SensorScope      `json:"scope,omitempty"`
+	UseCaseID     string                 `json:"use_case_id,omitempty"`
 	Angle         enums.ValidationAngle  `json:"angle"`
 	Kind          enums.SensorKind       `json:"kind"`
 	Nature        enums.SensorNature     `json:"nature"`

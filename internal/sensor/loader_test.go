@@ -1,14 +1,12 @@
 package sensor
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/enums"
-	"sigs.k8s.io/yaml"
 )
 
 func TestLoadSensor_BuildExample(t *testing.T) {
@@ -82,13 +80,6 @@ func TestLoadSensor_SchemaRejected(t *testing.T) {
 	}
 }
 
-// minimalScopeProbe is used only by TestLoadSensor_AllGoldenExamples to
-// detect a sensor's scope before the full Sensor struct gains a Scope field
-// (Task 6). Once Sensor.Scope is added, callers can use s.Scope instead.
-type minimalScopeProbe struct {
-	Scope string `json:"scope"`
-}
-
 func TestLoadSensor_AllGoldenExamples(t *testing.T) {
 	dir := filepath.Join("..", "..", "schemas", "examples", "sensor")
 	entries, err := os.ReadDir(dir)
@@ -113,22 +104,8 @@ func TestLoadSensor_AllGoldenExamples(t *testing.T) {
 				t.Errorf("loaded sensor has empty ID")
 			}
 			// use_case_id is required for use-case-scoped sensors but must
-			// be absent for core-scoped sensors. Probe the raw YAML for scope
-			// so this check remains correct before Sensor.Scope is added
-			// (Task 6 will let callers use s.Scope directly).
-			raw, readErr := os.ReadFile(filepath.Join(dir, name))
-			if readErr != nil {
-				t.Fatalf("re-read %s: %v", name, readErr)
-			}
-			asJSON, convErr := yaml.YAMLToJSON(raw)
-			if convErr != nil {
-				t.Fatalf("yaml->json %s: %v", name, convErr)
-			}
-			var probe minimalScopeProbe
-			if jsonErr := json.Unmarshal(asJSON, &probe); jsonErr != nil {
-				t.Fatalf("probe scope %s: %v", name, jsonErr)
-			}
-			isCore := probe.Scope == "core"
+			// be absent for core-scoped sensors.
+			isCore := s.Scope == enums.ScopeCore
 			if !isCore && s.UseCaseID == "" {
 				t.Errorf("use-case-scoped sensor has empty UseCaseID")
 			}
@@ -143,5 +120,52 @@ func TestLoadSensor_AllGoldenExamples(t *testing.T) {
 	}
 	if loaded < 6 {
 		t.Errorf("expected at least 6 sensor example files, found %d — schemas/examples/sensor/ may have shrunk", loaded)
+	}
+}
+
+func TestLoadSensor_DefaultsScopeToUseCase(t *testing.T) {
+	yaml := []byte(`schema_version: 1.0.0
+id: order-create-build
+use_case_id: order-create
+angle: build
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: compile
+    run: "go build ./..."
+`)
+	s, err := LoadSensorBytes(yaml)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if s.Scope != enums.ScopeUseCase {
+		t.Errorf("scope: got %q, want %q (default)", s.Scope, enums.ScopeUseCase)
+	}
+}
+
+func TestLoadSensor_CoreScopeNoUseCase(t *testing.T) {
+	yaml := []byte(`schema_version: 1.0.0
+id: run-dev
+scope: core
+angle: environment
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: boot
+    run: "make dev"
+`)
+	s, err := LoadSensorBytes(yaml)
+	if err != nil {
+		t.Fatalf("load core: %v", err)
+	}
+	if s.Scope != enums.ScopeCore {
+		t.Errorf("scope: got %q, want core", s.Scope)
+	}
+	if s.UseCaseID != "" {
+		t.Errorf("use_case_id: got %q, want empty for core", s.UseCaseID)
 	}
 }

@@ -24,7 +24,7 @@ Use cases describe *what* in `given/when/then` text with `${{fixtures.<id>}}` / 
 
 - **Use case text is tech-agnostic.** No code, regex, library names, or wire-protocol details beyond what an archetype's surface naturally requires.
 - **Sensors are grounded.** Top-level `uses:` may reference only `StackComponent` ids from the detected stack manifest.
-- **Fixtures bind per-step.** Step `uses:` references `Fixture` ids owned by the sensor's use case. No sensor-wide fixture list.
+- **Fixtures bind per-step via interpolation.** A step references `Fixture` ids owned by its use case through `${{ fixtures.<id> }}` in its `run`/`with` (the binder collects refs and injects payload paths as env vars). No sensor-wide fixture list. Step-level `uses:` now names a **core primitive** to compose (`uses` + `with`), not a fixture list. (#26)
 - **Every sensor emits exactly one terminal `AggregateSignal`** regardless of `output_type` (single-shot or stream) or `kind` (assertion or observational).
 - **`heal_hint` is required when `verdict = fail`** on any `Signal` or `AggregateSignal`. It is the contract with the LLM — structured, actionable, never raw logs.
 - **Schema filenames are unversioned** (`signal.yaml`, not `signal-v1.yaml`). `schema_version` lives *inside* the schema.

@@ -29,3 +29,10 @@ func TestRenderLabelsEntryPointSpec(t *testing.T) {
 		t.Errorf("got %q", got)
 	}
 }
+
+func TestRenderLabelsInputAndStepOutput(t *testing.T) {
+	segs, _ := Parse("${{ inputs.method }} ${{ steps.create.outputs.id }}")
+	if got := RenderLabels(segs); got != "[input: method] [step: create.outputs.id]" {
+		t.Errorf("got %q", got)
+	}
+}

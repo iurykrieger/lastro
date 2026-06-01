@@ -104,6 +104,10 @@ func (p *parser) parseRef() (Segment, error) {
 		return p.parseFixtureTail(nsStart)
 	case "entry_points":
 		return p.parseEntryPointTail(nsStart)
+	case "inputs":
+		return p.parseInputTail(nsStart)
+	case "steps":
+		return p.parseStepOutputTail(nsStart)
 	default:
 		return nil, &ParseError{Pos: nsStart, Msg: "unknown namespace: " + ns}
 	}
@@ -158,6 +162,46 @@ func (p *parser) parseEntryPointTail(refPos Position) (Segment, error) {
 		return nil, err
 	}
 	return ref, nil
+}
+
+func (p *parser) parseInputTail(refPos Position) (Segment, error) {
+	name, ok := p.readKebabID()
+	if !ok {
+		return nil, &ParseError{Pos: p.here(), Msg: "expected input name"}
+	}
+	if p.peekByte('.') {
+		return nil, &ParseError{Pos: p.here(), Msg: "inputs.<name> takes no further keys"}
+	}
+	if err := p.expectClose(); err != nil {
+		return nil, err
+	}
+	return InputRef{Name: name, Pos: refPos}, nil
+}
+
+func (p *parser) parseStepOutputTail(refPos Position) (Segment, error) {
+	stepID, ok := p.readKebabID()
+	if !ok {
+		return nil, &ParseError{Pos: p.here(), Msg: "expected step id"}
+	}
+	if !p.peekByte('.') {
+		return nil, &ParseError{Pos: p.here(), Msg: "expected '.outputs.' after step id"}
+	}
+	p.advance(1)
+	if seg := p.readIdent(isIdentByte); seg != "outputs" {
+		return nil, &ParseError{Pos: p.here(), Msg: "steps.<id> only accepts '.outputs.<name>'; got '" + seg + "'"}
+	}
+	if !p.peekByte('.') {
+		return nil, &ParseError{Pos: p.here(), Msg: "expected '.' after 'outputs'"}
+	}
+	p.advance(1)
+	name, ok := p.readKebabID()
+	if !ok {
+		return nil, &ParseError{Pos: p.here(), Msg: "expected output name"}
+	}
+	if err := p.expectClose(); err != nil {
+		return nil, err
+	}
+	return StepOutputRef{StepID: stepID, Name: name, Pos: refPos}, nil
 }
 
 func (p *parser) expectClose() error {

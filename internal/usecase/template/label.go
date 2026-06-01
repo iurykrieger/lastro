@@ -32,6 +32,16 @@ func RenderLabels(segs []Segment) string {
 				b.WriteString(v.SpecKey)
 			}
 			b.WriteByte(']')
+		case InputRef:
+			b.WriteString("[input: ")
+			b.WriteString(v.Name)
+			b.WriteByte(']')
+		case StepOutputRef:
+			b.WriteString("[step: ")
+			b.WriteString(v.StepID)
+			b.WriteString(".outputs.")
+			b.WriteString(v.Name)
+			b.WriteByte(']')
 		}
 	}
 	return b.String()

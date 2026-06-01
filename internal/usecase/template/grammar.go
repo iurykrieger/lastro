@@ -3,9 +3,11 @@
 // docs/harness-framework/plan.md §4.1.2 and recapped here:
 //
 //	template      := "${{" ws? ref ws? "}}"
-//	ref           := fixtureRef | entryPointRef
+//	ref           := fixtureRef | entryPointRef | inputRef | stepOutputRef
 //	fixtureRef    := "fixtures" "." ID ( "." JSONKEY )*
 //	entryPointRef := "entry_points" "." ID ( "." "spec" "." JSONKEY )?
+//	inputRef      := "inputs" "." ID
+//	stepOutputRef := "steps" "." ID "." "outputs" "." ID
 //
 // Tokens:
 //
@@ -52,3 +54,21 @@ type EntryPointRef struct {
 }
 
 func (EntryPointRef) isSegment() {}
+
+// InputRef is `${{ inputs.<name> }}` — a composed primitive's declared input.
+type InputRef struct {
+	Name string
+	Pos  Position
+}
+
+func (InputRef) isSegment() {}
+
+// StepOutputRef is `${{ steps.<id>.outputs.<name> }}` — an output produced by
+// a prior step (or by a uses-step that composed a primitive).
+type StepOutputRef struct {
+	StepID string
+	Name   string
+	Pos    Position
+}
+
+func (StepOutputRef) isSegment() {}

@@ -185,3 +185,31 @@ func TestParseErrorPositionIsAccurate(t *testing.T) {
 		t.Errorf("line: %d, want 2", pe.Pos.Line)
 	}
 }
+
+func TestParseInputRef(t *testing.T) {
+	got, err := Parse("x ${{ inputs.method }} y")
+	if err != nil {
+		t.Fatalf("Parse err: %v", err)
+	}
+	want := []Segment{Literal{Text: "x "}, InputRef{Name: "method", Pos: Position{Line: 1, Col: 7, Offset: 6}}, Literal{Text: " y"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %#v", got)
+	}
+}
+
+func TestParseStepOutputRef(t *testing.T) {
+	got, err := Parse("${{ steps.create.outputs.charge-id }}")
+	if err != nil {
+		t.Fatalf("Parse err: %v", err)
+	}
+	ref, ok := got[0].(StepOutputRef)
+	if !ok || ref.StepID != "create" || ref.Name != "charge-id" {
+		t.Errorf("got %#v", got[0])
+	}
+}
+
+func TestParseStepOutputRefRequiresOutputs(t *testing.T) {
+	if _, err := Parse("${{ steps.create.charge-id }}"); err == nil {
+		t.Fatal("expected error for missing 'outputs' segment")
+	}
+}

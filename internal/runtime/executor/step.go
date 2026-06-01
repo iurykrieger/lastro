@@ -40,6 +40,11 @@ type stepArgs struct {
 	// ranging over a nil map is a no-op, so callers may leave them unset.
 	InputEnv   map[string]string
 	StepOutEnv map[string]string
+	// OutTag uniquely identifies this step's HARNESS_OUTPUT scratch file.
+	// It must be unique across all physical step executions in a run
+	// (composed primitive inner steps share consumer step ids, so the bare
+	// Step.ID is not unique). When empty, runStep falls back to Step.ID.
+	OutTag string
 }
 
 // stepOutcome reports the per-step result.
@@ -88,7 +93,11 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	for k, v := range a.StepOutEnv {
 		env = append(env, k+"="+v)
 	}
-	outPath := filepath.Join(binder.ScratchDir, "stepout-"+a.Step.ID)
+	outTag := a.OutTag
+	if outTag == "" {
+		outTag = a.Step.ID
+	}
+	outPath := filepath.Join(binder.ScratchDir, "stepout-"+outTag)
 	if err := os.WriteFile(outPath, nil, 0o600); err != nil {
 		return stepOutcome{}, fmt.Errorf("executor: create stepout: %w", err)
 	}

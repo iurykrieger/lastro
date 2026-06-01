@@ -66,6 +66,7 @@ func defaultRunnerFactory(arts *HarnessArtifacts, repoRoot string) (SensorRunner
 		Resolver:      resolver,
 		FixtureStore:  arts.Fixtures,
 		UseCaseLookup: useCaseLookup,
+		SensorLookup:  arts.Sensors.LookupSensor,
 		Now:           time.Now,
 	})
 

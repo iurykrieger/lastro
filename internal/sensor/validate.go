@@ -20,7 +20,7 @@ func validateIntrinsic(s Sensor) error {
 	if err := checkUniqueTopLevelUses(s); err != nil {
 		errs = append(errs, err)
 	}
-	if err := checkUniqueStepUses(s); err != nil {
+	if err := checkStepShape(s); err != nil {
 		errs = append(errs, err)
 	}
 	if err := checkNoSelfDependency(s); err != nil {
@@ -67,12 +67,25 @@ func checkUniqueTopLevelUses(s Sensor) error {
 	return fmt.Errorf("duplicate uses id(s): %v", dups)
 }
 
-// TODO(Task 8): replaced by checkStepShape — step uses is now a scalar
-// primitive id, so duplicate step uses is not representable. This function
-// is neutered to a no-op to keep the package compiling until Task 8 adds
-// full run-xor-uses validation via checkStepShape.
-func checkUniqueStepUses(_ Sensor) error {
-	return nil
+func checkStepShape(s Sensor) error {
+	var errs []error
+	for _, st := range s.Steps {
+		hasRun := st.Run != ""
+		hasUses := st.Uses != ""
+		switch {
+		case hasRun && hasUses:
+			errs = append(errs, fmt.Errorf("step %q: has both run and uses", st.ID))
+		case !hasRun && !hasUses:
+			errs = append(errs, fmt.Errorf("step %q: has neither run nor uses", st.ID))
+		}
+		if hasRun && len(st.With) > 0 {
+			errs = append(errs, fmt.Errorf("step %q: with is only valid on a uses-step", st.ID))
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return errors.Join(errs...)
 }
 
 func checkNoSelfDependency(s Sensor) error {

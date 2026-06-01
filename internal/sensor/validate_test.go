@@ -106,6 +106,45 @@ func TestValidateIntrinsic_UseCaseScopeRequiresUseCaseID(t *testing.T) {
 	}
 }
 
+func TestValidateStepShapeRunXorUses(t *testing.T) {
+	bad := Sensor{ID: "x", Steps: []Step{{ID: "s"}}} // neither run nor uses
+	if err := validateIntrinsic(bad); err == nil {
+		t.Fatal("expected error for step with neither run nor uses")
+	}
+	both := Sensor{ID: "x", Steps: []Step{{ID: "s", Run: "echo", Uses: "p"}}}
+	if err := validateIntrinsic(both); err == nil {
+		t.Fatal("expected error for step with both run and uses")
+	}
+}
+
+func TestValidateWithOnlyOnUsesStep(t *testing.T) {
+	bad := Sensor{ID: "x", Steps: []Step{{ID: "s", Run: "echo", With: map[string]string{"a": "b"}}}}
+	if err := validateIntrinsic(bad); err == nil {
+		t.Fatal("expected error: with on a run-step")
+	}
+}
+
+func TestCheckStepShapeDirect(t *testing.T) {
+	if checkStepShape(Sensor{Steps: []Step{{ID: "ok", Run: "echo"}}}) != nil {
+		t.Error("valid run-step should pass")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "ok", Uses: "p"}}}) != nil {
+		t.Error("valid uses-step should pass")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "u", Uses: "p", With: map[string]string{"k": "v"}}}}) != nil {
+		t.Error("uses-step with `with` should pass")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "bad"}}}) == nil {
+		t.Error("neither run nor uses should fail")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "bad", Run: "e", Uses: "p"}}}) == nil {
+		t.Error("both run and uses should fail")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "bad", Run: "e", With: map[string]string{"k": "v"}}}}) == nil {
+		t.Error("with on run-step should fail")
+	}
+}
+
 // errorsJoinContains walks errors.Join trees, returning true if any
 // wrapped error's message contains substr. Used so tests can assert
 // on a single rule's message inside a joined multi-rule error.

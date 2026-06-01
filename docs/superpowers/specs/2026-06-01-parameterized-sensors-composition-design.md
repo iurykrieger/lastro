@@ -172,6 +172,9 @@ steps:
 - **Grounding (unchanged in spirit):** top-level `uses:` ⊆ StackManifest. New: a `uses`-step's target id must
   resolve to a loaded sensor with `scope: core` (a primitive). Validated at the store/resolver level (needs
   the global sensor set), not at single-file load.
+- **Semantic interpolation checks (store/resolver level, same as the `uses`-target check):** an `outputs[*].from`
+  or a `${{ steps.<id>.outputs.* }}` that names a non-existent step id is caught here, not at single-file load
+  (single-file load only checks *syntactic* validity of the expression).
 - **Loader:** parse the new fields; default `inputs[*].required=false`.
 
 ## 6. `internal/runtime` changes
@@ -189,8 +192,12 @@ boundary (decision #9).
 When the executor encounters a `uses`-step:
 1. Look up the primitive by id; assert `scope: core`.
 2. Validate every `required` input is satisfied by `with:` or a `default` → else `input-unbound` error.
-3. Build the input env map from `with:` (values themselves first interpolated against the consumer's context —
-   so `body: ${{ fixtures.create-charge-input }}` resolves the fixture before entering the primitive).
+3. Build the input env map from `with:` (values themselves first interpolated against the consumer's context).
+   **Timing:** static refs (`${{ fixtures.* }}`, literals) resolve when the consuming step is reached; refs to a
+   prior step's output (`${{ steps.create.outputs.* }}`) resolve at the **execution time of the consuming step**,
+   after the producing step has run — never eagerly at resolve-time (else the output would be unbound). So
+   `body: ${{ fixtures.create-charge-input }}` resolves the fixture before entering the primitive, while
+   `path: …/${{ steps.create.outputs.charge_id }}/capture` resolves only once `create` has produced its output.
 4. **Inline** the primitive's steps, compiling each `run` against `{inputs (from with/defaults), fixtures,
    steps.*}`.
 5. Merge the primitive's `depends_on` into the consumer's effective dependency set (decision #10).
@@ -225,6 +232,16 @@ Existing on-disk sensors using the **array** step `uses:` for fixtures:
 their `uses: [sample-harness-tree]` to a `${{ fixtures.sample-harness-tree }}` reference inside the step's
 `run`. The loader does **not** accept the old array form for step `uses:` (it is now a scalar primitive id);
 the migration is a hard cutover covered by a test asserting the rewritten sensors load and validate.
+
+Two clarifications for the plan:
+- **Fixture-as-path, not always an inline splice.** `sample-harness-tree` is a directory/path fixture, not a
+  value spliced into a command. The binder already exposes both an env var and a file path
+  (`binding.Files[fx.ID]`); `${{ fixtures.sample-harness-tree }}` resolves to that path env var. The rewrite
+  must target the path form, not a payload splice — interpolation refs are not all inline string substitutions.
+- **Sequence with the #24 folder migration.** The merged core-sensors spec (#24) plans moving sensors to
+  `core/` and `<usecase-id>/` folders, but these two files are still flat on disk. Land the folder move and
+  this `uses:` array→scalar rewrite in **one coherent pass** over the same two files, not as two colliding
+  rewrites.
 
 ## 9. Validation & error surface
 

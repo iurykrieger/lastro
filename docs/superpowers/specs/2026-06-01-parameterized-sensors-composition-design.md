@@ -40,12 +40,13 @@ The reuse the issue wants — single source of truth for the primitive, per-use-
 | 2 | **Composition model = GitHub Actions, not inheritance.** `uses:` + `with:` (composition), never `extends:` (extension). | User decision. Composition is explicit, additive, and avoids inheritance's override ambiguity. |
 | 3 | **Composition is step-level** (composite-action pattern), not sensor-level. A step is `uses: <primitive> + with:`; one sensor may compose several primitives across its steps. | More faithful to GHA's most common reuse and more composable (e.g. one step POSTs via `e2e-test`, the next verifies the row via `database-query`). |
 | 4 | **Binding resolves at runtime (resolve-time), not generation-time.** The executor reads `uses`+`with`, inlines the primitive's steps, binds inputs. The on-disk consumer stays compositional (references the primitive → single source of truth). | GHA-faithful (actions resolve at run time). Honors *"determinism beats prediction"*: inlining + substitution is deterministic Go; only generation (which primitive, which values) is inferential. |
-| 5 | **Interpolation syntax = `${{ inputs.x }}` (GHA).** Contexts: `inputs.*`, `fixtures.*`, `steps.<id>.outputs.*`. | Consistency with the GHA metaphor the user chose. |
+| 5 | **Interpolation syntax = `${{ inputs.x }}` (GHA).** Contexts: `inputs.*`, `fixtures.*`, `steps.<id>.outputs.*`, plus the existing `entry_points.*`. Achieved by **migrating the existing `{{ }}` grammar to `${{ }}`** (one grammar, not two — see decision #11). | Consistency with the GHA metaphor the user chose; a single interpolation surface across use-case text and sensor steps. |
 | 6 | **Step outputs ship in v1.** Primitives declare `outputs:`; steps produce them via a `$HARNESS_OUTPUT` file; `${{ steps.<id>.outputs.<name> }}` reads them. | The real charge-api flow (capture/cancel a charge created in a prior step) needs the id from `create` — blocking from day one. |
 | 7 | **Fixtures bind by interpolation**, not by an explicit per-step list. The binder collects `${{ fixtures.<id> }}` references in `run`/`with`, validates use-case ownership, and injects payloads (env var + file, as today). | Unifies params and fixtures (a `with:` value may be a fixture ref — issue Q4), and frees the step-level `uses:` keyword for composition. |
 | 8 | **`uses:` keyword collision resolved by level.** Top-level `uses:` stays = StackComponent ids (grounding). Step-level `uses:` is repurposed for composition. The old step-level fixture list is removed (see #7). | Minimal blast radius on the grounding invariant; step `uses:` now means exactly "compose this primitive," matching GHA. |
 | 9 | **Interpolation compiles to env-var references, never raw textual substitution.** `${{ inputs.method }}` → `"${__IN_method}"`, with the value injected as an env var. | Shell safety (issue Q3): no injection, no quoting hell for headers/body. Inherits the fixture binder's env-var+file mechanism. Inputs are **data, never code**. |
 | 10 | **Composing a primitive propagates its `depends_on`** to the consumer's effective dependency set. | `e2e-test depends_on run-dev` ⇒ a sensor composing `e2e-test` also waits for `run-dev`, without restating it. |
+| 11 | **Reuse and extend the existing `internal/usecase/template` package** rather than writing a second interpolation engine. Migrate its sentinel from `{{` to `${{`, add `inputs.*` and `steps.<id>.outputs.*` segment types, and **lift `ErrTemplateFixtureInRun`** so fixture refs are allowed in `run`/`with` — compiled to env-var references (never inlined payloads). | A discovery during planning: the harness already has a `{{ }}` grammar (`fixtures.*`, `entry_points.*`) used in use-case text and reused by the executor for sensor `run`. The executor forbids fixture refs in `run` (`ErrTemplateFixtureInRun: "use env vars"`) — the same safety rationale as decision #9. Lifting it by compiling to env refs honors that rationale while enabling decision #7. One grammar, one resolver, one executor integration point. |
 
 ## 4. Schema changes (`schemas/sensor.yaml`)
 
@@ -179,13 +180,22 @@ steps:
 
 ## 6. `internal/runtime` changes
 
-### 6.1 Interpolation compiler (new, deterministic)
+### 6.1 Interpolation compiler (extend `internal/usecase/template`, deterministic)
 
-A package that, given a `run` string (or a `with` value) and a resolution context
-(`inputs`, `fixtures`, `steps.<id>.outputs`), rewrites every `${{ ctx.name }}` into a **shell variable
-reference** (`"${__IN_name}"`, `"${__FX_name}"`, `"${__OUT_id_name}"`) and returns the env map to set. It
-**never** inlines the raw value into the command string. Unknown contexts/names → error. This is the safety
-boundary (decision #9).
+Extend the **existing** `internal/usecase/template` package (decision #11), do not write a new engine:
+- **Sentinel migration:** the parser detects `${{` instead of `{{` (`grammar.go`, `parser.go`); update the
+  package doc and `RenderLabels` (`label.go`). All existing `{{ }}` occurrences migrate to `${{ }}` (see §8).
+- **New segment types:** `InputRef` (`${{ inputs.<name> }}`) and `StepOutputRef`
+  (`${{ steps.<id>.outputs.<name> }}`), alongside the existing `FixtureRef` and `EntryPointRef`.
+- **Compile-to-env, not inline:** add a *compiler* mode (distinct from the existing `Resolve`, which inlines
+  for use-case text labels). Given a `run`/`with` value, it rewrites each ref into a **shell variable
+  reference** — `"${__IN_name}"`, `"${__FX_name}"`, `"${__OUT_id_name}"` — and returns the env map to set. It
+  **never** inlines the raw value into the command string. This is the safety boundary (decision #9) and the
+  mechanism that lets us lift `ErrTemplateFixtureInRun`.
+- Unknown contexts/names → error (reuses the existing `ResolveError` shape).
+
+The use-case-text path keeps using `Resolve` (inline render for human-readable criteria); the sensor-step
+path uses the new compiler (env refs). Both share one parser and one set of segment types.
 
 ### 6.2 Composition resolver (new, deterministic)
 
@@ -226,6 +236,26 @@ the **consumer's** `uses`-step id (so the consumer reads `${{ steps.create.outpu
   `required` input must be bound. Fixtures referenced as `${{ fixtures.<id> }}`.
 
 ## 8. Migration
+
+### 8.0 `{{ }}` → `${{ }}` grammar migration (decision #11)
+
+The sentinel change is a repo-wide find/replace of the interpolation delimiter, plus lifting the executor's
+fixture-in-run ban. Surface (verified on disk):
+- **Grammar/parser:** `internal/usecase/template/{grammar.go,parser.go,label.go}` (the `peek2("{{")` sentinel,
+  the `${{`/`}}` consumption, the package doc, `RenderLabels`).
+- **Template tests:** `internal/usecase/template/*_test.go` (parser, label, resolver, walk).
+- **Use-case text on disk:** `.harness/use-cases/uc-harness-validate-use-case.yaml` and the 9 archetype
+  examples under `schemas/examples/use-case/*.yaml`; the doc/comment in `schemas/use-case.yaml`.
+- **Callers' tests:** `internal/usecase/{loader_test,persist_test,validate_test}.go`,
+  `internal/runtime/executor/{run_test,step_test}.go`.
+- **Executor ban:** `internal/runtime/executor/errors.go` (`ErrTemplateFixtureInRun`) and `step.go`
+  (the loop that rejects `FixtureRef` in `run`) — **removed**; fixture refs now compile to env refs.
+- **Frozen docs:** `docs/harness-framework/plan.md` §4.1.2 and `E4-use-case.md` (update the grammar to `${{ }}`);
+  record the sentinel + new contexts in `00-schema-freeze.md`.
+
+This migration lands as its own early task block so the rest of the feature builds on `${{ }}` from the start.
+
+### 8.1 Step `uses:` array → scalar + fixture-by-interpolation
 
 Existing on-disk sensors using the **array** step `uses:` for fixtures:
 `.harness/sensors/uc-harness-validate-use-case-build.yaml` and `…-unit-test.yaml` (the dogfood sensors). Rewrite

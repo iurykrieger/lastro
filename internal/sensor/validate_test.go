@@ -49,22 +49,9 @@ func TestLoadSensor_DuplicateTopLevelUses(t *testing.T) {
 	}
 }
 
-func TestLoadSensor_DuplicateStepUses(t *testing.T) {
-	path := filepath.Join("testdata", "invalid", "duplicate-step-uses.yaml")
-	_, err := LoadSensor(path)
-	if err == nil {
-		t.Fatal("expected error for duplicate step-level uses, got nil")
-	}
-	if !errorsJoinContains(err, "duplicate uses id") {
-		t.Errorf("error did not mention duplicate uses id; got: %v", err)
-	}
-	if !errorsJoinContains(err, "probe") {
-		t.Errorf("error did not name the offending step 'probe'; got: %v", err)
-	}
-	if !errorsJoinContains(err, "order-input-fixture") {
-		t.Errorf("error did not name the duplicated fixture id; got: %v", err)
-	}
-}
+// TestLoadSensor_DuplicateStepUses is removed: step-level uses is now a
+// scalar primitive id, so "duplicate step uses" is not a representable state.
+// Task 8 introduces checkStepShape which validates run-xor-uses exclusivity.
 
 func TestLoadSensor_SelfDependency(t *testing.T) {
 	path := filepath.Join("testdata", "invalid", "self-dep.yaml")

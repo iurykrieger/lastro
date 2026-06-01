@@ -83,8 +83,7 @@ output_type: single-shot
 uses: [express]
 steps:
   - id: probe
-    run: curl -X POST localhost:8080/orders
-    uses: [fx-req]
+    run: curl -X POST localhost:8080/orders -d ${{ fixtures.fx-req }}
 `)
 
 func TestPersist_NewFile_AllInvariantsSatisfied(t *testing.T) {
@@ -245,8 +244,7 @@ output_type: single-shot
 uses: [express]
 steps:
   - id: probe
-    run: echo hi
-    uses: [fx-other]
+    run: echo ${{ fixtures.fx-other }}
 `)
 	err := Persist(s, dir)
 	if err == nil {
@@ -279,8 +277,7 @@ output_type: single-shot
 uses: [express]
 steps:
   - id: probe
-    run: curl -X POST localhost:8080/orders
-    uses: [fx-req]
+    run: curl -X POST localhost:8080/orders -d ${{ fixtures.fx-req }}
 `)
 	if err := os.WriteFile(filepath.Join(sensorDir, "s-create-order-e2e.yaml"), existing, 0o644); err != nil {
 		t.Fatal(err)

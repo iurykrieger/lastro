@@ -16,7 +16,4 @@ steps:
   - id: extract-endpoints
     run: "harness extract-openapi src/api.yaml"
   - id: judge-each
-    run: "harness llm-judge --rubric contract-per-endpoint"
-    uses:
-      - order-input-fixture
-      - order-output-fixture
+    run: "harness llm-judge --rubric contract-per-endpoint --input ${{ fixtures.order-input-fixture }} --expected ${{ fixtures.order-output-fixture }}"

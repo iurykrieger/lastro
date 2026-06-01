@@ -67,26 +67,12 @@ func checkUniqueTopLevelUses(s Sensor) error {
 	return fmt.Errorf("duplicate uses id(s): %v", dups)
 }
 
-func checkUniqueStepUses(s Sensor) error {
-	var errs []error
-	for _, st := range s.Steps {
-		seen := make(map[string]bool, len(st.Uses))
-		var dups []string
-		for _, id := range st.Uses {
-			if seen[id] {
-				dups = append(dups, id)
-				continue
-			}
-			seen[id] = true
-		}
-		if len(dups) > 0 {
-			errs = append(errs, fmt.Errorf("step %q: duplicate uses id(s): %v", st.ID, dups))
-		}
-	}
-	if len(errs) == 0 {
-		return nil
-	}
-	return errors.Join(errs...)
+// TODO(Task 8): replaced by checkStepShape — step uses is now a scalar
+// primitive id, so duplicate step uses is not representable. This function
+// is neutered to a no-op to keep the package compiling until Task 8 adds
+// full run-xor-uses validation via checkStepShape.
+func checkUniqueStepUses(_ Sensor) error {
+	return nil
 }
 
 func checkNoSelfDependency(s Sensor) error {

@@ -27,7 +27,7 @@ func TestParseEmptyInput(t *testing.T) {
 }
 
 func TestParseFixtureRefBare(t *testing.T) {
-	got, err := Parse("see {{fixtures.fx-order}} here")
+	got, err := Parse("see ${{fixtures.fx-order}} here")
 	if err != nil {
 		t.Fatalf("Parse err: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestParseFixtureRefBare(t *testing.T) {
 }
 
 func TestParseFixtureRefWithJSONPath(t *testing.T) {
-	got, err := Parse("{{fixtures.fx-order.customer_id}}")
+	got, err := Parse("${{fixtures.fx-order.customer_id}}")
 	if err != nil {
 		t.Fatalf("Parse err: %v", err)
 	}
@@ -64,7 +64,7 @@ func TestParseFixtureRefWithJSONPath(t *testing.T) {
 }
 
 func TestParseFixtureRefDeepJSONPath(t *testing.T) {
-	got, err := Parse("{{fixtures.fx.user.address.city}}")
+	got, err := Parse("${{fixtures.fx.user.address.city}}")
 	if err != nil {
 		t.Fatalf("Parse err: %v", err)
 	}
@@ -78,7 +78,7 @@ func TestParseFixtureRefDeepJSONPath(t *testing.T) {
 }
 
 func TestParseAllowsWhitespaceInsideBraces(t *testing.T) {
-	got, err := Parse("{{ fixtures.fx-a }}")
+	got, err := Parse("${{ fixtures.fx-a }}")
 	if err != nil {
 		t.Fatalf("Parse err: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestParseAllowsWhitespaceInsideBraces(t *testing.T) {
 }
 
 func TestParseEntryPointBare(t *testing.T) {
-	got, err := Parse("{{entry_points.ep-create}}")
+	got, err := Parse("${{entry_points.ep-create}}")
 	if err != nil {
 		t.Fatalf("Parse err: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestParseEntryPointBare(t *testing.T) {
 }
 
 func TestParseEntryPointSpecField(t *testing.T) {
-	got, err := Parse("{{entry_points.ep-create.spec.method}}")
+	got, err := Parse("${{entry_points.ep-create.spec.method}}")
 	if err != nil {
 		t.Fatalf("Parse err: %v", err)
 	}
@@ -111,7 +111,7 @@ func TestParseEntryPointSpecField(t *testing.T) {
 }
 
 func TestParseMultipleRefsOnOneLine(t *testing.T) {
-	got, err := Parse("A {{fixtures.fx-one}} B {{entry_points.ep-two}} C")
+	got, err := Parse("A ${{fixtures.fx-one}} B ${{entry_points.ep-two}} C")
 	if err != nil {
 		t.Fatalf("Parse err: %v", err)
 	}
@@ -127,9 +127,9 @@ func TestParseMultipleRefsOnOneLine(t *testing.T) {
 }
 
 func TestParseRejectsNested(t *testing.T) {
-	_, err := Parse("{{ {{fixtures.x}} }}")
+	_, err := Parse("${{ ${{fixtures.x}} }}")
 	if err == nil {
-		t.Fatal("want error for nested {{")
+		t.Fatal("want error for nested ${{")
 	}
 	if pe, ok := err.(*ParseError); !ok || pe.Msg == "" {
 		t.Errorf("want *ParseError, got %T: %v", err, err)
@@ -137,14 +137,14 @@ func TestParseRejectsNested(t *testing.T) {
 }
 
 func TestParseRejectsUnclosed(t *testing.T) {
-	_, err := Parse("text {{fixtures.fx-a")
+	_, err := Parse("text ${{fixtures.fx-a")
 	if err == nil {
-		t.Fatal("want error for unclosed {{")
+		t.Fatal("want error for unclosed ${{")
 	}
 }
 
 func TestParseRejectsUnknownNamespace(t *testing.T) {
-	_, err := Parse("{{stack.something}}")
+	_, err := Parse("${{stack.something}}")
 	pe, ok := err.(*ParseError)
 	if !ok {
 		t.Fatalf("want *ParseError, got %T: %v", err, err)
@@ -155,28 +155,28 @@ func TestParseRejectsUnknownNamespace(t *testing.T) {
 }
 
 func TestParseRejectsBadSpecAccess(t *testing.T) {
-	_, err := Parse("{{entry_points.ep-x.archetype}}")
+	_, err := Parse("${{entry_points.ep-x.archetype}}")
 	if err == nil {
 		t.Fatal("want error for non-spec entry-point access")
 	}
 }
 
 func TestParseRejectsSpecMultiKey(t *testing.T) {
-	_, err := Parse("{{entry_points.ep-x.spec.a.b}}")
+	_, err := Parse("${{entry_points.ep-x.spec.a.b}}")
 	if err == nil {
 		t.Fatal("want error for multi-key spec access")
 	}
 }
 
 func TestParseRejectsBadID(t *testing.T) {
-	_, err := Parse("{{fixtures.Bad_ID}}")
+	_, err := Parse("${{fixtures.Bad_ID}}")
 	if err == nil {
 		t.Fatal("want error for invalid id charset")
 	}
 }
 
 func TestParseErrorPositionIsAccurate(t *testing.T) {
-	_, err := Parse("line one\nline two {{stack.x}}")
+	_, err := Parse("line one\nline two ${{stack.x}}")
 	pe, ok := err.(*ParseError)
 	if !ok {
 		t.Fatalf("want *ParseError, got %T: %v", err, err)

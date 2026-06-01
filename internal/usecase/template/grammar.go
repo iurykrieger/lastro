@@ -1,8 +1,8 @@
-// Package template implements the {{ }} interpolation grammar for
+// Package template implements the ${{ }} interpolation grammar for
 // UseCase given/when/then text. The grammar is defined in
 // docs/harness-framework/plan.md §4.1.2 and recapped here:
 //
-//	template      := "{{" ws? ref ws? "}}"
+//	template      := "${{" ws? ref ws? "}}"
 //	ref           := fixtureRef | entryPointRef
 //	fixtureRef    := "fixtures" "." ID ( "." JSONKEY )*
 //	entryPointRef := "entry_points" "." ID ( "." "spec" "." JSONKEY )?
@@ -32,7 +32,7 @@ type Literal struct {
 
 func (Literal) isSegment() {}
 
-// FixtureRef is `{{fixtures.<id>(.<jsonkey>)*}}`. An empty JSONPath means
+// FixtureRef is `${{fixtures.<id>(.<jsonkey>)*}}`. An empty JSONPath means
 // the whole payload.
 type FixtureRef struct {
 	ID       string
@@ -42,8 +42,8 @@ type FixtureRef struct {
 
 func (FixtureRef) isSegment() {}
 
-// EntryPointRef is `{{entry_points.<id>}}` or
-// `{{entry_points.<id>.spec.<key>}}`. An empty SpecKey means the whole
+// EntryPointRef is `${{entry_points.<id>}}` or
+// `${{entry_points.<id>.spec.<key>}}`. An empty SpecKey means the whole
 // entry point (rendered as "<archetype>:<id>").
 type EntryPointRef struct {
 	ID      string

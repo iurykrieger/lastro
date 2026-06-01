@@ -14,7 +14,7 @@ func (e *ParseError) Error() string {
 }
 
 // Parse turns a string into a slice of Segments. The slice may be empty
-// (empty input) or all-literal (no {{ }} blocks).
+// (empty input) or all-literal (no `${{ }}` blocks).
 func Parse(input string) ([]Segment, error) {
 	p := &parser{input: input, line: 1, col: 1}
 	return p.parse()
@@ -39,7 +39,7 @@ func (p *parser) parse() ([]Segment, error) {
 	}
 
 	for p.pos < len(p.input) {
-		if p.peek2("{{") {
+		if p.peekOpen() {
 			flushLiteral()
 			seg, err := p.parseRef()
 			if err != nil {
@@ -59,6 +59,11 @@ func (p *parser) peek2(s string) bool {
 	return p.pos+2 <= len(p.input) && p.input[p.pos:p.pos+2] == s
 }
 
+// peekOpen reports whether the cursor is at the "${{" open sentinel.
+func (p *parser) peekOpen() bool {
+	return p.pos+3 <= len(p.input) && p.input[p.pos:p.pos+3] == "${{"
+}
+
 func (p *parser) advance(n int) {
 	for i := 0; i < n && p.pos < len(p.input); i++ {
 		if p.input[p.pos] == '\n' {
@@ -76,17 +81,17 @@ func (p *parser) here() Position {
 }
 
 func (p *parser) parseRef() (Segment, error) {
-	p.advance(2) // consume "{{"
+	p.advance(3) // consume "${{"
 	p.skipWS()
 
-	if p.peek2("{{") {
-		return nil, &ParseError{Pos: p.here(), Msg: "nested {{ inside template"}
+	if p.peekOpen() {
+		return nil, &ParseError{Pos: p.here(), Msg: "nested ${{ inside template"}
 	}
 
 	nsStart := p.here()
 	ns := p.readIdent(isIdentByte)
 	if ns == "" {
-		return nil, &ParseError{Pos: p.here(), Msg: "expected namespace after {{"}
+		return nil, &ParseError{Pos: p.here(), Msg: "expected namespace after ${{"}
 	}
 
 	if !p.peekByte('.') {

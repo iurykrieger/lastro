@@ -24,7 +24,7 @@ func (stubStore) All() []fixture.Fixture                          { return nil }
 func TestRunStep_RejectsFixtureRefInRun(t *testing.T) {
 	res := template.Resolver{Fixtures: stubStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}}
 	uc := &usecase.UseCase{ID: "uc"}
-	step := sensor.Step{ID: "s1", Run: "echo {{fixtures.foo}}"}
+	step := sensor.Step{ID: "s1", Run: "echo ${{fixtures.foo}}"}
 	dir := t.TempDir()
 
 	_, err := runStep(context.Background(), stepArgs{

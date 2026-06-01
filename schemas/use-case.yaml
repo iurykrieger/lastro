@@ -3,7 +3,7 @@ $id: "https://lastro.dev/harness/schemas/use-case.yaml"
 title: UseCase
 description: |
   Behavioral specification in given/when/then form. Tech-agnostic text with
-  {{fixtures.<id>}} and {{entry_points.<id>}} interpolation. No steps, no
+  ${{fixtures.<id>}} and ${{entry_points.<id>}} interpolation. No steps, no
   assertions — sensors validate; use cases describe.
 
 type: object

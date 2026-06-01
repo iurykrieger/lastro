@@ -10,9 +10,9 @@ entry_points:
       command: "cli-sample greet"
 
 given:
-  - "The user has a name {{fixtures.name}}"
+  - "The user has a name ${{fixtures.name}}"
 when:
-  - "The user invokes {{entry_points.greet-subcommand}} with --name set"
+  - "The user invokes ${{entry_points.greet-subcommand}} with --name set"
 then:
   - "stdout contains 'Hello, '"
   - "exit code is 0"

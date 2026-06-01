@@ -95,6 +95,6 @@ Each entry must land in this file **before** any Go or YAML changes that impleme
 - Interpolation sentinel migrates repo-wide from `{{ }}` to `${{ }}`. New contexts:
   `${{ inputs.<name> }}` and `${{ steps.<id>.outputs.<name> }}`, alongside existing
   `${{ fixtures.* }}` / `${{ entry_points.* }}`.
-- The executor's `{{fixtures.X}}`-in-run ban (`ErrTemplateFixtureInRun`) is lifted; fixture/input/
+- The executor's `${{fixtures.X}}`-in-run ban (`ErrTemplateFixtureInRun`) is lifted; fixture/input/
   step-output refs compile to env-var references (`HARNESS_FIXTURE_*`, `HARNESS_INPUT_*`,
   `HARNESS_STEPOUT_*`), never inline payloads.

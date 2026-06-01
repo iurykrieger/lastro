@@ -74,9 +74,9 @@ entry_points:
     archetype: http-api
     spec: {method: POST, path: /orders}
 given:
-  - "Request matching {{fixtures.fx-req}} is constructed"
+  - "Request matching ${{fixtures.fx-req}} is constructed"
 when:
-  - "Client invokes {{entry_points.ep1}}"
+  - "Client invokes ${{entry_points.ep1}}"
 then:
   - "Endpoint returns success"
 fixture_ids: [fx-req]

@@ -6,8 +6,8 @@
 
 ## 1. Core Philosophy
 
-- **Use cases are the problem.** Behavioral specifications in `given / when / then` form. Tech-agnostic in their *text*, but allowed to **reference** archetype-typed `entry_points` and `fixtures` via `{{ }}` interpolation. Use cases describe *what* the application does and *where* its observable surface lives. They are not tests, they do not orchestrate steps, and they make no assertions — they only describe behavioral criteria.
-- **Fixtures are the concrete proof.** Input/output payloads generated alongside each use case, derived by reverse-engineering observable behavior. They are referenceable from use case text via `{{fixtures.<id>}}` and consumed by sensors that decide to bind to them.
+- **Use cases are the problem.** Behavioral specifications in `given / when / then` form. Tech-agnostic in their *text*, but allowed to **reference** archetype-typed `entry_points` and `fixtures` via `${{ }}` interpolation. Use cases describe *what* the application does and *where* its observable surface lives. They are not tests, they do not orchestrate steps, and they make no assertions — they only describe behavioral criteria.
+- **Fixtures are the concrete proof.** Input/output payloads generated alongside each use case, derived by reverse-engineering observable behavior. They are referenceable from use case text via `${{fixtures.<id>}}` and consumed by sensors that decide to bind to them.
 - **The stack is the toolbox.** Detected capabilities, libraries, and components — the only materials sensors are allowed to use.
 - **Sensors are the solution.** Dynamically generated per `(use case × applicable validation angle)`, grounded in the toolbox via top-level `uses:` (stack components), and binding to fixtures per-step via each step's `uses:`. They do not solve the use case; they *validate* it.
 - **Signals are the contract with the LLM.** Semantically rich, structured JSON — never raw logs. Every failure carries a self-healing hint.
@@ -78,7 +78,7 @@ ValidationPolicy
 ```
 
 **Invariants:**
-- A use case's `given/when/then` text contains **no** code, regex, library names, or implementation patterns. It may interpolate `{{fixtures.<id>}}` or `{{entry_points.<id>}}` to bind to its structured references.
+- A use case's `given/when/then` text contains **no** code, regex, library names, or implementation patterns. It may interpolate `${{fixtures.<id>}}` or `${{entry_points.<id>}}` to bind to its structured references.
 - A use case **describes behavior**; it does not orchestrate execution. No steps, no `needs:`, no assertions, no test setup. Anything that *runs* belongs to a sensor.
 - A use case's `entry_points` are typed by the repo's `archetype` — an `http-api` use case cannot declare a `queue` entry point.
 - A use case's `source_refs` contains pointers only — file paths and symbols — never embedded code.
@@ -159,14 +159,14 @@ entry_points:                            # archetype-typed observable surfaces
       method: POST
       path: /orders
 
-# --- Behavioral criteria (textual, with {{ }} interpolation) ---
+# --- Behavioral criteria (textual, with ${{ }} interpolation) ---
 
 given:
-  - "A request payload matching {{fixtures.fx_create_order_request}} is constructed by the client"
+  - "A request payload matching ${{fixtures.fx_create_order_request}} is constructed by the client"
 when:
-  - "The client invokes {{entry_points.create_order_endpoint}}"
+  - "The client invokes ${{entry_points.create_order_endpoint}}"
 then:
-  - "The endpoint responds with a payload matching {{fixtures.fx_create_order_response}}"
+  - "The endpoint responds with a payload matching ${{fixtures.fx_create_order_response}}"
 
 # --- Provenance ---
 
@@ -209,7 +209,7 @@ entry_points:
       channel_name: orders.created
 
 given:
-  - "An event matching {{fixtures.fx_order_created_event}} is published to {{entry_points.on_order_created}}"
+  - "An event matching ${{fixtures.fx_order_created_event}} is published to ${{entry_points.on_order_created}}"
 when:
   - "The handler receives the event"
 then:
@@ -225,25 +225,25 @@ entry_points:
       command: harness
 
 given:
-  - "The user invokes {{entry_points.harness_detect_cli}} with arguments matching {{fixtures.fx_detect_args}}"
+  - "The user invokes ${{entry_points.harness_detect_cli}} with arguments matching ${{fixtures.fx_detect_args}}"
 when:
   - "The command completes"
 then:
-  - "Standard output matches {{fixtures.fx_detect_stdout}} and the process exits with code 0"
+  - "Standard output matches ${{fixtures.fx_detect_stdout}} and the process exits with code 0"
 ```
 
 Fixtures are referenced from text, not embedded in the entry point spec. This keeps the entry point a pure surface identifier and lets fixtures be reused freely across multiple positions in the same use case.
 
-#### 4.1.2 `{{ }}` interpolation grammar
+#### 4.1.2 `${{ }}` interpolation grammar
 
 Templates resolve against the use case's own structured references at validation time.
 
 | Expression | Resolves to |
 |---|---|
-| `{{fixtures.<fixture_id>}}` | The fixture's `payload` |
-| `{{fixtures.<fixture_id>.<jsonpath>}}` | A drilled-in value within the payload |
-| `{{entry_points.<entry_point_id>}}` | The entry point object (rendered as a short label in text contexts) |
-| `{{entry_points.<entry_point_id>.spec.<field>}}` | A specific spec field |
+| `${{fixtures.<fixture_id>}}` | The fixture's `payload` |
+| `${{fixtures.<fixture_id>.<jsonpath>}}` | A drilled-in value within the payload |
+| `${{entry_points.<entry_point_id>}}` | The entry point object (rendered as a short label in text contexts) |
+| `${{entry_points.<entry_point_id>.spec.<field>}}` | A specific spec field |
 
 **Rules:**
 - A template referencing an undefined id is a schema validation error.
@@ -462,7 +462,7 @@ detect-stack → detect-use-cases (+ fixtures)
 ### 6.1 Runtime components
 
 - **Resolver** — Topologically sorts sensors by `depends_on`, fails fast on cycles.
-- **Template Resolver** — Resolves `{{ }}` interpolations in use case text against fixtures and entry points at sensor execution time.
+- **Template Resolver** — Resolves `${{ }}` interpolations in use case text against fixtures and entry points at sensor execution time.
 - **Executor** — Runs `assertion` sensors to completion via `/run-sensor`; spawns `observational` sensors as long-lived watchers via `/start-sensor` and terminates them via `/stop-sensor`.
 - **Fixture Binder** — At step execution time, resolves each step's `uses:` fixture ids to concrete payloads and injects them into the step's command environment.
 - **Signal Collector** — Reads JSON Lines from sensor stdout, validates against schema, stores per-execution.
@@ -546,7 +546,7 @@ harness-framework/
 │   ├── sensors/                      # create-sensors generation logic
 │   ├── runtime/
 │   │   ├── resolver/
-│   │   ├── template/                 # {{ }} interpolation
+│   │   ├── template/                 # ${{ }} interpolation
 │   │   ├── executor/
 │   │   ├── fixtureBinder/
 │   │   ├── signalCollector/
@@ -635,7 +635,7 @@ The framework is considered functionally complete when, on a fresh sample repo:
 
 1. `/detect-stack` produces a manifest covering ≥95% of declared dependencies and a single `archetype` value with rationale.
 2. `/detect-use-cases` produces ≥1 valid use case per public entry point, each with: a `given/when/then` block, at least one archetype-typed `entry_point`, and ≥1 fixture referenced from the text.
-3. `{{ }}` interpolation in use case text resolves cleanly: every referenced fixture and entry point id exists in the same use case.
+3. `${{ }}` interpolation in use case text resolves cleanly: every referenced fixture and entry point id exists in the same use case.
 4. `/create-sensors` produces one sensor per `(use case × applicable obligatory angle)`, all schema-valid, all top-level `uses:` referencing only detected stack components, and any step-level `uses:` referencing only fixtures owned by the sensor's use case.
 5. `/validate-use-case` executes the sensor graph and produces aggregated signals.
 6. A deliberately broken sample emits a failing signal with a `heal_hint` actionable enough that `/heal` produces a fix on the first attempt.

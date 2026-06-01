@@ -11,10 +11,10 @@ import (
 )
 
 // ErrTemplateFixtureInRun is returned when a step's `run:` string
-// contains a `{{fixtures.X}}` reference. Fixtures must reach steps
+// contains a `${{fixtures.X}}` reference. Fixtures must reach steps
 // via env vars from fixturebinder, not via shell-string interpolation,
 // to avoid shell-injection from arbitrary fixture content.
-var ErrTemplateFixtureInRun = errors.New("executor: {{fixtures.X}} not allowed in step.run; use env vars")
+var ErrTemplateFixtureInRun = errors.New("executor: ${{fixtures.X}} not allowed in step.run; use env vars")
 
 // ErrStepCrashed is returned when a step's process exits non-zero and
 // has emitted zero Signals. Multi-step sensors short-circuit on this.

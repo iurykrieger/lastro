@@ -12,10 +12,10 @@ entry_points:
       output_destination: "postgres://app/orders"
 
 given:
-  - "CSV files matching {{fixtures.orders-csv-fixture}} exist in the input source"
+  - "CSV files matching ${{fixtures.orders-csv-fixture}} exist in the input source"
 when:
   - "The job runs to completion"
 then:
-  - "Database rows matching {{fixtures.orders-db-rows-fixture}} exist in the output destination"
+  - "Database rows matching ${{fixtures.orders-db-rows-fixture}} exist in the output destination"
 
 fixture_ids: [orders-csv-fixture, orders-db-rows-fixture]

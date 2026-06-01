@@ -12,7 +12,7 @@ entry_points:
       channel_name: orders.created
 
 given:
-  - "An event matching {{fixtures.order-created-event-fixture}} is published to {{entry_points.on-order-created}}"
+  - "An event matching ${{fixtures.order-created-event-fixture}} is published to ${{entry_points.on-order-created}}"
 when:
   - "The handler receives the event"
 then:

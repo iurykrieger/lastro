@@ -11,10 +11,10 @@ entry_points:
       exported_symbol: createClient
 
 given:
-  - "Configuration matching {{fixtures.client-config-fixture}} is available"
+  - "Configuration matching ${{fixtures.client-config-fixture}} is available"
 when:
-  - "The consumer calls {{entry_points.create-client-symbol}}"
+  - "The consumer calls ${{entry_points.create-client-symbol}}"
 then:
-  - "An initialized client matching {{fixtures.client-instance-fixture}} is returned"
+  - "An initialized client matching ${{fixtures.client-instance-fixture}} is returned"
 
 fixture_ids: [client-config-fixture, client-instance-fixture]

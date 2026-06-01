@@ -11,10 +11,10 @@ entry_points:
       route_path: /pricing
 
 given:
-  - "A rate card matching {{fixtures.rate-card-fixture}} is available at build time"
+  - "A rate card matching ${{fixtures.rate-card-fixture}} is available at build time"
 when:
-  - "A client fetches {{entry_points.pricing-route}}"
+  - "A client fetches ${{entry_points.pricing-route}}"
 then:
-  - "The response body matches {{fixtures.pricing-html-fixture}}"
+  - "The response body matches ${{fixtures.pricing-html-fixture}}"
 
 fixture_ids: [rate-card-fixture, pricing-html-fixture]

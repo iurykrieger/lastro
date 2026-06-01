@@ -21,7 +21,7 @@ git checkout -b feat/b1-composed-runtime origin/main
 
 | Need | Existing package | Key API |
 |---|---|---|
-| `{{ }}` template interpolation | `internal/usecase/template` | `(*Resolver).Resolve(segs)`, `ResolveValue` |
+| `${{ }}` template interpolation | `internal/usecase/template` | `(*Resolver).Resolve(segs)`, `ResolveValue` |
 | Sensor DAG topological sort | `internal/sensor` | `ResolveExecutionOrder(sensors)` |
 | Per-sensor terminal `AggregateSignal` | `internal/aggregate` | `Rollup(RollupInput) (AggregateSignal, error)` |
 | Heal-hint synthesis (stream + observational) | `internal/aggregate` | `synthesize*HealHint(...)` invoked by `Rollup` |
@@ -64,7 +64,7 @@ internal/runtime/
 ## Open questions for `/brainstorming`
 
 1. **Fixture exposure surface.** Env vars only, files only, or both? Recommendation: both — small payloads as `HARNESS_FIXTURE_<ID>` env, large/binary as file paths via `HARNESS_FIXTURE_<ID>_PATH`.
-2. **Template-inside-fixture semantics.** Plan §2 lets use case text reference fixtures via `{{ fixtures.<id> }}`. Can a fixture payload itself contain template tokens referencing other fixtures? Recommendation: no — keep the resolver one-pass and acyclic. Flag any cycle.
+2. **Template-inside-fixture semantics.** Plan §2 lets use case text reference fixtures via `${{ fixtures.<id> }}`. Can a fixture payload itself contain template tokens referencing other fixtures? Recommendation: no — keep the resolver one-pass and acyclic. Flag any cycle.
 3. **Verdict weighting.** Plan §6.3 says confidence is weighted `(nature: computational=1.0, inferential=aggregate.confidence)`. Confirm: inferential signals' weight = their own confidence (so low-confidence signals contribute less to the use-case verdict). Add a test asserting this.
 4. **Inconclusive floor.** Plan §10.3 (default `0.7`). The per-use-case aggregator should honor it from the `EffectivePolicy`. Check whether `policy.EffectivePolicy` already carries this field (the E9 work added two-scope resolution; the floor may or may not be exposed yet). If not, extend `internal/policy` here.
 5. **Failure-first vs all-results aggregation.** Short-circuit on first obligatory `fail`, or evaluate every sensor? Recommendation: always evaluate — the heal loop (B3) needs the full failure surface.

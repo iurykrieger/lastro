@@ -18,7 +18,7 @@ A **use-case-driven validation framework**. The flow:
 4. Aggregate signals per use case against a `ValidationPolicy` (obligatory/optional/disabled angles per archetype).
 5. On failure, feed `heal_hint` blocks into `/heal` to propose fixes; re-validate affected sensors only.
 
-Use cases describe *what* in `given/when/then` text with `{{fixtures.<id>}}` / `{{entry_points.<id>}}` interpolation. They contain **no code, no assertions, no orchestration**. Sensors do all the executing.
+Use cases describe *what* in `given/when/then` text with `${{fixtures.<id>}}` / `${{entry_points.<id>}}` interpolation. They contain **no code, no assertions, no orchestration**. Sensors do all the executing.
 
 ## Core invariants (do not violate)
 

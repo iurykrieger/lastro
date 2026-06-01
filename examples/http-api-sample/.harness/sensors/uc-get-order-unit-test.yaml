@@ -11,5 +11,4 @@ uses:
 
 steps:
   - id: probe
-    uses: [existing-order-id]
-    run: "go run ./cmd/sensor-check --sensor=uc-get-order-unit-test --use-case=uc-get-order --angle=unit-test pass"
+    run: "go run ./cmd/sensor-check --sensor=uc-get-order-unit-test --use-case=uc-get-order --angle=unit-test pass # ${{ fixtures.existing-order-id }}"

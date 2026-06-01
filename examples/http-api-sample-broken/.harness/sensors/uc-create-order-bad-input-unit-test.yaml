@@ -11,5 +11,4 @@ uses:
 
 steps:
   - id: probe
-    uses: [invalid-order-payload]
-    run: "go run ./cmd/sensor-check --sensor=uc-create-order-bad-input-unit-test --use-case=uc-create-order-bad-input --angle=unit-test bad-input"
+    run: "go run ./cmd/sensor-check --sensor=uc-create-order-bad-input-unit-test --use-case=uc-create-order-bad-input --angle=unit-test bad-input # ${{ fixtures.invalid-order-payload }}"

@@ -12,7 +12,7 @@ uses:
 
 steps:
   - id: emit-pass
-    uses: [sample-harness-tree]
     run: |
+      # fixture: ${{ fixtures.sample-harness-tree }}
       printf '%s\n' '{"schema_version":"1.0.0","sensor_id":"uc-harness-validate-use-case-build","use_case_id":"uc-harness-validate-use-case","angle":"build","emitted_at":"2026-05-27T00:00:00Z","verdict":"pass","confidence":1.0,"evidence":{"expected":"harness validate compiles","actual":"harness validate compiles"}}'
       sleep 0.1

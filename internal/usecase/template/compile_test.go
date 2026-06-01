@@ -44,3 +44,13 @@ func TestCompileDedupesAndOrders(t *testing.T) {
 		t.Errorf("inputs = %v (want first-seen, deduped)", refs.Inputs)
 	}
 }
+
+func TestCompileRejectsEntryPointRef(t *testing.T) {
+	segs, err := Parse(`${{ entry_points.x }}`)
+	if err != nil {
+		t.Fatalf("Parse err: %v", err)
+	}
+	if _, _, err := Compile(segs); err == nil {
+		t.Fatal("expected error: entry_points.* is not supported in sensor steps yet")
+	}
+}

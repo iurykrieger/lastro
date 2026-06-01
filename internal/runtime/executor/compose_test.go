@@ -6,6 +6,7 @@ import (
 
 	"github.com/iurykrieger/lastro/internal/entrypoint"
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/fixture"
 	"github.com/iurykrieger/lastro/internal/sensor"
 	"github.com/iurykrieger/lastro/internal/usecase"
 	"github.com/iurykrieger/lastro/internal/usecase/template"
@@ -143,6 +144,132 @@ func TestCompose_OutputReExport(t *testing.T) {
 	}
 	if agg.Verdict != enums.VerdictPass {
 		t.Errorf("verdict = %q, want pass (rollup=%+v)", agg.Verdict, agg.Rollup)
+	}
+}
+
+// TestCompose_WithFixtureRefBound verifies that a consumer's with-value
+// containing ${{ fixtures.<id> }} resolves to the bound fixture file path.
+// The primitive's inner step reads the file via ${{ inputs.body }} and
+// asserts the payload matches; the sensor must pass.
+func TestCompose_WithFixtureRefBound(t *testing.T) {
+	const fixtureID = "create-charge-input"
+	const payload = "PAYLOAD"
+
+	uc := &usecase.UseCase{
+		ID:         "fake-uc",
+		FixtureIDs: []string{fixtureID},
+	}
+
+	store, err := fixture.NewStore(fixture.Fixture{
+		SchemaVersion: "1.0.0",
+		ID:            fixtureID,
+		UseCaseID:     "fake-uc",
+		Role:          fixture.RoleInput,
+		ContentType:   "text/plain",
+		Payload:       []byte(payload),
+	})
+	if err != nil {
+		t.Fatalf("NewStore: %v", err)
+	}
+
+	// Primitive's inner step reads the file pointed to by ${{ inputs.body }}
+	// and asserts its content equals the fixture payload.
+	prim := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-http", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:   []string{"fake-stack"},
+		Inputs: map[string]sensor.InputSpec{"body": {Required: true}},
+		Steps: []sensor.Step{
+			{
+				ID:  "assert-body",
+				Run: `if [ "$(cat "${{ inputs.body }}")" = "` + payload + `" ]; then ` + fakeSensorBin + ` signal pass; else ` + fakeSensorBin + ` signal fail; fi`,
+			},
+		},
+	}
+
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{ID: "step1", Uses: "core-http", With: map[string]string{
+				"body": "${{ fixtures." + fixtureID + " }}",
+			}},
+		},
+	}
+
+	opts := composeBaseOptions(t, uc, prim)
+	opts.FixtureStore = store
+	ex := New(opts)
+	agg, err := ex.Run(context.Background(), consumer, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (rollup=%+v)", agg.Verdict, agg.Rollup)
+	}
+}
+
+// TestCompose_WithFixtureRefUnowned verifies that a with-value referencing a
+// fixture not owned by the consumer's use case fails the sensor.
+func TestCompose_WithFixtureRefUnowned(t *testing.T) {
+	const fixtureID = "other-uc-fixture"
+
+	// Use case does NOT list the fixture in FixtureIDs.
+	uc := &usecase.UseCase{
+		ID:         "fake-uc",
+		FixtureIDs: []string{},
+	}
+
+	store, err := fixture.NewStore(fixture.Fixture{
+		SchemaVersion: "1.0.0",
+		ID:            fixtureID,
+		UseCaseID:     "other-uc", // owned by a different use case
+		Role:          fixture.RoleInput,
+		ContentType:   "text/plain",
+		Payload:       []byte("data"),
+	})
+	if err != nil {
+		t.Fatalf("NewStore: %v", err)
+	}
+
+	prim := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-http", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:   []string{"fake-stack"},
+		Inputs: map[string]sensor.InputSpec{"body": {Required: true}},
+		Steps: []sensor.Step{
+			{ID: "do", Run: fakeSensorBin + ` signal pass`},
+		},
+	}
+
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{ID: "step1", Uses: "core-http", With: map[string]string{
+				"body": "${{ fixtures." + fixtureID + " }}",
+			}},
+		},
+	}
+
+	opts := composeBaseOptions(t, uc, prim)
+	opts.FixtureStore = store
+	ex := New(opts)
+	agg, err := ex.Run(context.Background(), consumer, t.TempDir(), nil, nil)
+	// Must not pass: fixture is not owned by the use case.
+	if err == nil && agg.Verdict == enums.VerdictPass {
+		t.Fatalf("expected failure for unowned fixture in with-value; got pass")
+	}
+	if agg.TerminationReason != enums.TerminationError {
+		t.Errorf("termination_reason = %q, want error", agg.TerminationReason)
 	}
 }
 

@@ -46,12 +46,7 @@ func Compile(segs []Segment) (string, Refs, error) {
 			b.WriteString(`"${` + "HARNESS_STEPOUT_" + upperEnv(v.StepID) + "_" + upperEnv(v.Name) + `}"`)
 			refs.StepOutputs = append(refs.StepOutputs, v)
 		case EntryPointRef:
-			key := v.ID
-			if v.SpecKey != "" {
-				key = v.ID + "_" + v.SpecKey
-			}
-			b.WriteString(`"${` + envName("HARNESS_ENTRYPOINT_", key) + `}"`)
-			refs.EntryPoints = append(refs.EntryPoints, v)
+			return "", Refs{}, &ResolveError{Pos: v.Pos, Msg: "entry_points.* is not supported in sensor steps yet"}
 		default:
 			return "", Refs{}, fmt.Errorf("compile: unknown segment %T", s)
 		}

@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/runtime/fixturebinder"
 	"github.com/iurykrieger/lastro/internal/sensor"
 	"github.com/iurykrieger/lastro/internal/signal"
 	"github.com/iurykrieger/lastro/internal/usecase"
@@ -109,7 +112,26 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 		}
 	}
 
-	inputEnv, err := buildInputEnv(prim, a.Step.With, a.StepOutEnv)
+	// Collect and bind any ${{ fixtures.<id> }} refs in the with values before
+	// building the input env, so resolveWithValue can substitute them.
+	fixturePaths := map[string]string{}
+	ids, err := fixturebinder.CollectFixtureRefs("", a.Step.With)
+	if err != nil {
+		return topStepResult{TermReason: enums.TerminationError, StepErr: fmt.Errorf("executor: collect fixture refs in with: %w", err)}
+	}
+	if len(ids) > 0 {
+		binder := &fixturebinder.Binder{ScratchDir: filepath.Join(a.RunDir, "scratch")}
+		if err := os.MkdirAll(binder.ScratchDir, 0o700); err != nil {
+			return topStepResult{TermReason: enums.TerminationError, StepErr: fmt.Errorf("executor: mkdir scratch: %w", err)}
+		}
+		binding, err := binder.Bind(ids, a.UseCase, e.opts.FixtureStore)
+		if err != nil {
+			return topStepResult{TermReason: enums.TerminationError, StepErr: err}
+		}
+		fixturePaths = binding.Files
+	}
+
+	inputEnv, err := buildInputEnv(prim, a.Step.With, fixturePaths, a.StepOutEnv)
 	if err != nil {
 		return topStepResult{TermReason: enums.TerminationError, StepErr: err}
 	}
@@ -174,21 +196,18 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 
 // buildInputEnv computes the HARNESS_INPUT_<NAME> env for a primitive's
 // declared inputs. Precedence per input: with-value > default (when
-// declared) > error (when required) > skip. A with-value containing a
-// single ${{ steps.<id>.outputs.<name> }} ref is substituted from the
-// accumulated step-output env; plain literals pass through verbatim.
-//
-// Limitation (v1): ${{ fixtures.<id> }} inside a with-value is not
-// resolved to a bound path here. Bind such fixtures inside the
-// primitive's own run-steps instead. Step-output substitution only
-// supports a with-value that is exactly one ref (no mixed literal+ref).
-func buildInputEnv(prim sensor.Sensor, with, stepOutEnv map[string]string) (map[string]string, error) {
+// declared) > error (when required) > skip. A with-value is fully
+// interpolated: literals pass through verbatim, ${{ fixtures.<id> }} refs
+// resolve to the bound file path (from fixturePaths), and
+// ${{ steps.<id>.outputs.<name> }} refs resolve from stepOutEnv. Mixed
+// literal+ref values are supported.
+func buildInputEnv(prim sensor.Sensor, with, fixturePaths, stepOutEnv map[string]string) (map[string]string, error) {
 	env := map[string]string{}
 	for name, spec := range prim.Inputs {
 		raw, bound := with[name]
 		switch {
 		case bound:
-			val, err := resolveWithValue(raw, stepOutEnv)
+			val, err := resolveWithValue(raw, fixturePaths, stepOutEnv)
 			if err != nil {
 				return nil, fmt.Errorf("input %q: %w", name, err)
 			}
@@ -204,23 +223,41 @@ func buildInputEnv(prim sensor.Sensor, with, stepOutEnv map[string]string) (map[
 	return env, nil
 }
 
-// resolveWithValue interprets a with-value. If it is a single
-// step-output ref, the value is read from stepOutEnv. Otherwise the raw
-// value is returned (literals and fixture refs pass through).
-func resolveWithValue(raw string, stepOutEnv map[string]string) (string, error) {
+// resolveWithValue interprets a with-value into a concrete string. Each
+// segment resolves: literal -> text; ${{ fixtures.<id> }} -> the bound
+// fixture's file path; ${{ steps.<id>.outputs.<name> }} -> the accumulated
+// step-output value. Input/entry-point refs are not valid inside a
+// with-value.
+func resolveWithValue(raw string, fixturePaths, stepOutEnv map[string]string) (string, error) {
 	segs, err := template.Parse(raw)
 	if err != nil {
 		return "", err
 	}
-	// Single pure ref: substitute step outputs; everything else passes
-	// through verbatim (compile is only used to detect the shape).
-	if len(segs) == 1 {
-		if so, ok := segs[0].(template.StepOutputRef); ok {
-			key := stepOutEnvName(so.StepID, so.Name)
-			return stepOutEnv[key], nil
+	var b strings.Builder
+	for _, s := range segs {
+		switch v := s.(type) {
+		case template.Literal:
+			b.WriteString(v.Text)
+		case template.FixtureRef:
+			if len(v.JSONPath) > 0 {
+				return "", fmt.Errorf("fixture jsonpath drilling not supported in with-values")
+			}
+			p, ok := fixturePaths[v.ID]
+			if !ok {
+				return "", fmt.Errorf("fixture %q referenced in with-value was not bound", v.ID)
+			}
+			b.WriteString(p)
+		case template.StepOutputRef:
+			b.WriteString(stepOutEnv[stepOutEnvName(v.StepID, v.Name)])
+		case template.InputRef:
+			return "", fmt.Errorf("inputs.* is not valid inside a with-value")
+		case template.EntryPointRef:
+			return "", fmt.Errorf("entry_points.* is not valid inside a with-value")
+		default:
+			return "", fmt.Errorf("unsupported segment %T in with-value", s)
 		}
 	}
-	return raw, nil
+	return b.String(), nil
 }
 
 // resolveOutputs maps each declared output name to its resolved value by

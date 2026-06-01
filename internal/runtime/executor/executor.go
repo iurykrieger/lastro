@@ -93,8 +93,19 @@ func (e *Executor) Run(
 	termReason := enums.TerminationCompleted
 	var stepErr error
 
+	stepOutputs := map[string]map[string]string{}
+
 	for i, step := range s.Steps {
 		stepIdx := i + 1
+
+		// Build the step-output env from outputs collected by prior steps.
+		stepOutEnv := map[string]string{}
+		for sid, kv := range stepOutputs {
+			for name, val := range kv {
+				stepOutEnv[stepOutEnvName(sid, name)] = val
+			}
+		}
+
 		outcome, err := runStep(ctx, stepArgs{
 			Step:        step,
 			StepIdx:     stepIdx,
@@ -109,7 +120,12 @@ func (e *Executor) Run(
 			SignalsW:    sw,
 			Stop:        stop,
 			OnStart:     e.opts.OnStepStart,
+			StepOutEnv:  stepOutEnv,
 		})
+
+		// Store outputs for use by subsequent steps.
+		stepOutputs[step.ID] = outcome.Outputs
+
 		allSignals = append(allSignals, toAggregateSignals(outcome.Signals)...)
 		observedKeys = append(observedKeys, outcome.ObservationKeys...)
 

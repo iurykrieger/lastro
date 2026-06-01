@@ -49,6 +49,7 @@ type stepOutcome struct {
 	ExitErr           error // nil if process exited 0
 	StoppedExternally bool  // closed via stop channel
 	CtxErr            error // ctx.Err() at exit, if any
+	Outputs           map[string]string // parsed from $HARNESS_OUTPUT after step exits
 }
 
 func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
@@ -87,9 +88,14 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	for k, v := range a.StepOutEnv {
 		env = append(env, k+"="+v)
 	}
+	outPath := filepath.Join(binder.ScratchDir, "stepout-"+a.Step.ID)
+	if err := os.WriteFile(outPath, nil, 0o600); err != nil {
+		return stepOutcome{}, fmt.Errorf("executor: create stepout: %w", err)
+	}
 	env = append(env,
 		"HARNESS_RUN_DIR="+a.RunDir,
 		"HARNESS_SCRATCH_DIR="+binder.ScratchDir,
+		"HARNESS_OUTPUT="+outPath,
 	)
 
 	// 4. Build the command.
@@ -172,12 +178,16 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 		a.RawLog.WriteAnnotated(a.StepIdx, "exit-nonzero", []byte(strconv.Quote(waitErr.Error())))
 	}
 
+	// 11. Parse step outputs written to $HARNESS_OUTPUT.
+	stepOut, _ := parseStepOutputFile(outPath)
+
 	return stepOutcome{
 		Signals:           stdoutRes.out.Signals,
 		ObservationKeys:   stdoutRes.out.ObservationKeys,
 		ExitErr:           waitErr,
 		StoppedExternally: stoppedExternally,
 		CtxErr:            ctx.Err(),
+		Outputs:           stepOut,
 	}, errors.Join(stdoutRes.err) // stderr errors are non-fatal
 }
 

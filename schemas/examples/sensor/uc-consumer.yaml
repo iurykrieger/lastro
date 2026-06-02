@@ -1,0 +1,17 @@
+schema_version: 1.0.0
+id: create-charge-e2e
+scope: use-case
+use_case_id: uc-create-charge
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: create
+    uses: e2e-test
+    with:
+      method: POST
+      path: /v1/charges
+      body: ${{ fixtures.create-charge-input }}
+      expect_status: "201"

@@ -11,9 +11,9 @@ entry_points:
       path: /orders
 
 given:
-  - "The client has an invalid order payload {{fixtures.invalid-order-payload}}"
+  - "The client has an invalid order payload ${{fixtures.invalid-order-payload}}"
 when:
-  - "The client invokes {{entry_points.create-order-endpoint}} with the payload"
+  - "The client invokes ${{entry_points.create-order-endpoint}} with the payload"
 then:
   - "The endpoint responds with status 400"
   - "The response body contains an error envelope"

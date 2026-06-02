@@ -111,6 +111,9 @@ fixture_ids: [fx-req]
 
 // happySensorYAML is a valid sensor for create-order that passes all
 // cross-entity checks when the seeded harness is present.
+// Steps use the new composition model: fixtures are referenced via
+// ${{ fixtures.<id> }} interpolation inside `run`, not via a step-level
+// uses array.
 const happySensorYAML = `schema_version: 1.0.0
 id: s-create-order-e2e
 use_case_id: create-order
@@ -121,8 +124,7 @@ output_type: single-shot
 uses: [express]
 steps:
   - id: probe
-    run: curl -X POST localhost:8080/orders
-    uses: [fx-req]
+    run: curl -X POST localhost:8080/orders -d '${{ fixtures.fx-req }}'
 `
 
 func TestMain_MissingFlag_ExitsOne(t *testing.T) {
@@ -194,5 +196,115 @@ steps:
 	}
 	if pe.Kind != persisterror.Grounding {
 		t.Fatalf("Kind=%q, want %q", pe.Kind, persisterror.Grounding)
+	}
+}
+
+// e2eCorePrimitiveYAML is a core primitive with a required input `path`
+// (no default). Used by composition validation tests.
+const e2eCorePrimitiveYAML = `schema_version: 1.0.0
+id: e2e-test
+scope: core
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: [express]
+inputs:
+  path: { required: true }
+steps:
+  - id: request
+    run: curl -sS http://localhost:8080${{ inputs.path }}
+`
+
+// seedCoreDir writes e2eCorePrimitiveYAML into <harnessDir>/sensors/core/.
+func seedCoreDir(t *testing.T, harnessDir string) {
+	t.Helper()
+	coreDir := filepath.Join(harnessDir, "sensors", "core")
+	if err := os.MkdirAll(coreDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(coreDir, "e2e-test.yaml"), []byte(e2eCorePrimitiveYAML), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestCreateSensors_Composition_BoundRequired passes when a consumer uses-step
+// supplies every required input of the core primitive.
+func TestCreateSensors_Composition_BoundRequired(t *testing.T) {
+	dir := t.TempDir()
+	harness := filepath.Join(dir, ".harness")
+	if err := os.MkdirAll(harness, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	seedHarness(t, harness)
+	seedCoreDir(t, harness)
+
+	// Consumer uses the core primitive and binds the required `path` input.
+	consumerYAML := `schema_version: 1.0.0
+id: s-create-order-e2e-composed
+use_case_id: create-order
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: [express]
+steps:
+  - id: probe
+    uses: e2e-test
+    with:
+      path: /orders
+`
+	input := filepath.Join(dir, "in.yaml")
+	if err := os.WriteFile(input, []byte(consumerYAML), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	sout, serr, code := runScript(t, "--file", input, "--harness-dir", harness)
+	if code != 0 {
+		t.Fatalf("exit=%d stderr=%q stdout=%q", code, serr, sout)
+	}
+}
+
+// TestCreateSensors_Composition_UnboundRequired fails (exit 2, schema_violation)
+// when a consumer uses-step leaves a required input of the core primitive unbound.
+func TestCreateSensors_Composition_UnboundRequired(t *testing.T) {
+	dir := t.TempDir()
+	harness := filepath.Join(dir, ".harness")
+	if err := os.MkdirAll(harness, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	seedHarness(t, harness)
+	seedCoreDir(t, harness)
+
+	// Consumer uses the core primitive but omits the required `path` input.
+	consumerYAML := `schema_version: 1.0.0
+id: s-create-order-e2e-unbound
+use_case_id: create-order
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: [express]
+steps:
+  - id: probe
+    uses: e2e-test
+    with: {}
+`
+	input := filepath.Join(dir, "in.yaml")
+	if err := os.WriteFile(input, []byte(consumerYAML), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	sout, _, code := runScript(t, "--file", input, "--harness-dir", harness)
+	if code != 2 {
+		t.Fatalf("exit=%d, want 2; stdout=%q", code, sout)
+	}
+	var pe persisterror.Error
+	if err := json.Unmarshal([]byte(sout), &pe); err != nil {
+		t.Fatalf("stdout is not a persisterror.Error JSON: %v\nstdout=%q", err, sout)
+	}
+	if pe.Kind != persisterror.SchemaViolation {
+		t.Fatalf("Kind=%q, want %q", pe.Kind, persisterror.SchemaViolation)
+	}
+	if !strings.Contains(pe.Message, "path") {
+		t.Fatalf("message %q should mention the unbound input \"path\"", pe.Message)
 	}
 }

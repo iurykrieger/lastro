@@ -12,5 +12,4 @@ uses:
 
 steps:
   - id: probe
-    uses: [existing-order-id]
-    run: "go run ./cmd/sensor-check --sensor=uc-get-order-e2e-test --use-case=uc-get-order --angle=e2e-test pass"
+    run: "go run ./cmd/sensor-check --sensor=uc-get-order-e2e-test --use-case=uc-get-order --angle=e2e-test pass # ${{ fixtures.existing-order-id }}"

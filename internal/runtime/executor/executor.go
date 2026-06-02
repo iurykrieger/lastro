@@ -2,7 +2,6 @@ package executor
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,6 +24,10 @@ type Options struct {
 	Resolver      *template.Resolver
 	FixtureStore  fixture.FixtureStore
 	UseCaseLookup func(sensorID string) (*usecase.UseCase, bool)
+	// SensorLookup resolves a core primitive sensor by id. Required only
+	// when a sensor contains uses-steps; run-step-only sensors never call
+	// it. Wired from the same *sensor.Store the loader builds.
+	SensorLookup  func(id string) (sensor.Sensor, bool)
 	Now           func() time.Time
 	Shell         []string
 	GroupSignaler process.GroupSignaler
@@ -93,58 +96,48 @@ func (e *Executor) Run(
 	termReason := enums.TerminationCompleted
 	var stepErr error
 
-	for i, step := range s.Steps {
-		stepIdx := i + 1
-		outcome, err := runStep(ctx, stepArgs{
+	// stepOutputs maps a top-level step id to its re-exported outputs.
+	// For run-steps the outputs are the parsed HARNESS_OUTPUT map; for
+	// uses-steps they are the primitive's declared Outputs resolved
+	// against its inner steps' outputs.
+	stepOutputs := map[string]map[string]string{}
+	// globalIdx is a monotonic counter across every physical step
+	// execution (run-steps and the inner steps of expanded uses-steps).
+	// It feeds StepIdx (signal attribution) and the unique stepout tag.
+	globalIdx := 0
+
+	for _, step := range s.Steps {
+		// Build the step-output env from outputs collected by prior
+		// top-level steps. Computed fresh per top-level step so the inner
+		// steps of a uses-step also see earlier consumer-step outputs.
+		stepOutEnv := map[string]string{}
+		for sid, kv := range stepOutputs {
+			for name, val := range kv {
+				stepOutEnv[stepOutEnvName(sid, name)] = val
+			}
+		}
+
+		res := e.execTopStep(ctx, topStepArgs{
+			Sensor:      s,
 			Step:        step,
-			StepIdx:     stepIdx,
+			GlobalIdx:   &globalIdx,
 			RunDir:      runDir,
 			UseCase:     uc,
-			Store:       e.opts.FixtureStore,
-			Resolver:    e.opts.Resolver,
-			Signaler:    e.opts.GroupSignaler,
-			Shell:       e.opts.Shell,
 			ExpectedObs: expectedObs,
 			RawLog:      rl,
 			SignalsW:    sw,
 			Stop:        stop,
-			OnStart:     e.opts.OnStepStart,
+			StepOutEnv:  stepOutEnv,
 		})
-		allSignals = append(allSignals, toAggregateSignals(outcome.Signals)...)
-		observedKeys = append(observedKeys, outcome.ObservationKeys...)
 
-		// Context cancellation / timeout / external stop takes priority over
-		// any scan or exit error: when the OS kills the child, the pipe closes
-		// with an error that looks like a structural failure but is actually a
-		// clean shutdown.
-		switch {
-		case outcome.StoppedExternally:
-			termReason = enums.TerminationStopped
-		case errors.Is(outcome.CtxErr, context.DeadlineExceeded):
-			termReason = enums.TerminationTimeout
-			stepErr = outcome.CtxErr
-		case errors.Is(outcome.CtxErr, context.Canceled):
-			termReason = enums.TerminationStopped
-		}
-		if termReason != enums.TerminationCompleted {
-			break
-		}
+		// Store re-exported outputs for use by subsequent steps.
+		stepOutputs[step.ID] = res.Outputs
+		allSignals = append(allSignals, toAggregateSignals(res.Signals)...)
+		observedKeys = append(observedKeys, res.ObservationKeys...)
 
-		// Structural error (template/spawn/binder) → halt with error.
-		// Exception: if signals were already collected, a scan error on
-		// stdout is a spurious pipe-close race (the process exited and the
-		// OS closed the pipe before our scanner finished). Treat it as
-		// non-fatal so the collected signals drive the verdict.
-		if err != nil && len(outcome.Signals) == 0 {
-			termReason = enums.TerminationError
-			stepErr = err
-			break
-		}
-
-		// Non-zero exit without any signals emitted → crash.
-		if outcome.ExitErr != nil && len(outcome.Signals) == 0 {
-			termReason = enums.TerminationError
-			stepErr = fmt.Errorf("%w: %v", ErrStepCrashed, outcome.ExitErr)
+		if res.TermReason != enums.TerminationCompleted {
+			termReason = res.TermReason
+			stepErr = res.StepErr
 			break
 		}
 	}

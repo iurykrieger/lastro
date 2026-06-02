@@ -1,6 +1,7 @@
 package sensor
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/enums"
@@ -32,13 +33,23 @@ func TestSensorHoldsTypedEnumValues(t *testing.T) {
 	}
 }
 
-func TestStepHoldsIDRunAndUses(t *testing.T) {
+func TestStepHoldsIDAndRun(t *testing.T) {
 	step := Step{
-		ID:   "probe",
-		Run:  "curl -sS http://localhost:3000/orders",
-		Uses: []string{"order-input-fixture"},
+		ID:  "probe",
+		Run: "curl -sS http://localhost:3000/orders",
 	}
-	if step.ID != "probe" || step.Run == "" || len(step.Uses) != 1 {
+	if step.ID != "probe" || step.Run == "" || step.Uses != "" {
+		t.Errorf("Step field round-trip failed: %+v", step)
+	}
+}
+
+func TestStepHoldsIDUsesAndWith(t *testing.T) {
+	step := Step{
+		ID:   "create",
+		Uses: "e2e-test",
+		With: map[string]string{"method": "POST"},
+	}
+	if step.ID != "create" || step.Uses != "e2e-test" || step.With["method"] != "POST" || step.Run != "" {
 		t.Errorf("Step field round-trip failed: %+v", step)
 	}
 }
@@ -59,5 +70,36 @@ func TestOwnedFixtureIDsContractAllowsNilReturn(t *testing.T) {
 	got := owner.OwnedFixtureIDs("anything")
 	if got != nil {
 		t.Errorf("stub: expected nil, got %v", got)
+	}
+}
+
+func TestStepUnmarshalUsesScalarAndWith(t *testing.T) {
+	var s Step
+	if err := json.Unmarshal([]byte(`{"id":"create","uses":"e2e-test","with":{"method":"POST"}}`), &s); err != nil {
+		t.Fatal(err)
+	}
+	if s.Uses != "e2e-test" || s.With["method"] != "POST" || s.Run != "" {
+		t.Errorf("got %#v", s)
+	}
+}
+
+func TestSensorInputsOutputsParse(t *testing.T) {
+	raw := []byte(`{"schema_version":"1.0.0","id":"e2e-test","scope":"core","angle":"e2e-test",` +
+		`"kind":"assertion","nature":"computational","output_type":"single-shot","uses":[],` +
+		`"inputs":{"method":{"required":true,"default":"GET"}},` +
+		`"outputs":{"body":{"from":"${{ steps.request.outputs.body }}"}},` +
+		`"steps":[{"id":"request","run":"echo hi"}]}`)
+	s, err := LoadSensorBytes(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !s.Inputs["method"].Required || s.Inputs["method"].Default != "GET" {
+		t.Errorf("inputs = %#v", s.Inputs)
+	}
+	if !s.Inputs["method"].HasDefault {
+		t.Errorf("expected HasDefault true for method")
+	}
+	if s.Outputs["body"].From == "" {
+		t.Errorf("outputs = %#v", s.Outputs)
 	}
 }

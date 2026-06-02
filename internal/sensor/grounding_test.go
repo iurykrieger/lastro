@@ -81,8 +81,8 @@ func TestValidateAgainstFixtures_AllRefsOwned(t *testing.T) {
 		ID:        "ok-sensor",
 		UseCaseID: "uc-1",
 		Steps: []Step{
-			{ID: "send", Run: "x", Uses: []string{"order-input-fixture"}},
-			{ID: "check", Run: "y", Uses: []string{"order-output-fixture"}},
+			{ID: "send", Run: "echo ${{ fixtures.order-input-fixture }}"},
+			{ID: "check", Run: "echo ${{ fixtures.order-output-fixture }}"},
 		},
 	}
 	if err := ValidateAgainstFixtures(s, owner); err != nil {
@@ -108,8 +108,8 @@ func TestValidateAgainstFixtures_TwoStepsWithUnknownFixtures(t *testing.T) {
 		ID:        "bad-sensor",
 		UseCaseID: "uc-1",
 		Steps: []Step{
-			{ID: "first", Uses: []string{"ghost-fixture"}},
-			{ID: "second", Uses: []string{"known-fixture", "phantom-fixture"}},
+			{ID: "first", Run: "echo ${{ fixtures.ghost-fixture }}"},
+			{ID: "second", Run: "echo ${{ fixtures.known-fixture }} ${{ fixtures.phantom-fixture }}"},
 		},
 	}
 	err := ValidateAgainstFixtures(s, owner)
@@ -133,7 +133,7 @@ func TestValidateAgainstFixtures_UnknownUseCase_FailsEveryStepWithUses(t *testin
 		ID:        "orphan-sensor",
 		UseCaseID: "nonexistent-uc",
 		Steps: []Step{
-			{ID: "send", Uses: []string{"x-fixture"}},
+			{ID: "send", Run: "echo ${{ fixtures.x-fixture }}"},
 		},
 	}
 	err := ValidateAgainstFixtures(s, owner)

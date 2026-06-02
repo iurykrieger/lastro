@@ -10,9 +10,9 @@ entry_points:
       command: "harness validate --use-case <id>"
 
 given:
-  - "A valid {{fixtures.sample-harness-tree}} is present under --repo-root"
+  - "A valid ${{fixtures.sample-harness-tree}} is present under --repo-root"
 when:
-  - "An operator invokes {{entry_points.harness-validate-subcommand}}"
+  - "An operator invokes ${{entry_points.harness-validate-subcommand}}"
 then:
   - "The CLI loads stack-manifest, fixtures, use-cases, and sensors"
   - "The runtime executes each sensor and aggregates per-use-case verdicts"

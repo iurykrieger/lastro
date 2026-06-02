@@ -10,7 +10,7 @@ Most validation tools take a fixed shape — "run these tests," "check this lint
 
 The four primitives:
 
-- **Use cases** describe *what* the application does, in `given / when / then` text. Tech-agnostic, no code, no assertions. They reference structured `entry_points` (HTTP routes, queue channels, CLI commands…) and `fixtures` (concrete I/O payloads) via `{{ }}` interpolation.
+- **Use cases** describe *what* the application does, in `given / when / then` text. Tech-agnostic, no code, no assertions. They reference structured `entry_points` (HTTP routes, queue channels, CLI commands…) and `fixtures` (concrete I/O payloads) via `${{ }}` interpolation.
 - **The stack** is the toolbox — detected libraries and capabilities. Sensors may only use what the toolbox provides.
 - **Sensors** are the solution. One per `(use case × applicable validation angle)`. They orchestrate execution and emit signals; they do not solve the use case, they validate it.
 - **Signals** are the contract with the LLM. Structured JSON, never raw logs. Every failure carries a `heal_hint` — a compressed, actionable instruction the LLM can act on.

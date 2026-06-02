@@ -47,7 +47,7 @@ func defaultRunnerFactory(arts *HarnessArtifacts, repoRoot string) (SensorRunner
 	}
 
 	// Flatten every use case's entry points into the template Resolver
-	// map so step.Run interpolations like `{{entry_points.X.spec.path}}`
+	// map so step.Run interpolations like `${{entry_points.X.spec.path}}`
 	// resolve at exec time.
 	entryPoints := map[string]entrypoint.EntryPoint{}
 	for _, uc := range arts.UseCases {
@@ -66,6 +66,7 @@ func defaultRunnerFactory(arts *HarnessArtifacts, repoRoot string) (SensorRunner
 		Resolver:      resolver,
 		FixtureStore:  arts.Fixtures,
 		UseCaseLookup: useCaseLookup,
+		SensorLookup:  arts.Sensors.LookupSensor,
 		Now:           time.Now,
 	})
 

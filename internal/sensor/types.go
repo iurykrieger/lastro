@@ -1,8 +1,10 @@
 // Package sensor loads, validates, and orders the dynamically-generated
 // Sensor units that validate (UseCase × ValidationAngle) pairs. A Sensor
 // composes a top-level toolbox subset (StackComponent ids it draws from)
-// and an ordered list of Steps, each of which may bind to fixtures via
-// its own Uses field.
+// and an ordered list of Steps. Each step is a discriminated union: either
+// a run-step (shell command) or a uses-step (composed primitive id), with
+// fixtures referenced via ${{ fixtures.<id> }} interpolation inside run
+// commands and with values.
 //
 // The canonical schema lives at schemas/sensor.yaml and is consumed via
 // the embedded schemas.FS. This package never edits sensors — generation
@@ -23,15 +25,37 @@ type Sensor struct {
 	OutputType    enums.SignalOutputType `json:"output_type"`
 	Uses          []string               `json:"uses"`                 // StackComponent ids (grounding invariant 1)
 	DependsOn     []string               `json:"depends_on,omitempty"` // Sensor ids (optional)
+	Inputs        map[string]InputSpec   `json:"inputs,omitempty"`
+	Outputs       map[string]OutputSpec  `json:"outputs,omitempty"`
 	Steps         []Step                 `json:"steps"`
 }
 
-// Step is one step of a Sensor's execution plan. Run is opaque here;
-// the Phase B executor interprets it (shell command vs skill invocation).
+// Step is one step of a Sensor. Exactly one of Run / Uses is set
+// (enforced by the schema oneOf and by validateIntrinsic).
+//   - Run-step:  Run is the shell command; With is empty.
+//   - Uses-step: Uses is a core primitive's id; With binds its inputs.
+//
+// Fixtures are referenced via ${{ fixtures.<id> }} interpolation inside
+// Run and With values (grounding invariant 2).
 type Step struct {
-	ID   string   `json:"id"`
-	Run  string   `json:"run"`
-	Uses []string `json:"uses,omitempty"` // Fixture ids (grounding invariant 2)
+	ID   string            `json:"id"`
+	Run  string            `json:"run,omitempty"`
+	Uses string            `json:"uses,omitempty"`
+	With map[string]string `json:"with,omitempty"`
+}
+
+// InputSpec declares a composable input on a primitive sensor.
+type InputSpec struct {
+	Required    bool   `json:"required,omitempty"`
+	Default     string `json:"default,omitempty"`
+	Description string `json:"description,omitempty"`
+	HasDefault  bool   `json:"-"` // set by loader: distinguishes "" default from absent
+}
+
+// OutputSpec declares a re-exported output on a primitive sensor.
+type OutputSpec struct {
+	From        string `json:"from"`
+	Description string `json:"description,omitempty"`
 }
 
 // UseCaseFixtureOwnership is the seam between this package and the

@@ -312,7 +312,9 @@ func TestCriterion7_FixtureReuseAcrossAngles(t *testing.T) {
 					byUC[s.UseCaseID] = map[string]map[string]struct{}{}
 				}
 				for _, step := range s.Steps {
-					for _, fid := range step.Uses {
+					// Fixtures are now referenced via ${{ fixtures.<id> }} in a
+					// step's run/with (not a step-level uses array). Collect those.
+					for _, fid := range stepFixtureRefs(t, step) {
 						if _, ok := byUC[s.UseCaseID][fid]; !ok {
 							byUC[s.UseCaseID][fid] = map[string]struct{}{}
 						}
@@ -337,6 +339,35 @@ func mapKeys(m map[string]struct{}) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
 		out = append(out, k)
+	}
+	return out
+}
+
+// stepFixtureRefs returns the fixture ids a step references via
+// ${{ fixtures.<id> }} in its run and with values, in first-seen order.
+func stepFixtureRefs(t *testing.T, step sensor.Step) []string {
+	t.Helper()
+	seen := map[string]struct{}{}
+	var out []string
+	collect := func(src string) {
+		segs, err := template.Parse(src)
+		if err != nil {
+			t.Fatalf("parse %q: %v", src, err)
+		}
+		_, refs, err := template.Compile(segs)
+		if err != nil {
+			t.Fatalf("compile %q: %v", src, err)
+		}
+		for _, id := range refs.Fixtures {
+			if _, ok := seen[id]; !ok {
+				seen[id] = struct{}{}
+				out = append(out, id)
+			}
+		}
+	}
+	collect(step.Run)
+	for _, v := range step.With {
+		collect(v)
 	}
 	return out
 }

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/fixture"
-	"github.com/iurykrieger/lastro/internal/sensor"
 	"github.com/iurykrieger/lastro/internal/usecase"
 )
 
@@ -33,10 +32,9 @@ func TestBindError_UnwrapReturnsCause(t *testing.T) {
 
 func TestBind_EmptyUsesReturnsEmptyBinding(t *testing.T) {
 	b := &Binder{ScratchDir: t.TempDir()}
-	step := sensor.Step{ID: "step-1", Run: "true", Uses: nil}
 	uc := &usecase.UseCase{ID: "uc-login", FixtureIDs: []string{"login-basic"}}
-	// Empty step.Uses never queries the store; nil is safe.
-	binding, err := b.Bind(step, uc, nil)
+	// Empty ids never queries the store; nil is safe.
+	binding, err := b.Bind(nil, uc, nil)
 	if err != nil {
 		t.Fatalf("Bind: %v", err)
 	}
@@ -96,9 +94,8 @@ func TestBind_HappyPath_JSONAndBinary(t *testing.T) {
 
 	store := newStubStore(t, jsonFix, binFix)
 	uc := &usecase.UseCase{ID: "uc-login", FixtureIDs: []string{"login-basic", "avatar-png"}}
-	step := sensor.Step{ID: "s1", Run: "true", Uses: []string{"avatar-png", "login-basic"}} // intentionally reversed
-
-	binding, err := b.Bind(step, uc, store)
+	// intentionally reversed to verify deterministic sort
+	binding, err := b.Bind([]string{"avatar-png", "login-basic"}, uc, store)
 	if err != nil {
 		t.Fatalf("Bind: %v", err)
 	}
@@ -152,9 +149,9 @@ func TestBind_BoundIDsDeterministicAcrossCalls(t *testing.T) {
 	fxC := makeFixture(t, "charlie", "uc", "application/json", []byte(`{}`))
 	store := newStubStore(t, fxA, fxB, fxC)
 	uc := &usecase.UseCase{ID: "uc", FixtureIDs: []string{"alpha", "bravo", "charlie"}}
-	step := sensor.Step{Uses: []string{"charlie", "alpha", "bravo"}}
+	ids := []string{"charlie", "alpha", "bravo"}
 
-	first, err := b.Bind(step, uc, store)
+	first, err := b.Bind(ids, uc, store)
 	if err != nil {
 		t.Fatalf("Bind first: %v", err)
 	}
@@ -163,7 +160,7 @@ func TestBind_BoundIDsDeterministicAcrossCalls(t *testing.T) {
 		t.Errorf("first BoundIDs = %v, want %v", first.BoundIDs, want)
 	}
 	for i := 0; i < 5; i++ {
-		again, err := b.Bind(step, uc, store)
+		again, err := b.Bind(ids, uc, store)
 		if err != nil {
 			t.Fatalf("Bind iter %d: %v", i, err)
 		}
@@ -176,10 +173,9 @@ func TestBind_BoundIDsDeterministicAcrossCalls(t *testing.T) {
 func TestBind_FixtureNotFound(t *testing.T) {
 	b := &Binder{ScratchDir: t.TempDir()}
 	uc := &usecase.UseCase{ID: "uc-login", FixtureIDs: []string{"missing"}}
-	step := sensor.Step{Uses: []string{"missing"}}
 	store := newStubStore(t)
 
-	_, err := b.Bind(step, uc, store)
+	_, err := b.Bind([]string{"missing"}, uc, store)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -198,11 +194,10 @@ func TestBind_FixtureNotFound(t *testing.T) {
 func TestBind_FixtureNotOwned(t *testing.T) {
 	b := &Binder{ScratchDir: t.TempDir()}
 	uc := &usecase.UseCase{ID: "uc-login", FixtureIDs: []string{"login-basic"}}
-	step := sensor.Step{Uses: []string{"foreign-fixture"}}
 	foreignFx := makeFixture(t, "foreign-fixture", "uc-other", "application/json", []byte(`{}`))
 	store := newStubStore(t, foreignFx)
 
-	_, err := b.Bind(step, uc, store)
+	_, err := b.Bind([]string{"foreign-fixture"}, uc, store)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -231,10 +226,9 @@ func TestBind_WriteFailed(t *testing.T) {
 	b := &Binder{ScratchDir: parent}
 	fx := makeFixture(t, "x", "uc", "application/json", []byte(`{}`))
 	uc := &usecase.UseCase{ID: "uc", FixtureIDs: []string{"x"}}
-	step := sensor.Step{Uses: []string{"x"}}
 	store := newStubStore(t, fx)
 
-	_, err := b.Bind(step, uc, store)
+	_, err := b.Bind([]string{"x"}, uc, store)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}

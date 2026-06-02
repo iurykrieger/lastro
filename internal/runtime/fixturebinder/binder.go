@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	"github.com/iurykrieger/lastro/internal/fixture"
-	"github.com/iurykrieger/lastro/internal/sensor"
 	"github.com/iurykrieger/lastro/internal/usecase"
 )
 
@@ -19,16 +18,17 @@ type Binder struct {
 	ScratchDir string
 }
 
-// Bind resolves a step's `uses:` fixture ids against the use case's owned
+// Bind resolves an explicit list of fixture ids against the use case's owned
 // fixtures, writes each payload to ScratchDir, and returns a StepBinding.
+// ids should be derived from CollectFixtureRefs on the step's run/with fields.
 // See the package doc for the spec reference.
-func (b *Binder) Bind(step sensor.Step, owningUseCase *usecase.UseCase, store fixture.FixtureStore) (StepBinding, error) {
+func (b *Binder) Bind(ids []string, owningUseCase *usecase.UseCase, store fixture.FixtureStore) (StepBinding, error) {
 	binding := StepBinding{
 		Env:      map[string]string{},
 		Files:    map[string]string{},
 		BoundIDs: []string{},
 	}
-	if len(step.Uses) == 0 {
+	if len(ids) == 0 {
 		return binding, nil
 	}
 
@@ -37,12 +37,12 @@ func (b *Binder) Bind(step sensor.Step, owningUseCase *usecase.UseCase, store fi
 		owned[id] = struct{}{}
 	}
 
-	// Sort step.Uses to get deterministic BoundIDs and file-write order.
+	// Sort to get deterministic BoundIDs and file-write order.
 	// Copy first to avoid mutating the caller's slice.
-	ids := append([]string(nil), step.Uses...)
-	sort.Strings(ids)
+	sorted := append([]string(nil), ids...)
+	sort.Strings(sorted)
 
-	for _, id := range ids {
+	for _, id := range sorted {
 		if _, ok := owned[id]; !ok {
 			return StepBinding{}, &BindError{
 				Code: "fixture-not-owned", FixtureID: id, UseCaseID: owningUseCase.ID,

@@ -11,9 +11,9 @@ entry_points:
       path: /orders/{id}
 
 given:
-  - "An order with id {{fixtures.existing-order-id}} exists in the store"
+  - "An order with id ${{fixtures.existing-order-id}} exists in the store"
 when:
-  - "The client invokes {{entry_points.get-order-endpoint}} with the order id"
+  - "The client invokes ${{entry_points.get-order-endpoint}} with the order id"
 then:
   - "The endpoint responds with status 200"
   - "The response body is JSON describing the order"

@@ -11,10 +11,10 @@ entry_points:
       command: harness
 
 given:
-  - "The user invokes {{entry_points.harness-detect-cli}} with arguments matching {{fixtures.detect-args-fixture}}"
+  - "The user invokes ${{entry_points.harness-detect-cli}} with arguments matching ${{fixtures.detect-args-fixture}}"
 when:
   - "The command completes"
 then:
-  - "Standard output matches {{fixtures.detect-stdout-fixture}} and the process exits with code 0"
+  - "Standard output matches ${{fixtures.detect-stdout-fixture}} and the process exits with code 0"
 
 fixture_ids: [detect-args-fixture, detect-stdout-fixture]

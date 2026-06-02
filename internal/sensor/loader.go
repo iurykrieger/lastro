@@ -49,6 +49,20 @@ func LoadSensorBytes(raw []byte) (Sensor, error) {
 		s.Scope = enums.ScopeUseCase
 	}
 
+	// mark which inputs carried an explicit default (for required-input validation).
+	if len(s.Inputs) > 0 {
+		var probe struct {
+			Inputs map[string]map[string]json.RawMessage `json:"inputs"`
+		}
+		_ = json.Unmarshal(asJSON, &probe)
+		for name, spec := range s.Inputs {
+			if _, ok := probe.Inputs[name]["default"]; ok {
+				spec.HasDefault = true
+				s.Inputs[name] = spec
+			}
+		}
+	}
+
 	if err := validateIntrinsic(s); err != nil {
 		return Sensor{}, fmt.Errorf("intrinsic validation: %w", err)
 	}

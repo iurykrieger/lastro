@@ -11,5 +11,4 @@ uses:
 
 steps:
   - id: probe
-    uses: [name]
-    run: "go run ./cmd/sensor-check --sensor=uc-greet-by-name-unit-test --use-case=uc-greet-by-name --angle=unit-test pass"
+    run: "go run ./cmd/sensor-check --sensor=uc-greet-by-name-unit-test --use-case=uc-greet-by-name --angle=unit-test pass # ${{ fixtures.name }}"

@@ -83,3 +83,18 @@ Each entry must land in this file **before** any Go or YAML changes that impleme
   (environment is a DAG precondition, never policy-graded).
 - File layout: core sensors under `.harness/sensors/core/`, use-case sensors under `.harness/sensors/<usecase-id>/`.
 - Backward compatibility: a sensor that omits `scope` defaults to `use-case` and still requires `use_case_id`.
+
+### 2026-06-01 — Parameterized sensors via composition (#26)
+
+- `sensor.yaml` step: discriminated union — a step has **either** `run` (string) **or**
+  `uses` (a single primitive sensor id) + optional `with` (map[string]string). The previous
+  step-level `uses: [fixture-id]` **array** is removed; fixtures are referenced by
+  `${{ fixtures.<id> }}` interpolation in `run`/`with`.
+- `sensor.yaml` adds optional top-level `inputs` (map of `{required?, default?, description?}`)
+  and `outputs` (map of `{from, description?}`).
+- Interpolation sentinel migrates repo-wide from `{{ }}` to `${{ }}`. New contexts:
+  `${{ inputs.<name> }}` and `${{ steps.<id>.outputs.<name> }}`, alongside existing
+  `${{ fixtures.* }}` / `${{ entry_points.* }}`.
+- The executor's `${{fixtures.X}}`-in-run ban (`ErrTemplateFixtureInRun`) is lifted; fixture/input/
+  step-output refs compile to env-var references (`HARNESS_FIXTURE_*`, `HARNESS_INPUT_*`,
+  `HARNESS_STEPOUT_*`), never inline payloads.

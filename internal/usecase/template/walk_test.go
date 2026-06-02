@@ -14,12 +14,12 @@ import (
 func TestWalkersCoverEveryGrammarForm(t *testing.T) {
 	cases := []string{
 		"literal only",
-		"{{fixtures.fx-a}}",
-		"{{fixtures.fx-a.k}}",
-		"{{fixtures.fx-a.k1.k2.k3}}",
-		"{{entry_points.ep-a}}",
-		"{{entry_points.ep-a.spec.method}}",
-		"mix {{fixtures.fx-a}} and {{entry_points.ep-a}}",
+		"${{fixtures.fx-a}}",
+		"${{fixtures.fx-a.k}}",
+		"${{fixtures.fx-a.k1.k2.k3}}",
+		"${{entry_points.ep-a}}",
+		"${{entry_points.ep-a.spec.method}}",
+		"mix ${{fixtures.fx-a}} and ${{entry_points.ep-a}}",
 	}
 
 	r := &Resolver{

@@ -11,10 +11,10 @@ entry_points:
       exported_symbol: parseConfig
 
 given:
-  - "A configuration document matching {{fixtures.config-input-fixture}}"
+  - "A configuration document matching ${{fixtures.config-input-fixture}}"
 when:
-  - "The caller invokes {{entry_points.parse-config-symbol}}"
+  - "The caller invokes ${{entry_points.parse-config-symbol}}"
 then:
-  - "A typed configuration matching {{fixtures.config-parsed-fixture}} is returned"
+  - "A typed configuration matching ${{fixtures.config-parsed-fixture}} is returned"
 
 fixture_ids: [config-input-fixture, config-parsed-fixture]

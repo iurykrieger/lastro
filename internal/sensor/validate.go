@@ -20,7 +20,7 @@ func validateIntrinsic(s Sensor) error {
 	if err := checkUniqueTopLevelUses(s); err != nil {
 		errs = append(errs, err)
 	}
-	if err := checkUniqueStepUses(s); err != nil {
+	if err := checkStepShape(s); err != nil {
 		errs = append(errs, err)
 	}
 	if err := checkNoSelfDependency(s); err != nil {
@@ -67,20 +67,19 @@ func checkUniqueTopLevelUses(s Sensor) error {
 	return fmt.Errorf("duplicate uses id(s): %v", dups)
 }
 
-func checkUniqueStepUses(s Sensor) error {
+func checkStepShape(s Sensor) error {
 	var errs []error
 	for _, st := range s.Steps {
-		seen := make(map[string]bool, len(st.Uses))
-		var dups []string
-		for _, id := range st.Uses {
-			if seen[id] {
-				dups = append(dups, id)
-				continue
-			}
-			seen[id] = true
+		hasRun := st.Run != ""
+		hasUses := st.Uses != ""
+		switch {
+		case hasRun && hasUses:
+			errs = append(errs, fmt.Errorf("step %q: has both run and uses", st.ID))
+		case !hasRun && !hasUses:
+			errs = append(errs, fmt.Errorf("step %q: has neither run nor uses", st.ID))
 		}
-		if len(dups) > 0 {
-			errs = append(errs, fmt.Errorf("step %q: duplicate uses id(s): %v", st.ID, dups))
+		if hasRun && len(st.With) > 0 {
+			errs = append(errs, fmt.Errorf("step %q: with is only valid on a uses-step", st.ID))
 		}
 	}
 	if len(errs) == 0 {

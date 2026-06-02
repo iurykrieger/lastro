@@ -1,11 +1,13 @@
-// Package template implements the {{ }} interpolation grammar for
+// Package template implements the ${{ }} interpolation grammar for
 // UseCase given/when/then text. The grammar is defined in
 // docs/harness-framework/plan.md §4.1.2 and recapped here:
 //
-//	template      := "{{" ws? ref ws? "}}"
-//	ref           := fixtureRef | entryPointRef
+//	template      := "${{" ws? ref ws? "}}"
+//	ref           := fixtureRef | entryPointRef | inputRef | stepOutputRef
 //	fixtureRef    := "fixtures" "." ID ( "." JSONKEY )*
 //	entryPointRef := "entry_points" "." ID ( "." "spec" "." JSONKEY )?
+//	inputRef      := "inputs" "." ID
+//	stepOutputRef := "steps" "." ID "." "outputs" "." ID
 //
 // Tokens:
 //
@@ -32,7 +34,7 @@ type Literal struct {
 
 func (Literal) isSegment() {}
 
-// FixtureRef is `{{fixtures.<id>(.<jsonkey>)*}}`. An empty JSONPath means
+// FixtureRef is `${{fixtures.<id>(.<jsonkey>)*}}`. An empty JSONPath means
 // the whole payload.
 type FixtureRef struct {
 	ID       string
@@ -42,8 +44,8 @@ type FixtureRef struct {
 
 func (FixtureRef) isSegment() {}
 
-// EntryPointRef is `{{entry_points.<id>}}` or
-// `{{entry_points.<id>.spec.<key>}}`. An empty SpecKey means the whole
+// EntryPointRef is `${{entry_points.<id>}}` or
+// `${{entry_points.<id>.spec.<key>}}`. An empty SpecKey means the whole
 // entry point (rendered as "<archetype>:<id>").
 type EntryPointRef struct {
 	ID      string
@@ -52,3 +54,21 @@ type EntryPointRef struct {
 }
 
 func (EntryPointRef) isSegment() {}
+
+// InputRef is `${{ inputs.<name> }}` — a composed primitive's declared input.
+type InputRef struct {
+	Name string
+	Pos  Position
+}
+
+func (InputRef) isSegment() {}
+
+// StepOutputRef is `${{ steps.<id>.outputs.<name> }}` — an output produced by
+// a prior step (or by a uses-step that composed a primitive).
+type StepOutputRef struct {
+	StepID string
+	Name   string
+	Pos    Position
+}
+
+func (StepOutputRef) isSegment() {}

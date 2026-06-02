@@ -23,8 +23,10 @@ Use the Read tool to load:
 
 1. `.harness/stack-manifest.yaml` — note `applicable_angles` (the list of angles to cover) and
    `components[*].id` (the only valid ids for sensor-level `uses:`).
-2. `.harness/use-cases/<use-case-id>.yaml` — note the use case `id` and its `fixture_ids` (the
-   only valid ids for step-level `uses:`).
+2. `.harness/use-cases/<use-case-id>.yaml` — note the use case `id` and its `fixture_ids`
+   (valid ids for `${{ fixtures.<id> }}` interpolation in step `run` and `with` values).
+3. `.harness/sensors/core/` (optional) — list available core primitives; their `id` values are
+   the only valid targets for step-level `uses:` in a uses-step.
 
 ## What to emit
 
@@ -40,10 +42,13 @@ One sensor per angle in `applicable_angles`. For each sensor, write a YAML file 
 - `output_type` — `single-shot` or `stream` (see `schemas/enums/signal-output-types.yaml`).
 - `uses: [...]` — **top-level only**: ids from `stack-manifest.components[*].id`. Pick the subset
   this sensor needs. Do NOT include fixture ids here.
-- `steps:` — list of steps, each with:
-  - `id` — hyphenated string.
-  - `run` — the shell command or instruction the sensor executes.
-  - `uses: [...]` (optional) — only fixture ids whose `use_case_id` matches `<use-case-id>`.
+- `steps:` — each step is EITHER a run-step or a uses-step:
+  - run-step: `{ id, run }`. Reference fixtures via `${{ fixtures.<id> }}` and prior step outputs
+    via `${{ steps.<id>.outputs.<name> }}` inside `run`.
+  - uses-step: `{ id, uses: <core-primitive-id>, with: { <input>: <value> } }`. Bind every
+    `required` input of the primitive. A `with` value may be a fixture ref
+    (`${{ fixtures.<id> }}`) or a prior step output (`${{ steps.<id>.outputs.<name> }}`).
+- Do NOT put fixture ids in step `uses:` — `uses:` now names a core primitive to compose.
 
 See `schemas/examples/sensor/*.yaml` for shape examples per angle and kind.
 

@@ -62,7 +62,7 @@ func TestValidateRejectsDuplicateEntryPointID(t *testing.T) {
 func TestValidateRejectsDuplicateFixtureID(t *testing.T) {
 	uc := validUseCase()
 	uc.FixtureIDs = []string{"fx-a", "fx-a"}
-	uc.Given = []string{"see {{fixtures.fx-a}}"}
+	uc.Given = []string{"see ${{fixtures.fx-a}}"}
 	err := Validate(uc, fixturestub.New(map[string]string{"fx-a": `{}`}))
 	if !hasCode(err, "USECASE_DUPLICATE_ID") {
 		t.Errorf("want USECASE_DUPLICATE_ID, got %v", err)
@@ -80,7 +80,7 @@ func TestValidateRejectsArchetypeOutOfScope(t *testing.T) {
 
 func TestValidateRejectsTemplateParseError(t *testing.T) {
 	uc := validUseCase()
-	uc.Given = []string{"bad {{ {{fixtures.x}} }}"}
+	uc.Given = []string{"bad ${{ ${{fixtures.x}} }}"}
 	err := Validate(uc, fixturestub.New(nil))
 	if !hasCode(err, "USECASE_TEMPLATE_PARSE") {
 		t.Errorf("want USECASE_TEMPLATE_PARSE, got %v", err)
@@ -89,7 +89,7 @@ func TestValidateRejectsTemplateParseError(t *testing.T) {
 
 func TestValidateRejectsTemplateBadSpecField(t *testing.T) {
 	uc := validUseCase()
-	uc.When = []string{"{{entry_points.ep.archetype}}"}
+	uc.When = []string{"${{entry_points.ep.archetype}}"}
 	err := Validate(uc, fixturestub.New(nil))
 	if !hasCode(err, "USECASE_TEMPLATE_BAD_SPEC_FIELD") {
 		t.Errorf("want USECASE_TEMPLATE_BAD_SPEC_FIELD, got %v", err)
@@ -98,7 +98,7 @@ func TestValidateRejectsTemplateBadSpecField(t *testing.T) {
 
 func TestValidateRejectsUnknownEntryPointRef(t *testing.T) {
 	uc := validUseCase()
-	uc.When = []string{"{{entry_points.ep-missing}}"}
+	uc.When = []string{"${{entry_points.ep-missing}}"}
 	err := Validate(uc, fixturestub.New(nil))
 	if !hasCode(err, "USECASE_TEMPLATE_UNKNOWN_ENTRY_POINT") {
 		t.Errorf("want USECASE_TEMPLATE_UNKNOWN_ENTRY_POINT, got %v", err)
@@ -107,7 +107,7 @@ func TestValidateRejectsUnknownEntryPointRef(t *testing.T) {
 
 func TestValidateRejectsFixtureUsedButUndeclared(t *testing.T) {
 	uc := validUseCase()
-	uc.Given = []string{"see {{fixtures.fx-undeclared}}"}
+	uc.Given = []string{"see ${{fixtures.fx-undeclared}}"}
 	err := Validate(uc, fixturestub.New(map[string]string{"fx-undeclared": `{}`}))
 	if !hasCode(err, "USECASE_FIXTURE_USED_UNDECLARED") {
 		t.Errorf("want USECASE_FIXTURE_USED_UNDECLARED, got %v", err)
@@ -117,7 +117,7 @@ func TestValidateRejectsFixtureUsedButUndeclared(t *testing.T) {
 func TestValidateRejectsFixtureNotInStore(t *testing.T) {
 	uc := validUseCase()
 	uc.FixtureIDs = []string{"fx-not-in-store"}
-	uc.Given = []string{"{{fixtures.fx-not-in-store}}"}
+	uc.Given = []string{"${{fixtures.fx-not-in-store}}"}
 	err := Validate(uc, fixturestub.New(nil))
 	if !hasCode(err, "USECASE_FIXTURE_NOT_IN_STORE") {
 		t.Errorf("want USECASE_FIXTURE_NOT_IN_STORE, got %v", err)

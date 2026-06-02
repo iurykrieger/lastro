@@ -199,7 +199,8 @@ The `expected_observations` mechanism added in PR #28 is reworked into `signal_m
    no-parse-error-for-plain-text behavior are preserved.
 4. `expected: true` matchers drive completeness for **any** sensor kind (not just
    observational); a run where an expected key is never observed yields an incomplete
-   aggregate whose verdict is fail/inconclusive with a heal_hint naming the missing keys.
+   aggregate whose verdict is `fail` (per `computeVerdict` Rule 1) with a heal_hint
+   naming the missing keys.
 5a. `e2e-test` exposes a `headers` input that a use-case sensor binds via `with:`,
    verifiable through the executor's input-env build (a bound header reaches the request).
 5b. (Doc acceptance, not test-suite) `/create-sensors` and `/create-core-sensors`

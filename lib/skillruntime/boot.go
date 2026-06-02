@@ -75,6 +75,9 @@ func BootLifecycle(repoRoot string) (*Booted, error) {
 			uc, ok := useCases[s.UseCaseID]
 			return uc, ok
 		},
+		// Required for sensors that compose core primitives via uses-steps
+		// (e.g. an e2e-test sensor that `uses: e2e-test`).
+		SensorLookup: sensorStore.LookupSensor,
 	})
 
 	runtimeRoot := filepath.Join(harnessDir, "runtime")

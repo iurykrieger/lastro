@@ -27,7 +27,20 @@ type Sensor struct {
 	DependsOn     []string               `json:"depends_on,omitempty"` // Sensor ids (optional)
 	Inputs        map[string]InputSpec   `json:"inputs,omitempty"`
 	Outputs       map[string]OutputSpec  `json:"outputs,omitempty"`
-	Steps         []Step                 `json:"steps"`
+	// ExpectedObservations declares regex matchers for observational/stream
+	// sensors. The executor tests each streamed stdout line against every
+	// pattern and emits an observation signal (keyed by Key) on a match.
+	ExpectedObservations []ObservationMatcher `json:"expected_observations,omitempty"`
+	Steps                []Step               `json:"steps"`
+}
+
+// ObservationMatcher maps a regular expression to an observation key. When a
+// streamed stdout line matches Pattern, the executor emits an observation
+// signal carrying Key (which also feeds completeness against the sensor's
+// expected observations).
+type ObservationMatcher struct {
+	Key     string `json:"key"`
+	Pattern string `json:"pattern"`
 }
 
 // Step is one step of a Sensor. Exactly one of Run / Uses is set

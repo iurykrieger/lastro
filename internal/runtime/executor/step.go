@@ -30,7 +30,8 @@ type stepArgs struct {
 	Resolver    *template.Resolver
 	Signaler    process.GroupSignaler
 	Shell       []string
-	ExpectedObs []string // nil for assertion sensors
+	ExpectedObs []string            // nil for assertion sensors
+	Obs         *observationConfig  // non-nil only for observational sensors with expected_observations
 	RawLog      *rawLog
 	SignalsW    *jsonlWriter
 	Stop        <-chan struct{}
@@ -138,13 +139,14 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 		err error
 	}
 	stdoutDone := make(chan pumpResult, 1)
-	stderrDone := make(chan error, 1)
+	stderrDone := make(chan pumpResult, 1)
 	go func() {
-		out, err := pumpStdout(stdout, a.StepIdx, a.RawLog, a.SignalsW, a.ExpectedObs != nil)
+		out, err := pumpStdout(stdout, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
 		stdoutDone <- pumpResult{out: out, err: err}
 	}()
 	go func() {
-		stderrDone <- pumpStderr(stderr, a.StepIdx, a.RawLog)
+		out, err := pumpStderr(stderr, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
+		stderrDone <- pumpResult{out: out, err: err}
 	}()
 
 	// 7. Stop watcher: kill the process group on stop or ctx cancel.
@@ -179,11 +181,16 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 
 	// 9. Drain the readers.
 	stdoutRes := <-stdoutDone
-	stderrErr := <-stderrDone
-	_ = stderrErr // best-effort; raw.log already captured what made it through
+	stderrRes := <-stderrDone
+	_ = stderrRes.err // best-effort; raw.log already captured what made it through
+
+	// Merge observations detected on stderr (e.g. docker compose status lines)
+	// with those from stdout.
+	signals := append(stdoutRes.out.Signals, stderrRes.out.Signals...)
+	observationKeys := append(stdoutRes.out.ObservationKeys, stderrRes.out.ObservationKeys...)
 
 	// 10. Note non-zero exit in raw.log for forensics.
-	if waitErr != nil && len(stdoutRes.out.Signals) > 0 {
+	if waitErr != nil && len(signals) > 0 {
 		a.RawLog.WriteAnnotated(a.StepIdx, "exit-nonzero", []byte(strconv.Quote(waitErr.Error())))
 	}
 
@@ -191,8 +198,8 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	stepOut, _ := parseStepOutputFile(outPath)
 
 	return stepOutcome{
-		Signals:           stdoutRes.out.Signals,
-		ObservationKeys:   stdoutRes.out.ObservationKeys,
+		Signals:           signals,
+		ObservationKeys:   observationKeys,
 		ExitErr:           waitErr,
 		StoppedExternally: stoppedExternally,
 		CtxErr:            ctx.Err(),

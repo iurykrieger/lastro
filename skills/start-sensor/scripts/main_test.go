@@ -8,7 +8,9 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 
 	"github.com/iurykrieger/lastro/lib/skillruntime"
 )
@@ -16,6 +18,15 @@ import (
 var fakeSensorBin string
 
 func TestMain(m *testing.M) {
+	// When StartDetachedSensor re-execs us as the detached watcher, the
+	// test binary itself is os.Executable(). Detect watch mode here and
+	// dispatch to run() so the spawned child actually watches under
+	// `go test`, instead of re-entering the test suite.
+	if skillruntime.IsWatchMode(os.Args) {
+		cwd, _ := os.Getwd()
+		os.Exit(run(os.Args, os.Stdin, os.Stdout, os.Stderr, cwd))
+	}
+
 	bin, err := buildFakeSensor()
 	if err != nil {
 		panic("build fakesensor: " + err.Error())
@@ -81,12 +92,27 @@ func setupHarness(t *testing.T, sensorYAML string) string {
 	return root
 }
 
-func killPID(pid int) error {
+// stopWatcher signals the detached watcher to terminate gracefully so it
+// tears down its step children (avoids leaking the fakesensor process),
+// then waits for the process to actually exit so t.TempDir cleanup does
+// not race against the watcher still writing into the run dir.
+func stopWatcher(pid int) error {
 	proc, err := os.FindProcess(pid)
 	if err != nil {
 		return err
 	}
-	return proc.Kill()
+	if err := proc.Signal(syscall.SIGTERM); err != nil {
+		return err
+	}
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if err := proc.Signal(syscall.Signal(0)); err != nil {
+			return nil // process gone
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	_ = proc.Signal(syscall.SIGKILL)
+	return nil
 }
 
 func TestRun_RejectsAssertionKind(t *testing.T) {
@@ -154,9 +180,9 @@ steps:
 		t.Errorf("handle run-id length = %d, want 26", len(runID))
 	}
 	// Cleanup: the watcher continues running after start-sensor returns;
-	// kill it so the test doesn't leak processes.
+	// signal it so it and its step children shut down (no leak).
 	if pid, ok := out["pid"].(float64); ok {
-		_ = killPID(int(pid))
+		_ = stopWatcher(int(pid))
 	}
 }
 

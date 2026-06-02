@@ -72,6 +72,19 @@ properties:
       properties:
         from:        { type: string, minLength: 1 }
         description: { type: string }
+  expected_observations:
+    type: array
+    description: |
+      Regex matchers for observational/stream sensors. The watcher tests each
+      streamed stdout line against every pattern; on a match it emits an
+      observation signal carrying the matcher's `key` (used for completeness).
+    items:
+      type: object
+      required: [key, pattern]
+      additionalProperties: false
+      properties:
+        key:     { $ref: "#/$defs/Id" }
+        pattern: { type: string, minLength: 1 }
 
 allOf:
   - if:

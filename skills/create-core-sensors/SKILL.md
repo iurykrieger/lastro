@@ -71,6 +71,53 @@ Environment primitives set up or tear down runtime infrastructure
 (`run-dev`, `datastore`). They take **no** `inputs:` and produce no
 composable `outputs:`. Their steps contain only `run:` commands.
 
+## Command shape MUST match `kind` + `output_type`
+
+This is a hard contract — the command a sensor runs is determined by its
+declared semantics, not the other way around:
+
+| kind | output_type | Command shape |
+|------|-------------|---------------|
+| `assertion` | `single-shot` | Runs, **exits**, verdict from exit code / parsed output. A detached or one-shot command (`docker compose up -d` + a `wait-ready` loop that `exit`s, a single `curl`, `go test`, …) is correct here. |
+| `observational` | `stream` | A **long-running, foreground (non-detached) command** that blocks and streams its output for as long as the watcher lives. It must **not** detach or exit on its own. |
+
+So a `run-dev` declared `kind: observational` + `output_type: stream` MUST run
+the dev stack in the **foreground** — e.g. `docker compose --profile dev up`
+(NO `-d`) as its single, blocking step. Never emit `up -d` + a `wait-ready`
+loop for an observational/stream sensor: that is the assertion/single-shot
+shape and contradicts the declared semantics (the watcher would exit instead
+of streaming).
+
+### Observations for observational/stream sensors (`expected_observations`)
+
+A `stream` sensor turns its streamed output into observation signals via
+`expected_observations` — a list of `{ key, pattern }` where `pattern` is a
+**regex** tested against each stdout **and** stderr line. On a match the
+watcher emits an observation signal carrying `key` (and `key` feeds
+completeness). Derive the keys and regexes from `.harness/stack-manifest.yaml`
+(component ids, health endpoints, readiness strings). Remember that
+`docker compose up` prints lifecycle status (`Container X Healthy`) to stderr.
+
+Example shape (environment primitive, observational/stream):
+
+```yaml
+id: run-dev
+scope: core
+angle: environment
+kind: observational
+nature: computational
+output_type: stream
+uses: [docker-compose]
+expected_observations:
+  - { key: api-ready,        pattern: "api ready|listening on" }
+  - { key: dynamodb-healthy, pattern: "Container .*dynamodb.*Healthy" }
+steps:
+  - id: up
+    run: |
+      cd charge-api
+      docker compose --profile dev up   # foreground, blocking — NO -d
+```
+
 ## What to emit
 
 For each applicable primitive (driven by `applicable_angles` and `archetype`),
@@ -87,6 +134,9 @@ emit one YAML file matching `schemas/sensor.yaml`:
 - `output_type` — `single-shot` or `stream`.
 - `uses: [...]` — stack component ids only; must be a subset of manifest
   `components[*].id`.
+- `expected_observations: [...]` — REQUIRED for `output_type: stream` sensors;
+  `{ key, pattern }` regex matchers derived from the stack manifest (see above).
+  Omit for `single-shot` sensors.
 
 ## How to validate each sensor
 

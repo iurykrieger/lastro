@@ -161,5 +161,21 @@ func dirHasYAML(dir string) bool {
 			return true
 		}
 	}
+	// LoadDirectory descends one level into subdirectories, so detection must too:
+	// sensors live under sensors/core/ and sensors/<use_case_id>/.
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		subEntries, err := os.ReadDir(filepath.Join(dir, e.Name()))
+		if err != nil {
+			continue
+		}
+		for _, se := range subEntries {
+			if !se.IsDir() && filepath.Ext(se.Name()) == ".yaml" {
+				return true
+			}
+		}
+	}
 	return false
 }

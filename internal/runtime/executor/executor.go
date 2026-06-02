@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
@@ -16,6 +17,24 @@ import (
 	"github.com/iurykrieger/lastro/internal/usecase"
 	"github.com/iurykrieger/lastro/internal/usecase/template"
 )
+
+// observationSignalSchemaVersion is the schema_version stamped on synthesized
+// observation signals (must match schemas/signal.yaml's accepted shape).
+const observationSignalSchemaVersion = "1.0.0"
+
+// mergeKeys returns the union of a and b preserving first-seen order.
+func mergeKeys(a, b []string) []string {
+	seen := make(map[string]struct{}, len(a)+len(b))
+	out := make([]string, 0, len(a)+len(b))
+	for _, s := range append(append([]string{}, a...), b...) {
+		if _, dup := seen[s]; dup {
+			continue
+		}
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+	return out
+}
 
 // Options is the dependency wiring an Executor needs. All fields are
 // read-only after New; concurrent Run calls are safe.
@@ -69,9 +88,41 @@ func (e *Executor) Run(
 	expectedObs []string,
 	stop <-chan struct{},
 ) (aggregate.AggregateSignal, error) {
+	// Core-scoped sensors (environment primitives like run-dev) are not bound
+	// to a use case, so a missing lookup is only an error for use-case sensors.
+	// Steps that reference no fixtures tolerate a nil UseCase (see fixturebinder.Bind).
 	uc, ok := e.opts.UseCaseLookup(s.ID)
-	if !ok {
+	if !ok && s.UseCaseID != "" {
 		return aggregate.AggregateSignal{}, fmt.Errorf("executor: use case lookup failed for sensor %q", s.ID)
+	}
+
+	// Build observation matchers for sensors that declare expected_observations.
+	// Each compiles to a regex tested against streamed stdout lines; a match
+	// synthesizes an observation signal keyed by Key. The keys also feed
+	// completeness, so merge them into expectedObs.
+	matchers := make([]observationMatcher, 0, len(s.ExpectedObservations))
+	for _, eo := range s.ExpectedObservations {
+		re, cerr := regexp.Compile(eo.Pattern)
+		if cerr != nil {
+			return aggregate.AggregateSignal{}, fmt.Errorf("executor: expected_observation %q: bad pattern %q: %w", eo.Key, eo.Pattern, cerr)
+		}
+		matchers = append(matchers, observationMatcher{Key: eo.Key, Re: re})
+		expectedObs = mergeKeys(expectedObs, []string{eo.Key})
+	}
+	// obs is non-nil for any observational sensor — whether its expected
+	// observation keys come from the caller (expectedObs) or from declared
+	// regex matchers. A non-nil obs enables observation_key collection from
+	// decoded signals; matchers add synthesis from plain stdout lines.
+	var obs *observationConfig
+	if len(expectedObs) > 0 || len(matchers) > 0 {
+		obs = &observationConfig{
+			SchemaVersion: observationSignalSchemaVersion,
+			SensorID:      s.ID,
+			UseCaseID:     s.UseCaseID,
+			Angle:         s.Angle,
+			Now:           e.opts.Now,
+			Matchers:      matchers,
+		}
 	}
 
 	if err := os.MkdirAll(filepath.Join(runDir, "scratch"), 0o700); err != nil {
@@ -124,6 +175,7 @@ func (e *Executor) Run(
 			RunDir:      runDir,
 			UseCase:     uc,
 			ExpectedObs: expectedObs,
+			Obs:         obs,
 			RawLog:      rl,
 			SignalsW:    sw,
 			Stop:        stop,

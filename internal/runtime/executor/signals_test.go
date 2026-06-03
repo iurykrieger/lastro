@@ -59,7 +59,7 @@ func TestPumpStdout_BadJSONLineKeepsStreaming(t *testing.T) {
 	}
 }
 
-// An observational sensor with expected_observations regexes synthesizes an
+// An observational sensor with signal_matches regexes synthesizes an
 // observation signal for each matched stdout line, writing it to signals.jsonl
 // and collecting the matcher key — even though the line is plain text.
 func TestPumpStdout_RegexMatchSynthesizesObservationSignal(t *testing.T) {

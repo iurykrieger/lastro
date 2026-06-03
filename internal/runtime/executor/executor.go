@@ -140,10 +140,11 @@ func (e *Executor) Run(
 			Now:           e.opts.Now,
 			Matchers:      matchers,
 		}
-		// Probe-validate each matcher: a representative signal must satisfy the
-		// Signal schema, so emitted signals are valid by construction.
+		// Probe-validate each matcher's signal envelope (schema fields + heal_hint requirement). Evidence values are dynamic strings (additionalProperties), so only the envelope is checked here.
 		for _, m := range matchers {
-			probe := obs.synthesize(m, []string{"<probe>"})
+			probeSub := make([]string, m.Re.NumSubexp()+1)
+			probeSub[0] = "<probe>"
+			probe := obs.synthesize(m, probeSub)
 			b, mErr := json.Marshal(probe)
 			if mErr != nil {
 				return aggregate.AggregateSignal{}, fmt.Errorf("executor: marshal probe signal for %q: %w", m.Key, mErr)

@@ -190,6 +190,29 @@ func TestPumpStdout_JSONAppLogMatchedNoParseError(t *testing.T) {
 	}
 }
 
+func TestSynthesize_ShortSubmatchDoesNotPanic(t *testing.T) {
+	cfg := &signalConfig{SchemaVersion: "1.0.0", SensorID: "s", Angle: "environment", Now: fixedNow(t)}
+	m := signalMatcher{Key: "k", Re: regexp.MustCompile(`(?P<status>\d+)`), Verdict: "pass", Confidence: 1}
+	// Probe-style call: only sub[0] populated. Must not panic.
+	sig := cfg.synthesize(m, []string{"<probe>"})
+	if sig.Evidence["observation_key"] != "k" {
+		t.Errorf("observation_key = %v, want k", sig.Evidence["observation_key"])
+	}
+}
+
+func TestSynthesize_CaptureCannotShadowReservedKeys(t *testing.T) {
+	cfg := &signalConfig{SchemaVersion: "1.0.0", SensorID: "s", Angle: "environment", Now: fixedNow(t)}
+	m := signalMatcher{Key: "k", Re: regexp.MustCompile(`(?P<observation_key>\w+) (?P<matched_line>\w+)`), Verdict: "pass", Confidence: 1}
+	sub := m.Re.FindStringSubmatch("aaa bbb")
+	sig := cfg.synthesize(m, sub)
+	if sig.Evidence["observation_key"] != "k" {
+		t.Errorf("capture shadowed reserved observation_key: %v", sig.Evidence["observation_key"])
+	}
+	if sig.Evidence["matched_line"] != "aaa bbb" {
+		t.Errorf("matched_line = %v, want full line", sig.Evidence["matched_line"])
+	}
+}
+
 // Plain human-readable stdout (no leading '{') must NOT be treated as a
 // malformed signal: no parse-error, no decoded signal — just teed to raw.log.
 func TestPumpStdout_PlainTextIsNotAParseError(t *testing.T) {

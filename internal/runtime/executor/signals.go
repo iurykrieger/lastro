@@ -42,13 +42,18 @@ func (o *signalConfig) synthesize(m signalMatcher, sub []string) signal.Signal {
 	if o.Now != nil {
 		now = o.Now
 	}
-	ev := signal.Evidence{"observation_key": m.Key, "matched_line": sub[0]}
+	ev := signal.Evidence{}
+	// Named capture groups become evidence fields. Written first so the
+	// reserved keys below always win even if a group is named observation_key
+	// or matched_line.
 	for i, name := range m.Re.SubexpNames() {
-		if i == 0 || name == "" {
+		if i == 0 || name == "" || i >= len(sub) {
 			continue
 		}
 		ev[name] = sub[i]
 	}
+	ev["observation_key"] = m.Key
+	ev["matched_line"] = sub[0]
 	return signal.Signal{
 		SchemaVersion: o.SchemaVersion,
 		SensorID:      o.SensorID,
@@ -65,8 +70,9 @@ func (o *signalConfig) synthesize(m signalMatcher, sub []string) signal.Signal {
 // matchLine tests line against every matcher; each hit synthesizes a signal,
 // tees it to signalsJSONL, and records it in out. Shared by stdout/stderr pumps.
 func (o *signalConfig) matchLine(line []byte, signalsJSONL *jsonlWriter, out *pumpOutput) {
+	s := string(line)
 	for _, m := range o.Matchers {
-		sub := m.Re.FindStringSubmatch(string(line))
+		sub := m.Re.FindStringSubmatch(s)
 		if sub == nil {
 			continue
 		}

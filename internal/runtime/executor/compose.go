@@ -27,7 +27,7 @@ type topStepArgs struct {
 	RunDir      string
 	UseCase     *usecase.UseCase
 	ExpectedObs []string
-	Obs         *observationConfig
+	Obs         *signalConfig
 	RawLog      *rawLog
 	SignalsW    *jsonlWriter
 	Stop        <-chan struct{}

@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -96,32 +97,60 @@ func (e *Executor) Run(
 		return aggregate.AggregateSignal{}, fmt.Errorf("executor: use case lookup failed for sensor %q", s.ID)
 	}
 
-	// Build observation matchers for sensors that declare expected_observations.
-	// Each compiles to a regex tested against streamed stdout lines; a match
-	// synthesizes an observation signal keyed by Key. The keys also feed
-	// completeness, so merge them into expectedObs.
-	matchers := make([]observationMatcher, 0, len(s.ExpectedObservations))
-	for _, eo := range s.ExpectedObservations {
-		re, cerr := regexp.Compile(eo.Pattern)
+	// Compile signal_matches into matchers, applying defaults (verdict=pass,
+	// confidence=1) and synthesizing a heal_hint for fail/warn matchers that
+	// omit one (the Signal schema requires it). Expected (pass-only) keys feed
+	// completeness.
+	matchers := make([]signalMatcher, 0, len(s.SignalMatches))
+	for _, sm := range s.SignalMatches {
+		re, cerr := regexp.Compile(sm.Pattern)
 		if cerr != nil {
-			return aggregate.AggregateSignal{}, fmt.Errorf("executor: expected_observation %q: bad pattern %q: %w", eo.Key, eo.Pattern, cerr)
+			return aggregate.AggregateSignal{}, fmt.Errorf("executor: signal_match %q: bad pattern %q: %w", sm.Key, sm.Pattern, cerr)
 		}
-		matchers = append(matchers, observationMatcher{Key: eo.Key, Re: re})
-		expectedObs = mergeKeys(expectedObs, []string{eo.Key})
+		verdict := sm.Verdict
+		if verdict == "" {
+			verdict = enums.VerdictPass
+		}
+		confidence := 1.0
+		if sm.Confidence != nil {
+			confidence = *sm.Confidence
+		}
+		var hh *signal.HealHint
+		if sm.HealHint != nil {
+			hh = &signal.HealHint{Summary: sm.HealHint.Summary, Rationale: sm.HealHint.Rationale}
+		}
+		if (verdict == enums.VerdictFail || verdict == enums.VerdictWarn) && hh == nil {
+			hh = &signal.HealHint{
+				Summary:   fmt.Sprintf("matched %s pattern %q", verdict, sm.Key),
+				Rationale: fmt.Sprintf("a stdout/stderr line matched signal_match %q", sm.Key),
+			}
+		}
+		matchers = append(matchers, signalMatcher{Key: sm.Key, Re: re, Verdict: verdict, Confidence: confidence, HealHint: hh})
+		if sm.Expected {
+			expectedObs = mergeKeys(expectedObs, []string{sm.Key})
+		}
 	}
-	// obs is non-nil for any observational sensor — whether its expected
-	// observation keys come from the caller (expectedObs) or from declared
-	// regex matchers. A non-nil obs enables observation_key collection from
-	// decoded signals; matchers add synthesis from plain stdout lines.
-	var obs *observationConfig
+	var obs *signalConfig
 	if len(expectedObs) > 0 || len(matchers) > 0 {
-		obs = &observationConfig{
+		obs = &signalConfig{
 			SchemaVersion: observationSignalSchemaVersion,
 			SensorID:      s.ID,
 			UseCaseID:     s.UseCaseID,
 			Angle:         s.Angle,
 			Now:           e.opts.Now,
 			Matchers:      matchers,
+		}
+		// Probe-validate each matcher: a representative signal must satisfy the
+		// Signal schema, so emitted signals are valid by construction.
+		for _, m := range matchers {
+			probe := obs.synthesize(m, []string{"<probe>"})
+			b, mErr := json.Marshal(probe)
+			if mErr != nil {
+				return aggregate.AggregateSignal{}, fmt.Errorf("executor: marshal probe signal for %q: %w", m.Key, mErr)
+			}
+			if _, vErr := signal.DecodeLine(b); vErr != nil {
+				return aggregate.AggregateSignal{}, fmt.Errorf("executor: signal_match %q produces an invalid signal: %w", m.Key, vErr)
+			}
 		}
 	}
 

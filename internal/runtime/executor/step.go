@@ -30,8 +30,8 @@ type stepArgs struct {
 	Resolver    *template.Resolver
 	Signaler    process.GroupSignaler
 	Shell       []string
-	ExpectedObs []string            // nil for assertion sensors
-	Obs         *observationConfig  // non-nil only for observational sensors with expected_observations
+	ExpectedObs []string      // nil for assertion sensors
+	Obs         *signalConfig // non-nil only for observational sensors with signal_matches
 	RawLog      *rawLog
 	SignalsW    *jsonlWriter
 	Stop        <-chan struct{}
@@ -52,9 +52,9 @@ type stepArgs struct {
 type stepOutcome struct {
 	Signals           []signal.Signal
 	ObservationKeys   []string
-	ExitErr           error // nil if process exited 0
-	StoppedExternally bool  // closed via stop channel
-	CtxErr            error // ctx.Err() at exit, if any
+	ExitErr           error             // nil if process exited 0
+	StoppedExternally bool              // closed via stop channel
+	CtxErr            error             // ctx.Err() at exit, if any
 	Outputs           map[string]string // parsed from $HARNESS_OUTPUT after step exits
 }
 

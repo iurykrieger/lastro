@@ -21,7 +21,7 @@ func TestPumpStdout_HappyPath(t *testing.T) {
 	signalsJSONL, _ := newJSONLWriter(dir + "/signals.jsonl")
 	defer signalsJSONL.Close()
 
-	out, err := pumpStdout(stdout, 1, rl, signalsJSONL, &observationConfig{} /*observational, no matchers*/)
+	out, err := pumpStdout(stdout, 1, rl, signalsJSONL, &signalConfig{} /*observational, no matchers*/)
 	if err != nil {
 		t.Fatalf("pumpStdout: %v", err)
 	}
@@ -71,15 +71,15 @@ func TestPumpStdout_RegexMatchSynthesizesObservationSignal(t *testing.T) {
 	jw, _ := newJSONLWriter(dir + "/signals.jsonl")
 	defer jw.Close()
 
-	obs := &observationConfig{
+	obs := &signalConfig{
 		SchemaVersion: "1.0.0",
 		SensorID:      "run-dev",
 		UseCaseID:     "", // core sensor: empty
 		Angle:         "environment",
 		Now:           fixedNow(t),
-		Matchers: []observationMatcher{
-			{Key: "api-ready", Re: regexp.MustCompile(`api ready on :`)},
-			{Key: "dynamodb-up", Re: regexp.MustCompile(`Container dynamodb\s+Started`)},
+		Matchers: []signalMatcher{
+			{Key: "api-ready", Re: regexp.MustCompile(`api ready on :`), Verdict: "pass", Confidence: 1},
+			{Key: "dynamodb-up", Re: regexp.MustCompile(`Container dynamodb\s+Started`), Verdict: "pass", Confidence: 1},
 		},
 	}
 	out, err := pumpStdout(stdout, 1, rl, jw, obs)
@@ -109,6 +109,54 @@ func TestPumpStdout_RegexMatchSynthesizesObservationSignal(t *testing.T) {
 		if ev["observation_key"] == nil {
 			t.Errorf("synthesized signal missing evidence.observation_key: %s", ln)
 		}
+	}
+}
+
+func TestPumpStdout_SignalMatchSynthesis(t *testing.T) {
+	stdout := strings.NewReader(`{"path":"/v1/charges","status_code":500}` + "\n" + `served /health ok` + "\n")
+
+	dir := t.TempDir()
+	rl, _ := newRawLog(dir+"/raw.log", fixedNow(t))
+	defer rl.Close()
+	jw, _ := newJSONLWriter(dir + "/signals.jsonl")
+	defer jw.Close()
+
+	cfg := &signalConfig{
+		SchemaVersion: "1.0.0", SensorID: "s", UseCaseID: "", Angle: "environment",
+		Now: fixedNow(t),
+		Matchers: []signalMatcher{
+			{Key: "http-5xx", Re: regexp.MustCompile(`"status_code":(?P<status>5\d\d)`),
+				Verdict: "fail", Confidence: 1,
+				HealHint: &signal.HealHint{Summary: "5xx", Rationale: "server error"}},
+			{Key: "served", Re: regexp.MustCompile(`served (?P<path>\S+)`),
+				Verdict: "pass", Confidence: 1},
+		},
+	}
+	out, err := pumpStdout(stdout, 1, rl, jw, cfg)
+	if err != nil {
+		t.Fatalf("pumpStdout: %v", err)
+	}
+	if len(out.Signals) != 2 {
+		t.Fatalf("Signals = %d, want 2", len(out.Signals))
+	}
+	var failSig signal.Signal
+	for _, s := range out.Signals {
+		if s.Verdict == "fail" {
+			failSig = s
+		}
+	}
+	if failSig.Verdict != "fail" {
+		t.Fatal("no fail signal emitted")
+	}
+	if got, _ := failSig.Evidence["status"].(string); got != "500" {
+		t.Errorf("evidence.status = %q, want 500", got)
+	}
+	if failSig.HealHint == nil {
+		t.Error("fail signal missing heal_hint")
+	}
+	b, _ := json.Marshal(failSig)
+	if _, derr := signal.DecodeLine(b); derr != nil {
+		t.Errorf("synthesized fail signal invalid: %v", derr)
 	}
 }
 

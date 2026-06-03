@@ -15,32 +15,39 @@ import (
 	"github.com/iurykrieger/lastro/internal/signal"
 )
 
-// observationMatcher is a compiled expected-observation: a regex tested
-// against streamed stdout lines, plus the observation key emitted on a match.
-type observationMatcher struct {
-	Key string
-	Re  *regexp.Regexp
+// signalMatcher is a compiled signal_match: a regex over output lines plus the
+// verdict/confidence/heal_hint of the Signal emitted on a match.
+type signalMatcher struct {
+	Key        string
+	Re         *regexp.Regexp
+	Verdict    enums.Verdict
+	Confidence float64
+	HealHint   *signal.HealHint
 }
 
-// observationConfig carries everything pumpStdout needs to synthesize
-// observation signals from matched stdout lines. It is non-nil only for
-// observational sensors that declare expected_observations.
-type observationConfig struct {
+// signalConfig carries what the pumps need to synthesize signals from matched
+// lines. Non-nil only for sensors that declare signal_matches (or are passed
+// expected keys for JSON-signal observation collection).
+type signalConfig struct {
 	SchemaVersion string
 	SensorID      string
 	UseCaseID     string
 	Angle         enums.ValidationAngle
 	Now           func() time.Time
-	Matchers      []observationMatcher
+	Matchers      []signalMatcher
 }
 
-// synthesize builds an observation signal for a matched line. The line is
-// recorded under evidence.matched_line and the matcher key under
-// evidence.observation_key (which feeds completeness).
-func (o *observationConfig) synthesize(key string, line []byte) signal.Signal {
+func (o *signalConfig) synthesize(m signalMatcher, sub []string) signal.Signal {
 	now := time.Now
 	if o.Now != nil {
 		now = o.Now
+	}
+	ev := signal.Evidence{"observation_key": m.Key, "matched_line": sub[0]}
+	for i, name := range m.Re.SubexpNames() {
+		if i == 0 || name == "" {
+			continue
+		}
+		ev[name] = sub[i]
 	}
 	return signal.Signal{
 		SchemaVersion: o.SchemaVersion,
@@ -48,12 +55,27 @@ func (o *observationConfig) synthesize(key string, line []byte) signal.Signal {
 		UseCaseID:     o.UseCaseID,
 		Angle:         o.Angle,
 		EmittedAt:     now(),
-		Verdict:       enums.VerdictPass,
-		Confidence:    1,
-		Evidence: signal.Evidence{
-			"observation_key": key,
-			"matched_line":    string(line),
-		},
+		Verdict:       m.Verdict,
+		Confidence:    m.Confidence,
+		Evidence:      ev,
+		HealHint:      m.HealHint,
+	}
+}
+
+// matchLine tests line against every matcher; each hit synthesizes a signal,
+// tees it to signalsJSONL, and records it in out. Shared by stdout/stderr pumps.
+func (o *signalConfig) matchLine(line []byte, signalsJSONL *jsonlWriter, out *pumpOutput) {
+	for _, m := range o.Matchers {
+		sub := m.Re.FindStringSubmatch(string(line))
+		if sub == nil {
+			continue
+		}
+		sig := o.synthesize(m, sub)
+		if b, err := json.Marshal(sig); err == nil {
+			_ = signalsJSONL.WriteLine(b)
+			out.Signals = append(out.Signals, sig)
+			out.ObservationKeys = append(out.ObservationKeys, m.Key)
+		}
 	}
 }
 
@@ -82,7 +104,7 @@ type pumpOutput struct {
 //
 // pumpStdout returns when r returns EOF or any scanner-level error. The
 // scanner error (if any) is returned wrapped; a bare EOF returns nil.
-func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter, obs *observationConfig) (pumpOutput, error) {
+func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter, obs *signalConfig) (pumpOutput, error) {
 	out := pumpOutput{}
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 64*1024), maxStdoutLineBytes)
@@ -100,7 +122,7 @@ func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter,
 		// Plain human-readable stdout (e.g. "api ready on :3030" from a
 		// computational sensor) is ordinary output, not a malformed signal:
 		// it is already teed to raw.log above. For observational sensors it is
-		// matched against the expected-observation regexes; otherwise it is
+		// matched against the signal_matches regexes; otherwise it is
 		// skipped without emitting a noisy parse-error. A parse-error is
 		// reserved for lines that attempt to be a signal ('{' ...) but fail.
 		if trimmed[0] != '{' {
@@ -112,6 +134,12 @@ func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter,
 		sig, err := signal.DecodeLine(trimmed)
 		if err != nil {
 			rl.WriteAnnotated(stepIdx, "parse-error", []byte(err.Error()))
+			// Even though the line is not a valid Signal, it may still match
+			// a signal_match regex (e.g. a JSON log line from the app that
+			// contains a field the matcher looks for).
+			if obs != nil {
+				obs.matchLine(trimmed, signalsJSONL, &out)
+			}
 			continue
 		}
 		out.Signals = append(out.Signals, sig)
@@ -133,7 +161,7 @@ func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter,
 // against the expected-observation regexes, since tools like docker compose
 // print status ("Container X Healthy") to stderr rather than stdout.
 // Returns when r returns EOF.
-func pumpStderr(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter, obs *observationConfig) (pumpOutput, error) {
+func pumpStderr(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter, obs *signalConfig) (pumpOutput, error) {
 	out := pumpOutput{}
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 64*1024), maxStdoutLineBytes)
@@ -199,21 +227,4 @@ func (j *jsonlWriter) Close() error {
 	}
 	j.f = nil
 	return err
-}
-
-// matchLine tests line against every matcher and, for each hit, synthesizes
-// an observation signal: tees it to signalsJSONL and records it in out. Used
-// by both the stdout and stderr pumps so observations are detected on either
-// stream (docker compose, for instance, prints status to stderr).
-func (o *observationConfig) matchLine(line []byte, signalsJSONL *jsonlWriter, out *pumpOutput) {
-	for _, m := range o.Matchers {
-		if m.Re.Match(line) {
-			sig := o.synthesize(m.Key, line)
-			if b, err := json.Marshal(sig); err == nil {
-				_ = signalsJSONL.WriteLine(b)
-				out.Signals = append(out.Signals, sig)
-				out.ObservationKeys = append(out.ObservationKeys, m.Key)
-			}
-		}
-	}
 }

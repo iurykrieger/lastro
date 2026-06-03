@@ -1,11 +1,11 @@
-# Sensor example — assertion / inferential / stream.
-# Contracts sensor judges each OpenAPI endpoint.
+# Sensor example — assertion / computational / stream.
+# Contracts sensor: validates the OpenAPI spec and gRPC proto in one pass.
 schema_version: 1.0.0
 id: contracts-create-order-sensor
 use_case_id: create-order-use-case
 angle: contracts
 kind: assertion
-nature: inferential
+nature: computational
 output_type: stream
 
 uses:
@@ -13,7 +13,9 @@ uses:
   - grpc
 
 steps:
-  - id: extract-endpoints
-    run: "harness extract-openapi src/api.yaml"
-  - id: judge-each
-    run: "harness llm-judge --rubric contract-per-endpoint --input ${{ fixtures.order-input-fixture }} --expected ${{ fixtures.order-output-fixture }}"
+  - id: lint-openapi
+    run: "npx @redocly/cli lint src/api.yaml --format compact"
+  - id: compile-proto
+    run: "protoc --proto_path=. --descriptor_set_out=/dev/null api.proto"
+signal_matches:
+  - { key: spec-error, pattern: "[Ee]rror", verdict: fail, heal_hint: { summary: "Contract violation found", rationale: "Fix the OpenAPI spec or proto file to match the declared interface." } }

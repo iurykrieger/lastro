@@ -52,6 +52,28 @@ One sensor per angle in `applicable_angles`. For each sensor, write a YAML file 
 
 See `schemas/examples/sensor/*.yaml` for shape examples per angle and kind.
 
+### Command grounding rule
+
+Steps MUST invoke only real executables: tools that appear in the stack manifest
+(matched by a `uses:` id), standard POSIX utilities (`curl`, `diff`, `tail`,
+`cat`, `docker`), or the project's own test runner. Never write `harness <subcommand>`
+in a `run:` field — those subcommands are not installed and will fail with `exit 127`.
+
+Per-angle real command patterns:
+
+| Angle | Real command pattern |
+|-------|---------------------|
+| `build` | Compiler: `go build ./...`, `npm run build`, `tsc --noEmit` |
+| `unit-test` | Test runner: `go test ./...`, `jest --json`, `pytest -q` |
+| `e2e-test` | Compose the `e2e-test` core primitive via `uses:` + `with:` |
+| `code-structure` | Lint tool in `uses:`: `golangci-lint run`, `npx eslint` |
+| `contracts` | Spec validator: `protoc --descriptor_set_out=/dev/null`, `npx @redocly/cli lint` |
+| `logs` | Tail process output: `docker logs --follow <container> 2>&1`, `tail -f <log>` |
+| `metrics` | Scrape endpoint: `curl -sS http://localhost:9090/metrics \| grep <key>` |
+| `database` | Stack CLI or probe: `aws dynamodb get-item ...`, `go run ./probe/db` |
+| `performance` | Load tool in `uses:`: `hey -n 100 http://...`, `k6 run script.js` |
+| `security` | Scanner in `uses:`: `gosec ./...`, `npm audit --json` |
+
 ### Composing core primitives + demanding inputs
 
 A use-case sensor composes a core primitive via `uses:` + `with:`. Bind the inputs the

@@ -1,11 +1,11 @@
-# Sensor example — assertion / inferential / single-shot.
-# Code-structure sensor uses an LLM judge over the diff.
+# Sensor example — assertion / computational / single-shot.
+# Code-structure sensor: ESLint lints the order handler for style violations.
 schema_version: 1.0.0
 id: code-structure-create-order-sensor
 use_case_id: create-order-use-case
 angle: code-structure
 kind: assertion
-nature: inferential
+nature: computational
 output_type: single-shot
 
 uses:
@@ -13,7 +13,8 @@ uses:
   - eslint
 
 steps:
-  - id: collect-context
-    run: "harness collect-files src/handlers/orders.ts"
-  - id: judge
-    run: "harness llm-judge --rubric code-structure"
+  - id: lint
+    run: "npx eslint src/handlers/orders.ts --format compact"
+signal_matches:
+  - { key: lint-clean, pattern: "0 problems", verdict: pass }
+  - { key: lint-errors, pattern: "[1-9][0-9]* error", verdict: fail, heal_hint: { summary: "ESLint reported errors", rationale: "Fix linting violations in src/handlers/orders.ts." } }

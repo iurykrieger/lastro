@@ -99,7 +99,10 @@ func computeConfidence(signals []signalstub.Signal, v enums.Verdict) float64 {
 }
 
 func computeCompleteness(in RollupInput) *Completeness {
-	if in.Kind != enums.KindObservational {
+	// Completeness applies to observational sensors (always) and to any sensor
+	// that declares expected observation keys (e.g. assertion sensors with
+	// expected signal_matches).
+	if in.Kind != enums.KindObservational && len(in.ExpectedObservations) == 0 {
 		return nil
 	}
 	expected := append([]string(nil), in.ExpectedObservations...)

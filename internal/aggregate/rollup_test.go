@@ -219,3 +219,25 @@ func TestRollupObservationalCleanCoverageIsPass(t *testing.T) {
 		t.Errorf("Verdict = %q, want pass", got.Verdict)
 	}
 }
+
+func TestCompleteness_AppliesToAssertionWhenExpected(t *testing.T) {
+	agg, err := Rollup(RollupInput{
+		Signals:              nil,
+		SensorID:             "s",
+		Angle:                enums.AngleE2ETest,
+		Kind:                 enums.KindAssertion,
+		OutputType:           enums.OutputSingleShot,
+		TerminationReason:    enums.TerminationCompleted,
+		ExpectedObservations: []string{"created"},
+		ObservedKeys:         nil, // "created" never observed
+	})
+	if err != nil {
+		t.Fatalf("Rollup: %v", err)
+	}
+	if agg.Completeness == nil || len(agg.Completeness.MissingObservations) != 1 {
+		t.Fatalf("expected 1 missing observation for assertion sensor, got %+v", agg.Completeness)
+	}
+	if agg.Verdict != enums.VerdictFail {
+		t.Errorf("verdict = %q, want fail (missing expected observation)", agg.Verdict)
+	}
+}

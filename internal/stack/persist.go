@@ -7,8 +7,8 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/iurykrieger/lastro/internal/enums"
-	"github.com/iurykrieger/lastro/internal/persisthelp"
 	"github.com/iurykrieger/lastro/internal/persisterror"
+	"github.com/iurykrieger/lastro/internal/persisthelp"
 )
 
 const manifestFilename = "stack-manifest.yaml"
@@ -89,4 +89,3 @@ func Persist(content []byte, harnessDir string) error {
 	}
 	return nil
 }
-

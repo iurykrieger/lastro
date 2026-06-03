@@ -342,3 +342,76 @@ func TestStopFromOtherProcess_Child(t *testing.T) {
 	// The parent greps for this exact substring in our stdout.
 	fmt.Printf("verdict=%s\n", agg.Verdict)
 }
+
+func TestRunWatcher_RegistersRunsAndDeregisters(t *testing.T) {
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "obs-watcher", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+		Uses:  []string{"fake"},
+		Steps: []sensor.Step{{ID: "watch", Run: fakeSensorBin + " watch --emit k1 --emit k2 --interval 20ms"}},
+	}
+	lc := newTestLifecycle(t, []sensor.Sensor{s})
+	runID := lc.GenerateRunID()
+	runDir := lc.RunDirFor(s.ID, runID)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- lc.RunWatcher(ctx, s.ID, runID, runDir, []string{"k1", "k2"}) }()
+
+	// While running: the watcher must register itself with this process's
+	// PID, and signals.jsonl must accumulate.
+	signalsPath := filepath.Join(runDir, "signals.jsonl")
+	deadline := time.Now().Add(2 * time.Second)
+	registered := false
+	for time.Now().Before(deadline) {
+		if e, ok, _ := lc.FindRunning(s.ID, runID); ok && e.PID == os.Getpid() {
+			registered = true
+			if b, err := os.ReadFile(signalsPath); err == nil && bytes.Count(b, []byte{'\n'}) >= 2 {
+				break
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if !registered {
+		cancel()
+		<-done
+		t.Fatalf("watcher never registered in running_sensors.json")
+	}
+
+	cancel() // graceful stop, like a cross-process SIGTERM
+	select {
+	case <-done:
+	case <-time.After(3 * time.Second):
+		t.Fatalf("RunWatcher did not return after ctx cancel")
+	}
+
+	if _, ok := readAggregateJSON(filepath.Join(runDir, "aggregate.json")); !ok {
+		t.Errorf("aggregate.json not written after RunWatcher returned")
+	}
+	entries, _ := lc.registry.List()
+	if len(entries) != 0 {
+		t.Errorf("registry entries after RunWatcher = %d, want 0", len(entries))
+	}
+}
+
+func TestRunWatcher_ErrAssertionSensor(t *testing.T) {
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "watcher-assertion", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:  []string{"fake"},
+		Steps: []sensor.Step{{ID: "only", Run: fakeSensorBin + " signal pass"}},
+	}
+	lc := newTestLifecycle(t, []sensor.Sensor{s})
+	err := lc.RunWatcher(context.Background(), s.ID, lc.GenerateRunID(), t.TempDir(), nil)
+	if !errors.Is(err, ErrAssertionSensor) {
+		t.Errorf("err = %v, want ErrAssertionSensor", err)
+	}
+}
+
+func TestRunWatcher_ErrSensorNotFound(t *testing.T) {
+	lc := newTestLifecycle(t, nil)
+	err := lc.RunWatcher(context.Background(), "no-such-sensor", lc.GenerateRunID(), t.TempDir(), nil)
+	if !errors.Is(err, ErrSensorNotFound) {
+		t.Errorf("err = %v, want ErrSensorNotFound", err)
+	}
+}

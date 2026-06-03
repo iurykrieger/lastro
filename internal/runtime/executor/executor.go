@@ -2,10 +2,11 @@ package executor
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
@@ -18,6 +19,24 @@ import (
 	"github.com/iurykrieger/lastro/internal/usecase/template"
 )
 
+// observationSignalSchemaVersion is the schema_version stamped on synthesized
+// observation signals (must match schemas/signal.yaml's accepted shape).
+const observationSignalSchemaVersion = "1.0.0"
+
+// mergeKeys returns the union of a and b preserving first-seen order.
+func mergeKeys(a, b []string) []string {
+	seen := make(map[string]struct{}, len(a)+len(b))
+	out := make([]string, 0, len(a)+len(b))
+	for _, s := range append(append([]string{}, a...), b...) {
+		if _, dup := seen[s]; dup {
+			continue
+		}
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+	return out
+}
+
 // Options is the dependency wiring an Executor needs. All fields are
 // read-only after New; concurrent Run calls are safe.
 type Options struct {
@@ -25,6 +44,10 @@ type Options struct {
 	Resolver      *template.Resolver
 	FixtureStore  fixture.FixtureStore
 	UseCaseLookup func(sensorID string) (*usecase.UseCase, bool)
+	// SensorLookup resolves a core primitive sensor by id. Required only
+	// when a sensor contains uses-steps; run-step-only sensors never call
+	// it. Wired from the same *sensor.Store the loader builds.
+	SensorLookup  func(id string) (sensor.Sensor, bool)
 	Now           func() time.Time
 	Shell         []string
 	GroupSignaler process.GroupSignaler
@@ -66,9 +89,70 @@ func (e *Executor) Run(
 	expectedObs []string,
 	stop <-chan struct{},
 ) (aggregate.AggregateSignal, error) {
+	// Core-scoped sensors (environment primitives like run-dev) are not bound
+	// to a use case, so a missing lookup is only an error for use-case sensors.
+	// Steps that reference no fixtures tolerate a nil UseCase (see fixturebinder.Bind).
 	uc, ok := e.opts.UseCaseLookup(s.ID)
-	if !ok {
+	if !ok && s.UseCaseID != "" {
 		return aggregate.AggregateSignal{}, fmt.Errorf("executor: use case lookup failed for sensor %q", s.ID)
+	}
+
+	// Compile signal_matches into matchers, applying defaults (verdict=pass,
+	// confidence=1) and synthesizing a heal_hint for fail/warn matchers that
+	// omit one (the Signal schema requires it). Expected (pass-only) keys feed
+	// completeness.
+	matchers := make([]signalMatcher, 0, len(s.SignalMatches))
+	for _, sm := range s.SignalMatches {
+		re, cerr := regexp.Compile(sm.Pattern)
+		if cerr != nil {
+			return aggregate.AggregateSignal{}, fmt.Errorf("executor: signal_match %q: bad pattern %q: %w", sm.Key, sm.Pattern, cerr)
+		}
+		verdict := sm.Verdict
+		if verdict == "" {
+			verdict = enums.VerdictPass
+		}
+		confidence := 1.0
+		if sm.Confidence != nil {
+			confidence = *sm.Confidence
+		}
+		var hh *signal.HealHint
+		if sm.HealHint != nil {
+			hh = &signal.HealHint{Summary: sm.HealHint.Summary, Rationale: sm.HealHint.Rationale}
+		}
+		if (verdict == enums.VerdictFail || verdict == enums.VerdictWarn) && hh == nil {
+			hh = &signal.HealHint{
+				Summary:   fmt.Sprintf("matched %s pattern %q", verdict, sm.Key),
+				Rationale: fmt.Sprintf("a stdout/stderr line matched signal_match %q", sm.Key),
+			}
+		}
+		matchers = append(matchers, signalMatcher{Key: sm.Key, Re: re, Verdict: verdict, Confidence: confidence, HealHint: hh})
+		if sm.Expected {
+			expectedObs = mergeKeys(expectedObs, []string{sm.Key})
+		}
+	}
+	var obs *signalConfig
+	if len(expectedObs) > 0 || len(matchers) > 0 {
+		obs = &signalConfig{
+			SchemaVersion: observationSignalSchemaVersion,
+			SensorID:      s.ID,
+			UseCaseID:     s.UseCaseID,
+			Angle:         s.Angle,
+			Now:           e.opts.Now,
+			Matchers:      matchers,
+		}
+		// Probe-validate each matcher's signal envelope (schema fields + heal_hint requirement). Evidence values are dynamic strings (additionalProperties), so only the envelope is checked here.
+		for _, m := range matchers {
+			probeSub := make([]string, m.Re.NumSubexp()+1)
+			probeSub[0] = "<probe>"
+			probe := obs.synthesize(m, probeSub)
+			b, mErr := json.Marshal(probe)
+			if mErr != nil {
+				return aggregate.AggregateSignal{}, fmt.Errorf("executor: marshal probe signal for %q: %w", m.Key, mErr)
+			}
+			if _, vErr := signal.DecodeLine(b); vErr != nil {
+				return aggregate.AggregateSignal{}, fmt.Errorf("executor: signal_match %q produces an invalid signal: %w", m.Key, vErr)
+			}
+		}
 	}
 
 	if err := os.MkdirAll(filepath.Join(runDir, "scratch"), 0o700); err != nil {
@@ -93,58 +177,49 @@ func (e *Executor) Run(
 	termReason := enums.TerminationCompleted
 	var stepErr error
 
-	for i, step := range s.Steps {
-		stepIdx := i + 1
-		outcome, err := runStep(ctx, stepArgs{
+	// stepOutputs maps a top-level step id to its re-exported outputs.
+	// For run-steps the outputs are the parsed HARNESS_OUTPUT map; for
+	// uses-steps they are the primitive's declared Outputs resolved
+	// against its inner steps' outputs.
+	stepOutputs := map[string]map[string]string{}
+	// globalIdx is a monotonic counter across every physical step
+	// execution (run-steps and the inner steps of expanded uses-steps).
+	// It feeds StepIdx (signal attribution) and the unique stepout tag.
+	globalIdx := 0
+
+	for _, step := range s.Steps {
+		// Build the step-output env from outputs collected by prior
+		// top-level steps. Computed fresh per top-level step so the inner
+		// steps of a uses-step also see earlier consumer-step outputs.
+		stepOutEnv := map[string]string{}
+		for sid, kv := range stepOutputs {
+			for name, val := range kv {
+				stepOutEnv[stepOutEnvName(sid, name)] = val
+			}
+		}
+
+		res := e.execTopStep(ctx, topStepArgs{
+			Sensor:      s,
 			Step:        step,
-			StepIdx:     stepIdx,
+			GlobalIdx:   &globalIdx,
 			RunDir:      runDir,
 			UseCase:     uc,
-			Store:       e.opts.FixtureStore,
-			Resolver:    e.opts.Resolver,
-			Signaler:    e.opts.GroupSignaler,
-			Shell:       e.opts.Shell,
 			ExpectedObs: expectedObs,
+			Obs:         obs,
 			RawLog:      rl,
 			SignalsW:    sw,
 			Stop:        stop,
-			OnStart:     e.opts.OnStepStart,
+			StepOutEnv:  stepOutEnv,
 		})
-		allSignals = append(allSignals, toAggregateSignals(outcome.Signals)...)
-		observedKeys = append(observedKeys, outcome.ObservationKeys...)
 
-		// Context cancellation / timeout / external stop takes priority over
-		// any scan or exit error: when the OS kills the child, the pipe closes
-		// with an error that looks like a structural failure but is actually a
-		// clean shutdown.
-		switch {
-		case outcome.StoppedExternally:
-			termReason = enums.TerminationStopped
-		case errors.Is(outcome.CtxErr, context.DeadlineExceeded):
-			termReason = enums.TerminationTimeout
-			stepErr = outcome.CtxErr
-		case errors.Is(outcome.CtxErr, context.Canceled):
-			termReason = enums.TerminationStopped
-		}
-		if termReason != enums.TerminationCompleted {
-			break
-		}
+		// Store re-exported outputs for use by subsequent steps.
+		stepOutputs[step.ID] = res.Outputs
+		allSignals = append(allSignals, toAggregateSignals(res.Signals)...)
+		observedKeys = append(observedKeys, res.ObservationKeys...)
 
-		// Structural error (template/spawn/binder) → halt with error.
-		// Exception: if signals were already collected, a scan error on
-		// stdout is a spurious pipe-close race (the process exited and the
-		// OS closed the pipe before our scanner finished). Treat it as
-		// non-fatal so the collected signals drive the verdict.
-		if err != nil && len(outcome.Signals) == 0 {
-			termReason = enums.TerminationError
-			stepErr = err
-			break
-		}
-
-		// Non-zero exit without any signals emitted → crash.
-		if outcome.ExitErr != nil && len(outcome.Signals) == 0 {
-			termReason = enums.TerminationError
-			stepErr = fmt.Errorf("%w: %v", ErrStepCrashed, outcome.ExitErr)
+		if res.TermReason != enums.TerminationCompleted {
+			termReason = res.TermReason
+			stepErr = res.StepErr
 			break
 		}
 	}
@@ -201,4 +276,3 @@ func toAggregateSignals(in []signal.Signal) []aggregate.Signal {
 	}
 	return out
 }
-

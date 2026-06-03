@@ -12,10 +12,10 @@ entry_points:
       schedule_or_signal: "0 2 * * *"
 
 given:
-  - "Ledger state matching {{fixtures.ledger-state-fixture}} at 02:00"
+  - "Ledger state matching ${{fixtures.ledger-state-fixture}} at 02:00"
 when:
-  - "The cron trigger fires {{entry_points.daily-reconciliation-worker}}"
+  - "The cron trigger fires ${{entry_points.daily-reconciliation-worker}}"
 then:
-  - "Reconciliation results matching {{fixtures.reconciliation-result-fixture}} are persisted"
+  - "Reconciliation results matching ${{fixtures.reconciliation-result-fixture}} are persisted"
 
 fixture_ids: [ledger-state-fixture, reconciliation-result-fixture]

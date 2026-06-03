@@ -50,6 +50,10 @@ func (r *rawLog) WriteAnnotated(stepIdx int, stream string, content []byte) {
 	// trims trailing zeros, so pad explicitly.
 	ts = padNanos(ts)
 	fmt.Fprintf(r.w, "[%s step-%02d %s] %s\n", ts, stepIdx, stream, content)
+	// Flush after each line so a long-running observational watcher's raw.log
+	// can be tailed live, mirroring jsonlWriter.WriteLine. Content is
+	// unchanged, so golden tests over the final file stay valid.
+	_ = r.w.Flush()
 }
 
 // Flush writes any buffered data to the underlying file without closing it.

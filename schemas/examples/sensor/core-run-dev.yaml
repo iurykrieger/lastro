@@ -1,0 +1,13 @@
+schema_version: 1.0.0
+id: run-dev
+scope: core
+angle: environment
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: boot
+    run: "make dev"
+  - id: wait-ready
+    run: "curl --fail --retry 30 --retry-delay 1 http://localhost:8080/health_check/ready"

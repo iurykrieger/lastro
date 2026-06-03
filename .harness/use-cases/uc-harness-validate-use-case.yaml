@@ -1,0 +1,29 @@
+schema_version: 2.0.0
+id: uc-harness-validate-use-case
+title: "harness CLI validates a use case via the deterministic runtime"
+archetype_scope: [cli]
+
+entry_points:
+  - id: harness-validate-subcommand
+    archetype: cli
+    spec:
+      command: "harness validate --use-case <id>"
+
+given:
+  - "A valid ${{fixtures.sample-harness-tree}} is present under --repo-root"
+when:
+  - "An operator invokes ${{entry_points.harness-validate-subcommand}}"
+then:
+  - "The CLI loads stack-manifest, fixtures, use-cases, and sensors"
+  - "The runtime executes each sensor and aggregates per-use-case verdicts"
+  - "The CLI exits with a code that mirrors the worst use-case verdict"
+
+source_refs:
+  - path: cmd/harness/validate.go
+    symbol: newValidateCmd
+    reason: "user-facing subcommand"
+  - path: cmd/harness/validate_runner.go
+    symbol: RunValidate
+    reason: "drives the lifecycle + aggregator chain"
+
+fixture_ids: [sample-harness-tree]

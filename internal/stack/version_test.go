@@ -63,8 +63,8 @@ func TestStackManifest_Validate_RejectsDifferentMajor(t *testing.T) {
 
 func TestStackManifest_Validate_RejectsWrongApplicableAngles(t *testing.T) {
 	m := StackManifest{
-		SchemaVersion: "1.0.0",
-		Archetype:     enums.ArchetypeHTTPAPI,
+		SchemaVersion:    "1.0.0",
+		Archetype:        enums.ArchetypeHTTPAPI,
 		ApplicableAngles: []enums.ValidationAngle{enums.AngleSecurity}, // missing the rest
 		Components: []StackComponent{{
 			SchemaVersion:     "1.0.0",

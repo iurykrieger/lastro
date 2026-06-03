@@ -12,11 +12,11 @@ entry_points:
       path: /orders
 
 given:
-  - "A request payload matching {{fixtures.order-input-fixture}} is constructed by the client"
+  - "A request payload matching ${{fixtures.order-input-fixture}} is constructed by the client"
 when:
-  - "The client invokes {{entry_points.create-order-endpoint}}"
+  - "The client invokes ${{entry_points.create-order-endpoint}}"
 then:
-  - "The endpoint responds with a payload matching {{fixtures.order-output-fixture}}"
+  - "The endpoint responds with a payload matching ${{fixtures.order-output-fixture}}"
 
 source_refs:
   - path: src/handlers/orders.ts

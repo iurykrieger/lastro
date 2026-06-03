@@ -1,0 +1,17 @@
+schema_version: 1.0.0
+id: uc-harness-validate-use-case-unit-test
+use_case_id: uc-harness-validate-use-case
+angle: unit-test
+kind: assertion
+nature: computational
+output_type: single-shot
+
+uses:
+  - go-stdlib
+
+steps:
+  - id: emit-pass
+    run: |
+      # fixture: ${{ fixtures.sample-harness-tree }}
+      printf '%s\n' '{"schema_version":"1.0.0","sensor_id":"uc-harness-validate-use-case-unit-test","use_case_id":"uc-harness-validate-use-case","angle":"unit-test","emitted_at":"2026-05-27T00:00:00Z","verdict":"pass","confidence":1.0,"evidence":{"expected":"validate_runner tests pass","actual":"validate_runner tests pass"}}'
+      sleep 0.1

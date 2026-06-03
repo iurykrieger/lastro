@@ -14,6 +14,4 @@ uses:
 
 steps:
   - id: start-tail
-    run: "harness log-tail --logger orders --level info"
-    uses:
-      - order-created-log-fixture
+    run: "harness log-tail --logger orders --level info --fixture ${{ fixtures.order-created-log-fixture }}"

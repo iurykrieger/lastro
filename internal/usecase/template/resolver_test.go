@@ -34,7 +34,7 @@ func TestResolveBareFixtureReturnsWholePayload(t *testing.T) {
 	r := mkResolver(t, map[string]string{
 		"fx-a": `{"k":1}`,
 	}, nil)
-	segs, _ := Parse("payload={{fixtures.fx-a}}")
+	segs, _ := Parse("payload=${{fixtures.fx-a}}")
 	got, err := r.Resolve(segs)
 	if err != nil {
 		t.Fatalf("Resolve err: %v", err)
@@ -48,7 +48,7 @@ func TestResolveJSONPathLeaf(t *testing.T) {
 	r := mkResolver(t, map[string]string{
 		"fx-order": `{"customer_id":"c-001","items":[{"sku":"A","qty":2}]}`,
 	}, nil)
-	segs, _ := Parse("{{fixtures.fx-order.customer_id}}")
+	segs, _ := Parse("${{fixtures.fx-order.customer_id}}")
 	got, err := r.Resolve(segs)
 	if err != nil {
 		t.Fatalf("Resolve err: %v", err)
@@ -60,7 +60,7 @@ func TestResolveJSONPathLeaf(t *testing.T) {
 
 func TestResolveJSONPathMissKey(t *testing.T) {
 	r := mkResolver(t, map[string]string{"fx": `{"a":1}`}, nil)
-	segs, _ := Parse("{{fixtures.fx.missing}}")
+	segs, _ := Parse("${{fixtures.fx.missing}}")
 	_, err := r.Resolve(segs)
 	if err == nil {
 		t.Fatal("want error for missing key")
@@ -72,7 +72,7 @@ func TestResolveJSONPathMissKey(t *testing.T) {
 
 func TestResolveJSONPathCrossesScalar(t *testing.T) {
 	r := mkResolver(t, map[string]string{"fx": `{"a":1}`}, nil)
-	segs, _ := Parse("{{fixtures.fx.a.b}}")
+	segs, _ := Parse("${{fixtures.fx.a.b}}")
 	_, err := r.Resolve(segs)
 	if err == nil {
 		t.Fatal("want error when path crosses scalar")
@@ -83,7 +83,7 @@ func TestResolveEntryPointBare(t *testing.T) {
 	r := mkResolver(t, nil, []entrypoint.EntryPoint{
 		{ID: "ep-create", Archetype: enums.ArchetypeHTTPAPI, Spec: map[string]any{}},
 	})
-	segs, _ := Parse("call {{entry_points.ep-create}}")
+	segs, _ := Parse("call ${{entry_points.ep-create}}")
 	got, err := r.Resolve(segs)
 	if err != nil {
 		t.Fatalf("Resolve err: %v", err)
@@ -97,7 +97,7 @@ func TestResolveEntryPointSpecField(t *testing.T) {
 	r := mkResolver(t, nil, []entrypoint.EntryPoint{
 		{ID: "ep-create", Archetype: enums.ArchetypeHTTPAPI, Spec: map[string]any{"method": "POST"}},
 	})
-	segs, _ := Parse("{{entry_points.ep-create.spec.method}}")
+	segs, _ := Parse("${{entry_points.ep-create.spec.method}}")
 	got, err := r.Resolve(segs)
 	if err != nil {
 		t.Fatalf("Resolve err: %v", err)
@@ -111,7 +111,7 @@ func TestResolveEntryPointUnknownSpecKey(t *testing.T) {
 	r := mkResolver(t, nil, []entrypoint.EntryPoint{
 		{ID: "ep", Archetype: enums.ArchetypeHTTPAPI, Spec: map[string]any{"method": "GET"}},
 	})
-	segs, _ := Parse("{{entry_points.ep.spec.nope}}")
+	segs, _ := Parse("${{entry_points.ep.spec.nope}}")
 	_, err := r.Resolve(segs)
 	if err == nil {
 		t.Fatal("want error for unknown spec key")
@@ -120,7 +120,7 @@ func TestResolveEntryPointUnknownSpecKey(t *testing.T) {
 
 func TestResolveUnknownFixtureID(t *testing.T) {
 	r := mkResolver(t, nil, nil)
-	segs, _ := Parse("{{fixtures.fx-missing}}")
+	segs, _ := Parse("${{fixtures.fx-missing}}")
 	_, err := r.Resolve(segs)
 	if err == nil {
 		t.Fatal("want error for unknown fixture")
@@ -129,7 +129,7 @@ func TestResolveUnknownFixtureID(t *testing.T) {
 
 func TestResolveUnknownEntryPointID(t *testing.T) {
 	r := mkResolver(t, nil, nil)
-	segs, _ := Parse("{{entry_points.ep-missing}}")
+	segs, _ := Parse("${{entry_points.ep-missing}}")
 	_, err := r.Resolve(segs)
 	if err == nil {
 		t.Fatal("want error for unknown entry_point")

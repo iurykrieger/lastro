@@ -6,8 +6,8 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"github.com/iurykrieger/lastro/internal/persisthelp"
 	"github.com/iurykrieger/lastro/internal/persisterror"
+	"github.com/iurykrieger/lastro/internal/persisthelp"
 )
 
 // Persist validates an LLM-emitted fixture YAML, patch-bumps its
@@ -76,4 +76,3 @@ func Persist(content []byte, harnessDir string) error {
 	}
 	return nil
 }
-

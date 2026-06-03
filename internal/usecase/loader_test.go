@@ -21,9 +21,9 @@ entry_points:
       method: POST
       path: /x
 given:
-  - "given {{fixtures.fx-x}}"
+  - "given ${{fixtures.fx-x}}"
 when:
-  - "when {{entry_points.ep-x}}"
+  - "when ${{entry_points.ep-x}}"
 then:
   - "then ok"
 fixture_ids: [fx-x]

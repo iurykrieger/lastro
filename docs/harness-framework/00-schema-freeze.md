@@ -68,3 +68,33 @@ If two parallel chunks each invent their own version of `UseCase.id` shape, the 
 - All 9 entity schemas + 5 enum schemas + 1 example each, valid YAML, lint-clean.
 - README.md documenting: the cross-reference table above, naming conventions, schema_version policy.
 - A short check that every example file passes a generic YAML/JSON-Schema validator (does not require Go).
+
+## Change Records
+
+Dated entries below document schema decisions that affect frozen fields after initial gate completion.
+Each entry must land in this file **before** any Go or YAML changes that implement the decision.
+
+### 2026-05-29 — core sensors (issue #24)
+
+- **`Sensor.scope`** (string enum `core | use-case`, default `use-case`): repo-level vs use-case-bound.
+- **`Sensor.use_case_id`** is now **conditional**: required when `scope: use-case`, forbidden when `scope: core`.
+- **`ValidationAngle`** gains an 11th value **`environment`** (boot/datastore preconditions). It is added to the
+  angle enum and `schemas/sensor.yaml`'s inline `angle` enum, but **NOT** to `ValidationPolicy.AngleList`
+  (environment is a DAG precondition, never policy-graded).
+- File layout: core sensors under `.harness/sensors/core/`, use-case sensors under `.harness/sensors/<usecase-id>/`.
+- Backward compatibility: a sensor that omits `scope` defaults to `use-case` and still requires `use_case_id`.
+
+### 2026-06-01 — Parameterized sensors via composition (#26)
+
+- `sensor.yaml` step: discriminated union — a step has **either** `run` (string) **or**
+  `uses` (a single primitive sensor id) + optional `with` (map[string]string). The previous
+  step-level `uses: [fixture-id]` **array** is removed; fixtures are referenced by
+  `${{ fixtures.<id> }}` interpolation in `run`/`with`.
+- `sensor.yaml` adds optional top-level `inputs` (map of `{required?, default?, description?}`)
+  and `outputs` (map of `{from, description?}`).
+- Interpolation sentinel migrates repo-wide from `{{ }}` to `${{ }}`. New contexts:
+  `${{ inputs.<name> }}` and `${{ steps.<id>.outputs.<name> }}`, alongside existing
+  `${{ fixtures.* }}` / `${{ entry_points.* }}`.
+- The executor's `${{fixtures.X}}`-in-run ban (`ErrTemplateFixtureInRun`) is lifted; fixture/input/
+  step-output refs compile to env-var references (`HARNESS_FIXTURE_*`, `HARNESS_INPUT_*`,
+  `HARNESS_STEPOUT_*`), never inline payloads.

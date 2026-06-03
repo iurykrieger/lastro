@@ -33,10 +33,11 @@ func Resolve(global, local *ValidationPolicy) *EffectivePolicy {
 	}
 
 	eff := &EffectivePolicy{
-		SchemaVersion:    SupportedSchemaVersion,
-		ResolvedFrom:     resolvedFrom,
-		PerArchetype:     map[enums.Archetype]map[enums.ValidationAngle]AngleStatus{},
-		InferentialFloor: resolveFloor(sources),
+		SchemaVersion:     SupportedSchemaVersion,
+		ResolvedFrom:      resolvedFrom,
+		PerArchetype:      map[enums.Archetype]map[enums.ValidationAngle]AngleStatus{},
+		InferentialFloor:  resolveFloor(sources),
+		MaxHealIterations: resolveMaxHealIterations(sources),
 	}
 
 	archetypes := unionArchetypes(sources)
@@ -105,6 +106,19 @@ func resolveFloor(sources []policySource) float64 {
 	for _, s := range sources {
 		if s.pol.InferentialFloor != nil {
 			out = *s.pol.InferentialFloor
+		}
+	}
+	return out
+}
+
+// resolveMaxHealIterations walks sources in order (global, local) and returns
+// the last non-nil MaxHealIterations encountered. Falls back to
+// DefaultMaxHealIterations when every source leaves the field nil.
+func resolveMaxHealIterations(sources []policySource) int {
+	out := DefaultMaxHealIterations
+	for _, s := range sources {
+		if s.pol.MaxHealIterations != nil {
+			out = *s.pol.MaxHealIterations
 		}
 	}
 	return out

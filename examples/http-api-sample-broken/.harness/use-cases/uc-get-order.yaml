@@ -1,0 +1,26 @@
+schema_version: 2.0.0
+id: uc-get-order
+title: "Client fetches an existing order"
+archetype_scope: [http-api]
+
+entry_points:
+  - id: get-order-endpoint
+    archetype: http-api
+    spec:
+      method: GET
+      path: /orders/{id}
+
+given:
+  - "An order with id ${{fixtures.existing-order-id}} exists in the store"
+when:
+  - "The client invokes ${{entry_points.get-order-endpoint}} with the order id"
+then:
+  - "The endpoint responds with status 200"
+  - "The response body is JSON describing the order"
+
+source_refs:
+  - path: handlers.go
+    symbol: GetOrderHandler
+    reason: "endpoint detected from mux registration"
+
+fixture_ids: [existing-order-id]

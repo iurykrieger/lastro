@@ -1,0 +1,26 @@
+schema_version: 2.0.0
+id: uc-create-order-success
+title: "Client creates an order with a valid payload"
+archetype_scope: [http-api]
+
+entry_points:
+  - id: create-order-endpoint
+    archetype: http-api
+    spec:
+      method: POST
+      path: /orders
+
+given:
+  - "The client has a valid order payload ${{fixtures.valid-order-payload}}"
+when:
+  - "The client invokes ${{entry_points.create-order-endpoint}} with the payload"
+then:
+  - "The endpoint responds with status 201"
+  - "The response body contains the created order with an id"
+
+source_refs:
+  - path: handlers.go
+    symbol: CreateOrderHandler
+    reason: "endpoint detected from mux registration"
+
+fixture_ids: [valid-order-payload]

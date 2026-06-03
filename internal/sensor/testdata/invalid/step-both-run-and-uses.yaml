@@ -1,0 +1,15 @@
+# Step "probe" sets both run and uses — violates the run-xor-uses discriminated union.
+# Schema oneOf rejects this document; LoadSensorBytes returns an error.
+schema_version: 1.0.0
+id: both-run-and-uses-sensor
+use_case_id: create-order-use-case
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses:
+  - node
+steps:
+  - id: probe
+    run: "echo hello"
+    uses: some-primitive

@@ -12,10 +12,10 @@ entry_points:
       target_channel_name: payments.processed
 
 given:
-  - "A successful card charge has occurred matching {{fixtures.charge-success-state-fixture}}"
+  - "A successful card charge has occurred matching ${{fixtures.charge-success-state-fixture}}"
 when:
   - "The service publishes its outbound event"
 then:
-  - "An event matching {{fixtures.payment-processed-event-fixture}} is published to {{entry_points.emit-payment-processed}}"
+  - "An event matching ${{fixtures.payment-processed-event-fixture}} is published to ${{entry_points.emit-payment-processed}}"
 
 fixture_ids: [charge-success-state-fixture, payment-processed-event-fixture]

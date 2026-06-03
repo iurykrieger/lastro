@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/iurykrieger/lastro/internal/enums"
 )
 
 func TestLoadSensor_DuplicateStepID(t *testing.T) {
@@ -47,22 +49,9 @@ func TestLoadSensor_DuplicateTopLevelUses(t *testing.T) {
 	}
 }
 
-func TestLoadSensor_DuplicateStepUses(t *testing.T) {
-	path := filepath.Join("testdata", "invalid", "duplicate-step-uses.yaml")
-	_, err := LoadSensor(path)
-	if err == nil {
-		t.Fatal("expected error for duplicate step-level uses, got nil")
-	}
-	if !errorsJoinContains(err, "duplicate uses id") {
-		t.Errorf("error did not mention duplicate uses id; got: %v", err)
-	}
-	if !errorsJoinContains(err, "probe") {
-		t.Errorf("error did not name the offending step 'probe'; got: %v", err)
-	}
-	if !errorsJoinContains(err, "order-input-fixture") {
-		t.Errorf("error did not name the duplicated fixture id; got: %v", err)
-	}
-}
+// TestLoadSensor_DuplicateStepUses is removed: step-level uses is now a
+// scalar primitive id, so "duplicate step uses" is not a representable state.
+// Task 8 introduces checkStepShape which validates run-xor-uses exclusivity.
 
 func TestLoadSensor_SelfDependency(t *testing.T) {
 	path := filepath.Join("testdata", "invalid", "self-dep.yaml")
@@ -88,6 +77,91 @@ func TestLoadSensor_MultiViolation(t *testing.T) {
 		if !errorsJoinContains(err, want) {
 			t.Errorf("joined error missing %q; got: %v", want, err)
 		}
+	}
+}
+
+func TestValidateIntrinsic_CoreScopeForbidsUseCaseID(t *testing.T) {
+	s := Sensor{
+		ID: "run-dev", Scope: enums.ScopeCore, UseCaseID: "order-create",
+		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Steps: []Step{{ID: "boot", Run: "make dev"}},
+	}
+	err := validateIntrinsic(s)
+	if err == nil || !strings.Contains(err.Error(), "core") {
+		t.Fatalf("expected core-scope use_case_id error, got %v", err)
+	}
+}
+
+func TestValidateIntrinsic_UseCaseScopeRequiresUseCaseID(t *testing.T) {
+	s := Sensor{
+		ID: "x-build", Scope: enums.ScopeUseCase, UseCaseID: "",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Steps: []Step{{ID: "c", Run: "go build ./..."}},
+	}
+	err := validateIntrinsic(s)
+	if err == nil || !strings.Contains(err.Error(), "use_case_id") {
+		t.Fatalf("expected missing use_case_id error, got %v", err)
+	}
+}
+
+func TestValidateStepShapeRunXorUses(t *testing.T) {
+	bad := Sensor{ID: "x", Steps: []Step{{ID: "s"}}} // neither run nor uses
+	if err := validateIntrinsic(bad); err == nil {
+		t.Fatal("expected error for step with neither run nor uses")
+	}
+	both := Sensor{ID: "x", Steps: []Step{{ID: "s", Run: "echo", Uses: "p"}}}
+	if err := validateIntrinsic(both); err == nil {
+		t.Fatal("expected error for step with both run and uses")
+	}
+}
+
+func TestValidateWithOnlyOnUsesStep(t *testing.T) {
+	bad := Sensor{ID: "x", Steps: []Step{{ID: "s", Run: "echo", With: map[string]string{"a": "b"}}}}
+	if err := validateIntrinsic(bad); err == nil {
+		t.Fatal("expected error: with on a run-step")
+	}
+}
+
+func TestCheckStepShapeDirect(t *testing.T) {
+	if checkStepShape(Sensor{Steps: []Step{{ID: "ok", Run: "echo"}}}) != nil {
+		t.Error("valid run-step should pass")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "ok", Uses: "p"}}}) != nil {
+		t.Error("valid uses-step should pass")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "u", Uses: "p", With: map[string]string{"k": "v"}}}}) != nil {
+		t.Error("uses-step with `with` should pass")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "bad"}}}) == nil {
+		t.Error("neither run nor uses should fail")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "bad", Run: "e", Uses: "p"}}}) == nil {
+		t.Error("both run and uses should fail")
+	}
+	if checkStepShape(Sensor{Steps: []Step{{ID: "bad", Run: "e", With: map[string]string{"k": "v"}}}}) == nil {
+		t.Error("with on run-step should fail")
+	}
+}
+
+func TestCheckSignalMatches_DuplicateKey(t *testing.T) {
+	s := Sensor{SignalMatches: []SignalMatch{
+		{Key: "k", Pattern: "a"},
+		{Key: "k", Pattern: "b"},
+	}}
+	if err := checkSignalMatches(s); err == nil {
+		t.Fatal("expected duplicate-key error, got nil")
+	}
+}
+
+func TestCheckSignalMatches_OK(t *testing.T) {
+	s := Sensor{SignalMatches: []SignalMatch{
+		{Key: "ok", Pattern: "a", Expected: true},   // expected on default (pass)
+		{Key: "err", Pattern: "b", Verdict: "fail"}, // fail without expected
+	}}
+	if err := checkSignalMatches(s); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

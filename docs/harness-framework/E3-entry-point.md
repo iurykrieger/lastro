@@ -15,7 +15,7 @@ In:
 
 Out:
 - The UseCase that owns these entry points (that's E4).
-- The `{{entry_points.<id>}}` interpolation grammar (also E4 — interpolation operates on a fully loaded UseCase).
+- The `${{entry_points.<id>}}` interpolation grammar (also E4 — interpolation operates on a fully loaded UseCase).
 
 ## Archetype-specific spec shapes (from plan §4.1.1)
 

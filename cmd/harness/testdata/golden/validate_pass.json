@@ -1,0 +1,53 @@
+{
+  "cli_schema_version": "1.0.0",
+  "run_id": "01J0000000000000000000000",
+  "command": "validate",
+  "args": [
+    "--use-case",
+    "create-order"
+  ],
+  "started_at": "2026-05-25T12:34:56.789Z",
+  "ended_at": "2026-05-25T12:34:58.012Z",
+  "duration_ms": 1223,
+  "harness_version": "0.1.0",
+  "result": {
+    "summary": {
+      "fail_count": 0,
+      "inconclusive_count": 0,
+      "pass_count": 1,
+      "total_use_cases": 1
+    },
+    "verdicts": [
+      {
+        "archetype": "http-api",
+        "confidence": 0.94,
+        "evaluated_angles": [
+          "build"
+        ],
+        "failing_angles": [],
+        "heal_hints": [],
+        "obligatory_satisfied": true,
+        "sensors": [
+          {
+            "angle": "build",
+            "confidence": 1,
+            "ended_at": "2026-05-25T12:34:58.012Z",
+            "rollup": {
+              "total_signals": 1,
+              "pass_count": 1,
+              "warn_count": 0,
+              "fail_count": 0,
+              "inconclusive_count": 0
+            },
+            "sensor_id": "create-order--build",
+            "started_at": "2026-05-25T12:34:56.789Z",
+            "verdict": "pass"
+          }
+        ],
+        "use_case_id": "create-order",
+        "verdict": "pass",
+        "warning_angles": []
+      }
+    ]
+  }
+}

@@ -3,6 +3,8 @@ package sensor
 import (
 	"errors"
 	"fmt"
+
+	"github.com/iurykrieger/lastro/internal/enums"
 )
 
 // validateIntrinsic runs every post-schema invariant on s and returns
@@ -18,10 +20,16 @@ func validateIntrinsic(s Sensor) error {
 	if err := checkUniqueTopLevelUses(s); err != nil {
 		errs = append(errs, err)
 	}
-	if err := checkUniqueStepUses(s); err != nil {
+	if err := checkStepShape(s); err != nil {
 		errs = append(errs, err)
 	}
 	if err := checkNoSelfDependency(s); err != nil {
+		errs = append(errs, err)
+	}
+	if err := checkScopeConsistency(s); err != nil {
+		errs = append(errs, err)
+	}
+	if err := checkSignalMatches(s); err != nil {
 		errs = append(errs, err)
 	}
 	if len(errs) == 0 {
@@ -62,20 +70,19 @@ func checkUniqueTopLevelUses(s Sensor) error {
 	return fmt.Errorf("duplicate uses id(s): %v", dups)
 }
 
-func checkUniqueStepUses(s Sensor) error {
+func checkStepShape(s Sensor) error {
 	var errs []error
 	for _, st := range s.Steps {
-		seen := make(map[string]bool, len(st.Uses))
-		var dups []string
-		for _, id := range st.Uses {
-			if seen[id] {
-				dups = append(dups, id)
-				continue
-			}
-			seen[id] = true
+		hasRun := st.Run != ""
+		hasUses := st.Uses != ""
+		switch {
+		case hasRun && hasUses:
+			errs = append(errs, fmt.Errorf("step %q: has both run and uses", st.ID))
+		case !hasRun && !hasUses:
+			errs = append(errs, fmt.Errorf("step %q: has neither run nor uses", st.ID))
 		}
-		if len(dups) > 0 {
-			errs = append(errs, fmt.Errorf("step %q: duplicate uses id(s): %v", st.ID, dups))
+		if hasRun && len(st.With) > 0 {
+			errs = append(errs, fmt.Errorf("step %q: with is only valid on a uses-step", st.ID))
 		}
 	}
 	if len(errs) == 0 {
@@ -91,4 +98,33 @@ func checkNoSelfDependency(s Sensor) error {
 		}
 	}
 	return nil
+}
+
+func checkScopeConsistency(s Sensor) error {
+	switch s.Scope {
+	case enums.ScopeCore:
+		if s.UseCaseID != "" {
+			return fmt.Errorf("scope=core forbids use_case_id (got %q)", s.UseCaseID)
+		}
+	case enums.ScopeUseCase, "": // "" treated as use-case (loader defaults it)
+		if s.UseCaseID == "" {
+			return fmt.Errorf("scope=use-case requires use_case_id")
+		}
+	}
+	return nil
+}
+
+func checkSignalMatches(s Sensor) error {
+	seen := map[string]bool{}
+	var errs []error
+	for _, m := range s.SignalMatches {
+		if seen[m.Key] {
+			errs = append(errs, fmt.Errorf("signal_match key %q is declared more than once", m.Key))
+		}
+		seen[m.Key] = true
+		if m.Expected && m.Verdict != "" && m.Verdict != enums.VerdictPass {
+			errs = append(errs, fmt.Errorf("signal_match %q: expected:true is only valid on pass matchers (got verdict %q)", m.Key, m.Verdict))
+		}
+	}
+	return errors.Join(errs...)
 }

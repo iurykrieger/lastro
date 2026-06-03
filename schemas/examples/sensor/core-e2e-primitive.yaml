@@ -1,0 +1,20 @@
+schema_version: 1.0.0
+id: e2e-test
+scope: core
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: [curl]
+depends_on: [run-dev]
+inputs:
+  method:        { required: true, default: GET }
+  path:          { required: true, default: /health_check/ready }
+  expect_status: { required: false, default: "2xx" }
+outputs:
+  body: { from: "${{ steps.request.outputs.body }}" }
+steps:
+  - id: request
+    run: |
+      resp=$(curl --fail -sS -X "${{ inputs.method }}" "http://localhost:8080${{ inputs.path }}")
+      printf 'body=%s\n' "$resp" >> "$HARNESS_OUTPUT"

@@ -1,0 +1,13 @@
+{
+  "PostToolUse": [
+    {
+      "matcher": "Skill\\((validate-use-case|run-sensor)\\)",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${REPO_ROOT}/skills/heal/hooks/check-heal-needed.sh"
+        }
+      ]
+    }
+  ]
+}

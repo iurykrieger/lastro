@@ -4,11 +4,12 @@ title: Sensor
 description: |
   Grounded validator produced for one (use case × applicable validation
   angle). Top-level `uses:` lists StackComponent ids (grounding invariant).
-  Step-level `uses:` lists Fixture ids (binding per step). No sensor-level
-  fixture list.
+  Step-level `uses:` is a scalar primitive-sensor id for composition; paired
+  with optional `with:` map of input overrides. Step `run:` and `uses:` are
+  mutually exclusive (oneOf discriminated union).
 
 type: object
-required: [schema_version, id, use_case_id, angle, kind, nature, output_type, uses, steps]
+required: [schema_version, id, angle, kind, nature, output_type, uses, steps]
 additionalProperties: false
 
 properties:
@@ -17,13 +18,18 @@ properties:
     pattern: "^\\d+\\.\\d+\\.\\d+$"
   id:
     $ref: "#/$defs/Id"
+  scope:
+    type: string
+    description: "Canonical source: schemas/enums/sensor-scopes.yaml"
+    enum: [core, use-case]
+    default: use-case
   use_case_id:
     $ref: "#/$defs/Id"
   angle:
     type: string
     description: "Canonical source: schemas/enums/validation-angles.yaml"
     enum: [security, build, code-structure, unit-test, e2e-test,
-           contracts, logs, metrics, database, performance]
+           contracts, logs, metrics, database, performance, environment]
   kind:
     type: string
     description: "Canonical source: schemas/enums/sensor-kinds.yaml"
@@ -48,6 +54,60 @@ properties:
     type: array
     minItems: 1
     items: { $ref: "#/$defs/SensorStep" }
+  inputs:
+    type: object
+    additionalProperties:
+      type: object
+      additionalProperties: false
+      properties:
+        required:    { type: boolean, default: false }
+        default:     { type: string }
+        description: { type: string }
+  outputs:
+    type: object
+    additionalProperties:
+      type: object
+      required: [from]
+      additionalProperties: false
+      properties:
+        from:        { type: string, minLength: 1 }
+        description: { type: string }
+  signal_matches:
+    type: array
+    description: |
+      Regex matchers (Go RE2) applied to every stdout/stderr line of any sensor.
+      Each match synthesizes a Signal carrying `verdict` and the named capture
+      groups as evidence. `expected: true` (pass matchers only) feeds completeness.
+    items:
+      type: object
+      required: [key, pattern]
+      additionalProperties: false
+      properties:
+        key:        { $ref: "#/$defs/Id" }
+        pattern:    { type: string, minLength: 1 }
+        verdict:    { type: string, enum: [pass, warn, fail, inconclusive] }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        expected:   { type: boolean }
+        heal_hint:
+          type: object
+          required: [summary, rationale]
+          additionalProperties: false
+          properties:
+            summary:   { type: string, minLength: 1 }
+            rationale: { type: string, minLength: 1 }
+
+allOf:
+  - if:
+      anyOf:
+        - not: { required: [scope] }
+        - properties: { scope: { const: use-case } }
+    then:
+      required: [use_case_id]
+  - if:
+      properties: { scope: { const: core } }
+      required: [scope]
+    then:
+      not: { required: [use_case_id] }
 
 $defs:
   Id:
@@ -57,12 +117,18 @@ $defs:
     maxLength: 128
   SensorStep:
     type: object
-    required: [id, run]
+    required: [id]
     additionalProperties: false
+    oneOf:
+      - required: [run]
+        not: { required: [uses] }
+        properties: { with: false }
+      - required: [uses]
+        not: { required: [run] }
     properties:
       id:   { $ref: "#/$defs/Id" }
       run:  { type: string, minLength: 1 }
-      uses:
-        type: array
-        description: "Fixture ids referenced by this step (must belong to the sensor's use_case_id — runtime invariant)"
-        items: { $ref: "#/$defs/Id" }
+      uses: { $ref: "#/$defs/Id" }
+      with:
+        type: object
+        additionalProperties: { type: string }

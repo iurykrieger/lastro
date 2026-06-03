@@ -16,12 +16,14 @@ properties:
   sensor_id:
     $ref: "#/$defs/Id"
   use_case_id:
-    $ref: "#/$defs/Id"
+    # Core-scoped sensors (environment primitives like run-dev) carry no
+    # use case, so an empty string is permitted here in addition to a valid Id.
+    $ref: "#/$defs/OptionalId"
   angle:
     type: string
     description: "Canonical source: schemas/enums/validation-angles.yaml"
     enum: [security, build, code-structure, unit-test, e2e-test,
-           contracts, logs, metrics, database, performance]
+           contracts, logs, metrics, database, performance, environment]
   emitted_at:
     type: string
     format: date-time
@@ -56,6 +58,12 @@ $defs:
     type: string
     pattern: "^[a-z][a-z0-9-]*$"
     minLength: 1
+    maxLength: 128
+  OptionalId:
+    # A valid Id, or the empty string (used by core-scoped sensors that
+    # have no use_case_id).
+    type: string
+    pattern: "^([a-z][a-z0-9-]*)?$"
     maxLength: 128
   HealHint:
     type: object

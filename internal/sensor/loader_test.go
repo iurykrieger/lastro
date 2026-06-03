@@ -103,8 +103,14 @@ func TestLoadSensor_AllGoldenExamples(t *testing.T) {
 			if s.ID == "" {
 				t.Errorf("loaded sensor has empty ID")
 			}
-			if s.UseCaseID == "" {
-				t.Errorf("loaded sensor has empty UseCaseID")
+			// use_case_id is required for use-case-scoped sensors but must
+			// be absent for core-scoped sensors.
+			isCore := s.Scope == enums.ScopeCore
+			if !isCore && s.UseCaseID == "" {
+				t.Errorf("use-case-scoped sensor has empty UseCaseID")
+			}
+			if isCore && s.UseCaseID != "" {
+				t.Errorf("core-scoped sensor must not have UseCaseID, got %q", s.UseCaseID)
 			}
 			if len(s.Steps) == 0 {
 				t.Errorf("loaded sensor has no steps")
@@ -114,5 +120,144 @@ func TestLoadSensor_AllGoldenExamples(t *testing.T) {
 	}
 	if loaded < 6 {
 		t.Errorf("expected at least 6 sensor example files, found %d — schemas/examples/sensor/ may have shrunk", loaded)
+	}
+}
+
+func TestLoadDirectory_FolderedAndFlat(t *testing.T) {
+	dir := t.TempDir()
+	// legacy flat use-case sensor
+	writeSensor(t, filepath.Join(dir, "oc-build.yaml"), "oc-build", "use-case", "order-create", "build")
+	// foldered use-case sensor
+	if err := os.MkdirAll(filepath.Join(dir, "order-create"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeSensor(t, filepath.Join(dir, "order-create", "oc-e2e.yaml"), "oc-e2e", "use-case", "order-create", "e2e-test")
+	// foldered core sensor
+	if err := os.MkdirAll(filepath.Join(dir, "core"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeSensor(t, filepath.Join(dir, "core", "run-dev.yaml"), "run-dev", "core", "", "environment")
+
+	st, err := LoadDirectory(dir)
+	if err != nil {
+		t.Fatalf("load dir: %v", err)
+	}
+	if len(st.All()) != 3 {
+		t.Fatalf("want 3 sensors, got %d", len(st.All()))
+	}
+	if len(st.ForScope(enums.ScopeCore)) != 1 {
+		t.Fatalf("want 1 core sensor")
+	}
+}
+
+// writeSensor writes a minimal valid sensor YAML to path.
+func writeSensor(t *testing.T, path, id, scope, useCase, angle string) {
+	t.Helper()
+	var ucLine string
+	if useCase != "" {
+		ucLine = "use_case_id: " + useCase + "\n"
+	}
+	body := "schema_version: 1.0.0\nid: " + id + "\nscope: " + scope + "\n" + ucLine +
+		"angle: " + angle + "\nkind: assertion\nnature: computational\noutput_type: single-shot\nuses: []\nsteps:\n  - id: s\n    run: \"echo ok\"\n"
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadSensor_DefaultsScopeToUseCase(t *testing.T) {
+	yaml := []byte(`schema_version: 1.0.0
+id: order-create-build
+use_case_id: order-create
+angle: build
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: compile
+    run: "go build ./..."
+`)
+	s, err := LoadSensorBytes(yaml)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if s.Scope != enums.ScopeUseCase {
+		t.Errorf("scope: got %q, want %q (default)", s.Scope, enums.ScopeUseCase)
+	}
+}
+
+func TestLoadSensor_SignalMatches(t *testing.T) {
+	raw := []byte(`schema_version: 1.0.0
+id: obs
+scope: core
+angle: environment
+kind: observational
+nature: computational
+output_type: stream
+uses: []
+signal_matches:
+  - {key: api-ready, pattern: "ready on :", expected: true}
+  - {key: http-5xx, pattern: "status_code\":5\\d\\d", verdict: fail, heal_hint: {summary: "5xx", rationale: "server error"}}
+steps:
+  - {id: up, run: "docker compose up"}
+`)
+	s, err := LoadSensorBytes(raw)
+	if err != nil {
+		t.Fatalf("LoadSensorBytes: %v", err)
+	}
+	if len(s.SignalMatches) != 2 {
+		t.Fatalf("SignalMatches = %d, want 2", len(s.SignalMatches))
+	}
+	if s.SignalMatches[0].Key != "api-ready" || !s.SignalMatches[0].Expected {
+		t.Errorf("matcher[0] = %+v", s.SignalMatches[0])
+	}
+	if s.SignalMatches[1].Verdict != "fail" || s.SignalMatches[1].HealHint == nil ||
+		s.SignalMatches[1].HealHint.Summary != "5xx" {
+		t.Errorf("matcher[1] = %+v", s.SignalMatches[1])
+	}
+}
+
+func TestLoadSensor_RejectsExpectedOnNonPass(t *testing.T) {
+	raw := []byte(`schema_version: 1.0.0
+id: obs
+scope: core
+angle: environment
+kind: observational
+nature: computational
+output_type: stream
+uses: []
+signal_matches:
+  - {key: bad, pattern: "x", verdict: fail, expected: true, heal_hint: {summary: a, rationale: b}}
+steps:
+  - {id: up, run: "x"}
+`)
+	_, err := LoadSensorBytes(raw)
+	if err == nil {
+		t.Fatal("expected error for expected:true on non-pass matcher")
+	}
+}
+
+func TestLoadSensor_CoreScopeNoUseCase(t *testing.T) {
+	yaml := []byte(`schema_version: 1.0.0
+id: run-dev
+scope: core
+angle: environment
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: boot
+    run: "make dev"
+`)
+	s, err := LoadSensorBytes(yaml)
+	if err != nil {
+		t.Fatalf("load core: %v", err)
+	}
+	if s.Scope != enums.ScopeCore {
+		t.Errorf("scope: got %q, want core", s.Scope)
+	}
+	if s.UseCaseID != "" {
+		t.Errorf("use_case_id: got %q, want empty for core", s.UseCaseID)
 	}
 }

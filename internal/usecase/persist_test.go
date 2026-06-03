@@ -42,9 +42,9 @@ entry_points:
     archetype: http-api
     spec: {method: POST, path: /orders}
 given:
-  - "Request matching {{fixtures.fx-req}} is constructed"
+  - "Request matching ${{fixtures.fx-req}} is constructed"
 when:
-  - "Client invokes {{entry_points.nonexistent}}"
+  - "Client invokes ${{entry_points.nonexistent}}"
 then:
   - "Endpoint returns success"
 fixture_ids: [fx-req]
@@ -91,9 +91,9 @@ entry_points:
     archetype: http-api
     spec: {method: POST, path: /orders}
 given:
-  - "Request matching {{fixtures.fx-create-order-request}} is constructed"
+  - "Request matching ${{fixtures.fx-create-order-request}} is constructed"
 when:
-  - "Client invokes {{entry_points.create-order-endpoint}}"
+  - "Client invokes ${{entry_points.create-order-endpoint}}"
 then:
   - "Endpoint returns success"
 fixture_ids: [fx-create-order-request]
@@ -149,9 +149,9 @@ entry_points:
     archetype: http-api
     spec: {method: POST, path: /orders}
 given:
-  - "Request matching {{fixtures.fx-missing-fixture}} is constructed"
+  - "Request matching ${{fixtures.fx-missing-fixture}} is constructed"
 when:
-  - "Client invokes {{entry_points.create-order-endpoint}}"
+  - "Client invokes ${{entry_points.create-order-endpoint}}"
 then:
   - "Endpoint returns success"
 fixture_ids: [fx-missing-fixture]
@@ -231,9 +231,9 @@ entry_points:
     archetype: http-api
     spec: {method: POST, path: /orders}
 given:
-  - "Request matching {{fixtures.fx-create-order-request}} is constructed"
+  - "Request matching ${{fixtures.fx-create-order-request}} is constructed"
 when:
-  - "Client invokes {{entry_points.create-order-endpoint}}"
+  - "Client invokes ${{entry_points.create-order-endpoint}}"
 then:
   - "Endpoint returns success"
 fixture_ids: [fx-create-order-request]

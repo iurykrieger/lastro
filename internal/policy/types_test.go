@@ -100,3 +100,9 @@ func TestEffectivePolicyHasFloorField(t *testing.T) {
 		t.Errorf("EffectivePolicy.InferentialFloor = %v, want 0.42", e.InferentialFloor)
 	}
 }
+
+func TestDefaultMaxHealIterationsIsThree(t *testing.T) {
+	if DefaultMaxHealIterations != 3 {
+		t.Errorf("DefaultMaxHealIterations = %d, want 3", DefaultMaxHealIterations)
+	}
+}

@@ -160,6 +160,36 @@ func TestPumpStdout_SignalMatchSynthesis(t *testing.T) {
 	}
 }
 
+// A JSON app-log line (starts with '{', not a harness Signal) matched by a
+// signal_match must emit a signal WITHOUT a parse-error in raw.log.
+func TestPumpStdout_JSONAppLogMatchedNoParseError(t *testing.T) {
+	stdout := strings.NewReader(`{"level":"info","status_code":500,"path":"/x"}` + "\n")
+	dir := t.TempDir()
+	rl, _ := newRawLog(dir+"/raw.log", fixedNow(t))
+	defer rl.Close()
+	jw, _ := newJSONLWriter(dir + "/signals.jsonl")
+	defer jw.Close()
+	obs := &signalConfig{
+		SchemaVersion: "1.0.0", SensorID: "s", Angle: "environment", Now: fixedNow(t),
+		Matchers: []signalMatcher{
+			{Key: "http-5xx", Re: regexp.MustCompile(`"status_code":5\d\d`), Verdict: "fail", Confidence: 1,
+				HealHint: &signal.HealHint{Summary: "5xx", Rationale: "server error"}},
+		},
+	}
+	out, err := pumpStdout(stdout, 1, rl, jw, obs)
+	if err != nil {
+		t.Fatalf("pumpStdout: %v", err)
+	}
+	if len(out.Signals) != 1 {
+		t.Fatalf("Signals = %d, want 1", len(out.Signals))
+	}
+	_ = rl.Flush()
+	raw, _ := os.ReadFile(dir + "/raw.log")
+	if strings.Contains(string(raw), "parse-error") {
+		t.Errorf("JSON app log matched by signal_matches must not produce a parse-error; raw.log:\n%s", raw)
+	}
+}
+
 // Plain human-readable stdout (no leading '{') must NOT be treated as a
 // malformed signal: no parse-error, no decoded signal — just teed to raw.log.
 func TestPumpStdout_PlainTextIsNotAParseError(t *testing.T) {

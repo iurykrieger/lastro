@@ -133,12 +133,16 @@ func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter,
 		}
 		sig, err := signal.DecodeLine(trimmed)
 		if err != nil {
-			rl.WriteAnnotated(stepIdx, "parse-error", []byte(err.Error()))
-			// Even though the line is not a valid Signal, it may still match
-			// a signal_match regex (e.g. a JSON log line from the app that
-			// contains a field the matcher looks for).
 			if obs != nil {
+				// The sensor uses signal_matches: a '{'-line that is not a harness
+				// Signal is ordinary (JSON) app output. Match it against the
+				// regexes and do NOT emit a parse-error — otherwise a JSON logger
+				// (e.g. zap) would flood raw.log with one parse-error per line.
 				obs.matchLine(trimmed, signalsJSONL, &out)
+			} else {
+				// No signal_matches: the line tried to be a Signal but is
+				// malformed; surface it for diagnostics.
+				rl.WriteAnnotated(stepIdx, "parse-error", []byte(err.Error()))
 			}
 			continue
 		}

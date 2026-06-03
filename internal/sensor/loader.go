@@ -67,12 +67,6 @@ func LoadSensorBytes(raw []byte) (Sensor, error) {
 		return Sensor{}, fmt.Errorf("intrinsic validation: %w", err)
 	}
 
-	for _, m := range s.SignalMatches {
-		if m.Expected && m.Verdict != "" && m.Verdict != "pass" {
-			return Sensor{}, fmt.Errorf("sensor %q: signal_match %q: expected:true is only valid on pass matchers (got verdict %q)", s.ID, m.Key, m.Verdict)
-		}
-	}
-
 	return s, nil
 }
 

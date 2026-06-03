@@ -29,6 +29,9 @@ func validateIntrinsic(s Sensor) error {
 	if err := checkScopeConsistency(s); err != nil {
 		errs = append(errs, err)
 	}
+	if err := checkSignalMatches(s); err != nil {
+		errs = append(errs, err)
+	}
 	if len(errs) == 0 {
 		return nil
 	}
@@ -109,4 +112,20 @@ func checkScopeConsistency(s Sensor) error {
 		}
 	}
 	return nil
+}
+
+func checkSignalMatches(s Sensor) error {
+	seen := map[string]string{}
+	var errs []error
+	for _, m := range s.SignalMatches {
+		if prev, dup := seen[m.Key]; dup {
+			_ = prev
+			errs = append(errs, fmt.Errorf("signal_match key %q is declared more than once", m.Key))
+		}
+		seen[m.Key] = m.Key
+		if m.Expected && m.Verdict != "" && m.Verdict != enums.VerdictPass {
+			errs = append(errs, fmt.Errorf("signal_match %q: expected:true is only valid on pass matchers (got verdict %q)", m.Key, m.Verdict))
+		}
+	}
+	return errors.Join(errs...)
 }

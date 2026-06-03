@@ -36,12 +36,14 @@ type Sensor struct {
 
 // SignalMatch maps a regex over a sensor's output lines to a synthesized Signal.
 // Verdict defaults to pass and Confidence to 1 when unset (Confidence is a
-// pointer to distinguish unset from 0). Expected is only valid on pass matchers
-// (enforced at load). HealHint is required-by-effect for fail/warn.
+// pointer to distinguish unset from 0; the default of 1 is applied by the
+// consumer when the pointer is nil — the loader does not materialize it).
+// Expected is only valid on pass matchers (enforced at load).
+// HealHint is required-by-effect for fail/warn.
 type SignalMatch struct {
 	Key        string         `json:"key"`
 	Pattern    string         `json:"pattern"`
-	Verdict    string         `json:"verdict,omitempty"`
+	Verdict    enums.Verdict  `json:"verdict,omitempty"`
 	Confidence *float64       `json:"confidence,omitempty"`
 	Expected   bool           `json:"expected,omitempty"`
 	HealHint   *MatchHealHint `json:"heal_hint,omitempty"`

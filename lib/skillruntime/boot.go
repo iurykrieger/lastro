@@ -75,6 +75,9 @@ func BootLifecycle(repoRoot string) (*Booted, error) {
 			uc, ok := useCases[s.UseCaseID]
 			return uc, ok
 		},
+		// Required for sensors that compose core primitives via uses-steps
+		// (e.g. an e2e-test sensor that `uses: e2e-test`).
+		SensorLookup: sensorStore.LookupSensor,
 	})
 
 	runtimeRoot := filepath.Join(harnessDir, "runtime")
@@ -159,6 +162,22 @@ func dirHasYAML(dir string) bool {
 	for _, e := range entries {
 		if !e.IsDir() && filepath.Ext(e.Name()) == ".yaml" {
 			return true
+		}
+	}
+	// LoadDirectory descends one level into subdirectories, so detection must too:
+	// sensors live under sensors/core/ and sensors/<use_case_id>/.
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		subEntries, err := os.ReadDir(filepath.Join(dir, e.Name()))
+		if err != nil {
+			continue
+		}
+		for _, se := range subEntries {
+			if !se.IsDir() && filepath.Ext(se.Name()) == ".yaml" {
+				return true
+			}
 		}
 	}
 	return false

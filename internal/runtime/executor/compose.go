@@ -27,6 +27,7 @@ type topStepArgs struct {
 	RunDir      string
 	UseCase     *usecase.UseCase
 	ExpectedObs []string
+	Obs         *signalConfig
 	RawLog      *rawLog
 	SignalsW    *jsonlWriter
 	Stop        <-chan struct{}
@@ -70,6 +71,7 @@ func (e *Executor) execRunStep(ctx context.Context, a topStepArgs) topStepResult
 		Signaler:    e.opts.GroupSignaler,
 		Shell:       e.opts.Shell,
 		ExpectedObs: a.ExpectedObs,
+		Obs:         a.Obs,
 		RawLog:      a.RawLog,
 		SignalsW:    a.SignalsW,
 		Stop:        a.Stop,
@@ -169,6 +171,7 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 			Signaler:    e.opts.GroupSignaler,
 			Shell:       e.opts.Shell,
 			ExpectedObs: a.ExpectedObs,
+			Obs:         a.Obs,
 			RawLog:      a.RawLog,
 			SignalsW:    a.SignalsW,
 			Stop:        a.Stop,

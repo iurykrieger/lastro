@@ -71,6 +71,57 @@ Environment primitives set up or tear down runtime infrastructure
 (`run-dev`, `datastore`). They take **no** `inputs:` and produce no
 composable `outputs:`. Their steps contain only `run:` commands.
 
+## Command shape MUST match `kind` + `output_type`
+
+This is a hard contract — the command a sensor runs is determined by its
+declared semantics, not the other way around:
+
+| kind | output_type | Command shape |
+|------|-------------|---------------|
+| `assertion` | `single-shot` | Runs, **exits**, verdict from exit code / parsed output. A detached or one-shot command (`docker compose up -d` + a `wait-ready` loop that `exit`s, a single `curl`, `go test`, …) is correct here. |
+| `observational` | `stream` | A **long-running, foreground (non-detached) command** that blocks and streams its output for as long as the watcher lives. It must **not** detach or exit on its own. |
+
+So a `run-dev` declared `kind: observational` + `output_type: stream` MUST run
+the dev stack in the **foreground** — e.g. `docker compose --profile dev up`
+(NO `-d`) as its single, blocking step. Never emit `up -d` + a `wait-ready`
+loop for an observational/stream sensor: that is the assertion/single-shot
+shape and contradicts the declared semantics (the watcher would exit instead
+of streaming).
+
+### signal_matches (all sensors)
+
+Every sensor MAY declare `signal_matches: [{ key, pattern, verdict?, confidence?, expected?, heal_hint? }]`.
+Each regex (Go RE2 — no backreferences/lookahead/lookbehind) is tested against every stdout
+and stderr line; a match emits a Signal with the matcher's `verdict` (default pass)
+and named capture groups `(?P<name>…)` as evidence. `expected: true` (pass matchers
+only) means the key must be observed at least once or the run is incomplete (fail).
+
+Derive patterns from the logging library in `stack-manifest.yaml`:
+- Anchor on individual fields; do NOT rely on JSON key order or bridge fields with `.*`.
+- Prefer one matcher per outcome (e.g. a pass matcher for 2xx, a fail matcher for 5xx).
+- For fail/warn matchers, provide a `heal_hint: {summary, rationale}`.
+
+Example shape (environment primitive, observational/stream):
+
+```yaml
+id: run-dev
+scope: core
+angle: environment
+kind: observational
+nature: computational
+output_type: stream
+uses: [docker-compose]
+signal_matches:
+  - { key: api-ready,        pattern: "api ready|listening on",           verdict: pass, expected: true }
+  - { key: dynamodb-healthy, pattern: "Container .*dynamodb.*Healthy",    verdict: pass, expected: true }
+  - { key: startup-error,    pattern: "Error|error|fatal",                verdict: fail, heal_hint: { summary: "Service failed to start", rationale: "Check container logs for the failing service." } }
+steps:
+  - id: up
+    run: |
+      cd charge-api
+      docker compose --profile dev up   # foreground, blocking — NO -d
+```
+
 ## What to emit
 
 For each applicable primitive (driven by `applicable_angles` and `archetype`),
@@ -87,6 +138,10 @@ emit one YAML file matching `schemas/sensor.yaml`:
 - `output_type` — `single-shot` or `stream`.
 - `uses: [...]` — stack component ids only; must be a subset of manifest
   `components[*].id`.
+- `signal_matches: [...]` — recommended for all sensors, especially `output_type: stream`;
+  `{ key, pattern, verdict?, confidence?, expected?, heal_hint? }` regex matchers derived
+  from the stack manifest's logging library (see above). Use `expected: true` on pass matchers
+  to assert completeness.
 
 ## How to validate each sensor
 

@@ -52,6 +52,15 @@ One sensor per angle in `applicable_angles`. For each sensor, write a YAML file 
 
 See `schemas/examples/sensor/*.yaml` for shape examples per angle and kind.
 
+### Composing core primitives + demanding inputs
+
+A use-case sensor composes a core primitive via `uses:` + `with:`. Bind the inputs the
+use case needs (e.g. `headers` for an authenticated request). If the core primitive does
+NOT expose a required input, ADD that input to the core sensor's YAML with a
+backward-compatible `default`/`required: false`, then bind it — the core evolves to
+satisfy the use case. Derive required auth/merchant headers and signal_matches regexes
+from the use case's preconditions and the stack manifest's logging library.
+
 ## How to write each sensor
 
 ```bash

@@ -2,9 +2,11 @@ package executor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
@@ -16,6 +18,24 @@ import (
 	"github.com/iurykrieger/lastro/internal/usecase"
 	"github.com/iurykrieger/lastro/internal/usecase/template"
 )
+
+// observationSignalSchemaVersion is the schema_version stamped on synthesized
+// observation signals (must match schemas/signal.yaml's accepted shape).
+const observationSignalSchemaVersion = "1.0.0"
+
+// mergeKeys returns the union of a and b preserving first-seen order.
+func mergeKeys(a, b []string) []string {
+	seen := make(map[string]struct{}, len(a)+len(b))
+	out := make([]string, 0, len(a)+len(b))
+	for _, s := range append(append([]string{}, a...), b...) {
+		if _, dup := seen[s]; dup {
+			continue
+		}
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+	return out
+}
 
 // Options is the dependency wiring an Executor needs. All fields are
 // read-only after New; concurrent Run calls are safe.
@@ -69,9 +89,70 @@ func (e *Executor) Run(
 	expectedObs []string,
 	stop <-chan struct{},
 ) (aggregate.AggregateSignal, error) {
+	// Core-scoped sensors (environment primitives like run-dev) are not bound
+	// to a use case, so a missing lookup is only an error for use-case sensors.
+	// Steps that reference no fixtures tolerate a nil UseCase (see fixturebinder.Bind).
 	uc, ok := e.opts.UseCaseLookup(s.ID)
-	if !ok {
+	if !ok && s.UseCaseID != "" {
 		return aggregate.AggregateSignal{}, fmt.Errorf("executor: use case lookup failed for sensor %q", s.ID)
+	}
+
+	// Compile signal_matches into matchers, applying defaults (verdict=pass,
+	// confidence=1) and synthesizing a heal_hint for fail/warn matchers that
+	// omit one (the Signal schema requires it). Expected (pass-only) keys feed
+	// completeness.
+	matchers := make([]signalMatcher, 0, len(s.SignalMatches))
+	for _, sm := range s.SignalMatches {
+		re, cerr := regexp.Compile(sm.Pattern)
+		if cerr != nil {
+			return aggregate.AggregateSignal{}, fmt.Errorf("executor: signal_match %q: bad pattern %q: %w", sm.Key, sm.Pattern, cerr)
+		}
+		verdict := sm.Verdict
+		if verdict == "" {
+			verdict = enums.VerdictPass
+		}
+		confidence := 1.0
+		if sm.Confidence != nil {
+			confidence = *sm.Confidence
+		}
+		var hh *signal.HealHint
+		if sm.HealHint != nil {
+			hh = &signal.HealHint{Summary: sm.HealHint.Summary, Rationale: sm.HealHint.Rationale}
+		}
+		if (verdict == enums.VerdictFail || verdict == enums.VerdictWarn) && hh == nil {
+			hh = &signal.HealHint{
+				Summary:   fmt.Sprintf("matched %s pattern %q", verdict, sm.Key),
+				Rationale: fmt.Sprintf("a stdout/stderr line matched signal_match %q", sm.Key),
+			}
+		}
+		matchers = append(matchers, signalMatcher{Key: sm.Key, Re: re, Verdict: verdict, Confidence: confidence, HealHint: hh})
+		if sm.Expected {
+			expectedObs = mergeKeys(expectedObs, []string{sm.Key})
+		}
+	}
+	var obs *signalConfig
+	if len(expectedObs) > 0 || len(matchers) > 0 {
+		obs = &signalConfig{
+			SchemaVersion: observationSignalSchemaVersion,
+			SensorID:      s.ID,
+			UseCaseID:     s.UseCaseID,
+			Angle:         s.Angle,
+			Now:           e.opts.Now,
+			Matchers:      matchers,
+		}
+		// Probe-validate each matcher's signal envelope (schema fields + heal_hint requirement). Evidence values are dynamic strings (additionalProperties), so only the envelope is checked here.
+		for _, m := range matchers {
+			probeSub := make([]string, m.Re.NumSubexp()+1)
+			probeSub[0] = "<probe>"
+			probe := obs.synthesize(m, probeSub)
+			b, mErr := json.Marshal(probe)
+			if mErr != nil {
+				return aggregate.AggregateSignal{}, fmt.Errorf("executor: marshal probe signal for %q: %w", m.Key, mErr)
+			}
+			if _, vErr := signal.DecodeLine(b); vErr != nil {
+				return aggregate.AggregateSignal{}, fmt.Errorf("executor: signal_match %q produces an invalid signal: %w", m.Key, vErr)
+			}
+		}
 	}
 
 	if err := os.MkdirAll(filepath.Join(runDir, "scratch"), 0o700); err != nil {
@@ -124,6 +205,7 @@ func (e *Executor) Run(
 			RunDir:      runDir,
 			UseCase:     uc,
 			ExpectedObs: expectedObs,
+			Obs:         obs,
 			RawLog:      rl,
 			SignalsW:    sw,
 			Stop:        stop,

@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	ossignal "os/signal"
 	"path/filepath"
 	"runtime"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
@@ -300,6 +302,15 @@ func (l *Lifecycle) StartSensor(
 		close(stopCh)
 		<-doneCh
 		return nil, err
+	case <-doneCh:
+		// The run goroutine finished before any step spawned: exec.Run
+		// returned an error (e.g. missing use case, template/setup failure)
+		// without ever invoking OnStepStart. Surface that real error rather
+		// than the misleading spawn timeout below.
+		if entry.err != nil {
+			return nil, fmt.Errorf("lifecycle: sensor run ended before child spawn: %w", entry.err)
+		}
+		return nil, fmt.Errorf("lifecycle: sensor run ended before child spawn")
 	case <-time.After(10 * time.Second):
 		close(stopCh)
 		<-doneCh
@@ -312,6 +323,85 @@ func (l *Lifecycle) StartSensor(
 
 	hCopy := *entry.handle
 	return &hCopy, nil
+}
+
+// GenerateRunID returns a fresh run id using the configured NewRunID
+// function. Exposed so a detached-watcher launcher can mint the id in the
+// parent process and pass it to the spawned watcher.
+func (l *Lifecycle) GenerateRunID() string { return l.opts.NewRunID() }
+
+// RunDirFor returns the canonical run directory for (sensorID, runID)
+// under the configured RuntimeRoot.
+func (l *Lifecycle) RunDirFor(sensorID, runID string) string {
+	return runDirPath(l.opts.RuntimeRoot, sensorID, runID)
+}
+
+// FindRunning returns the registry entry for (sensorID, runID), if any.
+func (l *Lifecycle) FindRunning(sensorID, runID string) (Handle, bool, error) {
+	return l.registry.Find(sensorID, runID)
+}
+
+// RunWatcher executes an observational sensor synchronously in the CURRENT
+// process and blocks until it completes. It is the body a detached watcher
+// process (spawned by the /start-sensor skill) runs: it registers itself in
+// running_sensors.json with its own PID/PGID, runs the sensor to completion
+// writing raw.log / signals.jsonl / aggregate.json, de-registers on exit,
+// and stops gracefully on SIGINT/SIGTERM so a cross-process StopSensor can
+// terminate it. The watcher is expected to be spawned as its own process-
+// group leader (PGID == PID), so SignalGroup(-PGID) reaches it.
+func (l *Lifecycle) RunWatcher(ctx context.Context, sensorID, runID, runDir string, expectedObs []string) error {
+	s, ok := l.opts.Sensors.Lookup(sensorID)
+	if !ok {
+		return ErrSensorNotFound
+	}
+	if s.Kind != enums.KindObservational {
+		return ErrAssertionSensor
+	}
+	if err := os.MkdirAll(runDir, 0o700); err != nil {
+		return fmt.Errorf("lifecycle: mkdir runDir: %w", err)
+	}
+
+	// Drop registry entries whose watcher process is no longer alive.
+	_, _ = l.pruneDead()
+
+	pid := os.Getpid()
+	h := Handle{
+		SensorID:             sensorID,
+		RunID:                runID,
+		RunDir:               runDir,
+		PID:                  pid,
+		PGID:                 pid, // spawned as its own process-group leader
+		StartedAt:            l.opts.Now(),
+		ExpectedObservations: expectedObs,
+		HarnessPID:           pid,
+		HarnessVersion:       l.opts.Version,
+		GOOS:                 runtime.GOOS,
+	}
+	if err := l.registry.Append(h); err != nil {
+		return fmt.Errorf("lifecycle: registry append: %w", err)
+	}
+	defer func() { _ = l.registry.Remove(sensorID, runID) }()
+
+	// Translate an external signal (cross-process StopSensor) or ctx
+	// cancellation into a stop channel the executor honors. The executor
+	// then tears down the running step's process group itself.
+	stopCh := make(chan struct{})
+	sigCh := make(chan os.Signal, 1)
+	ossignal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	defer ossignal.Stop(sigCh)
+	go func() {
+		select {
+		case <-sigCh:
+		case <-ctx.Done():
+		}
+		close(stopCh)
+	}()
+
+	agg, runErr := l.opts.Executor.Run(ctx, s, runDir, expectedObs, stopCh)
+	if werr := writeAggregateJSON(filepath.Join(runDir, "aggregate.json"), agg); werr != nil && runErr == nil {
+		runErr = werr
+	}
+	return runErr
 }
 
 // StopSensor terminates the sensor identified by h. In-process fast

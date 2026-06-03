@@ -3,14 +3,11 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 
 	"github.com/iurykrieger/lastro/internal/enums"
-	"github.com/iurykrieger/lastro/internal/lifecycle"
 	"github.com/iurykrieger/lastro/lib/skillio"
 	"github.com/iurykrieger/lastro/lib/skillruntime"
 )
@@ -25,12 +22,6 @@ func main() {
 }
 
 func run(args []string, stdin io.Reader, stdout, stderr io.Writer, cwd string) int {
-	if len(args) < 2 {
-		skillio.EmitError(stderr, "bad-argv", "expected sensor-id as first argument", nil)
-		return skillio.ExitScriptError
-	}
-	sensorID := args[1]
-
 	repoRoot, err := skillio.FindRepoRoot(cwd)
 	if err != nil {
 		skillio.EmitError(stderr, "repo-root-not-found", err.Error(), nil)
@@ -44,6 +35,23 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, cwd string) i
 	}
 	defer func() { _ = b.Cleanup() }()
 
+	// Detached-watcher mode: this process IS the watcher. Run the sensor to
+	// completion in-process (writing raw.log/signals/aggregate) and exit.
+	// Output goes to <runDir>/watcher.log via the parent's redirection.
+	if skillruntime.IsWatchMode(args) {
+		if err := skillruntime.RunWatcherMode(b, args); err != nil {
+			skillio.EmitError(stderr, "watch-failed", err.Error(), nil)
+			return skillio.ExitScriptError
+		}
+		return skillio.ExitPass
+	}
+
+	if len(args) < 2 {
+		skillio.EmitError(stderr, "bad-argv", "expected sensor-id as first argument", nil)
+		return skillio.ExitScriptError
+	}
+	sensorID := args[1]
+
 	s, ok := b.Sensors.LookupSensor(sensorID)
 	if !ok {
 		skillio.EmitError(stderr, "sensor-not-found", fmt.Sprintf("no sensor %q", sensorID), map[string]any{"sensor_id": sensorID})
@@ -54,16 +62,15 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, cwd string) i
 		return skillio.ExitScriptError
 	}
 
-	// F3: ExpectedObservations is currently not a field on Sensor; pass nil.
-	// When B4 adds it, populate from s here.
+	// Expected observation keys are derived from the sensor's signal_matches entries
+	// with expected:true; the executor computes them internally from s.SignalMatches.
+	// The skill passes nil here and the executor merges expected keys on its own.
 	var expectedObs []string
 
-	h, err := b.Lifecycle.StartSensor(context.Background(), sensorID, expectedObs)
+	// Spawn a detached watcher process and return its handle immediately.
+	// The watcher outlives this process; /stop-sensor terminates it.
+	h, err := skillruntime.StartDetachedSensor(b, repoRoot, sensorID, expectedObs)
 	if err != nil {
-		if errors.Is(err, lifecycle.ErrAssertionSensor) {
-			skillio.EmitError(stderr, "wrong-kind", err.Error(), nil)
-			return skillio.ExitScriptError
-		}
 		skillio.EmitError(stderr, "start-failed", err.Error(), nil)
 		return skillio.ExitScriptError
 	}

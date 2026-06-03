@@ -62,8 +62,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, cwd string) i
 		return skillio.ExitScriptError
 	}
 
-	// F3: ExpectedObservations is currently not a field on Sensor; pass nil.
-	// When B4 adds it, populate from s here.
+	// Expected observation keys are derived from the sensor's signal_matches entries
+	// with expected:true; the executor computes them internally from s.SignalMatches.
+	// The skill passes nil here and the executor merges expected keys on its own.
 	var expectedObs []string
 
 	// Spawn a detached watcher process and return its handle immediately.

@@ -115,14 +115,13 @@ func checkScopeConsistency(s Sensor) error {
 }
 
 func checkSignalMatches(s Sensor) error {
-	seen := map[string]string{}
+	seen := map[string]bool{}
 	var errs []error
 	for _, m := range s.SignalMatches {
-		if prev, dup := seen[m.Key]; dup {
-			_ = prev
+		if seen[m.Key] {
 			errs = append(errs, fmt.Errorf("signal_match key %q is declared more than once", m.Key))
 		}
-		seen[m.Key] = m.Key
+		seen[m.Key] = true
 		if m.Expected && m.Verdict != "" && m.Verdict != enums.VerdictPass {
 			errs = append(errs, fmt.Errorf("signal_match %q: expected:true is only valid on pass matchers (got verdict %q)", m.Key, m.Verdict))
 		}

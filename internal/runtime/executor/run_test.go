@@ -222,6 +222,82 @@ func TestRunAssertion_TimeoutReports(t *testing.T) {
 	}
 }
 
+// TestRun_SignalMatchesCompleteness verifies the full signal_matches path
+// through Run: a sensor whose step prints a line matching an expected-pass
+// matcher produces a complete aggregate (no missing observations), while a
+// sensor whose step prints a non-matching line is incomplete and receives a
+// fail verdict.
+func TestRun_SignalMatchesCompleteness(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+
+	newSensor := func(id, echoText string) sensor.Sensor {
+		return sensor.Sensor{
+			SchemaVersion: "1.0.0",
+			ID:            id,
+			UseCaseID:     "fake-uc",
+			Angle:         enums.AngleBuild,
+			Kind:          enums.KindAssertion,
+			Nature:        enums.NatureComputational,
+			OutputType:    enums.OutputSingleShot,
+			Uses:          []string{"fake-stack"},
+			Steps: []sensor.Step{
+				{ID: "s", Run: "echo '" + echoText + "'"},
+			},
+			SignalMatches: []sensor.SignalMatch{
+				{Key: "ready", Pattern: "api ready on", Expected: true},
+			},
+		}
+	}
+
+	newExecutor := func() *Executor {
+		return New(Options{
+			RepoRoot:      t.TempDir(),
+			Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+			FixtureStore:  emptyStore{},
+			UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+			Now:           fixedExecNow,
+		})
+	}
+
+	// Sensor A: step prints matching text → completeness must be non-nil with
+	// zero missing observations.
+	t.Run("matching_line_complete", func(t *testing.T) {
+		s := newSensor("sensor-a", "api ready on :3030")
+		agg, err := newExecutor().Run(context.Background(), s, t.TempDir(), nil, nil)
+		if err != nil {
+			t.Fatalf("Run: %v", err)
+		}
+		if agg.Completeness == nil {
+			t.Fatal("completeness is nil; want non-nil for sensor with expected signal_matches")
+		}
+		if len(agg.Completeness.MissingObservations) != 0 {
+			t.Errorf("MissingObservations = %v; want empty", agg.Completeness.MissingObservations)
+		}
+		if agg.Verdict != enums.VerdictPass {
+			t.Errorf("verdict = %q; want pass", agg.Verdict)
+		}
+	})
+
+	// Sensor B: step prints non-matching text → "ready" key is missing, verdict
+	// must be fail.
+	t.Run("non_matching_line_incomplete", func(t *testing.T) {
+		s := newSensor("sensor-b", "nope")
+		agg, err := newExecutor().Run(context.Background(), s, t.TempDir(), nil, nil)
+		if err != nil {
+			t.Fatalf("Run: %v", err)
+		}
+		if agg.Completeness == nil {
+			t.Fatal("completeness is nil; want non-nil for sensor with expected signal_matches")
+		}
+		if len(agg.Completeness.MissingObservations) != 1 {
+			t.Errorf("MissingObservations = %v; want [\"ready\"]", agg.Completeness.MissingObservations)
+		}
+		if agg.Verdict != enums.VerdictFail {
+			t.Errorf("verdict = %q; want fail", agg.Verdict)
+		}
+	})
+}
+
 func TestRunAssertion_CrashedStepSynthesizesHint(t *testing.T) {
 	uc := &usecase.UseCase{ID: "fake-uc"}
 	s := sensor.Sensor{

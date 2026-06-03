@@ -145,6 +145,26 @@ func TestCheckStepShapeDirect(t *testing.T) {
 	}
 }
 
+func TestCheckSignalMatches_DuplicateKey(t *testing.T) {
+	s := Sensor{SignalMatches: []SignalMatch{
+		{Key: "k", Pattern: "a"},
+		{Key: "k", Pattern: "b"},
+	}}
+	if err := checkSignalMatches(s); err == nil {
+		t.Fatal("expected duplicate-key error, got nil")
+	}
+}
+
+func TestCheckSignalMatches_OK(t *testing.T) {
+	s := Sensor{SignalMatches: []SignalMatch{
+		{Key: "ok", Pattern: "a", Expected: true},   // expected on default (pass)
+		{Key: "err", Pattern: "b", Verdict: "fail"}, // fail without expected
+	}}
+	if err := checkSignalMatches(s); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 // errorsJoinContains walks errors.Join trees, returning true if any
 // wrapped error's message contains substr. Used so tests can assert
 // on a single rule's message inside a joined multi-rule error.

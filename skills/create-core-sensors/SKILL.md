@@ -88,15 +88,18 @@ loop for an observational/stream sensor: that is the assertion/single-shot
 shape and contradicts the declared semantics (the watcher would exit instead
 of streaming).
 
-### Observations for observational/stream sensors (`expected_observations`)
+### signal_matches (all sensors)
 
-A `stream` sensor turns its streamed output into observation signals via
-`expected_observations` — a list of `{ key, pattern }` where `pattern` is a
-**regex** tested against each stdout **and** stderr line. On a match the
-watcher emits an observation signal carrying `key` (and `key` feeds
-completeness). Derive the keys and regexes from `.harness/stack-manifest.yaml`
-(component ids, health endpoints, readiness strings). Remember that
-`docker compose up` prints lifecycle status (`Container X Healthy`) to stderr.
+Every sensor MAY declare `signal_matches: [{ key, pattern, verdict?, confidence?, expected?, heal_hint? }]`.
+Each regex (Go RE2 — no backreferences/lookahead/lookbehind) is tested against every stdout
+and stderr line; a match emits a Signal with the matcher's `verdict` (default pass)
+and named capture groups `(?P<name>…)` as evidence. `expected: true` (pass matchers
+only) means the key must be observed at least once or the run is incomplete (fail).
+
+Derive patterns from the logging library in `stack-manifest.yaml`:
+- Anchor on individual fields; do NOT rely on JSON key order or bridge fields with `.*`.
+- Prefer one matcher per outcome (e.g. a pass matcher for 2xx, a fail matcher for 5xx).
+- For fail/warn matchers, provide a `heal_hint: {summary, rationale}`.
 
 Example shape (environment primitive, observational/stream):
 
@@ -108,9 +111,10 @@ kind: observational
 nature: computational
 output_type: stream
 uses: [docker-compose]
-expected_observations:
-  - { key: api-ready,        pattern: "api ready|listening on" }
-  - { key: dynamodb-healthy, pattern: "Container .*dynamodb.*Healthy" }
+signal_matches:
+  - { key: api-ready,        pattern: "api ready|listening on",           verdict: pass, expected: true }
+  - { key: dynamodb-healthy, pattern: "Container .*dynamodb.*Healthy",    verdict: pass, expected: true }
+  - { key: startup-error,    pattern: "Error|error|fatal",                verdict: fail, heal_hint: { summary: "Service failed to start", rationale: "Check container logs for the failing service." } }
 steps:
   - id: up
     run: |
@@ -134,9 +138,10 @@ emit one YAML file matching `schemas/sensor.yaml`:
 - `output_type` — `single-shot` or `stream`.
 - `uses: [...]` — stack component ids only; must be a subset of manifest
   `components[*].id`.
-- `expected_observations: [...]` — REQUIRED for `output_type: stream` sensors;
-  `{ key, pattern }` regex matchers derived from the stack manifest (see above).
-  Omit for `single-shot` sensors.
+- `signal_matches: [...]` — recommended for all sensors, especially `output_type: stream`;
+  `{ key, pattern, verdict?, confidence?, expected?, heal_hint? }` regex matchers derived
+  from the stack manifest's logging library (see above). Use `expected: true` on pass matchers
+  to assert completeness.
 
 ## How to validate each sensor
 

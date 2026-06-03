@@ -186,6 +186,57 @@ steps:
 	}
 }
 
+func TestLoadSensor_SignalMatches(t *testing.T) {
+	raw := []byte(`schema_version: 1.0.0
+id: obs
+scope: core
+angle: environment
+kind: observational
+nature: computational
+output_type: stream
+uses: []
+signal_matches:
+  - {key: api-ready, pattern: "ready on :", expected: true}
+  - {key: http-5xx, pattern: "status_code\":5\\d\\d", verdict: fail, heal_hint: {summary: "5xx", rationale: "server error"}}
+steps:
+  - {id: up, run: "docker compose up"}
+`)
+	s, err := LoadSensorBytes(raw)
+	if err != nil {
+		t.Fatalf("LoadSensorBytes: %v", err)
+	}
+	if len(s.SignalMatches) != 2 {
+		t.Fatalf("SignalMatches = %d, want 2", len(s.SignalMatches))
+	}
+	if s.SignalMatches[0].Key != "api-ready" || !s.SignalMatches[0].Expected {
+		t.Errorf("matcher[0] = %+v", s.SignalMatches[0])
+	}
+	if s.SignalMatches[1].Verdict != "fail" || s.SignalMatches[1].HealHint == nil ||
+		s.SignalMatches[1].HealHint.Summary != "5xx" {
+		t.Errorf("matcher[1] = %+v", s.SignalMatches[1])
+	}
+}
+
+func TestLoadSensor_RejectsExpectedOnNonPass(t *testing.T) {
+	raw := []byte(`schema_version: 1.0.0
+id: obs
+scope: core
+angle: environment
+kind: observational
+nature: computational
+output_type: stream
+uses: []
+signal_matches:
+  - {key: bad, pattern: "x", verdict: fail, expected: true, heal_hint: {summary: a, rationale: b}}
+steps:
+  - {id: up, run: "x"}
+`)
+	_, err := LoadSensorBytes(raw)
+	if err == nil {
+		t.Fatal("expected error for expected:true on non-pass matcher")
+	}
+}
+
 func TestLoadSensor_CoreScopeNoUseCase(t *testing.T) {
 	yaml := []byte(`schema_version: 1.0.0
 id: run-dev

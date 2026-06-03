@@ -27,20 +27,31 @@ type Sensor struct {
 	DependsOn     []string               `json:"depends_on,omitempty"` // Sensor ids (optional)
 	Inputs        map[string]InputSpec   `json:"inputs,omitempty"`
 	Outputs       map[string]OutputSpec  `json:"outputs,omitempty"`
-	// ExpectedObservations declares regex matchers for observational/stream
-	// sensors. The executor tests each streamed stdout line against every
-	// pattern and emits an observation signal (keyed by Key) on a match.
-	ExpectedObservations []ObservationMatcher `json:"expected_observations,omitempty"`
-	Steps                []Step               `json:"steps"`
+	// SignalMatches declares regex matchers applied to every stdout/stderr line.
+	// Each match synthesizes a Signal (see internal/runtime/executor). Valid on
+	// both assertion and observational sensors.
+	SignalMatches []SignalMatch `json:"signal_matches,omitempty"`
+	Steps         []Step        `json:"steps"`
 }
 
-// ObservationMatcher maps a regular expression to an observation key. When a
-// streamed stdout line matches Pattern, the executor emits an observation
-// signal carrying Key (which also feeds completeness against the sensor's
-// expected observations).
-type ObservationMatcher struct {
-	Key     string `json:"key"`
-	Pattern string `json:"pattern"`
+// SignalMatch maps a regex over a sensor's output lines to a synthesized Signal.
+// Verdict defaults to pass and Confidence to 1 when unset (Confidence is a
+// pointer to distinguish unset from 0). Expected is only valid on pass matchers
+// (enforced at load). HealHint is required-by-effect for fail/warn.
+type SignalMatch struct {
+	Key        string         `json:"key"`
+	Pattern    string         `json:"pattern"`
+	Verdict    string         `json:"verdict,omitempty"`
+	Confidence *float64       `json:"confidence,omitempty"`
+	Expected   bool           `json:"expected,omitempty"`
+	HealHint   *MatchHealHint `json:"heal_hint,omitempty"`
+}
+
+// MatchHealHint is the heal-hint a fail/warn matcher attaches to its signal.
+// Local type to avoid a sensor->signal package dependency.
+type MatchHealHint struct {
+	Summary   string `json:"summary"`
+	Rationale string `json:"rationale"`
 }
 
 // Step is one step of a Sensor. Exactly one of Run / Uses is set

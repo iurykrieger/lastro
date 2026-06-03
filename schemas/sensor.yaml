@@ -72,19 +72,29 @@ properties:
       properties:
         from:        { type: string, minLength: 1 }
         description: { type: string }
-  expected_observations:
+  signal_matches:
     type: array
     description: |
-      Regex matchers for observational/stream sensors. The watcher tests each
-      streamed stdout line against every pattern; on a match it emits an
-      observation signal carrying the matcher's `key` (used for completeness).
+      Regex matchers (Go RE2) applied to every stdout/stderr line of any sensor.
+      Each match synthesizes a Signal carrying `verdict` and the named capture
+      groups as evidence. `expected: true` (pass matchers only) feeds completeness.
     items:
       type: object
       required: [key, pattern]
       additionalProperties: false
       properties:
-        key:     { $ref: "#/$defs/Id" }
-        pattern: { type: string, minLength: 1 }
+        key:        { $ref: "#/$defs/Id" }
+        pattern:    { type: string, minLength: 1 }
+        verdict:    { type: string, enum: [pass, warn, fail, inconclusive] }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        expected:   { type: boolean }
+        heal_hint:
+          type: object
+          required: [summary, rationale]
+          additionalProperties: false
+          properties:
+            summary:   { type: string, minLength: 1 }
+            rationale: { type: string, minLength: 1 }
 
 allOf:
   - if:

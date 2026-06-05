@@ -25,8 +25,10 @@ Use the Read tool to load:
    `components[*].id` (the only valid ids for sensor-level `uses:`).
 2. `.harness/use-cases/<use-case-id>.yaml` — note the use case `id` and its `fixture_ids`
    (valid ids for `${{ fixtures.<id> }}` interpolation in step `run` and `with` values).
-3. `.harness/sensors/core/` (optional) — list available core primitives; their `id` values are
-   the only valid targets for step-level `uses:` in a uses-step.
+3. `.harness/sensors/core/` — **read this before writing any step**. List every core primitive
+   and note its `id`, `angle`, and declared `inputs`. A use-case sensor that composes a core
+   primitive needs no raw `run:` commands at all — the core sensor carries the stack-native
+   commands. Step-level `uses:` accepts only these core primitive ids.
 
 ## What to emit
 
@@ -42,15 +44,41 @@ One sensor per angle in `applicable_angles`. For each sensor, write a YAML file 
 - `output_type` — `single-shot` or `stream` (see `schemas/enums/signal-output-types.yaml`).
 - `uses: [...]` — **top-level only**: ids from `stack-manifest.components[*].id`. Pick the subset
   this sensor needs. Do NOT include fixture ids here.
-- `steps:` — each step is EITHER a run-step or a uses-step:
-  - run-step: `{ id, run }`. Reference fixtures via `${{ fixtures.<id> }}` and prior step outputs
-    via `${{ steps.<id>.outputs.<name> }}` inside `run`.
-  - uses-step: `{ id, uses: <core-primitive-id>, with: { <input>: <value> } }`. Bind every
-    `required` input of the primitive. A `with` value may be a fixture ref
-    (`${{ fixtures.<id> }}`) or a prior step output (`${{ steps.<id>.outputs.<name> }}`).
-- Do NOT put fixture ids in step `uses:` — `uses:` now names a core primitive to compose.
+- `steps:` — **prefer uses-steps; fall back to run-steps only when no core primitive covers
+  the angle**:
+  - uses-step **(default)**: `{ id, uses: <core-primitive-id>, with: { <input>: <value> } }`.
+    Bind every `required` input of the primitive via fixture refs
+    (`${{ fixtures.<id> }}`) or prior step outputs (`${{ steps.<id>.outputs.<name> }}`).
+    The core sensor owns the raw commands; the use-case sensor only binds parameters.
+  - run-step **(fallback)**: `{ id, run }`. Use only when `.harness/sensors/core/` contains
+    no primitive for this angle. Reference fixtures via `${{ fixtures.<id> }}` and prior
+    step outputs via `${{ steps.<id>.outputs.<name> }}` inside `run`.
+- Do NOT put fixture ids in step `uses:` — `uses:` names a core primitive to compose.
 
 See `schemas/examples/sensor/*.yaml` for shape examples per angle and kind.
+
+### Command grounding rule (run-step fallback only)
+
+Only reach for a `run:` step when no core primitive covers the angle. When you do,
+the command MUST be a real executable: a tool from the stack manifest (`uses:` id),
+a standard POSIX utility (`curl`, `diff`, `tail`, `cat`, `docker`), or the project's
+own test runner. Never write `harness <subcommand>` — those are not installed.
+
+If a matching core primitive exists, compose it with `uses:` + `with:` instead.
+
+Fallback commands per angle (use only when core/ has no matching primitive):
+
+| Angle | Fallback command pattern |
+|-------|--------------------------|
+| `build` | Compiler: `go build ./...`, `npm run build`, `tsc --noEmit` |
+| `unit-test` | Test runner: `go test ./...`, `jest --json`, `pytest -q` |
+| `code-structure` | Lint tool in `uses:`: `golangci-lint run`, `npx eslint` |
+| `contracts` | Spec validator: `protoc --descriptor_set_out=/dev/null`, `npx @redocly/cli lint` |
+| `logs` | Tail process output: `docker logs --follow <container> 2>&1`, `tail -f <log>` |
+| `metrics` | Scrape endpoint: `curl -sS http://localhost:9090/metrics \| grep <key>` |
+| `database` | Stack CLI or probe: `aws dynamodb get-item ...`, `go run ./probe/db` |
+| `performance` | Load tool in `uses:`: `hey -n 100 http://...`, `k6 run script.js` |
+| `security` | Scanner in `uses:`: `gosec ./...`, `npm audit --json` |
 
 ### Composing core primitives + demanding inputs
 

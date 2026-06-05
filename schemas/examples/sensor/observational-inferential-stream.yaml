@@ -1,5 +1,6 @@
 # Sensor example — observational / inferential / stream.
-# Log-tail using LLM-derived patterns for semantic correctness.
+# Log-tail with semantic patterns for order correctness (confidence < 1.0 because patterns
+# are derived from use-case text, not from a fixed schema).
 schema_version: 1.0.0
 id: semantic-logs-create-order-sensor
 use_case_id: create-order-use-case
@@ -12,7 +13,8 @@ uses:
   - node
 
 steps:
-  - id: derive-patterns
-    run: "harness derive-log-patterns --use-case create-order-use-case"
-  - id: start-tail
-    run: "harness log-tail --semantic"
+  - id: tail-logs
+    run: "docker logs --follow --since 0s orders-service 2>&1"
+signal_matches:
+  - { key: order-success, pattern: "order[._-]creat", verdict: pass, confidence: 0.8, expected: true }
+  - { key: order-failure, pattern: "(error|fail|exception).*order", verdict: fail, confidence: 0.8, heal_hint: { summary: "Order creation error in logs", rationale: "Inspect orders-service logs for the exception causing the failure." } }

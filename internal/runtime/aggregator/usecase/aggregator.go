@@ -32,13 +32,22 @@ func UseCase(
 		return UseCaseVerdict{}, fmt.Errorf("aggregator: archetype-not-in-scope: %q is not in use case %q archetype_scope", archetype, uc.ID)
 	}
 	for _, s := range signals {
-		if s.UseCaseID != uc.ID {
+		// Core sensors have use_case_id="" (scope: core). They are DAG
+		// preconditions, not policy-graded facets. Allow them through —
+		// they are excluded from signalByAngle below so they don't affect
+		// policy evaluation. Their verdicts reach worstExitCode via the
+		// caller's full aggs slice.
+		if s.UseCaseID != uc.ID && s.UseCaseID != "" {
 			return UseCaseVerdict{}, fmt.Errorf("aggregator: signal-foreign-use-case: signal use_case_id=%q does not match %q", s.UseCaseID, uc.ID)
 		}
 	}
 	seen := make(map[enums.ValidationAngle]struct{}, len(signals))
 	signalByAngle := make(map[enums.ValidationAngle]aggregate.AggregateSignal, len(signals))
 	for _, s := range signals {
+		if s.UseCaseID == "" {
+			// Core sensor signal — not policy-graded; skip.
+			continue
+		}
 		if _, dup := seen[s.Angle]; dup {
 			return UseCaseVerdict{}, fmt.Errorf("aggregator: duplicate-angle-signal: angle %q has more than one AggregateSignal", s.Angle)
 		}

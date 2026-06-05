@@ -13,5 +13,8 @@ uses:
   - express
 
 steps:
-  - id: start-tail
-    run: "harness log-tail --logger orders --level info --fixture ${{ fixtures.order-created-log-fixture }}"
+  - id: tail-logs
+    run: "docker logs --follow --since 0s orders-service 2>&1"
+signal_matches:
+  - { key: order-created-log, pattern: "\"level\":\"info\".*\"event\":\"order\\.created\"", verdict: pass, expected: true }
+  - { key: order-error-log, pattern: "\"level\":\"error\".*\"event\":\"order\\.created\"", verdict: fail, heal_hint: { summary: "Order creation logged as error", rationale: "Check orders-service handler for uncaught exceptions." } }

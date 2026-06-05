@@ -165,13 +165,10 @@ func RunUseCase(
 	if !ok {
 		return UseCaseRunResult{}, fmt.Errorf("use case %q not found", useCaseID)
 	}
-	// Filter sensors owned by this use case.
-	var owned []sensor.Sensor
-	for _, s := range arts.Sensors.All() {
-		if s.UseCaseID == useCaseID {
-			owned = append(owned, s)
-		}
-	}
+	// Gather use-case sensors plus the transitive depends_on closure into
+	// scope:core sensors (e.g. run-dev, database-query). Core sensors have
+	// no use_case_id and are excluded by a plain ForUseCase filter.
+	owned := arts.Sensors.GatherForUseCase(useCaseID)
 	if len(owned) == 0 {
 		return UseCaseRunResult{}, fmt.Errorf("no sensors found for use case %q", useCaseID)
 	}

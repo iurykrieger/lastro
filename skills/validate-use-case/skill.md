@@ -49,8 +49,13 @@ Promotion to the worst sensor verdict prevents an empty/vacuous policy
 
 - The use case must have at least one entry in `archetype_scope`; the
   first entry is used to resolve the validation policy.
-- Only sensors whose `use_case_id` matches participate. Cross-use-case
-  `depends_on` is ignored.
+- **Gather rule:** sensors participating in the run = use case's own
+  sensors **plus** the transitive `depends_on` closure restricted to
+  `scope: core`. Use-case→core and core→core edges are followed;
+  use-case→use-case edges are not. Core sensors (no `use_case_id`) act as
+  DAG roots, run before their dependents, and skip dependents on failure
+  — but are not policy-graded (the `environment` angle is not in any
+  angle list).
 - Policies are loaded best-effort from
   `.harness/policy/global.yaml` and
   `.harness/policy/local/<usecase-id>.yaml`. Missing or malformed files

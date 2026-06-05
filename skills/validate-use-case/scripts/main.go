@@ -77,7 +77,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, cwd string) i
 	}
 	archetype := uc.ArchetypeScope[0]
 
-	sensors := b.Sensors.ForUseCase(useCaseID)
+	sensors := b.Sensors.GatherForUseCase(useCaseID)
 
 	pol := loadPolicies(filepath.Join(skillio.HarnessDir(repoRoot), "policy"), useCaseID)
 

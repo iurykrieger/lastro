@@ -109,25 +109,52 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	)
 
 	// 4. Build the command.
+	//
+	// We create pipes manually instead of using cmd.StdoutPipe /
+	// cmd.StderrPipe. The stdlib helpers register the read ends in an
+	// internal closeAfterWait list, so cmd.Wait() closes them after the
+	// process exits — BEFORE our pump goroutines have necessarily finished
+	// scanning. That produces a data race: a goroutine reading the pipe
+	// gets EBADF and silently loses the last lines, including signal_matches
+	// that haven't been processed yet.
+	//
+	// With os.Pipe() we own the lifetimes: the write ends are closed in the
+	// parent after cmd.Start() (only the child needs them), and the read ends
+	// are closed by the pump goroutines after draining. cmd.Wait() never
+	// touches the read ends, so there is no race.
 	argv := shellArgv(a.Shell, resolved)
 	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
 	cmd.Env = env
 	if err := a.Signaler.Spawn(cmd); err != nil {
 		return stepOutcome{}, &SpawnError{Step: a.StepIdx, Cause: err}
 	}
-	stdout, err := cmd.StdoutPipe()
+	stdoutR, stdoutW, err := os.Pipe()
 	if err != nil {
 		return stepOutcome{}, &SpawnError{Step: a.StepIdx, Cause: err}
 	}
-	stderr, err := cmd.StderrPipe()
+	stderrR, stderrW, err := os.Pipe()
 	if err != nil {
+		stdoutR.Close()
+		stdoutW.Close()
 		return stepOutcome{}, &SpawnError{Step: a.StepIdx, Cause: err}
 	}
+	cmd.Stdout = stdoutW
+	cmd.Stderr = stderrW
 
 	// 5. Spawn.
 	if err := cmd.Start(); err != nil {
+		stdoutR.Close()
+		stdoutW.Close()
+		stderrR.Close()
+		stderrW.Close()
 		return stepOutcome{}, &SpawnError{Step: a.StepIdx, Cause: err}
 	}
+	// Close the write ends in the parent: only the child process needs
+	// them. Leaving them open would prevent the read ends from ever seeing
+	// EOF (the parent itself would be a writer).
+	stdoutW.Close()
+	stderrW.Close()
+
 	pgid, _ := a.Signaler.GroupID(cmd)
 	if a.OnStart != nil {
 		a.OnStart(a.StepIdx, cmd.Process.Pid, pgid)
@@ -141,11 +168,13 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	stdoutDone := make(chan pumpResult, 1)
 	stderrDone := make(chan pumpResult, 1)
 	go func() {
-		out, err := pumpStdout(stdout, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
+		defer stdoutR.Close()
+		out, err := pumpStdout(stdoutR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
 		stdoutDone <- pumpResult{out: out, err: err}
 	}()
 	go func() {
-		out, err := pumpStderr(stderr, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
+		defer stderrR.Close()
+		out, err := pumpStderr(stderrR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
 		stderrDone <- pumpResult{out: out, err: err}
 	}()
 

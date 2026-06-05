@@ -88,6 +88,37 @@ func makeEffectivePolicy(arch enums.Archetype, obligatory []enums.ValidationAngl
 	}
 }
 
+func TestUseCase_CoreSensorSignalAllowed(t *testing.T) {
+	// A core sensor signal (use_case_id="", angle=environment) must not be
+	// rejected by the foreign-use-case check and must not appear in
+	// EvaluatedAngles (it's a DAG precondition, not a policy-graded facet).
+	uc := makeUseCase("uc1", enums.ArchetypeHTTPAPI)
+	coreSig := makeSignal("", "run-dev", enums.AngleEnvironment, enums.VerdictPass, 1.0)
+	ucSig := makeSignal("uc1", "uc1-build", enums.AngleBuild, enums.VerdictPass, 1.0)
+	coreSensor := sensor.Sensor{
+		ID: "run-dev", Scope: enums.ScopeCore, Angle: enums.AngleEnvironment,
+		Nature: enums.NatureComputational,
+	}
+	ucSensor := makeSensor("uc1-build", "uc1", enums.AngleBuild, enums.NatureComputational)
+	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI, []enums.ValidationAngle{enums.AngleBuild}, nil, 0)
+
+	verdict, err := UseCase(uc, enums.ArchetypeHTTPAPI,
+		[]aggregate.AggregateSignal{coreSig, ucSig},
+		[]sensor.Sensor{coreSensor, ucSensor},
+		pol)
+	if err != nil {
+		t.Fatalf("unexpected error with core signal: %v", err)
+	}
+	if verdict.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass", verdict.Verdict)
+	}
+	for _, a := range verdict.EvaluatedAngles {
+		if a == enums.AngleEnvironment {
+			t.Errorf("environment angle must not be in EvaluatedAngles (core-only, not policy-graded)")
+		}
+	}
+}
+
 func TestUseCase_ArchetypeNotInScopeReturnsError(t *testing.T) {
 	uc := makeUseCase("uc-login", enums.ArchetypeCLI)
 	pol := makeEffectivePolicy(enums.ArchetypeHTTPAPI, []enums.ValidationAngle{enums.AngleBuild}, nil, 0.7)

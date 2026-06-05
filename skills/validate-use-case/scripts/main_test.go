@@ -151,6 +151,54 @@ steps:
 	}
 }
 
+func TestRun_CoreSensorIncludedViaGather(t *testing.T) {
+	// Core sensor: scope=core, no use_case_id, environment angle.
+	// Written flat into sensors/ — LoadDirectory handles both flat and subfolder layouts.
+	sCore := `schema_version: 1.0.0
+id: core-run-dev
+scope: core
+angle: environment
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: only
+    run: "` + fakeSensorBin + ` signal pass"
+`
+	// Use-case e2e sensor that depends on the core sensor.
+	sE2e := `schema_version: 1.0.0
+id: test-e2e
+use_case_id: test-uc
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+depends_on: [core-run-dev]
+steps:
+  - id: only
+    run: "` + fakeSensorBin + ` signal pass"
+`
+	root := setupHarness(t, map[string]string{"core-run-dev": sCore, "test-e2e": sE2e})
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"validate-use-case", "test-uc"}, nil, &stdout, &stderr, root)
+	if code != 0 {
+		t.Fatalf("exit = %d, want 0; stderr=%s; stdout=%s", code, stderr.String(), stdout.String())
+	}
+	// core-run-dev must appear in stdout: GatherForUseCase pulls it in
+	// via the depends_on edge and the lifecycle runs it.
+	if !strings.Contains(stdout.String(), "core-run-dev") {
+		t.Errorf("core sensor not included in run output; stdout=%q", stdout.String())
+	}
+	// Both sensors' AggregateSignals should be present.
+	lines := strings.Split(strings.TrimRight(stdout.String(), "\n"), "\n")
+	if len(lines) < 3 {
+		t.Fatalf("expected ≥3 lines (2 sensors + verdict), got %d: %q", len(lines), stdout.String())
+	}
+}
+
 func TestRun_DependencyFailedSkipsDependent(t *testing.T) {
 	sBuild := `schema_version: 1.0.0
 id: test-build

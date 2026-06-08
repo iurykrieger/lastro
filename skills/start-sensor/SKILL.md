@@ -41,6 +41,15 @@ skill does not kill the watcher. Use `/stop-sensor <handle>` to terminate.
   (`expected_observations` field; see B4). If absent, the script passes
   `nil` and the watcher reports `completeness` as best-effort.
 
+## How to invoke
+
+> **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.
+> Typical path after marketplace install: `~/.claude/plugins/lastro-harness/`.
+
+```bash
+<plugin-root>/scripts/harness-tools.sh start-sensor <sensor-id>
+```
+
 ## Examples
 
 ```

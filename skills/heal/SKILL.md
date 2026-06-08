@@ -65,6 +65,15 @@ edits and exits 3 with `{"code":"heal-exhausted"}`.
   B3's `DefaultTransactor` lands, this skill will switch to it.
 - Re-validation reuses the `/validate-use-case` DAG scheduler.
 
+## How to invoke
+
+> **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.
+> Typical path after marketplace install: `~/.claude/plugins/lastro-harness/`.
+
+```bash
+echo '<edit-plan-json>' | <plugin-root>/scripts/harness-tools.sh heal <usecase-id>
+```
+
 ## Examples
 
 Heal succeeds:

@@ -44,6 +44,15 @@ Synchronously run an assertion sensor and emit its signals + terminal
 Wraps `lifecycle.RunSensor`. After the call returns, replays the
 per-run `signals.jsonl` to stdout, then emits the terminal aggregate.
 
+## How to invoke
+
+> **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.
+> Typical path after marketplace install: `~/.claude/plugins/lastro-harness/`.
+
+```bash
+<plugin-root>/scripts/harness-tools.sh run-sensor <sensor-id>
+```
+
 ## Examples
 
 Pass:

@@ -17,47 +17,5 @@
     "harness",
     "testing",
     "ci"
-  ],
-  "skills": [
-    {
-      "name": "detect-stack",
-      "path": "skills/detect-stack/SKILL.md"
-    },
-    {
-      "name": "detect-use-cases",
-      "path": "skills/detect-use-cases/SKILL.md"
-    },
-    {
-      "name": "create-sensors",
-      "path": "skills/create-sensors/SKILL.md"
-    },
-    {
-      "name": "create-core-sensors",
-      "path": "skills/create-core-sensors/SKILL.md"
-    },
-    {
-      "name": "validate-use-case",
-      "path": "skills/validate-use-case/SKILL.md"
-    },
-    {
-      "name": "heal",
-      "path": "skills/heal/SKILL.md"
-    },
-    {
-      "name": "run-sensor",
-      "path": "skills/run-sensor/SKILL.md"
-    },
-    {
-      "name": "start-sensor",
-      "path": "skills/start-sensor/SKILL.md"
-    },
-    {
-      "name": "stop-sensor",
-      "path": "skills/stop-sensor/SKILL.md"
-    },
-    {
-      "name": "tail-sensor-signals",
-      "path": "skills/tail-sensor-signals/SKILL.md"
-    }
   ]
 }

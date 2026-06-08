@@ -34,5 +34,5 @@ jobs:
           git checkout main
           git add bin/
           git diff --cached --quiet && echo "no binary changes" && exit 0
-          git commit -m "chore: update harness-tools binaries for ${{ github.ref_name }}"
+          git commit -m "chore: update lastro binaries for ${{ github.ref_name }}"
           git push origin main

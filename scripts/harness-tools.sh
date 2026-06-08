@@ -13,16 +13,16 @@ case "$ARCH" in
   aarch64|arm64) ARCH=arm64 ;;
 esac
 case "$OS" in
-  darwin|linux) BIN="${PLUGIN_DIR}/bin/${OS}-${ARCH}/harness-tools" ;;
-  msys*|mingw*|cygwin*|windows*) BIN="${PLUGIN_DIR}/bin/windows-amd64/harness-tools.exe" ;;
+  darwin|linux) BIN="${PLUGIN_DIR}/bin/${OS}-${ARCH}/lastro" ;;
+  msys*|mingw*|cygwin*|windows*) BIN="${PLUGIN_DIR}/bin/windows-amd64/lastro.exe" ;;
   *)
-    echo "harness-tools.sh: unsupported platform ${OS}-${ARCH}" >&2
+    echo "harness-tools.sh: unsupported platform ${OS}-${ARCH} (no lastro binary)" >&2
     exit 1
     ;;
 esac
 
 if [[ ! -x "$BIN" ]]; then
-  echo "harness-tools.sh: binary not found at ${BIN}" >&2
+  echo "harness-tools.sh: lastro binary not found at ${BIN}" >&2
   echo "Build with: make build-all  (from ${PLUGIN_DIR})" >&2
   exit 1
 fi

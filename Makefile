@@ -1,4 +1,4 @@
-BINARY  := harness-tools
+BINARY  := lastro
 OUTDIR  := bin
 GOFLAGS := -trimpath -ldflags="-s -w"
 PKG     := ./cmd/harness-tools/

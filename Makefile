@@ -1,7 +1,7 @@
 BINARY  := lastro
 OUTDIR  := bin
 GOFLAGS := -trimpath -ldflags="-s -w"
-PKG     := ./cmd/harness-tools/
+PKG     := ./cmd/lastro/
 
 PLATFORMS := darwin-arm64 darwin-amd64 linux-amd64 linux-arm64 windows-amd64
 

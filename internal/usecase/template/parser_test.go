@@ -197,6 +197,38 @@ func TestParseInputRef(t *testing.T) {
 	}
 }
 
+func TestParseInputRefSnakeCase(t *testing.T) {
+	// Input names are snake_case across the framework (golden example
+	// declares `expect_status`; core sensors use `base_url`). The parser
+	// must read the underscore, not stop at it. Regression for #32.
+	got, err := Parse("${{ inputs.base_url }}")
+	if err != nil {
+		t.Fatalf("Parse err: %v", err)
+	}
+	ref, ok := got[0].(InputRef)
+	if !ok || ref.Name != "base_url" {
+		t.Errorf("got %#v, want InputRef{Name: base_url}", got[0])
+	}
+}
+
+func TestParseAdjacentInputRefs(t *testing.T) {
+	// Two back-to-back `}}${{` expressions on one line — the shape from the
+	// core e2e-test/performance run scripts. Regression for #32.
+	got, err := Parse(`url="${{ inputs.base_url }}${{ inputs.path }}"`)
+	if err != nil {
+		t.Fatalf("Parse err: %v", err)
+	}
+	want := []Segment{
+		Literal{Text: `url="`},
+		InputRef{Name: "base_url", Pos: Position{Line: 1, Col: 10, Offset: 9}},
+		InputRef{Name: "path", Pos: Position{Line: 1, Col: 32, Offset: 31}},
+		Literal{Text: `"`},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %#v", got)
+	}
+}
+
 func TestParseStepOutputRef(t *testing.T) {
 	got, err := Parse("${{ steps.create.outputs.charge-id }}")
 	if err != nil {

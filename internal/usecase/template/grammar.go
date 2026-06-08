@@ -6,13 +6,14 @@
 //	ref           := fixtureRef | entryPointRef | inputRef | stepOutputRef
 //	fixtureRef    := "fixtures" "." ID ( "." JSONKEY )*
 //	entryPointRef := "entry_points" "." ID ( "." "spec" "." JSONKEY )?
-//	inputRef      := "inputs" "." ID
+//	inputRef      := "inputs" "." INPUTNAME
 //	stepOutputRef := "steps" "." ID "." "outputs" "." ID
 //
 // Tokens:
 //
-//	ID      := [a-z][a-z0-9-]{0,127}      (kebab-case per schema-freeze)
-//	JSONKEY := [a-zA-Z_][a-zA-Z0-9_-]*    (allows hyphens for JSON keys)
+//	ID        := [a-z][a-z0-9-]{0,127}     (kebab-case per schema-freeze)
+//	INPUTNAME := [a-z][a-z0-9_-]{0,127}    (snake_case input names, e.g. base_url)
+//	JSONKEY   := [a-zA-Z_][a-zA-Z0-9_-]*   (allows hyphens for JSON keys)
 package template
 
 // Position locates a token within its source string. Line and Col are

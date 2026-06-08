@@ -1,0 +1,34 @@
+{
+  "name": "lastro",
+  "owner": {
+    "name": "Iury Krieger"
+  },
+  "metadata": {
+    "description": "Harness framework plugins — use-case-driven validation for any application archetype."
+  },
+  "plugins": [
+    {
+      "name": "lastro",
+      "source": "./",
+      "description": "Use-case-driven validation framework. Detects an application's archetype and stack, derives use cases with fixtures, and generates angle-specific sensors that validate behavior end-to-end.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Iury Krieger",
+        "url": "https://github.com/iurykrieger"
+      },
+      "homepage": "https://github.com/iurykrieger/lastro#readme",
+      "repository": "https://github.com/iurykrieger/lastro",
+      "license": "MIT",
+      "keywords": [
+        "validation",
+        "use-cases",
+        "sensors",
+        "stack-detection",
+        "harness",
+        "testing",
+        "ci"
+      ],
+      "category": "testing"
+    }
+  ]
+}

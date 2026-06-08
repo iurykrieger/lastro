@@ -39,6 +39,15 @@ a 26-char Crockford base32 ULID.
 - The handle must be well-formed: kebab-case sensor-id, then `:`, then
   26-char ULID run-id. Malformed handles exit 3 with `{"code":"bad-handle"}`.
 
+## How to invoke
+
+> **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.
+> Typical path after marketplace install: `~/.claude/plugins/lastro-harness/`.
+
+```bash
+<plugin-root>/scripts/harness-tools.sh stop-sensor <sensor-id>:<run-id>
+```
+
 ## Examples
 
 ```

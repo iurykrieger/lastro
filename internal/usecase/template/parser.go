@@ -165,7 +165,7 @@ func (p *parser) parseEntryPointTail(refPos Position) (Segment, error) {
 }
 
 func (p *parser) parseInputTail(refPos Position) (Segment, error) {
-	name, ok := p.readKebabID()
+	name, ok := p.readInputName()
 	if !ok {
 		return nil, &ParseError{Pos: p.here(), Msg: "expected input name"}
 	}
@@ -260,6 +260,36 @@ func (p *parser) readKebabID() (string, bool) {
 		return "", false
 	}
 	return id, true
+}
+
+// readInputName reads an input name matching ^[a-z][a-z0-9_-]{0,127}$.
+// Unlike readKebabID (used for schema Ids), input names are snake_case by
+// convention (e.g. `base_url`, `expect_status`), so the underscore is part
+// of the token. The env binder normalizes '-'/'_' uniformly, so both
+// separators are accepted here. Returns ("", false) if the first byte is not
+// [a-z] or the name exceeds 128 chars.
+func (p *parser) readInputName() (string, bool) {
+	if p.pos >= len(p.input) {
+		return "", false
+	}
+	c := p.input[p.pos]
+	if !(c >= 'a' && c <= 'z') {
+		return "", false
+	}
+	start := p.pos
+	for p.pos < len(p.input) {
+		c := p.input[p.pos]
+		if (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_' {
+			p.advance(1)
+			continue
+		}
+		break
+	}
+	name := p.input[start:p.pos]
+	if len(name) > 128 {
+		return "", false
+	}
+	return name, true
 }
 
 // readJSONKey reads JSONKEY matching ^[a-zA-Z_][a-zA-Z0-9_-]*$.

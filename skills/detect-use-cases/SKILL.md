@@ -52,13 +52,17 @@ For **each** use case, write ALL its fixtures before writing the use case itself
 use case before its fixtures causes a `fixture_binding` validation failure.
 
 **Per fixture:**
+
+> **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.
+> Typical path after marketplace install: `~/.claude/plugins/lastro-harness/`.
+
 ```bash
-go run ./skills/detect-use-cases/scripts/ --type fixture --file /tmp/<fixture-id>.yaml --harness-dir .harness
+<plugin-root>/scripts/harness-tools.sh detect-use-cases --type fixture --file /tmp/<fixture-id>.yaml --harness-dir .harness
 ```
 
 **Per use case (after all its fixtures):**
 ```bash
-go run ./skills/detect-use-cases/scripts/ --type use-case --file /tmp/<use-case-id>.yaml --harness-dir .harness
+<plugin-root>/scripts/harness-tools.sh detect-use-cases --type use-case --file /tmp/<use-case-id>.yaml --harness-dir .harness
 ```
 
 ## Exit code contract

@@ -91,8 +91,11 @@ from the use case's preconditions and the stack manifest's logging library.
 
 ## How to write each sensor
 
+> **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.
+> Typical path after marketplace install: `~/.claude/plugins/lastro-harness/`.
+
 ```bash
-go run ./skills/create-sensors/scripts/ --file /tmp/<sensor-id>.yaml --harness-dir .harness
+<plugin-root>/scripts/harness-tools.sh create-sensors --file /tmp/<sensor-id>.yaml --harness-dir .harness
 ```
 
 ## Exit code contract

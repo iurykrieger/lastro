@@ -38,6 +38,15 @@ Crockford base32 ULID.
 
 This skill does not opine on the sensor's verdict — that's `/stop-sensor`'s job.
 
+## How to invoke
+
+> **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.
+> Typical path after marketplace install: `~/.claude/plugins/lastro-harness/`.
+
+```bash
+<plugin-root>/scripts/harness-tools.sh tail-sensor-signals <sensor-id>:<run-id> [--follow] [--since N]
+```
+
 ## Examples
 
 Snapshot:

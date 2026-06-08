@@ -64,6 +64,15 @@ Promotion to the worst sensor verdict prevents an empty/vacuous policy
   aggregate with `heal_hint.summary` = `"skipped: depends_on <id> failed"`.
 - Cycles in `depends_on` exit 3 with `{"code":"scheduler-failed"}`.
 
+## How to invoke
+
+> **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.
+> Typical path after marketplace install: `~/.claude/plugins/lastro-harness/`.
+
+```bash
+<plugin-root>/scripts/harness-tools.sh validate-use-case <usecase-id>
+```
+
 ## Examples
 
 Pass:

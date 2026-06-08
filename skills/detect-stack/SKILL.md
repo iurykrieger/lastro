@@ -37,8 +37,12 @@ A single YAML file matching `schemas/stack-manifest.yaml`. Required fields:
 
 1. Use the Write tool to put your YAML at `/tmp/stack-manifest.yaml`.
 2. Run:
+
+   > **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.
+   > Typical path after marketplace install: `~/.claude/plugins/lastro-harness/`.
+
    ```bash
-   go run ./skills/detect-stack/scripts/ --file /tmp/stack-manifest.yaml --harness-dir .harness
+   <plugin-root>/scripts/harness-tools.sh detect-stack --file /tmp/stack-manifest.yaml --harness-dir .harness
    ```
 3. **If exit code is 0:** the manifest has been written to `.harness/stack-manifest.yaml` with
    `applicable_angles` populated. You are done.

@@ -72,3 +72,42 @@ func TestExecAttachStep_WindowElapsesWithoutAllKeys(t *testing.T) {
 		t.Fatalf("keys = %v, want none", got.ObservationKeys)
 	}
 }
+
+func TestExecTopStep_DispatchesToAttachForObservableTarget(t *testing.T) {
+	dir := t.TempDir()
+	svc := filepath.Join(dir, "svc.jsonl")
+	if err := os.WriteFile(svc, []byte(`{"evidence":{"observation_key":"log-line","matched_line":"ready - started server"}}`+"\n"), 0o600); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	e := New(Options{
+		Now: func() time.Time { return time.Unix(0, 0).UTC() },
+		SensorLookup: func(id string) (sensor.Sensor, bool) {
+			if id == "run-dev" {
+				return sensor.Sensor{ID: "run-dev", Scope: enums.ScopeCore, Kind: enums.KindObservational}, true
+			}
+			return sensor.Sensor{}, false
+		},
+		ServiceAttach: func(_ context.Context, serviceID string) (servicemgr.Attachment, bool) {
+			return servicemgr.Attachment{ServiceID: serviceID, SignalsPath: svc}, true
+		},
+	})
+
+	consumer := sensor.Sensor{
+		ID: "logs", UseCaseID: "uc", Angle: enums.ValidationAngle("logs"), Kind: enums.KindObservational,
+		SignalMatches: []sensor.SignalMatch{{Key: "ready", Pattern: "ready - started", Verdict: enums.VerdictPass, Expected: true}},
+	}
+	idx := 0
+	res := e.execTopStep(context.Background(), topStepArgs{
+		Sensor:    consumer,
+		Step:      sensor.Step{ID: "watch", Uses: "run-dev"},
+		GlobalIdx: &idx,
+		RunDir:    dir,
+	})
+	if res.TermReason != enums.TerminationCompleted {
+		t.Fatalf("term = %q, want completed", res.TermReason)
+	}
+	if len(res.ObservationKeys) != 1 || res.ObservationKeys[0] != "ready" {
+		t.Fatalf("keys = %v, want [ready]", res.ObservationKeys)
+	}
+}

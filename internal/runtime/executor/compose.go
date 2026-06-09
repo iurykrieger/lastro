@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/iurykrieger/lastro/internal/enums"
 	"github.com/iurykrieger/lastro/internal/runtime/fixturebinder"
@@ -50,10 +51,71 @@ type topStepResult struct {
 // the composition (uses-step) path.
 func (e *Executor) execTopStep(ctx context.Context, a topStepArgs) topStepResult {
 	if a.Step.Uses != "" {
+		if e.opts.SensorLookup != nil {
+			if prim, ok := e.opts.SensorLookup(a.Step.Uses); ok && prim.Kind == enums.KindObservational {
+				return e.attachToService(ctx, a, prim)
+			}
+		}
 		return e.execUsesStep(ctx, a)
 	}
 	return e.execRunStep(ctx, a)
 }
+
+// attachToService runs the attach-step path for a uses-step whose target is a
+// shared observational service. Falls back to inline expansion if no service
+// is registered (ServiceAttach nil or returns false) so non-validate callers
+// keep working.
+func (e *Executor) attachToService(ctx context.Context, a topStepArgs, prim sensor.Sensor) topStepResult {
+	if e.opts.ServiceAttach == nil {
+		return e.execUsesStep(ctx, a)
+	}
+	att, ok := e.opts.ServiceAttach(ctx, prim.ID)
+	if !ok {
+		return e.execUsesStep(ctx, a)
+	}
+	*a.GlobalIdx++
+	r := execAttachStep(ctx, attachArgs{
+		Consumer:      a.Sensor,
+		Attachment:    att,
+		ExpectedKeys:  expectedKeysOf(a.Sensor),
+		ObserveWindow: observeWindowOf(a.Sensor),
+		Now:           e.opts.Now,
+		SignalsW:      a.SignalsW,
+		Stop:          a.Stop,
+	})
+	return topStepResult{
+		Signals:         r.Signals,
+		ObservationKeys: r.ObservationKeys,
+		Outputs:         map[string]string{},
+		TermReason:      r.TermReason,
+		StepErr:         r.StepErr,
+	}
+}
+
+// expectedKeysOf returns the consumer's expected observation keys (pass
+// matchers flagged expected:true).
+func expectedKeysOf(s sensor.Sensor) []string {
+	var keys []string
+	for _, sm := range s.SignalMatches {
+		if sm.Expected {
+			keys = append(keys, sm.Key)
+		}
+	}
+	return keys
+}
+
+// observeWindowOf returns the sensor's ObserveWindow (parsed) or 0 for default.
+func observeWindowOf(s sensor.Sensor) time.Duration {
+	if s.ObserveWindow == "" {
+		return 0
+	}
+	d, err := time.ParseDuration(s.ObserveWindow)
+	if err != nil {
+		return 0
+	}
+	return d
+}
+
 
 // execRunStep runs a single shell run-step. It preserves the exact
 // termination semantics the executor relied on before composition.

@@ -23,6 +23,10 @@ type Sensor struct {
 	Kind          enums.SensorKind       `json:"kind"`
 	Nature        enums.SensorNature     `json:"nature"`
 	OutputType    enums.SignalOutputType `json:"output_type"`
+	// ObserveWindow optionally bounds how long an attaching observational
+	// sensor watches a shared service's signal stream before rolling up on
+	// completeness. A Go duration string ("45s"); empty means runtime default.
+	ObserveWindow string                 `json:"observe_window,omitempty"`
 	Uses          []string               `json:"uses"`                 // StackComponent ids (grounding invariant 1)
 	DependsOn     []string               `json:"depends_on,omitempty"` // Sensor ids (optional)
 	Inputs        map[string]InputSpec   `json:"inputs,omitempty"`

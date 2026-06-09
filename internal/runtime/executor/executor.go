@@ -13,6 +13,7 @@ import (
 	"github.com/iurykrieger/lastro/internal/enums"
 	"github.com/iurykrieger/lastro/internal/fixture"
 	"github.com/iurykrieger/lastro/internal/runtime/process"
+	"github.com/iurykrieger/lastro/internal/runtime/servicemgr"
 	"github.com/iurykrieger/lastro/internal/sensor"
 	"github.com/iurykrieger/lastro/internal/signal"
 	"github.com/iurykrieger/lastro/internal/usecase"
@@ -48,6 +49,12 @@ type Options struct {
 	// when a sensor contains uses-steps; run-step-only sensors never call
 	// it. Wired from the same *sensor.Store the loader builds.
 	SensorLookup  func(id string) (sensor.Sensor, bool)
+	// ServiceAttach resolves a running shared service (a core + observational
+	// sensor) to its live Attachment. Returns false when the target is not a
+	// managed service, in which case a uses-step expands inline as before.
+	// Wired from the use-case runner's *servicemgr.Manager; nil outside the
+	// validate flow (uses-steps then always expand).
+	ServiceAttach func(ctx context.Context, serviceID string) (servicemgr.Attachment, bool)
 	Now           func() time.Time
 	Shell         []string
 	GroupSignaler process.GroupSignaler

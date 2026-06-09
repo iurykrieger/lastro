@@ -220,6 +220,17 @@ func (l *Lifecycle) StartSensor(
 
 	_, _ = l.pruneDead()
 
+	// Second-spawn guard: refuse to start a sensor that already has a live
+	// registry entry. Shared observational services are host-exclusive
+	// (e.g. run-dev holds .next/dev/lock); a duplicate would crash on the lock.
+	if existing, err := l.registry.List(); err == nil {
+		for _, h := range existing {
+			if h.SensorID == sensorID {
+				return nil, fmt.Errorf("%w: %s (run %s)", ErrServiceAlreadyRunning, sensorID, h.RunID)
+			}
+		}
+	}
+
 	key := runKey{SensorID: sensorID, RunID: runID}
 	stopCh := make(chan struct{})
 	doneCh := make(chan struct{})

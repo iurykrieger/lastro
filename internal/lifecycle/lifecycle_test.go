@@ -394,6 +394,30 @@ func TestRunWatcher_RegistersRunsAndDeregisters(t *testing.T) {
 	}
 }
 
+func TestStartSensor_RejectsSecondLiveInstanceOfSameSensor(t *testing.T) {
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "run-dev", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+		Uses: []string{"fake"},
+		Steps: []sensor.Step{
+			{ID: "boot", Run: fakeSensorBin + " watch --emit ready --interval 30ms"},
+		},
+	}
+	lc := newTestLifecycle(t, []sensor.Sensor{s})
+	ctx := context.Background()
+
+	h1, err := lc.StartSensor(ctx, "run-dev", []string{"ready"})
+	if err != nil {
+		t.Fatalf("first start: %v", err)
+	}
+	t.Cleanup(func() { _, _ = lc.StopSensor(ctx, h1) })
+
+	_, err = lc.StartSensor(ctx, "run-dev", []string{"ready"})
+	if !errors.Is(err, ErrServiceAlreadyRunning) {
+		t.Fatalf("second start err = %v, want ErrServiceAlreadyRunning", err)
+	}
+}
+
 func TestRunWatcher_ErrAssertionSensor(t *testing.T) {
 	s := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: "watcher-assertion", UseCaseID: "lifecycle-uc",

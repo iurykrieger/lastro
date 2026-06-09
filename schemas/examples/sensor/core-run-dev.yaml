@@ -2,12 +2,21 @@ schema_version: 1.0.0
 id: run-dev
 scope: core
 angle: environment
-kind: assertion
+kind: observational
 nature: computational
-output_type: single-shot
+output_type: stream
 uses: []
+signal_matches:
+  # Readiness: servicemgr.Acquire blocks until this key appears.
+  - key: ready
+    pattern: "ready|started server|compiled successfully"
+    verdict: pass
+    expected: true
+  # Firehose: emit every server log line so attaching sensors (e.g. logs)
+  # can grep matched_line for their own patterns.
+  - key: log-line
+    pattern: ".+"
+    verdict: pass
 steps:
   - id: boot
     run: "make dev"
-  - id: wait-ready
-    run: "curl --fail --retry 30 --retry-delay 1 http://localhost:8080/health_check/ready"

@@ -94,6 +94,19 @@ func (m *Manager) Acquire(ctx context.Context, serviceID string, expectedObs []s
 	return Attachment{ServiceID: serviceID, RunID: started.RunID, SignalsPath: started.SignalsPath}, nil
 }
 
+// Lookup returns the current attachment for a running service without
+// changing its ref-count. Used by the executor attach seam, which runs only
+// after the runner has already Acquired the service.
+func (m *Manager) Lookup(serviceID string) (Attachment, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.services[serviceID]
+	if !ok {
+		return Attachment{}, false
+	}
+	return Attachment{ServiceID: serviceID, RunID: e.runID, SignalsPath: e.signalsPath}, true
+}
+
 // Release decrements serviceID's ref-count, stopping the service when it
 // reaches zero. Releasing an unknown service is a no-op.
 func (m *Manager) Release(ctx context.Context, serviceID string) error {

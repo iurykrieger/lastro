@@ -57,6 +57,22 @@ func TestAcquire_StartsServiceOnce(t *testing.T) {
 	}
 }
 
+func TestLookup_DoesNotChangeRefCount(t *testing.T) {
+	fl := newFakeLifecycle(t.TempDir())
+	m := New(fl, Options{Ready: alwaysReady, ReadyTimeout: time.Second})
+	ctx := context.Background()
+
+	_, _ = m.Acquire(ctx, "run-dev", nil)
+	if _, ok := m.Lookup("run-dev"); !ok {
+		t.Fatal("lookup miss after acquire")
+	}
+	_ = m.Release(ctx, "run-dev")
+	// assert the fake recorded exactly ONE stop for run-dev (lookup added no ref)
+	if fl.stops["run-dev"] != 1 {
+		t.Fatalf("stops = %d, want 1 (lookup must not change ref-count)", fl.stops["run-dev"])
+	}
+}
+
 func TestRelease_StopsOnlyOnLastDetach(t *testing.T) {
 	fl := newFakeLifecycle(t.TempDir())
 	m := New(fl, Options{Ready: alwaysReady})

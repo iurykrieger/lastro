@@ -110,7 +110,7 @@ func TestRunUseCaseSensors_LayerSerialization(t *testing.T) {
 		delay: map[string]time.Duration{"a": 50 * time.Millisecond},
 	}
 
-	results, err := runUseCaseSensors(context.Background(), runner, sensors, nil)
+	results, err := runUseCaseSensors(context.Background(), runner, sensors, nil, &fakeServiceMgr{}, nil)
 	if err != nil {
 		t.Fatalf("runUseCaseSensors: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestRunUseCaseSensors_ParallelWithinLayer(t *testing.T) {
 	}
 
 	start := time.Now()
-	results, err := runUseCaseSensors(context.Background(), runner, sensors, nil)
+	results, err := runUseCaseSensors(context.Background(), runner, sensors, nil, &fakeServiceMgr{}, nil)
 	elapsed := time.Since(start)
 	if err != nil {
 		t.Fatalf("runUseCaseSensors: %v", err)

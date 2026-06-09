@@ -47,8 +47,8 @@ func TestValidate_ConcurrencyBound(t *testing.T) {
 	}
 
 	runner := &countingRunner{}
-	makeRunner := func(arts *HarnessArtifacts, repoRoot string) (SensorRunner, func(), error) {
-		return runner, func() {}, nil
+	makeRunner := func(arts *HarnessArtifacts, repoRoot string) (SensorRunner, ServiceManager, func(), error) {
+		return runner, &fakeServiceMgr{}, func() {}, nil
 	}
 
 	cfg := &Config{Output: "json", Concurrency: 1, RepoRoot: filepath.Dir(filepath.Dir(harnessDir))}

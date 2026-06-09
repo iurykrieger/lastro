@@ -64,6 +64,25 @@ Promotion to the worst sensor verdict prevents an empty/vacuous policy
   aggregate with `heal_hint.summary` = `"skipped: depends_on <id> failed"`.
 - Cycles in `depends_on` exit 3 with `{"code":"scheduler-failed"}`.
 
+## Shared observational services
+
+A `kind: observational` + `scope: core` sensor (e.g. `run-dev`) is a **shared
+service**, not a scheduled DAG node. The runtime:
+
+- starts exactly **one** instance on the first attaching sensor (a host-exclusive
+  server like `next dev` holds a lock — a second instance would crash), blocking
+  until the service emits its `ready` observation;
+- **reference-counts** it: the service stays alive while any sensor is attached
+  and is stopped on the last detach;
+- feeds its **live signal stream** to each attaching sensor. A sensor attaches by
+  naming the service in `depends_on` (and a step `uses: <service>`); it applies
+  its own `signal_matches` to the service's emitted lines instead of spawning its
+  own copy.
+
+Shared services are excluded from the wavefront node set and are not
+policy-graded (their `environment` angle is in no angle list); their role is
+infrastructure, surfaced through the verdicts of the sensors that attach to them.
+
 ## How to invoke
 
 > **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.

@@ -74,11 +74,48 @@ Fallback commands per angle (use only when core/ has no matching primitive):
 | `unit-test` | Test runner: `go test ./...`, `jest --json`, `pytest -q` |
 | `code-structure` | Lint tool in `uses:`: `golangci-lint run`, `npx eslint` |
 | `contracts` | Spec validator: `protoc --descriptor_set_out=/dev/null`, `npx @redocly/cli lint` |
-| `logs` | Tail process output: `docker logs --follow <container> 2>&1`, `tail -f <log>` |
+| `logs` | **Attach to the shared service — see below.** Only tail directly (`docker logs --follow`, `tail -f`) when no observational service exists. |
 | `metrics` | Scrape endpoint: `curl -sS http://localhost:9090/metrics \| grep <key>` |
 | `database` | Stack CLI or probe: `aws dynamodb get-item ...`, `go run ./probe/db` |
 | `performance` | Load tool in `uses:`: `hey -n 100 http://...`, `k6 run script.js` |
 | `security` | Scanner in `uses:`: `gosec ./...`, `npm audit --json` |
+
+### Attaching to a shared observational service (logs, and other stream consumers)
+
+When `.harness/sensors/core/` contains a `kind: observational` + `scope: core`
+service (e.g. `run-dev`), a `logs`-angle sensor (or any sensor that needs to
+watch that service's output) **attaches** to it rather than spawning its own
+server or `docker logs`. The runtime starts the service once, reference-counts
+it, and feeds its live signal stream to every attaching sensor. Emit:
+
+- `kind: observational`, `output_type: stream`.
+- `depends_on: [<service-id>]` — this is what pulls the shared service into the
+  use case's scheduled set; without it the service is never started.
+- a step `{ id: watch, uses: <service-id> }` — the attach itself. No `run:`
+  server boot, no second `docker logs`.
+- `signal_matches:` describing the lines to watch; each pattern is applied to
+  the service's emitted `matched_line`. Mark the lines that must appear with
+  `expected: true` (completeness).
+- optional `observe_window: <duration>` (e.g. `45s`) bounding how long to watch
+  before rolling up; omit for the runtime default.
+
+```yaml
+id: s-checkout-logs
+use_case_id: uc-checkout
+angle: logs
+kind: observational
+nature: computational
+output_type: stream
+uses: []
+depends_on: [run-dev]
+observe_window: 45s
+signal_matches:
+  - { key: served, pattern: "GET /checkout .* 200", verdict: pass, expected: true }
+  - { key: error,  pattern: "5\\d\\d|unhandled",     verdict: fail, heal_hint: { summary: "Server error during checkout", rationale: "A 5xx surfaced while exercising the use case." } }
+steps:
+  - id: watch
+    uses: run-dev
+```
 
 ### Composing core primitives + demanding inputs
 

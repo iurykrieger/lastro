@@ -56,3 +56,30 @@ func TestAcquire_StartsServiceOnce(t *testing.T) {
 		t.Fatalf("attachments disagree on signals path: %q vs %q", a1.SignalsPath, a2.SignalsPath)
 	}
 }
+
+func TestRelease_StopsOnlyOnLastDetach(t *testing.T) {
+	fl := newFakeLifecycle(t.TempDir())
+	m := New(fl, Options{Ready: alwaysReady})
+	ctx := context.Background()
+
+	_, _ = m.Acquire(ctx, "run-dev", nil)
+	_, _ = m.Acquire(ctx, "run-dev", nil)
+
+	if err := m.Release(ctx, "run-dev"); err != nil {
+		t.Fatalf("release 1: %v", err)
+	}
+	if fl.stops["run-dev"] != 0 {
+		t.Fatalf("stopped too early: stops = %d", fl.stops["run-dev"])
+	}
+	if err := m.Release(ctx, "run-dev"); err != nil {
+		t.Fatalf("release 2: %v", err)
+	}
+	if fl.stops["run-dev"] != 1 {
+		t.Fatalf("stops = %d, want 1", fl.stops["run-dev"])
+	}
+	// A subsequent Acquire must start a fresh instance.
+	_, _ = m.Acquire(ctx, "run-dev", nil)
+	if fl.starts["run-dev"] != 2 {
+		t.Fatalf("starts = %d, want 2 after re-acquire", fl.starts["run-dev"])
+	}
+}

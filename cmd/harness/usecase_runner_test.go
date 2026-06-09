@@ -179,3 +179,22 @@ func layerIDs(layer []sensor.Sensor) string {
 	}
 	return out
 }
+
+func TestClassifyServices_SplitsCoreObservationalTargets(t *testing.T) {
+	sensors := []sensor.Sensor{
+		{ID: "run-dev", Scope: enums.ScopeCore, Kind: enums.KindObservational},
+		{ID: "logs", UseCaseID: "uc", Kind: enums.KindObservational, Steps: []sensor.Step{{ID: "watch", Uses: "run-dev"}}},
+		{ID: "unit", UseCaseID: "uc", Kind: enums.KindAssertion, Steps: []sensor.Step{{ID: "t", Run: "go test ./..."}}},
+	}
+	services, regular := classifyServices(sensors)
+	if len(services) != 1 || services[0].ID != "run-dev" {
+		t.Fatalf("services = %v, want [run-dev]", services)
+	}
+	ids := []string{}
+	for _, s := range regular {
+		ids = append(ids, s.ID)
+	}
+	if len(ids) != 2 {
+		t.Fatalf("regular = %v, want logs+unit", ids)
+	}
+}

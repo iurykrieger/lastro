@@ -20,6 +20,21 @@ type SensorRunner interface {
 	RunSensor(ctx context.Context, sensorID string, expectedObs []string) (aggregate.AggregateSignal, error)
 }
 
+// classifyServices partitions gathered sensors into shared services (core +
+// observational sensors that other sensors attach to) and regular sensors.
+// Services are managed by servicemgr — started on first attach, reaped on
+// last detach — and are NOT scheduled as run-to-completion wavefront nodes.
+func classifyServices(sensors []sensor.Sensor) (services, regular []sensor.Sensor) {
+	for _, s := range sensors {
+		if s.Scope == enums.ScopeCore && s.Kind == enums.KindObservational {
+			services = append(services, s)
+			continue
+		}
+		regular = append(regular, s)
+	}
+	return services, regular
+}
+
 // wavefronts groups sensors into layers of independent work. Layer 0
 // contains every sensor with no DependsOn; layer N contains sensors
 // whose DependsOn ids all resolved to layers 0..N-1.

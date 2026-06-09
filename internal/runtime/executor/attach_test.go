@@ -45,8 +45,8 @@ func TestExecAttachStep_MatchesServiceLinesAndCompletes(t *testing.T) {
 	if got.TermReason != enums.TerminationCompleted {
 		t.Fatalf("term = %q, want completed", got.TermReason)
 	}
-	if len(got.ObservationKeys) == 0 || got.ObservationKeys[len(got.ObservationKeys)-1] != "compiled" {
-		t.Fatalf("observation keys = %v, want to include compiled", got.ObservationKeys)
+	if len(got.ObservationKeys) != 1 || got.ObservationKeys[0] != "compiled" {
+		t.Fatalf("observation keys = %v, want exactly [compiled]", got.ObservationKeys)
 	}
 }
 

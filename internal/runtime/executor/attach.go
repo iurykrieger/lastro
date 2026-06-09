@@ -86,6 +86,7 @@ func execAttachStep(ctx context.Context, a attachArgs) attachResult {
 	wctx, cancel := context.WithTimeout(ctx, window)
 	defer cancel()
 
+	// poll 0 → sigstream default (50ms).
 	err := sigstream.Follow(wctx, a.Attachment.SignalsPath, 0, a.Stop, func(d sigstream.Decoded) bool {
 		for _, m := range matchers {
 			if !m.re.MatchString(d.MatchedLine) {
@@ -109,6 +110,7 @@ func execAttachStep(ctx context.Context, a attachArgs) attachResult {
 					_ = a.SignalsW.WriteLine(b)
 				}
 			}
+			// remaining holds only ExpectedKeys; deleting a non-expected key is a no-op.
 			delete(remaining, m.key)
 		}
 		return len(remaining) == 0 // satisfied-on-completeness

@@ -62,8 +62,12 @@ func TestRelease_StopsOnlyOnLastDetach(t *testing.T) {
 	m := New(fl, Options{Ready: alwaysReady})
 	ctx := context.Background()
 
-	_, _ = m.Acquire(ctx, "run-dev", nil)
-	_, _ = m.Acquire(ctx, "run-dev", nil)
+	if _, err := m.Acquire(ctx, "run-dev", nil); err != nil {
+		t.Fatalf("setup acquire: %v", err)
+	}
+	if _, err := m.Acquire(ctx, "run-dev", nil); err != nil {
+		t.Fatalf("setup acquire: %v", err)
+	}
 
 	if err := m.Release(ctx, "run-dev"); err != nil {
 		t.Fatalf("release 1: %v", err)
@@ -78,7 +82,9 @@ func TestRelease_StopsOnlyOnLastDetach(t *testing.T) {
 		t.Fatalf("stops = %d, want 1", fl.stops["run-dev"])
 	}
 	// A subsequent Acquire must start a fresh instance.
-	_, _ = m.Acquire(ctx, "run-dev", nil)
+	if _, err := m.Acquire(ctx, "run-dev", nil); err != nil {
+		t.Fatalf("re-acquire: %v", err)
+	}
 	if fl.starts["run-dev"] != 2 {
 		t.Fatalf("starts = %d, want 2 after re-acquire", fl.starts["run-dev"])
 	}

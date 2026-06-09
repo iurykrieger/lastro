@@ -50,6 +50,7 @@ type Manager struct {
 	services map[string]*entry
 }
 
+// entry tracks a running service's identity and reference count. It is removed from the services map when refs reaches zero.
 type entry struct {
 	runID       string
 	signalsPath string
@@ -75,6 +76,7 @@ func (m *Manager) Acquire(ctx context.Context, serviceID string, expectedObs []s
 		m.mu.Unlock()
 		return att, nil
 	}
+	// StartService runs under the lock to prevent a double-start race; this serializes all first-acquires on this manager.
 	started, err := m.lc.StartService(ctx, serviceID, expectedObs)
 	if err != nil {
 		m.mu.Unlock()
@@ -85,7 +87,7 @@ func (m *Manager) Acquire(ctx context.Context, serviceID string, expectedObs []s
 
 	if m.opts.Ready != nil {
 		if err := m.opts.Ready(ctx, started.SignalsPath, m.opts.ReadyTimeout); err != nil {
-			_ = m.Release(ctx, serviceID)
+			_ = m.Release(context.WithoutCancel(ctx), serviceID)
 			return Attachment{}, fmt.Errorf("servicemgr: %q not ready: %w", serviceID, err)
 		}
 	}

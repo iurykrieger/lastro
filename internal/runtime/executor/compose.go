@@ -52,7 +52,10 @@ type topStepResult struct {
 func (e *Executor) execTopStep(ctx context.Context, a topStepArgs) topStepResult {
 	if a.Step.Uses != "" {
 		if e.opts.SensorLookup != nil {
-			if prim, ok := e.opts.SensorLookup(a.Step.Uses); ok && prim.Kind == enums.KindObservational {
+			// A shared service is, by invariant, a core + observational sensor
+			// (see servicemgr). Only those targets attach to a live stream;
+			// every other uses-step inline-expands as before.
+			if prim, ok := e.opts.SensorLookup(a.Step.Uses); ok && prim.Scope == enums.ScopeCore && prim.Kind == enums.KindObservational {
 				return e.attachToService(ctx, a, prim)
 			}
 		}
@@ -115,7 +118,6 @@ func observeWindowOf(s sensor.Sensor) time.Duration {
 	}
 	return d
 }
-
 
 // execRunStep runs a single shell run-step. It preserves the exact
 // termination semantics the executor relied on before composition.

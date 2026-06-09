@@ -17,11 +17,11 @@ import (
 // let tests assert wavefront semantics.
 type fakeRunner struct {
 	mu        sync.Mutex
-	starts    []string                   // sensor IDs in order RunSensor was entered
-	completes []string                   // sensor IDs in order RunSensor returned
-	delay     map[string]time.Duration   // per-sensor sleep before returning
-	verdicts  map[string]enums.Verdict   // override verdict per sensor
-	calls     atomic.Int64               // total RunSensor calls
+	starts    []string                 // sensor IDs in order RunSensor was entered
+	completes []string                 // sensor IDs in order RunSensor returned
+	delay     map[string]time.Duration // per-sensor sleep before returning
+	verdicts  map[string]enums.Verdict // override verdict per sensor
+	calls     atomic.Int64             // total RunSensor calls
 }
 
 func (f *fakeRunner) RunSensor(ctx context.Context, sensorID string, expectedObs []string) (aggregate.AggregateSignal, error) {

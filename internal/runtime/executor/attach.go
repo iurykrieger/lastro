@@ -120,9 +120,18 @@ func execAttachStep(ctx context.Context, a attachArgs) attachResult {
 	case err == nil:
 		res.TermReason = enums.TerminationCompleted
 	case errors.Is(err, context.DeadlineExceeded):
-		// Window elapsed without full completeness; not an error — the rollup
-		// turns missing expected keys into the verdict.
-		res.TermReason = enums.TerminationCompleted
+		// DeadlineExceeded has two sources: the observe-window timeout (wctx,
+		// derived here) or an outer ctx deadline imposed by the caller. Only
+		// the former is a normal completeness rollup — the window elapsed
+		// without all expected keys and the rollup turns the gap into the
+		// verdict. An outer deadline is an externally imposed timeout and must
+		// surface as such, not be masked as a clean completion.
+		if ctx.Err() == nil {
+			res.TermReason = enums.TerminationCompleted
+		} else {
+			res.TermReason = enums.TerminationTimeout
+			res.StepErr = ctx.Err()
+		}
 	case errors.Is(err, context.Canceled):
 		res.TermReason = enums.TerminationStopped
 	default:

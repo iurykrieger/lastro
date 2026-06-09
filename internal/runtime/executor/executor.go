@@ -48,7 +48,7 @@ type Options struct {
 	// SensorLookup resolves a core primitive sensor by id. Required only
 	// when a sensor contains uses-steps; run-step-only sensors never call
 	// it. Wired from the same *sensor.Store the loader builds.
-	SensorLookup  func(id string) (sensor.Sensor, bool)
+	SensorLookup func(id string) (sensor.Sensor, bool)
 	// ServiceAttach resolves a running shared service (a core + observational
 	// sensor) to its live Attachment. Returns false when the target is not a
 	// managed service, in which case a uses-step expands inline as before.

@@ -246,10 +246,10 @@ type UseCaseRunResult struct {
 }
 
 // RunUseCase orchestrates the full per-use-case validation pipeline:
-//   1. Filter the sensor store to sensors owned by this use case.
-//   2. Classify sensors into shared services (core+observational) and regular.
-//   3. Run regular sensors via wavefront layers, acquiring/releasing services.
-//   4. Aggregate via internal/runtime/aggregator/usecase.UseCase.
+//  1. Filter the sensor store to sensors owned by this use case.
+//  2. Classify sensors into shared services (core+observational) and regular.
+//  3. Run regular sensors via wavefront layers, acquiring/releasing services.
+//  4. Aggregate via internal/runtime/aggregator/usecase.UseCase.
 //
 // Returns the use-case verdict plus the per-sensor AggregateSignal
 // slice so the renderer can show both.

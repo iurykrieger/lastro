@@ -19,9 +19,9 @@ import (
 // the *use-case* level; this also bounds total sensor concurrency
 // when there is one sensor per use case.
 type countingRunner struct {
-	mu        sync.Mutex
-	inflight  atomic.Int64
-	maxSeen   atomic.Int64
+	mu       sync.Mutex
+	inflight atomic.Int64
+	maxSeen  atomic.Int64
 }
 
 func (c *countingRunner) RunSensor(ctx context.Context, sensorID string, expectedObs []string) (aggregate.AggregateSignal, error) {

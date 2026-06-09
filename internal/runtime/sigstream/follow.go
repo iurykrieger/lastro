@@ -30,11 +30,21 @@ type Decoded struct {
 //   - ctx is done.
 //
 // A not-yet-created file is treated as empty and retried every poll interval.
+// Passing a nil stop channel is valid: it simply never fires, so cancellation
+// relies on ctx.
 func Follow(ctx context.Context, path string, poll time.Duration, stop <-chan struct{}, onSignal func(Decoded) (done bool)) error {
 	if poll <= 0 {
 		poll = 50 * time.Millisecond
 	}
 	var offset int64
+
+	timer := time.NewTimer(poll)
+	defer timer.Stop()
+	// Start drained; we Reset before each wait.
+	if !timer.Stop() {
+		<-timer.C
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -52,12 +62,25 @@ func Follow(ctx context.Context, path string, poll time.Duration, stop <-chan st
 			return nil
 		}
 		if n == 0 {
+			timer.Reset(poll)
 			select {
 			case <-ctx.Done():
+				if !timer.Stop() {
+					select {
+					case <-timer.C:
+					default:
+					}
+				}
 				return ctx.Err()
 			case <-stop:
+				if !timer.Stop() {
+					select {
+					case <-timer.C:
+					default:
+					}
+				}
 				return nil
-			case <-time.After(poll):
+			case <-timer.C:
 			}
 		}
 	}
@@ -65,7 +88,9 @@ func Follow(ctx context.Context, path string, poll time.Duration, stop <-chan st
 
 // drain reads any new whole lines from path starting at *offset, advances
 // *offset past consumed bytes, and invokes onSignal for each decoded object.
-// Returns the count of lines consumed and whether onSignal asked to stop.
+// Returns the count of successfully decoded (delivered) signals and whether
+// onSignal asked to stop. *offset is advanced for every complete line
+// (valid or malformed) so malformed lines are not re-read on the next pass.
 func drain(path string, offset *int64, onSignal func(Decoded) bool) (int, bool, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -83,16 +108,17 @@ func drain(path string, offset *int64, onSignal func(Decoded) bool) (int, bool, 
 	count := 0
 	for {
 		line, err := r.ReadBytes('\n')
+		// Complete line ends in '\n'; a partial trailing line leaves *offset unadvanced so it is re-read next pass.
 		if len(line) > 0 && line[len(line)-1] == '\n' {
 			*offset += int64(len(line))
-			count++
 			if d, ok := decode(line); ok {
+				count++
 				if onSignal(d) {
 					return count, true, nil
 				}
 			}
 		}
-		if err != nil { // io.EOF or partial trailing line: stop this pass
+		if err != nil {
 			break
 		}
 	}

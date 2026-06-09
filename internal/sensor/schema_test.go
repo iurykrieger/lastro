@@ -37,7 +37,7 @@ func TestCompiledSchemaIsAvailableAndCached(t *testing.T) {
 }
 
 func TestSchemaAcceptsCompositionExamples(t *testing.T) {
-	for _, f := range []string{"core-e2e-primitive.yaml", "uc-consumer.yaml"} {
+	for _, f := range []string{"core-e2e-primitive.yaml", "uc-consumer.yaml", "core-run-dev.yaml"} {
 		raw, err := os.ReadFile(filepath.Join("..", "..", "schemas", "examples", "sensor", f))
 		if err != nil {
 			t.Fatal(err)
@@ -57,5 +57,22 @@ func TestSchemaRejectsStepWithBothRunAndUses(t *testing.T) {
 	asJSON, _ := yaml.YAMLToJSON(raw)
 	if err := validateAgainstSchema(asJSON); err == nil {
 		t.Fatal("expected schema rejection of step with both run and uses")
+	}
+}
+
+func TestSchemaAcceptsObserveWindow(t *testing.T) {
+	good := []byte("schema_version: 1.0.0\nid: logs\nscope: use-case\nuse_case_id: uc\nangle: logs\nkind: observational\nnature: computational\noutput_type: stream\nuses: []\nobserve_window: 45s\nsteps:\n  - id: watch\n    uses: run-dev\n")
+	asJSON, err := yaml.YAMLToJSON(good)
+	if err != nil {
+		t.Fatalf("yaml->json: %v", err)
+	}
+	if err := validateAgainstSchema(asJSON); err != nil {
+		t.Errorf("observe_window 45s should validate: %v", err)
+	}
+
+	bad := []byte("schema_version: 1.0.0\nid: logs\nscope: use-case\nuse_case_id: uc\nangle: logs\nkind: observational\nnature: computational\noutput_type: stream\nuses: []\nobserve_window: 45seconds\nsteps:\n  - id: watch\n    uses: run-dev\n")
+	asJSONBad, _ := yaml.YAMLToJSON(bad)
+	if err := validateAgainstSchema(asJSONBad); err == nil {
+		t.Error("observe_window 45seconds should be rejected by the duration pattern")
 	}
 }

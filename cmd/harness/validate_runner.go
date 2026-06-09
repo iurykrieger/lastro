@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 	"time"
@@ -16,6 +17,8 @@ import (
 	"github.com/iurykrieger/lastro/internal/lifecycle"
 	aggregator "github.com/iurykrieger/lastro/internal/runtime/aggregator/usecase"
 	"github.com/iurykrieger/lastro/internal/runtime/executor"
+	"github.com/iurykrieger/lastro/internal/runtime/servicemgr"
+	"github.com/iurykrieger/lastro/internal/runtime/sigstream"
 	"github.com/iurykrieger/lastro/internal/usecase"
 	"github.com/iurykrieger/lastro/internal/usecase/template"
 )
@@ -24,12 +27,52 @@ func runValidate(ctx context.Context, cfg *Config, useCaseIDs []string, all bool
 	return runValidateWith(ctx, cfg, useCaseIDs, all, out, defaultRunnerFactory)
 }
 
-// runnerFactory builds a SensorRunner over loaded artifacts. The seam
-// lets tests inject a fake runner without touching the real lifecycle.
-type runnerFactory func(arts *HarnessArtifacts, repoRoot string) (SensorRunner, func(), error)
+// runnerFactory builds a SensorRunner and ServiceManager over loaded artifacts.
+// The seam lets tests inject a fake runner without touching the real lifecycle.
+type runnerFactory func(arts *HarnessArtifacts, repoRoot string) (SensorRunner, ServiceManager, func(), error)
 
-// defaultRunnerFactory builds the real lifecycle + executor.
-func defaultRunnerFactory(arts *HarnessArtifacts, repoRoot string) (SensorRunner, func(), error) {
+// lifecycleService adapts *lifecycle.Lifecycle to servicemgr.ServiceLifecycle.
+type lifecycleService struct {
+	lc      *lifecycle.Lifecycle
+	mu      sync.Mutex
+	handles map[string]*lifecycle.Handle // serviceID -> running handle
+}
+
+func (a *lifecycleService) StartService(ctx context.Context, serviceID string, expectedObs []string) (servicemgr.Started, error) {
+	h, err := a.lc.StartSensor(ctx, serviceID, expectedObs)
+	if err != nil {
+		return servicemgr.Started{}, err
+	}
+	a.mu.Lock()
+	a.handles[serviceID] = h
+	a.mu.Unlock()
+	return servicemgr.Started{RunID: h.RunID, SignalsPath: filepath.Join(h.RunDir, "signals.jsonl")}, nil
+}
+
+func (a *lifecycleService) StopService(ctx context.Context, serviceID, runID string) error {
+	a.mu.Lock()
+	h := a.handles[serviceID]
+	delete(a.handles, serviceID)
+	a.mu.Unlock()
+	if h == nil {
+		return nil
+	}
+	_, err := a.lc.StopSensor(ctx, h)
+	return err
+}
+
+// readyByObservation blocks until a "ready" observation_key appears in the
+// service's signal stream, or timeout elapses.
+func readyByObservation(ctx context.Context, signalsPath string, timeout time.Duration) error {
+	wctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	return sigstream.Follow(wctx, signalsPath, 0, nil, func(d sigstream.Decoded) bool {
+		return d.ObservationKey == "ready"
+	})
+}
+
+// defaultRunnerFactory builds the real lifecycle + executor + servicemgr.
+func defaultRunnerFactory(arts *HarnessArtifacts, repoRoot string) (SensorRunner, ServiceManager, func(), error) {
 	// Build the (sensor.ID -> *usecase.UseCase) lookup closure the
 	// executor uses to resolve fixture/entry-point references at
 	// step-execution time.
@@ -61,6 +104,11 @@ func defaultRunnerFactory(arts *HarnessArtifacts, repoRoot string) (SensorRunner
 		EntryPoints: entryPoints,
 	}
 
+	// Build the lifecycle adapter shell first (lc field set after lc is
+	// constructed below to break the circular dependency).
+	svc := &lifecycleService{handles: map[string]*lifecycle.Handle{}}
+	mgr := servicemgr.New(svc, servicemgr.Options{Ready: readyByObservation, ReadyTimeout: 60 * time.Second})
+
 	exec := executor.New(executor.Options{
 		RepoRoot:      repoRoot,
 		Resolver:      resolver,
@@ -68,6 +116,9 @@ func defaultRunnerFactory(arts *HarnessArtifacts, repoRoot string) (SensorRunner
 		UseCaseLookup: useCaseLookup,
 		SensorLookup:  arts.Sensors.LookupSensor,
 		Now:           time.Now,
+		ServiceAttach: func(_ context.Context, serviceID string) (servicemgr.Attachment, bool) {
+			return mgr.Lookup(serviceID)
+		},
 	})
 
 	lc := lifecycle.New(lifecycle.Options{
@@ -76,9 +127,10 @@ func defaultRunnerFactory(arts *HarnessArtifacts, repoRoot string) (SensorRunner
 		RuntimeRoot: arts.RuntimeRoot,
 		Version:     HarnessVersion,
 	})
+	svc.lc = lc
 
 	cleanup := func() {}
-	return lc, cleanup, nil
+	return lc, mgr, cleanup, nil
 }
 
 // runValidateWith is the testable seam. Production calls it with
@@ -125,7 +177,7 @@ func runValidateWith(
 		}
 	}
 
-	runner, cleanup, err := makeRunner(arts, repoRoot)
+	runner, mgr, cleanup, err := makeRunner(arts, repoRoot)
 	if err != nil {
 		return fmt.Errorf("init runner: %w", err)
 	}
@@ -143,7 +195,7 @@ func runValidateWith(
 		go func() {
 			defer wg.Done()
 			defer func() { <-sem }()
-			r, err := RunUseCase(ctx, runner, arts, id)
+			r, err := RunUseCase(ctx, runner, mgr, arts, id)
 			if err != nil {
 				// Surface as an inconclusive synthesized verdict.
 				r = synthesizeFailedRun(id, err)

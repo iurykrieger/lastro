@@ -10,13 +10,15 @@ import (
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/sensor"
+	"github.com/iurykrieger/lastro/internal/usecase"
 )
 
 // stubRunnerFactory returns a SensorRunner that emits one
 // pre-configured AggregateSignal per sensor ID.
 func stubRunnerFactory(verdicts map[string]enums.Verdict) runnerFactory {
-	return func(arts *HarnessArtifacts, repoRoot string) (SensorRunner, func(), error) {
-		return &fakeRunnerVerdict{verdicts: verdicts}, func() {}, nil
+	return func(arts *HarnessArtifacts, repoRoot string) (SensorRunner, ServiceManager, func(), error) {
+		return &fakeRunnerVerdict{verdicts: verdicts}, &fakeServiceMgr{}, func() {}, nil
 	}
 }
 
@@ -93,5 +95,25 @@ func TestValidate_OneFails(t *testing.T) {
 
 	if err != VerdictFailError {
 		t.Fatalf("err = %v, want VerdictFailError", err)
+	}
+}
+
+func TestDefaultRunnerFactory_BuildsServiceManager(t *testing.T) {
+	st, err := sensor.NewStore()
+	if err != nil {
+		t.Fatalf("new store: %v", err)
+	}
+	arts := &HarnessArtifacts{
+		Sensors:     st,
+		UseCases:    map[string]*usecase.UseCase{},
+		RuntimeRoot: t.TempDir(),
+	}
+	runner, mgr, cleanup, err := defaultRunnerFactory(arts, t.TempDir())
+	if err != nil {
+		t.Fatalf("factory: %v", err)
+	}
+	defer cleanup()
+	if runner == nil || mgr == nil {
+		t.Fatalf("factory returned nil runner/mgr")
 	}
 }

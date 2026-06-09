@@ -48,8 +48,8 @@ func TestValidate_CancellationViaContext(t *testing.T) {
 		cancel()
 	}()
 
-	makeRunner := func(arts *HarnessArtifacts, repoRoot string) (SensorRunner, func(), error) {
-		return slowRunner{}, func() {}, nil
+	makeRunner := func(arts *HarnessArtifacts, repoRoot string) (SensorRunner, ServiceManager, func(), error) {
+		return slowRunner{}, &fakeServiceMgr{}, func() {}, nil
 	}
 	err = runValidateWith(ctx, cfg, nil, true, out, makeRunner)
 	// The result is allowed to surface as VerdictInconclusiveError

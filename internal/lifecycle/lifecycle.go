@@ -178,6 +178,7 @@ func (l *Lifecycle) RunSensor(
 		SensorLookup:  base.SensorLookup,
 		Now:           base.Now,
 		Shell:         base.Shell,
+		ServiceAttach: base.ServiceAttach,
 		GroupSignaler: l.opts.Signaler,
 		OnStepStart:   onStart,
 	})
@@ -219,6 +220,23 @@ func (l *Lifecycle) StartSensor(
 	}
 
 	_, _ = l.pruneDead()
+
+	// Second-spawn guard: refuse to start a sensor that already has a live
+	// registry entry. Shared observational services are host-exclusive
+	// (e.g. run-dev holds .next/dev/lock); a duplicate would crash on the lock.
+	//
+	// This check-then-Append is reliable only because callers are serialized
+	// upstream by servicemgr.Acquire (one StartService per service id at a
+	// time). Direct, concurrent StartSensor calls for the same id are NOT
+	// protected by this guard alone; the registry file lock in Append is the
+	// last line of defense for the cross-process case.
+	if existing, err := l.registry.List(); err == nil {
+		for _, h := range existing {
+			if h.SensorID == sensorID {
+				return nil, fmt.Errorf("%w: %s (run %s)", ErrServiceAlreadyRunning, sensorID, h.RunID)
+			}
+		}
+	}
 
 	key := runKey{SensorID: sensorID, RunID: runID}
 	stopCh := make(chan struct{})
@@ -274,6 +292,7 @@ func (l *Lifecycle) StartSensor(
 		SensorLookup:  l.opts.Executor.OptionsRef().SensorLookup,
 		Now:           l.opts.Executor.OptionsRef().Now,
 		Shell:         l.opts.Executor.OptionsRef().Shell,
+		ServiceAttach: l.opts.Executor.OptionsRef().ServiceAttach,
 		GroupSignaler: l.opts.Signaler,
 		OnStepStart:   onStart,
 	})

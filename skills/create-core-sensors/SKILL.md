@@ -71,6 +71,20 @@ Environment primitives set up or tear down runtime infrastructure
 (`run-dev`, `datastore`). They take **no** `inputs:` and produce no
 composable `outputs:`. Their steps contain only `run:` commands.
 
+A `kind: observational` + `scope: core` environment primitive is a **shared
+service**: the runtime starts exactly one instance, reference-counts it, and
+keeps it alive while any sensor is attached. Other sensors attach to its live
+signal stream (they do not spawn their own copy). Two consequences for the
+YAML you emit:
+
+- **Readiness key is reserved.** The service manager blocks each attaching
+  sensor until the service emits an observation whose `key` is exactly
+  `ready`. Your readiness matcher **must** use `key: ready` (not `api-ready`
+  or similar) or consumers will never unblock.
+- **Emit a firehose matcher.** Add a catch-all matcher (e.g. `key: log-line`,
+  `pattern: ".+"`, `verdict: pass`) so attaching sensors can grep each server
+  log line via `matched_line`.
+
 ## Command shape MUST match `kind` + `output_type`
 
 This is a hard contract — the command a sensor runs is determined by its
@@ -112,8 +126,8 @@ nature: computational
 output_type: stream
 uses: [docker-compose]
 signal_matches:
-  - { key: api-ready,        pattern: "api ready|listening on",           verdict: pass, expected: true }
-  - { key: dynamodb-healthy, pattern: "Container .*dynamodb.*Healthy",    verdict: pass, expected: true }
+  - { key: ready,            pattern: "api ready|listening on",           verdict: pass, expected: true }   # reserved readiness key — consumers block on this
+  - { key: log-line,         pattern: ".+",                               verdict: pass }                    # firehose: attaching sensors grep matched_line
   - { key: startup-error,    pattern: "Error|error|fatal",                verdict: fail, heal_hint: { summary: "Service failed to start", rationale: "Check container logs for the failing service." } }
 steps:
   - id: up

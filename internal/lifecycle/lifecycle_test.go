@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/iurykrieger/lastro/internal/enums"
 	"github.com/iurykrieger/lastro/internal/fixture"
 	rxexec "github.com/iurykrieger/lastro/internal/runtime/executor"
+	"github.com/iurykrieger/lastro/internal/runtime/servicemgr"
 	"github.com/iurykrieger/lastro/internal/sensor"
 	"github.com/iurykrieger/lastro/internal/usecase"
 	"github.com/iurykrieger/lastro/internal/usecase/template"
@@ -179,6 +181,67 @@ func TestStartSensor_ObservationalEmitsAndAppearsInRegistry(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 	}
 	t.Errorf("signals.jsonl did not accumulate 3 lines within deadline")
+}
+
+// TestRunSensor_PropagatesServiceAttachToPerRunExecutor pins the fix that
+// carries the parent executor's ServiceAttach seam through RunSensor's per-run
+// executor rebuild. A prior bug dropped it during the rebuild, forcing a
+// uses-step to inline-expand the shared service (a second spawn) instead of
+// attaching to its live stream.
+func TestRunSensor_PropagatesServiceAttachToPerRunExecutor(t *testing.T) {
+	dir := t.TempDir()
+	svcSignals := filepath.Join(dir, "svc.jsonl")
+	if err := os.WriteFile(svcSignals, []byte(`{"evidence":{"observation_key":"log-line","matched_line":"MATCH here"}}`+"\n"), 0o600); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	svc := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "svc", Scope: enums.ScopeCore,
+		Angle: enums.AngleEnvironment, Kind: enums.KindObservational,
+		Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+	}
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleLogs, Kind: enums.KindObservational,
+		Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+		SignalMatches: []sensor.SignalMatch{{Key: "hit", Pattern: "MATCH", Verdict: enums.VerdictPass, Expected: true}},
+		ObserveWindow: "2s",
+		Steps:         []sensor.Step{{ID: "watch", Uses: "svc"}},
+	}
+
+	store := &stubSensorStore{by: map[string]sensor.Sensor{svc.ID: svc, consumer.ID: consumer}}
+	uc := &usecase.UseCase{ID: "lifecycle-uc"}
+	var attachCalls int32
+	parent := rxexec.New(rxexec.Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		SensorLookup:  store.Lookup,
+		ServiceAttach: func(_ context.Context, serviceID string) (servicemgr.Attachment, bool) {
+			atomic.AddInt32(&attachCalls, 1)
+			return servicemgr.Attachment{ServiceID: serviceID, SignalsPath: svcSignals}, true
+		},
+	})
+	lc := New(Options{
+		Sensors:     store,
+		Executor:    parent,
+		RuntimeRoot: t.TempDir(),
+		Version:     "test-0.0.0",
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	agg, err := lc.RunSensor(ctx, "consumer", nil)
+	if err != nil {
+		t.Fatalf("RunSensor: %v", err)
+	}
+	if atomic.LoadInt32(&attachCalls) == 0 {
+		t.Fatal("ServiceAttach was never invoked — per-run executor rebuild dropped the seam")
+	}
+	if agg.Verdict == enums.VerdictInconclusive {
+		t.Fatalf("verdict inconclusive; attach did not complete: %+v", agg)
+	}
 }
 
 func TestStartSensor_ErrAssertionSensor(t *testing.T) {
@@ -391,6 +454,30 @@ func TestRunWatcher_RegistersRunsAndDeregisters(t *testing.T) {
 	entries, _ := lc.registry.List()
 	if len(entries) != 0 {
 		t.Errorf("registry entries after RunWatcher = %d, want 0", len(entries))
+	}
+}
+
+func TestStartSensor_RejectsSecondLiveInstanceOfSameSensor(t *testing.T) {
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "run-dev", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleLogs, Kind: enums.KindObservational, Nature: enums.NatureComputational, OutputType: enums.OutputStream,
+		Uses: []string{"fake"},
+		Steps: []sensor.Step{
+			{ID: "boot", Run: fakeSensorBin + " watch --emit ready --interval 30ms"},
+		},
+	}
+	lc := newTestLifecycle(t, []sensor.Sensor{s})
+	ctx := context.Background()
+
+	h1, err := lc.StartSensor(ctx, "run-dev", []string{"ready"})
+	if err != nil {
+		t.Fatalf("first start: %v", err)
+	}
+	t.Cleanup(func() { _, _ = lc.StopSensor(ctx, h1) })
+
+	_, err = lc.StartSensor(ctx, "run-dev", []string{"ready"})
+	if !errors.Is(err, ErrServiceAlreadyRunning) {
+		t.Fatalf("second start err = %v, want ErrServiceAlreadyRunning", err)
 	}
 }
 

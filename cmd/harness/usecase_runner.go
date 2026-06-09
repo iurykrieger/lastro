@@ -66,6 +66,36 @@ func serviceDepsOf(sensors []sensor.Sensor, isService map[string]bool) map[strin
 	return deps
 }
 
+// stripServiceEdges returns copies of sensors with every depends_on edge that
+// points at a shared service removed. Service ordering is handled by the
+// ref-counted Acquire/Release around each consumer's run, so services are not
+// scheduled as wavefront nodes; leaving the edge in would make
+// ResolveExecutionOrder reject the consumer as having a dangling dependency.
+// The set of service ids is the union of serviceDeps' values.
+func stripServiceEdges(sensors []sensor.Sensor, serviceDeps map[string][]string) []sensor.Sensor {
+	isService := map[string]bool{}
+	for _, svcs := range serviceDeps {
+		for _, id := range svcs {
+			isService[id] = true
+		}
+	}
+	out := make([]sensor.Sensor, len(sensors))
+	for i, s := range sensors {
+		out[i] = s
+		if len(s.DependsOn) == 0 {
+			continue
+		}
+		filtered := make([]string, 0, len(s.DependsOn))
+		for _, dep := range s.DependsOn {
+			if !isService[dep] {
+				filtered = append(filtered, dep)
+			}
+		}
+		out[i].DependsOn = filtered
+	}
+	return out
+}
+
 // wavefronts groups sensors into layers of independent work. Layer 0
 // contains every sensor with no DependsOn; layer N contains sensors
 // whose DependsOn ids all resolved to layers 0..N-1.
@@ -122,7 +152,13 @@ func runUseCaseSensors(
 	mgr ServiceManager,
 	serviceDeps map[string][]string,
 ) ([]aggregate.AggregateSignal, error) {
-	sorted, err := sensor.ResolveExecutionOrder(sensors)
+	// Shared services are excluded from the scheduled set; their lifetime is
+	// managed by Acquire/Release, not the wavefront DAG. Strip service edges
+	// from depends_on so the resolver does not treat the (absent) service as a
+	// dangling dependency. A consumer attaches via serviceDeps regardless.
+	scheduled := stripServiceEdges(sensors, serviceDeps)
+
+	sorted, err := sensor.ResolveExecutionOrder(scheduled)
 	if err != nil {
 		return nil, fmt.Errorf("topo sort: %w", err)
 	}

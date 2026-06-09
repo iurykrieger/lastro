@@ -178,6 +178,7 @@ func (l *Lifecycle) RunSensor(
 		SensorLookup:  base.SensorLookup,
 		Now:           base.Now,
 		Shell:         base.Shell,
+		ServiceAttach: base.ServiceAttach,
 		GroupSignaler: l.opts.Signaler,
 		OnStepStart:   onStart,
 	})
@@ -285,6 +286,7 @@ func (l *Lifecycle) StartSensor(
 		SensorLookup:  l.opts.Executor.OptionsRef().SensorLookup,
 		Now:           l.opts.Executor.OptionsRef().Now,
 		Shell:         l.opts.Executor.OptionsRef().Shell,
+		ServiceAttach: l.opts.Executor.OptionsRef().ServiceAttach,
 		GroupSignaler: l.opts.Signaler,
 		OnStepStart:   onStart,
 	})

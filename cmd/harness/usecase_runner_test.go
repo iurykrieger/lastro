@@ -9,6 +9,7 @@ import (
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/runtime/servicemgr"
 	"github.com/iurykrieger/lastro/internal/sensor"
 )
 
@@ -178,6 +179,45 @@ func layerIDs(layer []sensor.Sensor) string {
 		out += s.ID
 	}
 	return out
+}
+
+type fakeServiceMgr struct {
+	mu       sync.Mutex
+	acquired []string
+	released []string
+}
+
+func (f *fakeServiceMgr) Acquire(_ context.Context, id string, _ []string) (servicemgr.Attachment, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.acquired = append(f.acquired, id)
+	return servicemgr.Attachment{ServiceID: id, SignalsPath: "/tmp/" + id + ".jsonl"}, nil
+}
+
+func (f *fakeServiceMgr) Release(_ context.Context, id string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.released = append(f.released, id)
+	return nil
+}
+
+func TestRunUseCaseSensors_AcquiresAndReleasesServices(t *testing.T) {
+	owned := []sensor.Sensor{
+		{ID: "logs", UseCaseID: "uc", Kind: enums.KindObservational, Steps: []sensor.Step{{ID: "watch", Uses: "run-dev"}}},
+	}
+	fsm := &fakeServiceMgr{}
+	runner := &fakeRunner{}
+
+	_, err := runUseCaseSensors(context.Background(), runner, owned, nil, fsm, serviceDepsOf(owned, map[string]bool{"run-dev": true}))
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if len(fsm.acquired) != 1 || fsm.acquired[0] != "run-dev" {
+		t.Fatalf("acquired = %v, want [run-dev]", fsm.acquired)
+	}
+	if len(fsm.released) != 1 || fsm.released[0] != "run-dev" {
+		t.Fatalf("released = %v, want [run-dev]", fsm.released)
+	}
 }
 
 func TestClassifyServices_SplitsCoreObservationalTargets(t *testing.T) {

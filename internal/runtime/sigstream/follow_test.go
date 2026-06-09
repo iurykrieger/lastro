@@ -52,3 +52,28 @@ func TestFollow_StopsWhenStopChannelClosed(t *testing.T) {
 		t.Fatalf("Follow on closed stop: %v", err)
 	}
 }
+
+func TestFollow_PicksUpAppendedLines(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "signals.jsonl")
+	writeLines(t, path, `{"evidence":{"observation_key":"log-line","matched_line":"booting"}}`)
+
+	go func() {
+		time.Sleep(30 * time.Millisecond)
+		writeLines(t, path, `{"evidence":{"observation_key":"ready","matched_line":"ready - started"}}`)
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	var keys []string
+	err := Follow(ctx, path, 10*time.Millisecond, nil, func(s Decoded) bool {
+		keys = append(keys, s.ObservationKey)
+		return s.ObservationKey == "ready"
+	})
+	if err != nil {
+		t.Fatalf("Follow: %v", err)
+	}
+	if len(keys) != 2 || keys[1] != "ready" {
+		t.Fatalf("keys = %v, want [log-line ready]", keys)
+	}
+}

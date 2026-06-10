@@ -315,7 +315,7 @@ output_type: single-shot
 uses: []
 steps:
   - id: boot
-    run: "make dev"
+    run: "echo dev-server-up"
 `)
 	if err := Persist(content, dir); err != nil {
 		t.Fatalf("persist core: %v", err)

@@ -1,0 +1,69 @@
+# Sensor example — security angle, assertion / computational / single-shot.
+#
+# Security covers two facets, one step each:
+#   1. dep-audit  — vulnerable dependencies (stack-native audit command).
+#   2. code-scan  — the use case's own implementation (hardcoded secrets,
+#      injection anti-patterns), scanning the files listed in the use
+#      case's source_refs (written literally at generation time).
+#
+# Scanners signal findings via a non-zero exit — that is their normal
+# "I found something" path, not a crash. Each step therefore tolerates
+# the scanner's exit status and ends by echoing one normalized summary
+# line; signal_matches grades those lines. The `expected: true` report
+# keys turn "scanner produced no report at all" into a completeness fail
+# instead of a silent pass.
+schema_version: 1.0.0
+id: s-create-order-security
+use_case_id: create-order-use-case
+angle: security
+kind: assertion
+nature: computational
+output_type: single-shot
+
+uses:
+  - node
+
+signal_matches:
+  - key: dep-audit-report
+    pattern: "dep-audit critical=[0-9]+ high=[0-9]+"
+    verdict: pass
+    expected: true
+  - key: dep-audit-findings
+    pattern: "dep-audit critical=[1-9][0-9]* high=[0-9]+|dep-audit critical=[0-9]+ high=[1-9][0-9]*"
+    verdict: fail
+    heal_hint:
+      summary: "High/critical dependency vulnerabilities"
+      rationale: "npm audit reported high or critical advisories; run `npm audit` locally and upgrade or replace the flagged packages."
+  - key: code-scan-report
+    pattern: "code-scan secrets=[0-9]+ injection=[0-9]+"
+    verdict: pass
+    expected: true
+  - key: secret-findings
+    pattern: "code-scan secrets=[1-9][0-9]*"
+    verdict: fail
+    heal_hint:
+      summary: "Hardcoded credential in use case implementation"
+      rationale: "A credential-shaped literal was found in the files implementing this use case; move it to environment configuration or a secret store."
+  - key: injection-findings
+    pattern: "code-scan secrets=[0-9]+ injection=[1-9][0-9]*"
+    verdict: fail
+    heal_hint:
+      summary: "Possible injection: request data concatenated into a query"
+      rationale: "Raw request input flows into a query string by concatenation/interpolation in this use case's implementation; use parameterized queries."
+
+steps:
+  - id: dep-audit
+    run: |
+      npm audit --json --audit-level=high | node -e '
+        let d = "";
+        process.stdin.on("data", (c) => (d += c)).on("end", () => {
+          const v = JSON.parse(d).metadata.vulnerabilities;
+          console.log(`dep-audit critical=${v.critical} high=${v.high}`);
+        });'
+  - id: code-scan
+    run: |
+      # Files come from the use case's source_refs.
+      files="src/handlers/orders.js src/services/order-service.js"
+      secrets=$(grep -nE "(api_key|apikey|secret|password|token)[[:space:]]*[:=][[:space:]]*[\"'][A-Za-z0-9+/_-]{8,}" $files | wc -l)
+      injection=$(grep -nE 'query\(.*(\$\{|\+[[:space:]]*req\.(body|params|query))' $files | wc -l)
+      echo "code-scan secrets=$secrets injection=$injection"

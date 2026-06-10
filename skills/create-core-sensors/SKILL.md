@@ -182,6 +182,9 @@ emit one YAML file matching `schemas/sensor.yaml`:
 Common `kind` values on exit 2:
 
 - `grounding` — top-level `uses:` contains a component id not in the stack manifest.
+- `step_resolvability` — a run-step invokes a command not installed on this machine, or a
+  `make` target missing from the repo Makefile. Switch to a stack-native tool or a
+  self-bootstrapping form (`go run <module>@latest`, `npx --yes <pkg>`).
 - `missing_dependency` — the stack manifest is not on disk.
 - `schema_violation` — a required field is missing or wrong shape.
 - `unknown_enum_value` — `kind`, `nature`, `scope`, or `output_type` is invalid.

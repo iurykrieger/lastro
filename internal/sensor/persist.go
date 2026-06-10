@@ -29,6 +29,8 @@ import (
 //	(a) stack-manifest.yaml exists; sensor's top-level uses: ⊆ that
 //	    manifest's components[*].id (Grounding via ValidateAgainstStack).
 //	    Applies to ALL sensors.
+//	(a2) every run-step command resolves on this machine
+//	    (ValidateStepResolvability). Applies to ALL sensors.
 //	(b) sensor.angle ∈ stack-manifest.applicable_angles.
 //	(c) use-cases/<sensor.use_case_id>.yaml exists.
 //	(d) each step's uses: ⊆ fixtures whose use_case_id matches sensor's.
@@ -51,6 +53,18 @@ func Persist(content []byte, harnessDir string) error {
 	if err := ValidateAgainstStack(s, manifest); err != nil {
 		return &persisterror.Error{
 			Kind:       persisterror.Grounding,
+			EntityType: "sensor",
+			EntityID:   s.ID,
+			Message:    err.Error(),
+		}
+	}
+
+	// (a2) Every run-step command must resolve on this machine (grounding
+	// invariant 3). Applies to ALL sensors; core sensors carry most raw
+	// commands. The repo root (Makefile lookups) is the harness dir's parent.
+	if err := ValidateStepResolvability(s, ResolvabilityEnv{RepoRoot: repoRootOf(harnessDir)}); err != nil {
+		return &persisterror.Error{
+			Kind:       persisterror.StepResolvability,
 			EntityType: "sensor",
 			EntityID:   s.ID,
 			Message:    err.Error(),
@@ -150,6 +164,16 @@ func Persist(content []byte, harnessDir string) error {
 		}
 	}
 	return nil
+}
+
+// repoRootOf returns the directory the harness dir lives in — the project
+// root, where Makefile/package.json lookups make sense.
+func repoRootOf(harnessDir string) string {
+	abs, err := filepath.Abs(harnessDir)
+	if err != nil {
+		return "."
+	}
+	return filepath.Dir(abs)
 }
 
 func loadStackOrErr(harnessDir, sensorID string) (stack.StackManifest, error) {

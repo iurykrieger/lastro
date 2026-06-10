@@ -151,6 +151,9 @@ from the use case's preconditions and the stack manifest's logging library.
 Common `kind` values on exit 2:
 
 - `grounding` — top-level `uses:` contains a component id not in the stack manifest.
+- `step_resolvability` — a run-step invokes a command not installed on this machine, or a
+  `make` target missing from the repo Makefile. Switch to a stack-native tool or a
+  self-bootstrapping form (`go run <module>@latest`, `npx --yes <pkg>`).
 - `fixture_binding` — a step's `uses:` references a fixture not owned by this use case.
 - `angle_not_applicable` — sensor's `angle` is not in `applicable_angles`.
 - `missing_dependency` — the use case or stack manifest is not on disk.

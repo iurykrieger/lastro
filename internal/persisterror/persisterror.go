@@ -19,6 +19,7 @@ const (
 	UnknownEnumValue     Kind = "unknown_enum_value"
 	AngleNotApplicable   Kind = "angle_not_applicable"
 	MissingDependency    Kind = "missing_dependency"
+	StepResolvability    Kind = "step_resolvability"
 )
 
 // Error is the structured error type. Skill scripts marshal it to JSON.

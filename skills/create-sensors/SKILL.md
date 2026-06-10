@@ -29,6 +29,9 @@ Use the Read tool to load:
    and note its `id`, `angle`, and declared `inputs`. A use-case sensor that composes a core
    primitive needs no raw `run:` commands at all — the core sensor carries the stack-native
    commands. Step-level `uses:` accepts only these core primitive ids.
+4. `angles.md` (next to this file) — **the per-angle playbook**. Before writing each sensor,
+   read its angle's section: what the angle validates, the shape to declare, what to compose
+   or run, and how to grade the outcome with `signal_matches`.
 
 ## What to emit
 
@@ -54,6 +57,9 @@ One sensor per angle in `applicable_angles`. For each sensor, write a YAML file 
     no primitive for this angle. Reference fixtures via `${{ fixtures.<id> }}` and prior
     step outputs via `${{ steps.<id>.outputs.<name> }}` inside `run`.
 - Do NOT put fixture ids in step `uses:` — `uses:` names a core primitive to compose.
+- `signal_matches: [...]` — **sensor-level, never per step**: `{ key, pattern, verdict?,
+  expected?, heal_hint? }` regexes (Go RE2) applied to every stdout/stderr line of every
+  step. Per-angle grading schemes live in `angles.md`.
 
 See `schemas/examples/sensor/*.yaml` for shape examples per angle and kind.
 
@@ -66,81 +72,21 @@ own test runner. Never write `harness <subcommand>` — those are not installed.
 
 If a matching core primitive exists, compose it with `uses:` + `with:` instead.
 
-Fallback commands per angle (use only when core/ has no matching primitive):
+### Per-angle approach (read `angles.md`)
 
-| Angle | Fallback command pattern |
-|-------|--------------------------|
-| `build` | Compiler: `go build ./...`, `npm run build`, `tsc --noEmit` |
-| `unit-test` | Test runner: `go test ./...`, `jest --json`, `pytest -q` |
-| `code-structure` | Lint tool in `uses:`: `golangci-lint run`, `npx eslint` |
-| `contracts` | Spec validator: `protoc --descriptor_set_out=/dev/null`, `npx @redocly/cli lint` |
-| `logs` | **Attach to the shared service — see below.** Only tail directly (`docker logs --follow`, `tail -f`) when no observational service exists. |
-| `metrics` | Scrape endpoint: `curl -sS http://localhost:9090/metrics \| grep <key>` |
-| `database` | Stack CLI or probe: `aws dynamodb get-item ...`, `go run ./probe/db` |
-| `performance` | Load tool in `uses:`: `hey -n 100 http://...`, `k6 run script.js` |
-| `security` | Two steps: dependency audit + implementation scan — see "Security angle" below. |
+Each angle has its own playbook in `angles.md`, in this skill's directory: what
+the angle validates, the shape (`kind`/`nature`/`output_type`), the preferred
+composition, the fallback command, and the `signal_matches` grading scheme.
+Read the section for the angle you are generating — in particular:
 
-### Security angle: audit dependencies AND scan the implementation
-
-A security sensor covers two facets — emit both as separate steps of one sensor:
-
-1. **dep-audit** — stack-native dependency audit (`npm audit --json`,
-   `go run golang.org/x/vuln/cmd/govulncheck@latest ./...`, `pip-audit`).
-2. **code-scan** — scan the files in the use case's `source_refs` for hardcoded
-   credentials and injection anti-patterns (request data concatenated or
-   interpolated into queries/commands). Derive `grep -E` patterns from the
-   stack's language and libraries; write the `source_refs` paths literally
-   into the step at generation time.
-
-Scanners report findings through a **non-zero exit** — that is a result, not a
-crash. A bare scanner command with no `signal_matches` is graded `inconclusive`
-("step exited non-zero without emitting signals"). Every security step MUST:
-
-- tolerate the scanner's exit status (pipe into a parser, or `|| true`), and
-- end by echoing one normalized summary line, e.g. `dep-audit critical=2 high=5`
-  or `code-scan secrets=0 injection=1`, and
-- be graded by `signal_matches`: per step, one pass matcher on the report line
-  with `expected: true` (no report ⇒ completeness fail, never a silent pass),
-  plus fail matchers with `heal_hint`s for non-zero finding counts.
-
-Full shape: `schemas/examples/sensor/assertion-security-single.yaml`.
-
-### Attaching to a shared observational service (logs, and other stream consumers)
-
-When `.harness/sensors/core/` contains a `kind: observational` + `scope: core`
-service (e.g. `run-dev`), a `logs`-angle sensor (or any sensor that needs to
-watch that service's output) **attaches** to it rather than spawning its own
-server or `docker logs`. The runtime starts the service once, reference-counts
-it, and feeds its live signal stream to every attaching sensor. Emit:
-
-- `kind: observational`, `output_type: stream`.
-- `depends_on: [<service-id>]` — this is what pulls the shared service into the
-  use case's scheduled set; without it the service is never started.
-- a step `{ id: watch, uses: <service-id> }` — the attach itself. No `run:`
-  server boot, no second `docker logs`.
-- `signal_matches:` describing the lines to watch; each pattern is applied to
-  the service's emitted `matched_line`. Mark the lines that must appear with
-  `expected: true` (completeness).
-- optional `observe_window: <duration>` (e.g. `45s`) bounding how long to watch
-  before rolling up; omit for the runtime default.
-
-```yaml
-id: s-checkout-logs
-use_case_id: uc-checkout
-angle: logs
-kind: observational
-nature: computational
-output_type: stream
-uses: []
-depends_on: [run-dev]
-observe_window: 45s
-signal_matches:
-  - { key: served, pattern: "GET /checkout .* 200", verdict: pass, expected: true }
-  - { key: error,  pattern: "5\\d\\d|unhandled",     verdict: fail, heal_hint: { summary: "Server error during checkout", rationale: "A 5xx surfaced while exercising the use case." } }
-steps:
-  - id: watch
-    uses: run-dev
-```
+- Tools that report findings via a **non-zero exit** (scanners, linters,
+  validators, test runners, `grep`) must tolerate that exit and be graded by
+  `signal_matches` over a normalized summary line, or the sensor is graded
+  `inconclusive` ("step exited non-zero without emitting signals").
+- `logs`-angle (and other stream consumers) **attach** to the shared
+  observational service — never boot a second server. The attach mechanics
+  and a full example live in the `logs` section of `angles.md`.
+- `environment` is a core-only angle; never emit a use-case sensor for it.
 
 ### Composing core primitives + demanding inputs
 

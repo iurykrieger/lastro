@@ -9,6 +9,7 @@ import (
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/runtime/servicemgr"
 	"github.com/iurykrieger/lastro/internal/sensor"
 )
 
@@ -16,11 +17,11 @@ import (
 // let tests assert wavefront semantics.
 type fakeRunner struct {
 	mu        sync.Mutex
-	starts    []string                   // sensor IDs in order RunSensor was entered
-	completes []string                   // sensor IDs in order RunSensor returned
-	delay     map[string]time.Duration   // per-sensor sleep before returning
-	verdicts  map[string]enums.Verdict   // override verdict per sensor
-	calls     atomic.Int64               // total RunSensor calls
+	starts    []string                 // sensor IDs in order RunSensor was entered
+	completes []string                 // sensor IDs in order RunSensor returned
+	delay     map[string]time.Duration // per-sensor sleep before returning
+	verdicts  map[string]enums.Verdict // override verdict per sensor
+	calls     atomic.Int64             // total RunSensor calls
 }
 
 func (f *fakeRunner) RunSensor(ctx context.Context, sensorID string, expectedObs []string) (aggregate.AggregateSignal, error) {
@@ -109,7 +110,7 @@ func TestRunUseCaseSensors_LayerSerialization(t *testing.T) {
 		delay: map[string]time.Duration{"a": 50 * time.Millisecond},
 	}
 
-	results, err := runUseCaseSensors(context.Background(), runner, sensors, nil)
+	results, err := runUseCaseSensors(context.Background(), runner, sensors, nil, &fakeServiceMgr{}, nil)
 	if err != nil {
 		t.Fatalf("runUseCaseSensors: %v", err)
 	}
@@ -137,7 +138,7 @@ func TestRunUseCaseSensors_ParallelWithinLayer(t *testing.T) {
 	}
 
 	start := time.Now()
-	results, err := runUseCaseSensors(context.Background(), runner, sensors, nil)
+	results, err := runUseCaseSensors(context.Background(), runner, sensors, nil, &fakeServiceMgr{}, nil)
 	elapsed := time.Since(start)
 	if err != nil {
 		t.Fatalf("runUseCaseSensors: %v", err)
@@ -178,4 +179,62 @@ func layerIDs(layer []sensor.Sensor) string {
 		out += s.ID
 	}
 	return out
+}
+
+type fakeServiceMgr struct {
+	mu       sync.Mutex
+	acquired []string
+	released []string
+}
+
+func (f *fakeServiceMgr) Acquire(_ context.Context, id string, _ []string) (servicemgr.Attachment, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.acquired = append(f.acquired, id)
+	return servicemgr.Attachment{ServiceID: id, SignalsPath: "/tmp/" + id + ".jsonl"}, nil
+}
+
+func (f *fakeServiceMgr) Release(_ context.Context, id string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.released = append(f.released, id)
+	return nil
+}
+
+func TestRunUseCaseSensors_AcquiresAndReleasesServices(t *testing.T) {
+	owned := []sensor.Sensor{
+		{ID: "logs", UseCaseID: "uc", Kind: enums.KindObservational, Steps: []sensor.Step{{ID: "watch", Uses: "run-dev"}}},
+	}
+	fsm := &fakeServiceMgr{}
+	runner := &fakeRunner{}
+
+	_, err := runUseCaseSensors(context.Background(), runner, owned, nil, fsm, serviceDepsOf(owned, map[string]bool{"run-dev": true}))
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if len(fsm.acquired) != 1 || fsm.acquired[0] != "run-dev" {
+		t.Fatalf("acquired = %v, want [run-dev]", fsm.acquired)
+	}
+	if len(fsm.released) != 1 || fsm.released[0] != "run-dev" {
+		t.Fatalf("released = %v, want [run-dev]", fsm.released)
+	}
+}
+
+func TestClassifyServices_SplitsCoreObservationalTargets(t *testing.T) {
+	sensors := []sensor.Sensor{
+		{ID: "run-dev", Scope: enums.ScopeCore, Kind: enums.KindObservational},
+		{ID: "logs", UseCaseID: "uc", Kind: enums.KindObservational, Steps: []sensor.Step{{ID: "watch", Uses: "run-dev"}}},
+		{ID: "unit", UseCaseID: "uc", Kind: enums.KindAssertion, Steps: []sensor.Step{{ID: "t", Run: "go test ./..."}}},
+	}
+	services, regular := classifyServices(sensors)
+	if len(services) != 1 || services[0].ID != "run-dev" {
+		t.Fatalf("services = %v, want [run-dev]", services)
+	}
+	ids := []string{}
+	for _, s := range regular {
+		ids = append(ids, s.ID)
+	}
+	if len(ids) != 2 {
+		t.Fatalf("regular = %v, want logs+unit", ids)
+	}
 }

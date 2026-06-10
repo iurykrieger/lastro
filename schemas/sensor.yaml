@@ -72,6 +72,13 @@ properties:
       properties:
         from:        { type: string, minLength: 1 }
         description: { type: string }
+  observe_window:
+    type: string
+    description: |
+      Optional Go duration ("45s") bounding how long an attaching
+      observational sensor watches a shared service's signal stream before
+      rolling up on completeness. Absent → runtime default.
+    pattern: "^[0-9]+(ns|us|µs|ms|s|m|h)$"
   signal_matches:
     type: array
     description: |

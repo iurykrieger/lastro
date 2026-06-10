@@ -12,4 +12,10 @@ var (
 	ErrSensorOrphaned  = errors.New("lifecycle: registry entry's PID is dead")
 	ErrSensorReplaced  = errors.New("lifecycle: PID is alive but started_at disagrees (PID recycled)")
 	ErrRegistryBusy    = errors.New("lifecycle: could not acquire registry lock within timeout")
+
+	// ErrServiceAlreadyRunning is returned by StartSensor when a live registry
+	// entry already exists for the same sensor id. Prevents a second
+	// host-exclusive service (e.g. run-dev) from racing the first on a shared
+	// resource such as .next/dev/lock.
+	ErrServiceAlreadyRunning = errors.New("lifecycle: a live instance of this sensor is already running")
 )

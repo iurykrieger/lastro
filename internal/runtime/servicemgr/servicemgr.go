@@ -107,6 +107,27 @@ func (m *Manager) Lookup(serviceID string) (Attachment, bool) {
 	return Attachment{ServiceID: serviceID, RunID: e.runID, SignalsPath: e.signalsPath}, true
 }
 
+// Shutdown stops every still-running service regardless of its ref-count.
+// It is the deferred "finally" sweep the orchestrator runs once validation
+// finishes (or aborts): with balanced Acquire/Release pairs it is a no-op,
+// but it guarantees no service outlives the run on error or cancellation
+// paths. The first StopService error is returned; all services are
+// attempted regardless.
+func (m *Manager) Shutdown(ctx context.Context) error {
+	m.mu.Lock()
+	remaining := m.services
+	m.services = map[string]*entry{}
+	m.mu.Unlock()
+
+	var firstErr error
+	for id, e := range remaining {
+		if err := m.lc.StopService(ctx, id, e.runID); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
+}
+
 // Release decrements serviceID's ref-count, stopping the service when it
 // reaches zero. Releasing an unknown service is a no-op.
 func (m *Manager) Release(ctx context.Context, serviceID string) error {

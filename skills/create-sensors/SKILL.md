@@ -78,7 +78,32 @@ Fallback commands per angle (use only when core/ has no matching primitive):
 | `metrics` | Scrape endpoint: `curl -sS http://localhost:9090/metrics \| grep <key>` |
 | `database` | Stack CLI or probe: `aws dynamodb get-item ...`, `go run ./probe/db` |
 | `performance` | Load tool in `uses:`: `hey -n 100 http://...`, `k6 run script.js` |
-| `security` | Scanner in `uses:`: `gosec ./...`, `npm audit --json` |
+| `security` | Two steps: dependency audit + implementation scan — see "Security angle" below. |
+
+### Security angle: audit dependencies AND scan the implementation
+
+A security sensor covers two facets — emit both as separate steps of one sensor:
+
+1. **dep-audit** — stack-native dependency audit (`npm audit --json`,
+   `go run golang.org/x/vuln/cmd/govulncheck@latest ./...`, `pip-audit`).
+2. **code-scan** — scan the files in the use case's `source_refs` for hardcoded
+   credentials and injection anti-patterns (request data concatenated or
+   interpolated into queries/commands). Derive `grep -E` patterns from the
+   stack's language and libraries; write the `source_refs` paths literally
+   into the step at generation time.
+
+Scanners report findings through a **non-zero exit** — that is a result, not a
+crash. A bare scanner command with no `signal_matches` is graded `inconclusive`
+("step exited non-zero without emitting signals"). Every security step MUST:
+
+- tolerate the scanner's exit status (pipe into a parser, or `|| true`), and
+- end by echoing one normalized summary line, e.g. `dep-audit critical=2 high=5`
+  or `code-scan secrets=0 injection=1`, and
+- be graded by `signal_matches`: per step, one pass matcher on the report line
+  with `expected: true` (no report ⇒ completeness fail, never a silent pass),
+  plus fail matchers with `heal_hint`s for non-zero finding counts.
+
+Full shape: `schemas/examples/sensor/assertion-security-single.yaml`.
 
 ### Attaching to a shared observational service (logs, and other stream consumers)
 

@@ -173,3 +173,75 @@ func TestValidateBaselineInputs_SkipsNonCoreAndUnknownAngles(t *testing.T) {
 		t.Fatalf("angle without a baseline must be skipped: %v", err)
 	}
 }
+
+func TestValidateInputReferences_AllReferencedPasses(t *testing.T) {
+	s := Sensor{
+		ID: "e2e-test", Scope: enums.ScopeCore, Angle: enums.AngleE2ETest,
+		Inputs: map[string]InputSpec{
+			"method": {HasDefault: true},
+			"path":   {HasDefault: true},
+		},
+		Steps: []Step{{
+			ID:  "request",
+			Run: `curl -X "${{ inputs.method }}" "http://x${{inputs.path}}"`,
+		}},
+	}
+	if err := ValidateInputReferences(s); err != nil {
+		t.Fatalf("all inputs referenced (with and without inner spaces): %v", err)
+	}
+}
+
+func TestValidateInputReferences_UnreferencedFails(t *testing.T) {
+	s := Sensor{
+		ID: "e2e-test", Scope: enums.ScopeCore, Angle: enums.AngleE2ETest,
+		Inputs: map[string]InputSpec{
+			"method":        {HasDefault: true},
+			"expect_status": {HasDefault: true},
+		},
+		Steps: []Step{{ID: "request", Run: `curl -X "${{ inputs.method }}" http://x/`}},
+	}
+	err := ValidateInputReferences(s)
+	if err == nil {
+		t.Fatal("declared-but-ignored input must fail")
+	}
+	if !strings.Contains(err.Error(), "expect_status") {
+		t.Fatalf("error should name the unreferenced input, got: %v", err)
+	}
+}
+
+func TestValidateInputReferences_WithValueCounts(t *testing.T) {
+	s := Sensor{
+		ID: "wrapper", Scope: enums.ScopeCore, Angle: enums.AngleE2ETest,
+		Inputs: map[string]InputSpec{"path": {HasDefault: true}},
+		Steps: []Step{{
+			ID:   "inner",
+			Uses: "e2e-test",
+			With: map[string]string{"path": "${{ inputs.path }}"},
+		}},
+	}
+	if err := ValidateInputReferences(s); err != nil {
+		t.Fatalf("a reference inside a with value counts: %v", err)
+	}
+}
+
+func TestValidateInputReferences_SkipsNonCore(t *testing.T) {
+	s := Sensor{
+		ID: "s-x", Scope: enums.ScopeUseCase, UseCaseID: "uc", Angle: enums.AngleE2ETest,
+		Inputs: map[string]InputSpec{"ghost": {}},
+		Steps:  []Step{{ID: "a", Run: "echo hi"}},
+	}
+	if err := ValidateInputReferences(s); err != nil {
+		t.Fatalf("non-core sensors are skipped: %v", err)
+	}
+}
+
+func TestValidateInputReferences_ZeroStepsFails(t *testing.T) {
+	s := Sensor{
+		ID: "e2e-test", Scope: enums.ScopeCore, Angle: enums.AngleE2ETest,
+		Inputs: map[string]InputSpec{"base_url": {HasDefault: true}},
+		Steps:  nil,
+	}
+	if err := ValidateInputReferences(s); err == nil {
+		t.Fatal("inputs with no steps should fail: no step can reference them")
+	}
+}

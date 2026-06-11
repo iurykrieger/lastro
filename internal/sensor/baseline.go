@@ -3,6 +3,7 @@ package sensor
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -130,4 +131,41 @@ func ValidateBaselineInputs(s Sensor, baselines map[enums.ValidationAngle]CoreIn
 			undefaulted))
 	}
 	return errors.Join(errs...)
+}
+
+// ValidateInputReferences enforces faithfulness on core primitives: every
+// declared input must be referenced as ${{ inputs.<name> }} in at least one
+// step's run script or with value. A declared-but-ignored input is a
+// contract lie — consumers would bind it and silently change nothing.
+func ValidateInputReferences(s Sensor) error {
+	if s.Scope != enums.ScopeCore || len(s.Inputs) == 0 {
+		return nil
+	}
+	var blob strings.Builder
+	for _, st := range s.Steps {
+		blob.WriteString(st.Run)
+		blob.WriteByte('\n')
+		for _, v := range st.With {
+			blob.WriteString(v)
+			blob.WriteByte('\n')
+		}
+	}
+	// outputs.from references ${{ steps.<id>.outputs.<key> }} by schema
+	// convention, never ${{ inputs.<name> }}, so it is intentionally
+	// excluded from this scan.
+	text := blob.String()
+	var unreferenced []string
+	for name := range s.Inputs {
+		re := regexp.MustCompile(`\$\{\{\s*inputs\.` + regexp.QuoteMeta(name) + `\s*\}\}`)
+		if !re.MatchString(text) {
+			unreferenced = append(unreferenced, name)
+		}
+	}
+	sort.Strings(unreferenced)
+	if len(unreferenced) > 0 {
+		return fmt.Errorf(
+			"declared input(s) never referenced as ${{ inputs.<name> }} in any step: %v — bind them in a run script or remove them",
+			unreferenced)
+	}
+	return nil
 }

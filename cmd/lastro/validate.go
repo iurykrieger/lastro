@@ -11,9 +11,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/iurykrieger/lastro/internal/aggregate"
 	aggregator "github.com/iurykrieger/lastro/internal/runtime/aggregator/usecase"
-	"github.com/iurykrieger/lastro/internal/sensor"
 	"github.com/iurykrieger/lastro/lib/skillio"
 	"github.com/iurykrieger/lastro/lib/skillruntime"
 	"github.com/oklog/ulid/v2"
@@ -63,10 +61,10 @@ func runValidateUseCase(args []string, stdin io.Reader, stdout, stderr io.Writer
 	sensors := b.Sensors.GatherForUseCase(useCaseID)
 	pol := skillruntime.LoadPolicies(filepath.Join(skillio.HarnessDir(repoRoot), "policy"), useCaseID)
 
-	runner := skillruntime.SensorRunner(func(ctx context.Context, s sensor.Sensor) (aggregate.AggregateSignal, error) {
-		return b.Lifecycle.RunSensor(ctx, s.ID, nil)
-	})
-	aggs, err := skillruntime.RunAll(context.Background(), sensors, runner, runtime.NumCPU())
+	// Shared observational core services (e.g. run-dev) are managed
+	// out-of-band — started on first attach, stopped on last detach — so
+	// the scheduler never waits on a server that runs forever (issue #34).
+	aggs, scheduled, err := skillruntime.RunUseCaseSensors(context.Background(), b, sensors, runtime.NumCPU())
 	if err != nil {
 		skillio.EmitError(stderr, "scheduler-failed", err.Error(), nil)
 		return skillio.ExitScriptError
@@ -79,7 +77,7 @@ func runValidateUseCase(args []string, stdin io.Reader, stdout, stderr io.Writer
 		}
 	}
 
-	verdict, err := aggregator.UseCase(uc, archetype, aggs, sensors, pol)
+	verdict, err := aggregator.UseCase(uc, archetype, aggs, scheduled, pol)
 	if err != nil {
 		skillio.EmitError(stderr, "aggregate-failed", err.Error(), nil)
 		return skillio.ExitScriptError

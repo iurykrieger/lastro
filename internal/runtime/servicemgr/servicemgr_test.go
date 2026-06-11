@@ -73,6 +73,40 @@ func TestLookup_DoesNotChangeRefCount(t *testing.T) {
 	}
 }
 
+func TestShutdown_StopsEverythingRegardlessOfRefs(t *testing.T) {
+	fl := newFakeLifecycle(t.TempDir())
+	m := New(fl, Options{Ready: alwaysReady})
+	ctx := context.Background()
+
+	// run-dev held by two consumers, database-query by one.
+	for i := 0; i < 2; i++ {
+		if _, err := m.Acquire(ctx, "run-dev", nil); err != nil {
+			t.Fatalf("acquire run-dev: %v", err)
+		}
+	}
+	if _, err := m.Acquire(ctx, "database-query", nil); err != nil {
+		t.Fatalf("acquire database-query: %v", err)
+	}
+
+	if err := m.Shutdown(ctx); err != nil {
+		t.Fatalf("shutdown: %v", err)
+	}
+	if fl.stops["run-dev"] != 1 || fl.stops["database-query"] != 1 {
+		t.Fatalf("stops = %+v, want one per service", fl.stops)
+	}
+
+	// Idempotent: a second sweep and late Releases are no-ops.
+	if err := m.Shutdown(ctx); err != nil {
+		t.Fatalf("second shutdown: %v", err)
+	}
+	if err := m.Release(ctx, "run-dev"); err != nil {
+		t.Fatalf("late release: %v", err)
+	}
+	if fl.stops["run-dev"] != 1 {
+		t.Fatalf("late release re-stopped: stops = %+v", fl.stops)
+	}
+}
+
 func TestRelease_StopsOnlyOnLastDetach(t *testing.T) {
 	fl := newFakeLifecycle(t.TempDir())
 	m := New(fl, Options{Ready: alwaysReady})

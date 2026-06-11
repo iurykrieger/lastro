@@ -1,0 +1,14 @@
+schema_version: 1.0.0
+title: UseCaseVariation
+description: |
+  Which outcome of its journey a use case exercises. A complete journey has
+  at least one success and one failure variation; alternatives cover the
+  remaining meaningful branch clusters.
+
+values:
+  - id: success
+    purpose: "The journey's happy path completes"
+  - id: failure
+    purpose: "The journey is rejected or errors (validation failure, fault path)"
+  - id: alternative
+    purpose: "A meaningful variation that is neither the happy path nor a failure"

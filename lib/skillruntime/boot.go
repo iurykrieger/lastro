@@ -29,6 +29,11 @@ type Booted struct {
 	UseCases    map[string]*usecase.UseCase
 	RuntimeRoot string // <repoRoot>/.harness/runtime — used by skills that need to walk run dirs
 	Cleanup     func() error
+
+	// services lets RunUseCaseSensors install the validate run's shared-
+	// service manager after boot; the executor's ServiceAttach closure reads
+	// through it so consumer uses-steps attach to live service streams.
+	services *serviceHolder
 }
 
 // BootLifecycle loads .harness/{sensors,fixtures,use-cases} from disk and
@@ -63,6 +68,8 @@ func BootLifecycle(repoRoot string) (*Booted, error) {
 		EntryPoints: entryPoints,
 	}
 
+	services := &serviceHolder{}
+
 	exec := executor.New(executor.Options{
 		RepoRoot:     repoRoot,
 		Resolver:     resolver,
@@ -78,6 +85,10 @@ func BootLifecycle(repoRoot string) (*Booted, error) {
 		// Required for sensors that compose core primitives via uses-steps
 		// (e.g. an e2e-test sensor that `uses: e2e-test`).
 		SensorLookup: sensorStore.LookupSensor,
+		// Resolves shared services (core + observational, e.g. run-dev) to
+		// their live signal stream while a validate run has a manager
+		// installed; outside that window uses-steps inline-expand as before.
+		ServiceAttach: services.Lookup,
 	})
 
 	runtimeRoot := filepath.Join(harnessDir, "runtime")
@@ -99,6 +110,7 @@ func BootLifecycle(repoRoot string) (*Booted, error) {
 		UseCases:    useCases,
 		RuntimeRoot: runtimeRoot,
 		Cleanup:     func() error { return nil },
+		services:    services,
 	}, nil
 }
 

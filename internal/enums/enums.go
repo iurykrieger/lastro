@@ -251,6 +251,62 @@ func IsValidStackKind(s string) bool {
 	return false
 }
 
+// BranchKind is the syntactic kind of a logic branch extracted from
+// application source by the branch-scan engine.
+type BranchKind string
+
+const (
+	BranchIf      BranchKind = "if"
+	BranchElseIf  BranchKind = "else-if"
+	BranchElse    BranchKind = "else"
+	BranchCase    BranchKind = "case"
+	BranchDefault BranchKind = "default"
+	BranchCatch   BranchKind = "catch"
+	BranchTernary BranchKind = "ternary"
+)
+
+// AllBranchKinds returns every BranchKind in canonical (YAML) order.
+func AllBranchKinds() []BranchKind {
+	return []BranchKind{
+		BranchIf, BranchElseIf, BranchElse, BranchCase,
+		BranchDefault, BranchCatch, BranchTernary,
+	}
+}
+
+// IsValidBranchKind reports whether s is one of the canonical BranchKind values.
+func IsValidBranchKind(s string) bool {
+	for _, v := range AllBranchKinds() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}
+
+// UseCaseVariation is which outcome of its journey a use case exercises.
+type UseCaseVariation string
+
+const (
+	VariationSuccess     UseCaseVariation = "success"
+	VariationFailure     UseCaseVariation = "failure"
+	VariationAlternative UseCaseVariation = "alternative"
+)
+
+// AllUseCaseVariations returns every UseCaseVariation in canonical (YAML) order.
+func AllUseCaseVariations() []UseCaseVariation {
+	return []UseCaseVariation{VariationSuccess, VariationFailure, VariationAlternative}
+}
+
+// IsValidUseCaseVariation reports whether s is one of the canonical UseCaseVariation values.
+func IsValidUseCaseVariation(s string) bool {
+	for _, v := range AllUseCaseVariations() {
+		if string(v) == s {
+			return true
+		}
+	}
+	return false
+}
+
 // SensorScope is whether a sensor is repo-level (core) or bound to a use case.
 type SensorScope string
 

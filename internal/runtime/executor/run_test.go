@@ -298,6 +298,47 @@ func TestRun_SignalMatchesCompleteness(t *testing.T) {
 	})
 }
 
+// A scanner step (npm audit, gosec, grep-based secret scan) signals
+// findings via a non-zero exit. As long as a signal_matches matcher fired,
+// the run is a graded completion — never an ErrStepCrashed/inconclusive.
+func TestRunAssertion_NonZeroExitWithMatchedSignalsGrades(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "scanner-sensor", UseCaseID: "fake-uc",
+		Angle: enums.AngleSecurity, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{ID: "audit", Run: "echo 'dep-audit critical=1 high=2'; exit 1"},
+		},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "dep-audit-clean", Pattern: "dep-audit critical=0 high=0", Verdict: enums.VerdictPass},
+			{Key: "dep-audit-findings", Pattern: "dep-audit critical=[1-9]|high=[1-9]", Verdict: enums.VerdictFail,
+				HealHint: &sensor.MatchHealHint{Summary: "Vulnerable dependencies", Rationale: "The dependency audit reported high/critical advisories."}},
+		},
+	}
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+
+	agg, err := ex.Run(context.Background(), s, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.TerminationReason != enums.TerminationCompleted {
+		t.Errorf("termination_reason = %q, want completed (non-zero exit with signals is not a crash)", agg.TerminationReason)
+	}
+	if agg.Verdict != enums.VerdictFail {
+		t.Errorf("verdict = %q, want fail", agg.Verdict)
+	}
+	if agg.HealHint == nil {
+		t.Error("heal_hint is nil; want the fail matcher's hint propagated")
+	}
+}
+
 func TestRunAssertion_CrashedStepSynthesizesHint(t *testing.T) {
 	uc := &usecase.UseCase{ID: "fake-uc"}
 	s := sensor.Sensor{

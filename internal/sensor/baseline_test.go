@@ -2,6 +2,7 @@ package sensor
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/enums"
@@ -95,5 +96,80 @@ func TestBaselineFiles_MatchMetaSchema(t *testing.T) {
 		if err := sch.Validate(inst); err != nil {
 			t.Errorf("FAIL %s against meta-schema: %v", e.Name(), err)
 		}
+	}
+}
+
+// fullE2EInputs returns an Inputs map satisfying the e2e-test floor.
+func fullE2EInputs() map[string]InputSpec {
+	names := []string{
+		"base_url", "method", "path", "query", "headers", "body",
+		"expect_status", "timeout",
+	}
+	m := make(map[string]InputSpec, len(names))
+	for _, n := range names {
+		m[n] = InputSpec{HasDefault: true}
+	}
+	return m
+}
+
+func mustBaselines(t *testing.T) map[enums.ValidationAngle]CoreInputBaseline {
+	t.Helper()
+	baselines, err := LoadBaselines()
+	if err != nil {
+		t.Fatalf("LoadBaselines: %v", err)
+	}
+	return baselines
+}
+
+func TestValidateBaselineInputs_FullFloorPasses(t *testing.T) {
+	s := Sensor{ID: "e2e-test", Scope: enums.ScopeCore, Angle: enums.AngleE2ETest, Inputs: fullE2EInputs()}
+	if err := ValidateBaselineInputs(s, mustBaselines(t)); err != nil {
+		t.Fatalf("full floor should pass: %v", err)
+	}
+}
+
+func TestValidateBaselineInputs_ExtraInputsStillPass(t *testing.T) {
+	in := fullE2EInputs()
+	in["idempotency_key"] = InputSpec{HasDefault: true}
+	s := Sensor{ID: "e2e-test", Scope: enums.ScopeCore, Angle: enums.AngleE2ETest, Inputs: in}
+	if err := ValidateBaselineInputs(s, mustBaselines(t)); err != nil {
+		t.Fatalf("floor is a minimum, extras must pass: %v", err)
+	}
+}
+
+func TestValidateBaselineInputs_MissingInputFails(t *testing.T) {
+	in := fullE2EInputs()
+	delete(in, "headers")
+	s := Sensor{ID: "e2e-test", Scope: enums.ScopeCore, Angle: enums.AngleE2ETest, Inputs: in}
+	err := ValidateBaselineInputs(s, mustBaselines(t))
+	if err == nil {
+		t.Fatal("missing baseline input must fail")
+	}
+	if !strings.Contains(err.Error(), "headers") {
+		t.Fatalf("error should name the missing input, got: %v", err)
+	}
+}
+
+func TestValidateBaselineInputs_MissingDefaultFails(t *testing.T) {
+	in := fullE2EInputs()
+	in["body"] = InputSpec{HasDefault: false}
+	s := Sensor{ID: "e2e-test", Scope: enums.ScopeCore, Angle: enums.AngleE2ETest, Inputs: in}
+	err := ValidateBaselineInputs(s, mustBaselines(t))
+	if err == nil {
+		t.Fatal("baseline input without default must fail")
+	}
+	if !strings.Contains(err.Error(), "body") {
+		t.Fatalf("error should name the undefaulted input, got: %v", err)
+	}
+}
+
+func TestValidateBaselineInputs_SkipsNonCoreAndUnknownAngles(t *testing.T) {
+	useCase := Sensor{ID: "s-x", Scope: enums.ScopeUseCase, UseCaseID: "uc", Angle: enums.AngleE2ETest}
+	if err := ValidateBaselineInputs(useCase, mustBaselines(t)); err != nil {
+		t.Fatalf("use-case scope must be skipped: %v", err)
+	}
+	env := Sensor{ID: "run-dev", Scope: enums.ScopeCore, Angle: enums.AngleEnvironment}
+	if err := ValidateBaselineInputs(env, mustBaselines(t)); err != nil {
+		t.Fatalf("angle without a baseline must be skipped: %v", err)
 	}
 }

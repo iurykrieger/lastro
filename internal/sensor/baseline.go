@@ -1,7 +1,9 @@
 package sensor
 
 import (
+	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -88,4 +90,44 @@ func LoadBaselines() (map[enums.ValidationAngle]CoreInputBaseline, error) {
 		out[k] = v
 	}
 	return out, nil
+}
+
+// ValidateBaselineInputs enforces the per-angle input floor on core
+// primitives: a scope=core sensor whose angle has a baseline must declare
+// every baseline input, each carrying a default (the self-run smoke-test
+// invariant). Non-core sensors and angles without a baseline pass
+// trivially. The floor is a minimum — extra declared inputs are fine.
+func ValidateBaselineInputs(s Sensor, baselines map[enums.ValidationAngle]CoreInputBaseline) error {
+	if s.Scope != enums.ScopeCore {
+		return nil
+	}
+	bl, ok := baselines[s.Angle]
+	if !ok {
+		return nil
+	}
+	var missing, undefaulted []string
+	for name := range bl.Inputs {
+		spec, declared := s.Inputs[name]
+		if !declared {
+			missing = append(missing, name)
+			continue
+		}
+		if !spec.HasDefault {
+			undefaulted = append(undefaulted, name)
+		}
+	}
+	sort.Strings(missing)
+	sort.Strings(undefaulted)
+	var errs []error
+	if len(missing) > 0 {
+		errs = append(errs, fmt.Errorf(
+			"angle %q baseline input(s) not declared: %v — see schemas/core-inputs/%s.yaml; the floor is a minimum, declare them all with defaults",
+			s.Angle, missing, s.Angle))
+	}
+	if len(undefaulted) > 0 {
+		errs = append(errs, fmt.Errorf(
+			"baseline input(s) missing a default: %v — every core input needs a default so the primitive self-runs",
+			undefaulted))
+	}
+	return errors.Join(errs...)
 }

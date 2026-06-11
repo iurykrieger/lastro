@@ -208,6 +208,225 @@ func TestRunUseCaseSensors_SharedServiceCompletesAndTearsDown(t *testing.T) {
 	}
 }
 
+// writeSingleRunRepro lays the issue #42 .harness tree: a run-dev core
+// observational service, a core assertion primitive (e2e-test) that
+// depends on it, and two assertion consumers — one declaring
+// depends_on: [run-dev] directly, one reaching run-dev only transitively
+// by composing the e2e-test primitive. Both probes succeed only while
+// the service process is actually alive (kill -0 on its recorded PID).
+func writeSingleRunRepro(t *testing.T, repoRoot, pidPath string) {
+	t.Helper()
+	mustWrite := func(rel, content string) {
+		t.Helper()
+		abs := filepath.Join(repoRoot, rel)
+		if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(abs, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	mustWrite(".harness/use-cases/health-check.yaml", `schema_version: 2.0.0
+id: health-check
+title: "Health check responds"
+archetype_scope: [web-app]
+entry_points:
+  - id: health-endpoint
+    archetype: web-app
+    spec:
+      path: /health
+      method: GET
+given:
+  - "the dev server is running"
+when:
+  - "a health request is made"
+then:
+  - "it responds ok"
+`)
+
+	mustWrite(".harness/sensors/core/run-dev.yaml", fmt.Sprintf(`schema_version: 1.0.0
+id: run-dev
+scope: core
+angle: environment
+kind: observational
+nature: computational
+output_type: stream
+uses: []
+signal_matches:
+  - key: ready
+    pattern: "ready"
+    verdict: pass
+    expected: true
+steps:
+  - id: boot
+    run: 'echo $$ > %s; echo "ready - started server"; sleep 600'
+`, pidPath))
+
+	mustWrite(".harness/sensors/core/e2e-test.yaml", fmt.Sprintf(`schema_version: 1.0.0
+id: e2e-test
+scope: core
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+depends_on: [run-dev]
+signal_matches:
+  - key: ok
+    pattern: "OK"
+    verdict: pass
+steps:
+  - id: request
+    run: 'kill -0 "$(cat %s)" && echo OK'
+`, pidPath))
+
+	mustWrite(".harness/sensors/health-check/s-direct-dep.yaml", fmt.Sprintf(`schema_version: 1.0.0
+id: s-direct-dep
+use_case_id: health-check
+scope: use-case
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+depends_on: [run-dev]
+signal_matches:
+  - key: ok
+    pattern: "OK"
+    verdict: pass
+steps:
+  - id: probe
+    run: 'kill -0 "$(cat %s)" && echo OK'
+`, pidPath))
+
+	mustWrite(".harness/sensors/health-check/s-composed-dep.yaml", `schema_version: 1.0.0
+id: s-composed-dep
+use_case_id: health-check
+scope: use-case
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+signal_matches:
+  - key: ok
+    pattern: "OK"
+    verdict: pass
+steps:
+  - id: call
+    uses: e2e-test
+`)
+
+	mustWrite(".harness/sensors/health-check/s-no-deps.yaml", `schema_version: 1.0.0
+id: s-no-deps
+use_case_id: health-check
+scope: use-case
+angle: unit-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+signal_matches:
+  - key: ok
+    pattern: "OK"
+    verdict: pass
+steps:
+  - id: probe
+    run: "echo OK"
+`)
+}
+
+// TestRunSensorWithServices reproduces issue #42: a single-sensor run must
+// start the shared observational core services in the sensor's dependency
+// closure (blocking on ready), run the sensor against them, and tear them
+// down afterwards — for both a direct depends_on edge and a transitive one
+// through a composed core primitive.
+func TestRunSensorWithServices(t *testing.T) {
+	cases := []struct {
+		name     string
+		sensorID string
+	}{
+		{"direct depends_on edge", "s-direct-dep"},
+		{"transitive via composed core primitive", "s-composed-dep"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			repoRoot := t.TempDir()
+			pidPath := filepath.Join(t.TempDir(), "svc.pid")
+			writeSingleRunRepro(t, repoRoot, pidPath)
+
+			b, err := BootLifecycle(repoRoot)
+			if err != nil {
+				t.Fatalf("boot: %v", err)
+			}
+			defer func() { _ = b.Cleanup() }()
+
+			s, ok := b.Sensors.LookupSensor(tc.sensorID)
+			if !ok {
+				t.Fatalf("sensor %q not loaded", tc.sensorID)
+			}
+			agg, err := RunSensorWithServices(context.Background(), b, s)
+			if err != nil {
+				t.Fatalf("RunSensorWithServices: %v", err)
+			}
+			if agg.Verdict != enums.VerdictPass {
+				t.Fatalf("verdict = %q, want pass (heal_hint: %+v)", agg.Verdict, agg.HealHint)
+			}
+
+			// Teardown: the service's shell must be dead once the run returns.
+			pid := readPID(t, pidPath)
+			deadline := time.Now().Add(5 * time.Second)
+			for {
+				if err := syscall.Kill(pid, 0); err == syscall.ESRCH {
+					break
+				}
+				if time.Now().After(deadline) {
+					t.Fatalf("run-dev process %d still alive after single-sensor run returned", pid)
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
+
+			running, err := b.Lifecycle.ListRunning()
+			if err != nil {
+				t.Fatalf("list running: %v", err)
+			}
+			if len(running) != 0 {
+				t.Fatalf("registry still tracks %d running sensors, want 0: %+v", len(running), running)
+			}
+		})
+	}
+}
+
+// TestRunSensorWithServices_NoServiceDeps pins that a sensor without any
+// service in its dependency closure runs plainly, with no manager installed.
+func TestRunSensorWithServices_NoServiceDeps(t *testing.T) {
+	repoRoot := t.TempDir()
+	pidPath := filepath.Join(t.TempDir(), "svc.pid")
+	writeSingleRunRepro(t, repoRoot, pidPath)
+
+	b, err := BootLifecycle(repoRoot)
+	if err != nil {
+		t.Fatalf("boot: %v", err)
+	}
+	defer func() { _ = b.Cleanup() }()
+
+	s, ok := b.Sensors.LookupSensor("s-no-deps")
+	if !ok {
+		t.Fatal("sensor s-no-deps not loaded")
+	}
+	agg, err := RunSensorWithServices(context.Background(), b, s)
+	if err != nil {
+		t.Fatalf("RunSensorWithServices: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Fatalf("verdict = %q, want pass", agg.Verdict)
+	}
+	if _, err := os.Stat(pidPath); !os.IsNotExist(err) {
+		t.Fatalf("run-dev was started for a sensor with no service deps (pid file exists, stat err=%v)", err)
+	}
+}
+
 type aggSignal struct {
 	SensorID string
 	Verdict  enums.Verdict

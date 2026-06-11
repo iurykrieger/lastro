@@ -1,4 +1,5 @@
-// Shared-service orchestration for the validate path (issue #34).
+// Shared-service orchestration for the validate path (issue #34) and the
+// single-sensor run path (issue #42).
 //
 // A `kind: observational` + `scope: core` sensor (e.g. run-dev) is a shared
 // service: it must not be scheduled as a run-to-completion DAG node (a dev
@@ -192,10 +193,7 @@ func RunUseCaseSensors(
 	deps := serviceDepsOf(regular, isService)
 	scheduled := stripServiceEdges(regular, isService)
 
-	mgr := servicemgr.New(
-		&lifecycleService{lc: b.Lifecycle, handles: map[string]*lifecycle.Handle{}},
-		servicemgr.Options{Ready: readyByObservation, ReadyTimeout: serviceReadyTimeout},
-	)
+	mgr := newServiceManager(b)
 	b.services.set(mgr)
 	defer b.services.clear()
 	// Finally sweep: no service may outlive the run, whatever path exits it.
@@ -221,6 +219,77 @@ func RunUseCaseSensors(
 
 	aggs, err := RunAll(ctx, scheduled, runner, parallelism)
 	return aggs, scheduled, err
+}
+
+// newServiceManager builds the ref-counted shared-service manager both run
+// paths (validate and single-sensor) install around their sensor runs.
+func newServiceManager(b *Booted) *servicemgr.Manager {
+	return servicemgr.New(
+		&lifecycleService{lc: b.Lifecycle, handles: map[string]*lifecycle.Handle{}},
+		servicemgr.Options{Ready: readyByObservation, ReadyTimeout: serviceReadyTimeout},
+	)
+}
+
+// serviceClosureFor returns the shared services (scope: core + kind:
+// observational) reachable from root through depends_on edges and step
+// `uses:` targets, following edges through core sensors only — the
+// single-sensor analogue of Store.GatherForUseCase + classifyServices.
+// Dangling ids and use-case→use-case edges are skipped, as in gather.
+func serviceClosureFor(store *sensor.Store, root sensor.Sensor) []sensor.Sensor {
+	var services []sensor.Sensor
+	seen := map[string]bool{root.ID: true}
+	queue := []sensor.Sensor{root}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		ids := append([]string{}, cur.DependsOn...)
+		for _, st := range cur.Steps {
+			if st.Uses != "" {
+				ids = append(ids, st.Uses)
+			}
+		}
+		for _, id := range ids {
+			if seen[id] {
+				continue
+			}
+			seen[id] = true
+			d, ok := store.LookupSensor(id)
+			if !ok || d.Scope != enums.ScopeCore {
+				continue
+			}
+			if d.Kind == enums.KindObservational {
+				services = append(services, d)
+			}
+			queue = append(queue, d)
+		}
+	}
+	return services
+}
+
+// RunSensorWithServices runs one sensor, managing the shared observational
+// core services its dependency closure declares (issue #42): each service
+// is acquired before the run — started and blocked on its "ready"
+// observation — and shut down once the run returns, mirroring the
+// lifecycle RunUseCaseSensors gives the validate path. A sensor with no
+// service in its closure runs plainly, exactly as before.
+func RunSensorWithServices(ctx context.Context, b *Booted, s sensor.Sensor) (aggregate.AggregateSignal, error) {
+	services := serviceClosureFor(b.Sensors, s)
+	if len(services) == 0 {
+		return b.Lifecycle.RunSensor(ctx, s.ID, nil)
+	}
+
+	mgr := newServiceManager(b)
+	b.services.set(mgr)
+	defer b.services.clear()
+	// Finally sweep: no service may outlive the run, whatever path exits it.
+	defer func() { _ = mgr.Shutdown(context.WithoutCancel(ctx)) }()
+
+	for _, svc := range services {
+		if _, err := mgr.Acquire(ctx, svc.ID, nil); err != nil {
+			return inconclusiveFromServiceError(s, svc.ID, err), nil
+		}
+	}
+	return b.Lifecycle.RunSensor(ctx, s.ID, nil)
 }
 
 // inconclusiveFromServiceError synthesizes an inconclusive AggregateSignal

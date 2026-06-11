@@ -47,7 +47,10 @@ func runRunSensor(args []string, stdin io.Reader, stdout, stderr io.Writer, cwd 
 		return skillio.ExitScriptError
 	}
 
-	agg, err := b.Lifecycle.RunSensor(context.Background(), sensorID, nil)
+	// Bring up the shared observational core services the sensor's
+	// dependency closure declares (e.g. run-dev), run against them, then
+	// tear them down — the lifecycle validate-use-case already provides.
+	agg, err := skillruntime.RunSensorWithServices(context.Background(), b, s)
 	if err != nil {
 		if errors.Is(err, lifecycle.ErrSensorNotFound) {
 			skillio.EmitError(stderr, "sensor-not-found", err.Error(), map[string]any{"sensor_id": sensorID})

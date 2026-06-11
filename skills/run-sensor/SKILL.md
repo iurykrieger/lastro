@@ -41,8 +41,13 @@ Synchronously run an assertion sensor and emit its signals + terminal
 
 ## Implementation
 
-Wraps `lifecycle.RunSensor`. After the call returns, replays the
-per-run `signals.jsonl` to stdout, then emits the terminal aggregate.
+Wraps `lifecycle.RunSensor` via `skillruntime.RunSensorWithServices`: any
+shared observational core service in the sensor's dependency closure
+(`depends_on` edges and composed `uses:` primitives, e.g. `run-dev`) is
+started first — blocking on its `ready` observation — and torn down once
+the run returns, the same lifecycle `/validate-use-case` provides. After
+the call returns, replays the per-run `signals.jsonl` to stdout, then
+emits the terminal aggregate.
 
 ## How to invoke
 

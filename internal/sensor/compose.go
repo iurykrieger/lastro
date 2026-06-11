@@ -49,8 +49,8 @@ func ValidateComposition(s Sensor, store *Store) error {
 // declared input of the composed core primitive. An undeclared key would
 // silently bind nothing — the caller must evolve the core primitive first
 // (add the input with a backward-compatible default, re-persist it), then
-// retry. Unknown uses-targets are skipped here; ValidateComposition owns
-// that finding.
+// retry. Unknown and non-core uses-targets are skipped here;
+// ValidateComposition owns both findings.
 func ValidateWithKeys(s Sensor, store *Store) error {
 	var errs []error
 	for _, st := range s.Steps {
@@ -58,7 +58,7 @@ func ValidateWithKeys(s Sensor, store *Store) error {
 			continue
 		}
 		prim, ok := store.LookupSensor(st.Uses)
-		if !ok {
+		if !ok || prim.Scope != enums.ScopeCore {
 			continue
 		}
 		var unknown []string

@@ -115,6 +115,9 @@ func TestPersistCreateSensors_UnknownWithKey_ThenEvolutionFlow(t *testing.T) {
 	if pe.Kind != persisterror.UnknownWithKey {
 		t.Fatalf("Kind=%q, want %q", pe.Kind, persisterror.UnknownWithKey)
 	}
+	if pe.EntityType != "sensor" || pe.EntityID != "s-uc-checkout-e2e-test" {
+		t.Fatalf("error should name the failing sensor: %+v", pe)
+	}
 
 	// 2. Evolve the core: add the input (with default) AND reference it.
 	writeFile(t, coreIn, evoCorePrimitive(

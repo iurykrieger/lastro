@@ -132,7 +132,7 @@ func persistCreateSensors(args []string, stdout, stderr io.Writer) int {
 		if wkErr := sensor.ValidateWithKeys(s, store); wkErr != nil {
 			pe := &persisterror.Error{
 				Kind: persisterror.UnknownWithKey, EntityType: "sensor", EntityID: s.ID,
-				Message: wkErr.Error(),
+				Message: "with-key validation: " + wkErr.Error(),
 			}
 			_ = json.NewEncoder(stdout).Encode(pe)
 			return 2

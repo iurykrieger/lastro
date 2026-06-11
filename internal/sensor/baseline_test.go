@@ -1,0 +1,99 @@
+package sensor
+
+import (
+	"encoding/json"
+	"testing"
+
+	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/schemas"
+	"github.com/santhosh-tekuri/jsonschema/v6"
+	"sigs.k8s.io/yaml"
+)
+
+func TestLoadBaselines_AllFiveAngles(t *testing.T) {
+	baselines, err := LoadBaselines()
+	if err != nil {
+		t.Fatalf("LoadBaselines: %v", err)
+	}
+	wantAngles := []enums.ValidationAngle{
+		enums.AngleE2ETest, enums.AngleDatabase, enums.AnglePerformance,
+		enums.AngleLogs, enums.AngleMetrics,
+	}
+	if len(baselines) != len(wantAngles) {
+		t.Fatalf("got %d baselines, want %d: %v", len(baselines), len(wantAngles), baselines)
+	}
+	for _, a := range wantAngles {
+		if _, ok := baselines[a]; !ok {
+			t.Errorf("missing baseline for angle %q", a)
+		}
+	}
+}
+
+func TestLoadBaselines_E2EFloorContents(t *testing.T) {
+	baselines, err := LoadBaselines()
+	if err != nil {
+		t.Fatalf("LoadBaselines: %v", err)
+	}
+	e2e := baselines[enums.AngleE2ETest]
+	for _, name := range []string{
+		"base_url", "method", "path", "query", "headers", "body",
+		"expect_status", "timeout",
+	} {
+		spec, ok := e2e.Inputs[name]
+		if !ok {
+			t.Errorf("e2e-test baseline missing input %q", name)
+			continue
+		}
+		if spec.Description == "" {
+			t.Errorf("e2e-test baseline input %q has empty description", name)
+		}
+	}
+}
+
+func TestBaselineFiles_MatchMetaSchema(t *testing.T) {
+	raw, err := schemas.FS.ReadFile("core-input-baseline.yaml")
+	if err != nil {
+		t.Fatalf("read meta-schema: %v", err)
+	}
+	asJSON, err := yaml.YAMLToJSON(raw)
+	if err != nil {
+		t.Fatalf("yaml->json meta-schema: %v", err)
+	}
+	var doc any
+	if err := json.Unmarshal(asJSON, &doc); err != nil {
+		t.Fatalf("unmarshal meta-schema: %v", err)
+	}
+	c := jsonschema.NewCompiler()
+	const url = "https://lastro.dev/harness/schemas/core-input-baseline.yaml"
+	if err := c.AddResource(url, doc); err != nil {
+		t.Fatalf("add resource: %v", err)
+	}
+	sch, err := c.Compile(url)
+	if err != nil {
+		t.Fatalf("compile meta-schema: %v", err)
+	}
+	entries, err := schemas.FS.ReadDir("core-inputs")
+	if err != nil {
+		t.Fatalf("read core-inputs dir: %v", err)
+	}
+	for _, e := range entries {
+		b, err := schemas.FS.ReadFile("core-inputs/" + e.Name())
+		if err != nil {
+			t.Errorf("read %s: %v", e.Name(), err)
+			continue
+		}
+		j, err := yaml.YAMLToJSON(b)
+		if err != nil {
+			t.Errorf("yaml->json %s: %v", e.Name(), err)
+			continue
+		}
+		var inst any
+		if err := json.Unmarshal(j, &inst); err != nil {
+			t.Errorf("unmarshal %s: %v", e.Name(), err)
+			continue
+		}
+		if err := sch.Validate(inst); err != nil {
+			t.Errorf("FAIL %s against meta-schema: %v", e.Name(), err)
+		}
+	}
+}

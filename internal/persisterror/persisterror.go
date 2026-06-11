@@ -11,16 +11,19 @@ import "fmt"
 type Kind string
 
 const (
-	SchemaViolation      Kind = "schema_violation"
-	FixtureBinding       Kind = "fixture_binding"
-	Grounding            Kind = "grounding"
-	TemplateResolution   Kind = "template_resolution"
-	MissingRequiredField Kind = "missing_required_field"
-	UnknownEnumValue     Kind = "unknown_enum_value"
-	AngleNotApplicable   Kind = "angle_not_applicable"
-	MissingDependency    Kind = "missing_dependency"
-	StepResolvability    Kind = "step_resolvability"
-	UnknownBranchRef     Kind = "unknown_branch_ref"
+	SchemaViolation        Kind = "schema_violation"
+	FixtureBinding         Kind = "fixture_binding"
+	Grounding              Kind = "grounding"
+	TemplateResolution     Kind = "template_resolution"
+	MissingRequiredField   Kind = "missing_required_field"
+	UnknownEnumValue       Kind = "unknown_enum_value"
+	AngleNotApplicable     Kind = "angle_not_applicable"
+	MissingDependency      Kind = "missing_dependency"
+	StepResolvability      Kind = "step_resolvability"
+	UnknownBranchRef       Kind = "unknown_branch_ref"
+	IncompleteInputSurface Kind = "incomplete_input_surface"
+	UnknownWithKey         Kind = "unknown_with_key"
+	UnreferencedInput      Kind = "unreferenced_input"
 )
 
 // Error is the structured error type. Skill scripts marshal it to JSON.

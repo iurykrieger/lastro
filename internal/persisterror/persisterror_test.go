@@ -66,3 +66,16 @@ func TestError_ErrorsAs(t *testing.T) {
 		t.Fatalf("Kind=%q, want %q", pe.Kind, Grounding)
 	}
 }
+
+func TestNewKinds_StringValues(t *testing.T) {
+	cases := map[Kind]string{
+		IncompleteInputSurface: "incomplete_input_surface",
+		UnknownWithKey:         "unknown_with_key",
+		UnreferencedInput:      "unreferenced_input",
+	}
+	for kind, want := range cases {
+		if string(kind) != want {
+			t.Errorf("kind %v = %q, want %q", kind, string(kind), want)
+		}
+	}
+}

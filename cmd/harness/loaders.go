@@ -71,33 +71,55 @@ func LoadHarnessArtifacts(harnessDir, policyPath string) (*HarnessArtifacts, err
 	}, nil
 }
 
+// loadUseCases reads both layouts: legacy flat use-cases/<id>.yaml files
+// and journey folders use-cases/<journey>/<id>.yaml (one level deep).
 func loadUseCases(dir string, fixtures fixture.FixtureStore) (map[string]*usecase.UseCase, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("read use cases dir %s: %w", dir, err)
 	}
 	out := make(map[string]*usecase.UseCase)
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		name := e.Name()
-		if filepath.Ext(name) != ".yaml" && filepath.Ext(name) != ".yml" {
-			continue
-		}
-		full := filepath.Join(dir, name)
+	loadFile := func(full string) error {
 		data, err := os.ReadFile(full)
 		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", full, err)
+			return fmt.Errorf("read %s: %w", full, err)
 		}
 		uc, err := usecase.Load(data, fixtures)
 		if err != nil {
-			return nil, fmt.Errorf("load %s: %w", full, err)
+			return fmt.Errorf("load %s: %w", full, err)
 		}
 		if _, dup := out[uc.ID]; dup {
-			return nil, fmt.Errorf("duplicate use case id %q in %s", uc.ID, full)
+			return fmt.Errorf("duplicate use case id %q in %s", uc.ID, full)
 		}
 		out[uc.ID] = uc
+		return nil
+	}
+	isYAML := func(name string) bool {
+		return filepath.Ext(name) == ".yaml" || filepath.Ext(name) == ".yml"
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			subDir := filepath.Join(dir, e.Name())
+			subEntries, err := os.ReadDir(subDir)
+			if err != nil {
+				return nil, fmt.Errorf("read journey dir %s: %w", subDir, err)
+			}
+			for _, se := range subEntries {
+				if se.IsDir() || !isYAML(se.Name()) {
+					continue
+				}
+				if err := loadFile(filepath.Join(subDir, se.Name())); err != nil {
+					return nil, err
+				}
+			}
+			continue
+		}
+		if !isYAML(e.Name()) {
+			continue
+		}
+		if err := loadFile(filepath.Join(dir, e.Name())); err != nil {
+			return nil, err
+		}
 	}
 	if len(out) == 0 {
 		return nil, errors.New("no use case YAMLs found")

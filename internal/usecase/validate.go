@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/iurykrieger/lastro/internal/enums"
@@ -22,6 +23,7 @@ func Validate(uc *UseCase, store fixture.FixtureStore) error {
 	errs = appendIfErr(errs, checkCharset(uc))
 	errs = appendIfErr(errs, checkUniqueness(uc))
 	errs = appendIfErr(errs, checkArchetypeScope(uc))
+	errs = appendIfErr(errs, checkJourneyFields(uc))
 
 	segs, parseErrs := parseAllSegments(uc)
 	errs = append(errs, parseErrs...)
@@ -134,6 +136,46 @@ func checkArchetypeScope(uc *UseCase) error {
 				Refs:    []string{ep.ID},
 			})
 		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return errors.Join(errs...)
+}
+
+// branchIDRe is the shape of a branch-inventory id; covers entries must
+// match it. Cross-checking against the actual inventory happens at persist
+// time (Validate is pure and never touches the filesystem).
+var branchIDRe = regexp.MustCompile(`^br-[a-f0-9]{12}$`)
+
+func checkJourneyFields(uc *UseCase) error {
+	var errs []error
+	if uc.Journey != "" {
+		if err := ValidateID(uc.Journey); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if uc.Variation != "" && !enums.IsValidUseCaseVariation(string(uc.Variation)) {
+		errs = append(errs, &ValidationError{
+			Code:    "USECASE_VARIATION_UNKNOWN",
+			Message: "variation " + string(uc.Variation) + " is not one of success|failure|alternative",
+		})
+	}
+	seen := map[string]bool{}
+	for _, id := range uc.Covers {
+		if !branchIDRe.MatchString(id) {
+			errs = append(errs, &ValidationError{
+				Code:    "USECASE_COVERS_BAD_REF",
+				Message: "covers entry " + id + " does not match br-<12 hex>",
+				Refs:    []string{id},
+			})
+		}
+		if seen[id] {
+			errs = append(errs, &ValidationError{
+				Code: "USECASE_DUPLICATE_ID", Message: "duplicate covers entry: " + id, Refs: []string{id},
+			})
+		}
+		seen[id] = true
 	}
 	if len(errs) == 0 {
 		return nil

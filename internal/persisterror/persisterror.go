@@ -20,6 +20,7 @@ const (
 	AngleNotApplicable   Kind = "angle_not_applicable"
 	MissingDependency    Kind = "missing_dependency"
 	StepResolvability    Kind = "step_resolvability"
+	UnknownBranchRef     Kind = "unknown_branch_ref"
 )
 
 // Error is the structured error type. Skill scripts marshal it to JSON.

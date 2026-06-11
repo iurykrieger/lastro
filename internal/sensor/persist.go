@@ -86,14 +86,15 @@ func Persist(content []byte, harnessDir string) error {
 			}
 		}
 
-		// (c) Use-case must exist on disk.
-		ucPath := filepath.Join(harnessDir, "use-cases", s.UseCaseID+".yaml")
-		if _, err := os.Stat(ucPath); errors.Is(err, os.ErrNotExist) {
+		// (c) Use-case must exist on disk — flat layout or inside a
+		// journey folder (use-cases/<journey>/<id>.yaml).
+		if !useCaseFileExists(harnessDir, s.UseCaseID) {
 			return &persisterror.Error{
 				Kind:       persisterror.MissingDependency,
 				EntityType: "sensor",
 				EntityID:   s.ID,
-				Message:    fmt.Sprintf("use-case %q not found at %s", s.UseCaseID, ucPath),
+				Message: fmt.Sprintf("use-case %q not found at %s or in any journey folder",
+					s.UseCaseID, filepath.Join(harnessDir, "use-cases", s.UseCaseID+".yaml")),
 			}
 		}
 
@@ -164,6 +165,18 @@ func Persist(content []byte, harnessDir string) error {
 		}
 	}
 	return nil
+}
+
+// useCaseFileExists reports whether the use case's YAML is on disk, in
+// either layout: flat use-cases/<id>.yaml or journeyed
+// use-cases/<journey>/<id>.yaml.
+func useCaseFileExists(harnessDir, useCaseID string) bool {
+	flat := filepath.Join(harnessDir, "use-cases", useCaseID+".yaml")
+	if _, err := os.Stat(flat); err == nil {
+		return true
+	}
+	matches, err := filepath.Glob(filepath.Join(harnessDir, "use-cases", "*", useCaseID+".yaml"))
+	return err == nil && len(matches) > 0
 }
 
 // repoRootOf returns the directory the harness dir lives in — the project

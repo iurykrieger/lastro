@@ -8,6 +8,7 @@ import (
 
 	"sigs.k8s.io/yaml"
 
+	"github.com/iurykrieger/lastro/internal/detect/branchscan"
 	"github.com/iurykrieger/lastro/internal/fixture"
 	"github.com/iurykrieger/lastro/internal/persisterror"
 	"github.com/iurykrieger/lastro/internal/persisthelp"
@@ -38,6 +39,10 @@ func Persist(content []byte, harnessDir string) error {
 		return mapLoadError(uc, content, loadErr)
 	}
 
+	if err := checkCoversAgainstInventory(uc, harnessDir); err != nil {
+		return err
+	}
+
 	// Map-based bump to preserve all original fields exactly (the typed
 	// UseCase struct doesn't round-trip entry_points[].spec or the
 	// given/when/then text verbatim via yaml.Marshal).
@@ -51,7 +56,11 @@ func Persist(content []byte, harnessDir string) error {
 		}
 	}
 
+	// Journeyed use cases live one folder deep; the journey id is the folder.
 	targetPath := filepath.Join(harnessDir, "use-cases", uc.ID+".yaml")
+	if uc.Journey != "" {
+		targetPath = filepath.Join(harnessDir, "use-cases", uc.Journey, uc.ID+".yaml")
+	}
 	bumped, err := persisthelp.BumpSchemaVersion(targetPath, uc.SchemaVersion)
 	if err != nil {
 		return &persisterror.Error{
@@ -78,6 +87,50 @@ func Persist(content []byte, harnessDir string) error {
 			EntityType: "use-case",
 			EntityID:   uc.ID,
 			Message:    fmt.Sprintf("write %s: %v", targetPath, err),
+		}
+	}
+	return nil
+}
+
+// checkCoversAgainstInventory verifies every covers entry exists in the
+// on-disk branch inventory. A use case with no covers needs no inventory;
+// one with covers and no inventory is a missing dependency (run
+// scan-branches first).
+func checkCoversAgainstInventory(uc *UseCase, harnessDir string) error {
+	if len(uc.Covers) == 0 {
+		return nil
+	}
+	invPath := filepath.Join(harnessDir, "branch-inventory.yaml")
+	raw, err := os.ReadFile(invPath)
+	if err != nil {
+		return &persisterror.Error{
+			Kind:       persisterror.MissingDependency,
+			EntityType: "use-case",
+			EntityID:   uc.ID,
+			Message:    fmt.Sprintf("covers is set but %s is unreadable (run scan-branches first): %v", invPath, err),
+		}
+	}
+	inv, err := branchscan.Load(raw)
+	if err != nil {
+		return &persisterror.Error{
+			Kind:       persisterror.MissingDependency,
+			EntityType: "use-case",
+			EntityID:   uc.ID,
+			Message:    fmt.Sprintf("load %s: %v", invPath, err),
+		}
+	}
+	known := inv.IDs()
+	for _, id := range uc.Covers {
+		if !known[id] {
+			return &persisterror.Error{
+				Kind:       persisterror.UnknownBranchRef,
+				EntityType: "use-case",
+				EntityID:   uc.ID,
+				Path:       "covers",
+				Value:      id,
+				Expected:   "a branch id present in " + invPath,
+				Message:    fmt.Sprintf("covers references branch %s which is not in the inventory; re-run scan-branches or drop the ref", id),
+			}
 		}
 	}
 	return nil
@@ -150,6 +203,10 @@ func classifyLoadErr(err error) persisterror.Kind {
 			"USECASE_TEMPLATE_UNKNOWN_ENTRY_POINT":
 			if best != persisterror.FixtureBinding {
 				best = persisterror.TemplateResolution
+			}
+		case "USECASE_VARIATION_UNKNOWN":
+			if best == persisterror.SchemaViolation {
+				best = persisterror.UnknownEnumValue
 			}
 		}
 	})

@@ -31,6 +31,9 @@ import (
 //	    Applies to ALL sensors.
 //	(a2) every run-step command resolves on this machine
 //	    (ValidateStepResolvability). Applies to ALL sensors.
+//	(a3) scope: core only — the sensor declares at least its angle's
+//	    baseline input floor (IncompleteInputSurface) and references every
+//	    declared input in its steps (UnreferencedInput).
 //	(b) sensor.angle ∈ stack-manifest.applicable_angles.
 //	(c) use-cases/<sensor.use_case_id>.yaml exists.
 //	(d) each step's uses: ⊆ fixtures whose use_case_id matches sensor's.
@@ -68,6 +71,38 @@ func Persist(content []byte, harnessDir string) error {
 			EntityType: "sensor",
 			EntityID:   s.ID,
 			Message:    err.Error(),
+		}
+	}
+
+	// (a3) Core primitives must satisfy the per-angle baseline input floor
+	// and reference every input they declare. Ordered after (a2) so
+	// unresolvable-command errors surface first.
+	if s.Scope == enums.ScopeCore {
+		baselines, blErr := LoadBaselines()
+		if blErr != nil {
+			return &persisterror.Error{
+				Kind:       persisterror.SchemaViolation,
+				EntityType: "sensor",
+				EntityID:   s.ID,
+				Message:    fmt.Sprintf("load core-input baselines: %v", blErr),
+			}
+		}
+		if err := ValidateBaselineInputs(s, baselines); err != nil {
+			return &persisterror.Error{
+				Kind:       persisterror.IncompleteInputSurface,
+				EntityType: "sensor",
+				EntityID:   s.ID,
+				Expected:   fmt.Sprintf("at least the inputs in schemas/core-inputs/%s.yaml, each with a default", s.Angle),
+				Message:    err.Error(),
+			}
+		}
+		if err := ValidateInputReferences(s); err != nil {
+			return &persisterror.Error{
+				Kind:       persisterror.UnreferencedInput,
+				EntityType: "sensor",
+				EntityID:   s.ID,
+				Message:    err.Error(),
+			}
 		}
 	}
 

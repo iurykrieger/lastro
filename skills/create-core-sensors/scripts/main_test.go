@@ -80,7 +80,8 @@ components:
 }
 
 // happyCoreSensorYAML is a valid core sensor that passes all checks when
-// the seeded harness is present.
+// the seeded harness is present: full e2e-test baseline floor, every
+// input referenced, grade-and-emit shape (no curl --fail).
 const happyCoreSensorYAML = `schema_version: 1.0.0
 id: e2e-test
 scope: core
@@ -91,15 +92,40 @@ output_type: single-shot
 uses: [curl]
 depends_on: [run-dev]
 inputs:
-  method: { required: true, default: GET }
-  path:   { required: true, default: /health_check/ready }
+  base_url:      { required: true,  default: "http://localhost:8080" }
+  method:        { required: true,  default: GET }
+  path:          { required: true,  default: /health_check/ready }
+  query:         { required: false, default: "" }
+  headers:       { required: false, default: "" }
+  body:          { required: false, default: "" }
+  expect_status: { required: true,  default: 2xx }
+  timeout:       { required: false, default: "10" }
 outputs:
-  body: { from: "${{ steps.request.outputs.body }}" }
+  status: { from: "${{ steps.request.outputs.status }}" }
+  body:   { from: "${{ steps.request.outputs.body }}" }
+signal_matches:
+  - key: expectation-unmet
+    pattern: "expectation-unmet expected=(?P<expected>\\S+) got=(?P<got>\\d+)"
+    verdict: fail
+    heal_hint: { summary: "Response status did not match the declared expectation", rationale: "The endpoint answered outside expect_status; inspect the handler or the expectation binding." }
 steps:
   - id: request
     run: |
-      resp=$(curl --fail -sS -X "${{ inputs.method }}" "http://localhost:8080${{ inputs.path }}")
-      printf 'body=%s\n' "$resp" >> "$HARNESS_OUTPUT"
+      hdr_file=$(mktemp)
+      printf '%s' "${{ inputs.headers }}" > "$hdr_file"
+      if [ -n "${{ inputs.body }}" ]; then set -- --data-binary "@${{ inputs.body }}"; else set --; fi
+      status=$(curl -sS -o /tmp/harness-e2e-body -w '%{http_code}' \
+        --max-time "${{ inputs.timeout }}" -X "${{ inputs.method }}" \
+        -H "@$hdr_file" "$@" \
+        "${{ inputs.base_url }}${{ inputs.path }}${{ inputs.query }}")
+      body=$(cat /tmp/harness-e2e-body 2>/dev/null || true)
+      printf 'status=%s\nbody=%s\n' "$status" "$body"
+      printf 'status=%s\nbody=%s\n' "$status" "$body" >> "$HARNESS_OUTPUT"
+      expect=$(printf '%s' "${{ inputs.expect_status }}" | tr 'xX' '??')
+      case "$status" in
+        $expect) ;;
+        *) printf 'expectation-unmet expected=%s got=%s\n' "${{ inputs.expect_status }}" "$status"; exit 1 ;;
+      esac
 `
 
 func TestMain_MissingFlag_ExitsOne(t *testing.T) {
@@ -213,5 +239,46 @@ steps:
 	}
 	if !strings.Contains(pe.Message, "scope") {
 		t.Fatalf("message %q should mention scope", pe.Message)
+	}
+}
+
+func TestCreateCoreSensors_IncompleteInputSurface_ExitsTwoWithJSON(t *testing.T) {
+	dir := t.TempDir()
+	harness := filepath.Join(dir, ".harness")
+	if err := os.MkdirAll(harness, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	seedHarness(t, harness)
+
+	// e2e-test-angle core sensor declaring only a slice of the baseline floor.
+	narrowYAML := `schema_version: 1.0.0
+id: e2e-test
+scope: core
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: [curl]
+inputs:
+  method: { required: true, default: GET }
+  path:   { required: true, default: / }
+steps:
+  - id: request
+    run: 'curl -sS -X "${{ inputs.method }}" "http://localhost:8080${{ inputs.path }}"'
+`
+	input := filepath.Join(dir, "in.yaml")
+	if err := os.WriteFile(input, []byte(narrowYAML), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	sout, _, code := runScript(t, "--file", input, "--harness-dir", harness)
+	if code != 2 {
+		t.Fatalf("exit=%d, want 2; stdout=%q", code, sout)
+	}
+	var pe persisterror.Error
+	if err := json.Unmarshal([]byte(sout), &pe); err != nil {
+		t.Fatalf("stdout is not a persisterror.Error JSON: %v\nstdout=%q", err, sout)
+	}
+	if pe.Kind != persisterror.IncompleteInputSurface {
+		t.Fatalf("Kind=%q, want %q", pe.Kind, persisterror.IncompleteInputSurface)
 	}
 }

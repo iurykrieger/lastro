@@ -24,6 +24,9 @@ type UseCase struct {
 	Then           []string                `yaml:"then"            json:"then"`
 	SourceRefs     []SourceRef             `yaml:"source_refs"     json:"source_refs,omitempty"`
 	FixtureIDs     []string                `yaml:"fixture_ids"     json:"fixture_ids,omitempty"`
+	Journey        string                  `yaml:"journey"         json:"journey,omitempty"`
+	Variation      enums.UseCaseVariation  `yaml:"variation"       json:"variation,omitempty"`
+	Covers         []string                `yaml:"covers"          json:"covers,omitempty"`
 
 	givenSegs [][]template.Segment
 	whenSegs  [][]template.Segment

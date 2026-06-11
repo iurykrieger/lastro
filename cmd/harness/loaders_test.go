@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/iurykrieger/lastro/internal/fixture"
 )
 
 // passingTreeRel is the relative path to the hand-authored passing
@@ -37,6 +39,59 @@ func TestLoadHarnessArtifacts_HappyPath(t *testing.T) {
 	}
 	if arts.RuntimeRoot != filepath.Join(harnessDir, "runtime") {
 		t.Errorf("RuntimeRoot = %q, want %q", arts.RuntimeRoot, filepath.Join(harnessDir, "runtime"))
+	}
+}
+
+func TestLoadUseCases_JourneyFoldersAndFlat(t *testing.T) {
+	dir := t.TempDir()
+	flatUC := `schema_version: 2.0.0
+id: uc-flat
+title: Flat
+archetype_scope: [library]
+entry_points:
+  - {id: ep-flat, archetype: library, spec: {symbol: F}}
+given: ["g"]
+when: ["w"]
+then: ["t"]
+`
+	journeyUC := `schema_version: 2.0.0
+id: uc-journeyed
+title: Journeyed
+archetype_scope: [library]
+entry_points:
+  - {id: ep-j, archetype: library, spec: {symbol: J}}
+given: ["g"]
+when: ["w"]
+then: ["t"]
+journey: orders
+variation: success
+`
+	if err := os.WriteFile(filepath.Join(dir, "uc-flat.yaml"), []byte(flatUC), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(dir, "orders"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "orders", "uc-journeyed.yaml"), []byte(journeyUC), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	store, err := fixture.NewStore()
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := loadUseCases(dir, store)
+	if err != nil {
+		t.Fatalf("loadUseCases: %v", err)
+	}
+	if len(out) != 2 {
+		t.Fatalf("loaded %d use cases, want 2 (flat + journeyed): %v", len(out), out)
+	}
+	if out["uc-journeyed"] == nil || out["uc-journeyed"].Journey != "orders" {
+		t.Errorf("journeyed use case not loaded correctly: %+v", out["uc-journeyed"])
+	}
+	if out["uc-flat"] == nil {
+		t.Error("flat use case not loaded")
 	}
 }
 

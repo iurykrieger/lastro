@@ -1,0 +1,56 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/coverage-report.yaml"
+title: CoverageReport
+description: |
+  Computed (never hand-authored) score of detected use cases against the
+  branch inventory: which fraction of the application's logic branches at
+  least one use case covers, rolled up per journey, with the uncovered
+  remainder listed for the detection skill to iterate on.
+
+type: object
+required: [schema_version, total_branches, covered_branches, coverage_percent, journeys, uncovered]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  total_branches:
+    type: integer
+    minimum: 0
+  covered_branches:
+    type: integer
+    minimum: 0
+  coverage_percent:
+    type: number
+    minimum: 0
+    maximum: 100
+  journeys:
+    type: array
+    items:
+      type: object
+      required: [journey, use_cases, success_count, failure_count, alternative_count, covered_branches]
+      additionalProperties: false
+      properties:
+        journey:           { type: string, minLength: 1 }
+        use_cases:         { type: integer, minimum: 0 }
+        success_count:     { type: integer, minimum: 0 }
+        failure_count:     { type: integer, minimum: 0 }
+        alternative_count: { type: integer, minimum: 0 }
+        covered_branches:  { type: integer, minimum: 0 }
+  uncovered:
+    type: array
+    items:
+      type: object
+      required: [id, file, line, kind]
+      additionalProperties: false
+      properties:
+        id:        { type: string, pattern: "^br-[a-f0-9]{12}$" }
+        file:      { type: string, minLength: 1 }
+        line:      { type: integer, minimum: 1 }
+        kind:
+          type: string
+          description: "Canonical source: schemas/enums/branch-kinds.yaml"
+          enum: [if, else-if, else, case, default, catch, ternary]
+        condition: { type: string }
+        enclosing: { type: string }

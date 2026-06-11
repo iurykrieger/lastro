@@ -21,7 +21,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "usage: harness-tools <subcommand> [args...]\n")
 		fmt.Fprintf(stderr, "subcommands:\n")
 		fmt.Fprintf(stderr, "  detect-stack        validate and persist a stack-manifest YAML\n")
+		fmt.Fprintf(stderr, "  scan-branches       extract the application's logic branches to branch-inventory.yaml\n")
 		fmt.Fprintf(stderr, "  detect-use-cases    validate and persist a use-case or fixture YAML\n")
+		fmt.Fprintf(stderr, "  coverage            score detected use cases against the branch inventory\n")
 		fmt.Fprintf(stderr, "  create-sensors      validate and persist a sensor YAML\n")
 		fmt.Fprintf(stderr, "  create-core-sensors validate and persist a core sensor YAML\n")
 		fmt.Fprintf(stderr, "  run-sensor          run an assertion sensor\n")
@@ -43,8 +45,12 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	switch sub {
 	case "detect-stack":
 		return persistDetectStack(rest, stdout, stderr)
+	case "scan-branches":
+		return runScanBranches(rest, stdout, stderr)
 	case "detect-use-cases":
 		return persistDetectUseCases(rest, stdout, stderr)
+	case "coverage":
+		return runCoverage(rest, stdout, stderr)
 	case "create-sensors":
 		return persistCreateSensors(rest, stdout, stderr)
 	case "create-core-sensors":

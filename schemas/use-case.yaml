@@ -56,6 +56,23 @@ properties:
   fixture_ids:
     type: array
     items: { $ref: "#/$defs/Id" }
+  journey:
+    $ref: "#/$defs/Id"
+    description: |
+      Journey this use case belongs to. Journeyed use cases persist to
+      use-cases/<journey>/<id>.yaml; absent means the legacy flat layout.
+  variation:
+    type: string
+    description: "Canonical source: schemas/enums/use-case-variations.yaml"
+    enum: [success, failure, alternative]
+  covers:
+    type: array
+    description: |
+      Branch ids from branch-inventory.yaml this use case's scenario
+      exercises. Drives the coverage metric.
+    items:
+      type: string
+      pattern: "^br-[a-f0-9]{12}$"
 
 $defs:
   Id:

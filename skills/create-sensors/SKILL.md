@@ -12,7 +12,8 @@ You are generating one sensor YAML per applicable validation angle for the speci
 Both of the following must exist before you proceed:
 
 - `.harness/stack-manifest.yaml`
-- `.harness/use-cases/<use-case-id>.yaml`
+- the use case's YAML — flat `.harness/use-cases/<use-case-id>.yaml` or inside its
+  journey folder `.harness/use-cases/<journey>/<use-case-id>.yaml` (search both)
 
 If either is absent, stop and tell the user which command to run first (`/detect-stack` or
 `/detect-use-cases`).
@@ -23,8 +24,13 @@ Use the Read tool to load:
 
 1. `.harness/stack-manifest.yaml` — note `applicable_angles` (the list of angles to cover) and
    `components[*].id` (the only valid ids for sensor-level `uses:`).
-2. `.harness/use-cases/<use-case-id>.yaml` — note the use case `id` and its `fixture_ids`
-   (valid ids for `${{ fixtures.<id> }}` interpolation in step `run` and `with` values).
+2. the use case's YAML (flat or journeyed — see Prerequisites) — note its `id`,
+   `fixture_ids` (valid ids for `${{ fixtures.<id> }}` interpolation in step `run` and
+   `with` values), `variation`, and `covers`. The variation sets each sensor's
+   expectation: a `failure` use case's sensors assert the *rejection* (4xx response,
+   error log line, no DB write), not success. `covers` + the branch inventory tell you
+   which conditions the scenario exercises — derive fixtures/inputs that actually take
+   those branches.
 3. `.harness/sensors/core/` — **read this before writing any step**. List every core primitive
    and note its `id`, `angle`, and declared `inputs`. A use-case sensor that composes a core
    primitive needs no raw `run:` commands at all — the core sensor carries the stack-native

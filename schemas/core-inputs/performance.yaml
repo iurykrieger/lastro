@@ -1,0 +1,27 @@
+schema_version: 1.0.0
+angle: performance
+inputs:
+  base_url:
+    description: "Origin of the system under test (scheme://host:port, no trailing slash)"
+    suggested_default: "http://localhost:8080"
+  method:
+    description: "HTTP method for the load-tested request"
+    suggested_default: "GET"
+  path:
+    description: "Request path under load, with leading slash"
+    suggested_default: "/"
+  headers:
+    description: "Newline-separated 'Key: value' header lines, or empty"
+    suggested_default: ""
+  body:
+    description: "Path to the request-body file, or empty for no body"
+    suggested_default: ""
+  duration:
+    description: "Load duration as a Go duration string"
+    suggested_default: "10s"
+  rate:
+    description: "Target request rate in requests/second (plain number string)"
+    suggested_default: "5"
+  p95_budget_ms:
+    description: "p95 latency budget in milliseconds; measured p95 above this exits 1 with an 'expectation-unmet' line"
+    suggested_default: "500"

@@ -9,5 +9,5 @@ import "embed"
 // stack-manifest.yaml) and every enum file (under enums/).
 // Examples and README are intentionally excluded.
 //
-//go:embed *.yaml enums/*.yaml
+//go:embed *.yaml enums/*.yaml core-inputs/*.yaml
 var FS embed.FS

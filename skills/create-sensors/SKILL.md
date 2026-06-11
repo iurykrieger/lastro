@@ -94,14 +94,26 @@ Read the section for the angle you are generating — in particular:
   and a full example live in the `logs` section of `angles.md`.
 - `environment` is a core-only angle; never emit a use-case sensor for it.
 
-### Composing core primitives + demanding inputs
+### Composing core primitives + evolving their inputs
 
-A use-case sensor composes a core primitive via `uses:` + `with:`. Bind the inputs the
-use case needs (e.g. `headers` for an authenticated request). If the core primitive does
-NOT expose a required input, ADD that input to the core sensor's YAML with a
-backward-compatible `default`/`required: false`, then bind it — the core evolves to
-satisfy the use case. Derive required auth/merchant headers and signal_matches regexes
-from the use case's preconditions and the stack manifest's logging library.
+A use-case sensor composes a core primitive via `uses:` + `with:`. Bind the inputs
+the use case needs — e.g. `headers` for an authenticated request, or
+`expect_status: "422"` so a failure variation *expects* the rejection. Every
+`with:` key MUST be a declared input of the composed primitive; an undeclared key
+fails validation with `unknown_with_key`.
+
+When the use case needs an input the primitive does not declare, evolve the core
+FIRST (the baseline floor is a minimum, not a ceiling):
+
+1. Edit `.harness/sensors/core/<primitive-id>.yaml`: add the input with a
+   backward-compatible default (`required: false, default: ""`) AND reference it
+   as `${{ inputs.<name> }}` in the run script (unreferenced inputs are rejected).
+2. Re-persist the core via `harness-tools.sh create-core-sensors`.
+3. Retry this use-case sensor.
+
+Grade over the primitive's normalized output lines (`status=`, `body=`, `rows=`,
+`p95_ms=`) with this sensor's `signal_matches`. Derive auth/merchant headers and
+regexes from the use case's preconditions and the manifest's logging library.
 
 ## How to write each sensor
 
@@ -132,6 +144,8 @@ Common `kind` values on exit 2:
   `make` target missing from the repo Makefile. Switch to a stack-native tool or a
   self-bootstrapping form (`go run <module>@latest`, `npx --yes <pkg>`).
 - `fixture_binding` — a step's `uses:` references a fixture not owned by this use case.
+- `unknown_with_key` — a step's `with:` key is not a declared input of the composed
+  core primitive. Evolve the core first (see "Composing core primitives"), then retry.
 - `angle_not_applicable` — sensor's `angle` is not in `applicable_angles`.
 - `missing_dependency` — the use case or stack manifest is not on disk.
 - `schema_violation` — a required field is missing or wrong shape.

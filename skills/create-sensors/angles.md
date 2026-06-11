@@ -68,11 +68,15 @@ the same line — the fail wins.
   `e2e-test` core primitive: `{ uses: e2e-test, with: { method, path, ... } }`,
   binding the entry point literally and payloads via `${{ fixtures.<id> }}`.
   The primitive already `depends_on` the shared `run-dev` service.
-- **Grading:** match the response summary the primitive emits (or its `body`
-  output in a follow-up step) against the `then` clauses: pass matcher with
-  `expected: true` for the expected status/body shape, fail matchers with
-  `heal_hint`s for wrong status or missing fields. One sensor covers one use
-  case; bind each scenario variant (success, bad input) to its own use case.
+- **Inputs:** the primitive's floor (`schemas/core-inputs/e2e-test.yaml`) is
+  `base_url, method, path, query, headers, body, expect_status, timeout`. Bind
+  `expect_status` to the variation's expectation — `"422"` for a failure use
+  case — and `body` to a fixture path. The primitive grades the status itself
+  (no `curl --fail`) and emits `status=` / `body=` lines.
+- **Grading:** layer matchers over those normalized lines for the `then`
+  clauses: an `expected: true` pass matcher on the expected status/body shape,
+  fail matchers with `heal_hint`s for wrong status or missing fields. One
+  sensor covers one use case; bind each variation to its own use case.
 
 ## contracts
 
@@ -93,6 +97,9 @@ the same line — the fail wins.
 - **Shape:** `observational` / `computational` / `stream`, **attached to the
   shared service** (mechanics below). Only tail directly
   (`docker logs --follow`, `tail -f`) when no observational core service exists.
+  A parameterized `logs` primitive (floor: `pattern, anti_pattern, within,
+  service`) may also exist for one-shot grep-style assertions over the
+  shared stream.
 - **Grading:** `expected: true` pass matchers on the lines that must appear
   for this use case; fail matchers with `heal_hint`s on error lines
   (`5\d\d|unhandled|panic`) and on sensitive data surfacing in logs
@@ -142,7 +149,10 @@ steps:
   exercising the use case); attach to the shared service instead when
   metrics flow through its log stream. Scraping a local endpoint needs
   `depends_on: [run-dev]`.
-- **Command:** `curl -sS http://localhost:9090/metrics | grep <key>`.
+- **Command:** compose the `metrics` core primitive (floor: `metrics_url,
+  name, labels, predicate, within`; it grades the predicate and emits the
+  scraped value), or fall back to
+  `curl -sS http://localhost:9090/metrics | grep <key>`.
 - **Grading:** `grep` exits 1 when the metric is absent — tolerate it and
   grade with an `expected: true` pass matcher on the metric line; the
   completeness fail (with a `heal_hint` naming the missing key) is the
@@ -153,9 +163,10 @@ steps:
 - **Validates:** the writes/migrations promised by the use case's `then`
   actually happened.
 - **Shape:** `assertion` / `computational` / `single-shot`. Compose the
-  `database-query` core primitive with the query and
-  `${{ fixtures.<id> }}`-bound identifiers; fall back to a stack CLI probe
-  (`psql -c`, `aws dynamodb get-item`).
+  `database-query` core primitive (floor: `query, params, expect_rows,
+  timeout`) with the query and `${{ fixtures.<id> }}`-bound identifiers —
+  bind `expect_rows: "0"` to assert an ABSENT write for failure variations;
+  fall back to a stack CLI probe (`psql -c`, `aws dynamodb get-item`).
 - **Grading:** pass matcher (`expected: true`) on the expected row/state in
   the query output; fail matcher with a `heal_hint` describing the expected
   vs. observed state when it is missing or mismatched.
@@ -165,7 +176,9 @@ steps:
 - **Validates:** latency, throughput, and resource ceilings for the use
   case's entry points.
 - **Shape:** `assertion` / `computational` / `single-shot`. Compose the
-  `performance` core primitive, or fall back to a load tool from the stack
+  `performance` core primitive (floor: `base_url, method, path, headers,
+  body, duration, rate, p95_budget_ms`; it emits `p95_ms=` and grades the
+  budget itself), or fall back to a load tool from the stack
   (`hey -n 100 <url>`, `k6 run script.js`); needs `depends_on: [run-dev]`.
 - **Grading:** normalize to one summary line (`perf p95_ms=N error_rate=P`),
   then threshold via matchers: `warn` approaching the ceiling, `fail` above

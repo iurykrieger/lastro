@@ -179,9 +179,9 @@ Common `kind` values on exit 2:
 - `unreferenced_input` — a declared input is never referenced as `${{ inputs.<name> }}`
   in any step; bind it in the run script or remove it.
 - `missing_dependency` — the stack manifest is not on disk.
-- `schema_violation` — a required field is missing or wrong shape.
+- `schema_violation` — a required field is missing or wrong shape, including a
+  `scope` that is not `core` or a `use_case_id` that is set.
 - `unknown_enum_value` — `kind`, `nature`, `scope`, or `output_type` is invalid.
-- `scope_violation` — the sensor's `scope` is not `core`, or `use_case_id` is set.
 
 ## Coverage check
 

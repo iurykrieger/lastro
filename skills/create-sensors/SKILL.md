@@ -100,7 +100,8 @@ A use-case sensor composes a core primitive via `uses:` + `with:`. Bind the inpu
 the use case needs — e.g. `headers` for an authenticated request, or
 `expect_status: "422"` so a failure variation *expects* the rejection. Every
 `with:` key MUST be a declared input of the composed primitive; an undeclared key
-fails validation with `unknown_with_key`.
+fails validation with `unknown_with_key` (the check needs `.harness/sensors/core/`
+on disk — run `/create-core-sensors` first).
 
 When the use case needs an input the primitive does not declare, evolve the core
 FIRST (the baseline floor is a minimum, not a ceiling):
@@ -108,7 +109,8 @@ FIRST (the baseline floor is a minimum, not a ceiling):
 1. Edit `.harness/sensors/core/<primitive-id>.yaml`: add the input with a
    backward-compatible default (`required: false, default: ""`) AND reference it
    as `${{ inputs.<name> }}` in the run script (unreferenced inputs are rejected).
-2. Re-persist the core via `harness-tools.sh create-core-sensors`.
+2. Re-persist the core: `<plugin-root>/scripts/harness-tools.sh create-core-sensors
+   --file .harness/sensors/core/<primitive-id>.yaml --harness-dir .harness`.
 3. Retry this use-case sensor.
 
 Grade over the primitive's normalized output lines (`status=`, `body=`, `rows=`,

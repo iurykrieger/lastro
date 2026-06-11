@@ -1,0 +1,64 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/branch-inventory.yaml"
+title: BranchInventory
+description: |
+  Deterministic output of the branch-scan engine: every logic branch found
+  in the application source. Branch ids are stable across unrelated edits
+  (hash of file|kind|condition|ordinal — line numbers are informational).
+  Use cases reference these ids via their `covers` list; the coverage
+  report scores detected use cases against this inventory.
+
+type: object
+required: [schema_version, source_root, files, branches]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  source_root:
+    type: string
+    minLength: 1
+    description: "Directory the scan walked, relative to the repo root"
+  files:
+    type: array
+    items:
+      type: object
+      required: [path, precision]
+      additionalProperties: false
+      properties:
+        path: { type: string, minLength: 1 }
+        precision:
+          type: string
+          description: "ast = exact parse; heuristic = regex line scan (approximate)"
+          enum: [ast, heuristic]
+  branches:
+    type: array
+    items: { $ref: "#/$defs/Branch" }
+
+$defs:
+  Branch:
+    type: object
+    required: [id, file, line, kind]
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+        pattern: "^br-[a-f0-9]{12}$"
+      file:
+        type: string
+        minLength: 1
+      line:
+        type: integer
+        minimum: 1
+        description: "1-based line at scan time; informational, not identity"
+      kind:
+        type: string
+        description: "Canonical source: schemas/enums/branch-kinds.yaml"
+        enum: [if, else-if, else, case, default, catch, ternary]
+      condition:
+        type: string
+        description: "Normalized condition text; empty for else/default"
+      enclosing:
+        type: string
+        description: "Enclosing function or method, when the analyzer knows it"

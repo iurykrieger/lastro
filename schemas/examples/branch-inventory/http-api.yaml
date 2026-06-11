@@ -1,0 +1,30 @@
+# BranchInventory example — engine output for a small Go HTTP API.
+schema_version: 1.0.0
+source_root: .
+files:
+  - { path: handlers/handlers.go, precision: ast }
+  - { path: src/routes/orders.js, precision: heuristic }
+branches:
+  - id: br-1f2e3d4c5b6a
+    file: handlers/handlers.go
+    line: 14
+    kind: if
+    condition: "r.Method != http.MethodPost"
+    enclosing: CreateOrder
+  - id: br-a1b2c3d4e5f6
+    file: handlers/handlers.go
+    line: 19
+    kind: if
+    condition: "err != nil"
+    enclosing: CreateOrder
+  - id: br-0d9c8b7a6f5e
+    file: handlers/handlers.go
+    line: 24
+    kind: else
+    condition: ""
+    enclosing: CreateOrder
+  - id: br-99aa88bb77cc
+    file: src/routes/orders.js
+    line: 31
+    kind: catch
+    condition: "catch (err)"

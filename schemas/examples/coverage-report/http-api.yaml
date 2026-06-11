@@ -1,0 +1,20 @@
+# CoverageReport example — three orders-journey use cases over a four-branch
+# inventory; one default clause remains uncovered.
+schema_version: 1.0.0
+total_branches: 4
+covered_branches: 3
+coverage_percent: 75.0
+journeys:
+  - journey: orders
+    use_cases: 3
+    success_count: 1
+    failure_count: 1
+    alternative_count: 1
+    covered_branches: 3
+uncovered:
+  - id: br-dddddddddddd
+    file: handlers/handlers.go
+    line: 16
+    kind: default
+    condition: ""
+    enclosing: route

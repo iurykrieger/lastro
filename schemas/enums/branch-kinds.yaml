@@ -1,0 +1,21 @@
+schema_version: 1.0.0
+title: BranchKind
+description: |
+  Syntactic kind of a logic branch extracted from application source by the
+  branch-scan engine. Canonical for branch-inventory entries.
+
+values:
+  - id: if
+    purpose: "An if statement's then-branch"
+  - id: else-if
+    purpose: "A chained else-if branch"
+  - id: else
+    purpose: "A trailing else branch (no condition)"
+  - id: case
+    purpose: "A switch/select/match case clause"
+  - id: default
+    purpose: "A switch/select/match default clause"
+  - id: catch
+    purpose: "An exception handler clause (heuristic languages)"
+  - id: ternary
+    purpose: "A conditional expression a ? b : c (heuristic languages)"

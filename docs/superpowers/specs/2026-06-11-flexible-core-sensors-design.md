@@ -57,10 +57,10 @@ Baselines:
 | angle | baseline inputs |
 |---|---|
 | `e2e-test` | `base_url`, `method`, `path`, `query`, `headers`, `body`, `expect_status`, `timeout` |
-| `database-query` | `query`, `params`, `expect_rows`, `timeout` |
-| `performance` | `method`, `path`, `headers`, `body`, `duration`, `rate`, `p95_budget_ms` |
+| `database` (primitive id `database-query`) | `query`, `params`, `expect_rows`, `timeout` |
+| `performance` | `base_url`, `method`, `path`, `headers`, `body`, `duration`, `rate`, `p95_budget_ms` |
 | `logs` | `pattern`, `anti_pattern`, `within`, `service` |
-| `metrics` | `name`, `labels`, `predicate`, `within` |
+| `metrics` | `metrics_url`, `name`, `labels`, `predicate`, `within` |
 
 Encoding (no `sensor.yaml` schema change — `with:` values stay strings):
 

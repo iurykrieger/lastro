@@ -10,6 +10,12 @@ func TestFSContainsKeySchemas(t *testing.T) {
 		"stack-manifest.yaml",
 		"enums/stack-kinds.yaml",
 		"enums/archetypes.yaml",
+		"core-input-baseline.yaml",
+		"core-inputs/e2e-test.yaml",
+		"core-inputs/database.yaml",
+		"core-inputs/performance.yaml",
+		"core-inputs/logs.yaml",
+		"core-inputs/metrics.yaml",
 	}
 	for _, name := range wanted {
 		b, err := FS.ReadFile(name)

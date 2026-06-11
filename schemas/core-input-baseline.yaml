@@ -1,0 +1,32 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/core-input-baseline.yaml"
+title: CoreInputBaseline
+description: |
+  The baseline input floor for one parameterized core-sensor angle. A
+  scope:core sensor whose angle has a baseline must declare at least these
+  inputs (each with a default). The floor is a minimum, not a ceiling —
+  primitives declare more inputs when a use case needs them.
+
+type: object
+required: [schema_version, angle, inputs]
+additionalProperties: false
+
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  angle:
+    type: string
+    description: "Canonical source: schemas/enums/validation-angles.yaml"
+    enum: [security, build, code-structure, unit-test, e2e-test,
+           contracts, logs, metrics, database, performance, environment]
+  inputs:
+    type: object
+    minProperties: 1
+    additionalProperties:
+      type: object
+      required: [description]
+      additionalProperties: false
+      properties:
+        description:       { type: string, minLength: 1 }
+        suggested_default: { type: string }

@@ -1,0 +1,27 @@
+schema_version: 1.0.0
+angle: e2e-test
+inputs:
+  base_url:
+    description: "Origin of the system under test (scheme://host:port, no trailing slash). Derive from the detected dev-server port."
+    suggested_default: "http://localhost:8080"
+  method:
+    description: "HTTP method"
+    suggested_default: "GET"
+  path:
+    description: "Request path, with leading slash"
+    suggested_default: "/"
+  query:
+    description: "Query string including the leading '?', or empty for none"
+    suggested_default: ""
+  headers:
+    description: "Newline-separated 'Key: value' header lines, or empty for none"
+    suggested_default: ""
+  body:
+    description: "Path to the request-body file (a fixture payload path), or empty for no body"
+    suggested_default: ""
+  expect_status:
+    description: "Expected response status: a class ('2xx', '4xx') or an exact code ('422'). Unmet expectation exits 1 with an 'expectation-unmet' line."
+    suggested_default: "2xx"
+  timeout:
+    description: "Request timeout in seconds (plain number string, feeds curl --max-time)"
+    suggested_default: "10"

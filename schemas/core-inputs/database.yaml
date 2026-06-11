@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+angle: database
+inputs:
+  query:
+    description: "The query to run, in the detected datastore's native dialect"
+    suggested_default: "SELECT 1"
+  params:
+    description: "JSON-encoded array string of positional query parameters, e.g. '[\"42\", \"BRL\"]'"
+    suggested_default: "[]"
+  expect_rows:
+    description: "Expected result rows: exact count ('0', '1') or lower bound ('>=1'). '0' asserts an ABSENT write (failure variations)."
+    suggested_default: ">=1"
+  timeout:
+    description: "Query timeout in seconds (plain number string)"
+    suggested_default: "10"

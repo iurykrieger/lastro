@@ -383,3 +383,100 @@ steps:
 		t.Fatalf("sensor file written despite missing stack manifest: stat=%v", statErr)
 	}
 }
+
+// fullCoreE2EYAML satisfies the e2e-test baseline floor and references
+// every declared input. Commands (echo) resolve on any POSIX dev machine.
+const fullCoreE2EYAML = `schema_version: 1.0.0
+id: e2e-test
+scope: core
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+inputs:
+  base_url:      { required: true,  default: "http://localhost:8080" }
+  method:        { required: true,  default: GET }
+  path:          { required: true,  default: / }
+  query:         { required: false, default: "" }
+  headers:       { required: false, default: "" }
+  body:          { required: false, default: "" }
+  expect_status: { required: true,  default: 2xx }
+  timeout:       { required: false, default: "10" }
+steps:
+  - id: request
+    run: |
+      echo "${{ inputs.base_url }} ${{ inputs.method }} ${{ inputs.path }}"
+      echo "${{ inputs.query }} ${{ inputs.headers }} ${{ inputs.body }}"
+      echo "${{ inputs.expect_status }} ${{ inputs.timeout }}"
+`
+
+func TestPersist_CoreSensor_FullBaselinePasses(t *testing.T) {
+	dir := seedHappyPath(t, t.TempDir())
+	if err := Persist([]byte(fullCoreE2EYAML), dir); err != nil {
+		t.Fatalf("full-floor core sensor must persist: %v", err)
+	}
+}
+
+func TestPersist_CoreSensor_IncompleteInputSurface(t *testing.T) {
+	dir := seedHappyPath(t, t.TempDir())
+	content := []byte(`schema_version: 1.0.0
+id: e2e-test
+scope: core
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+inputs:
+  method: { required: true, default: GET }
+steps:
+  - id: request
+    run: 'echo "${{ inputs.method }}"'
+`)
+	err := Persist(content, dir)
+	var pe *persisterror.Error
+	if !errors.As(err, &pe) {
+		t.Fatalf("want *persisterror.Error, got %v", err)
+	}
+	if pe.Kind != persisterror.IncompleteInputSurface {
+		t.Fatalf("Kind=%q, want %q (err: %v)", pe.Kind, persisterror.IncompleteInputSurface, err)
+	}
+}
+
+func TestPersist_CoreSensor_UnreferencedInput(t *testing.T) {
+	dir := seedHappyPath(t, t.TempDir())
+	// Full floor declared, but expect_status is never referenced in run.
+	content := []byte(`schema_version: 1.0.0
+id: e2e-test
+scope: core
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+inputs:
+  base_url:      { required: true,  default: "http://localhost:8080" }
+  method:        { required: true,  default: GET }
+  path:          { required: true,  default: / }
+  query:         { required: false, default: "" }
+  headers:       { required: false, default: "" }
+  body:          { required: false, default: "" }
+  expect_status: { required: true,  default: 2xx }
+  timeout:       { required: false, default: "10" }
+steps:
+  - id: request
+    run: |
+      echo "${{ inputs.base_url }} ${{ inputs.method }} ${{ inputs.path }}"
+      echo "${{ inputs.query }} ${{ inputs.headers }} ${{ inputs.body }}"
+      echo "${{ inputs.timeout }}"
+`)
+	err := Persist(content, dir)
+	var pe *persisterror.Error
+	if !errors.As(err, &pe) {
+		t.Fatalf("want *persisterror.Error, got %v", err)
+	}
+	if pe.Kind != persisterror.UnreferencedInput {
+		t.Fatalf("Kind=%q, want %q (err: %v)", pe.Kind, persisterror.UnreferencedInput, err)
+	}
+}

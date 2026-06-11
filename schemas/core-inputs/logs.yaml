@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+angle: logs
+inputs:
+  pattern:
+    description: "Go RE2 regex that MUST appear in the watched stream within the window"
+    suggested_default: ".+"
+  anti_pattern:
+    description: "Go RE2 regex that must NOT appear; empty disables the check"
+    suggested_default: ""
+  within:
+    description: "Watch window as a Go duration string"
+    suggested_default: "45s"
+  service:
+    description: "Id of the shared observational core service whose stream is watched"
+    suggested_default: "run-dev"

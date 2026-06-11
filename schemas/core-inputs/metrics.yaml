@@ -1,0 +1,18 @@
+schema_version: 1.0.0
+angle: metrics
+inputs:
+  metrics_url:
+    description: "Full URL of the metrics scrape endpoint"
+    suggested_default: "http://localhost:8080/metrics"
+  name:
+    description: "Metric name to assert on; empty matches any metric line (smoke mode)"
+    suggested_default: ""
+  labels:
+    description: "Newline-separated 'key=value' label filters, or empty"
+    suggested_default: ""
+  predicate:
+    description: "Comparison over the scraped value, e.g. '>0', '>=1'; unmet predicate exits 1 with an 'expectation-unmet' line"
+    suggested_default: ">=0"
+  within:
+    description: "How long to keep re-scraping before giving up, as a Go duration string"
+    suggested_default: "45s"

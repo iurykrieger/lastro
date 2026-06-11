@@ -129,6 +129,14 @@ func persistCreateSensors(args []string, stdout, stderr io.Writer) int {
 			_ = json.NewEncoder(stdout).Encode(pe)
 			return 2
 		}
+		if wkErr := sensor.ValidateWithKeys(s, store); wkErr != nil {
+			pe := &persisterror.Error{
+				Kind: persisterror.UnknownWithKey, EntityType: "sensor", EntityID: s.ID,
+				Message: "with-key validation: " + wkErr.Error(),
+			}
+			_ = json.NewEncoder(stdout).Encode(pe)
+			return 2
+		}
 	} else {
 		fmt.Fprintln(stderr, "warning: .harness/sensors/core/ not found; skipping composition validation")
 	}

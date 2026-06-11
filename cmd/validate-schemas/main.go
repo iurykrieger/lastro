@@ -17,6 +17,7 @@ var entities = []string{
 	"stack-component", "entry-point", "use-case", "fixture",
 	"sensor", "signal", "aggregate-signal", "validation-policy",
 	"stack-manifest", "branch-inventory", "coverage-report",
+	"core-input-baseline",
 }
 
 var enums = []string{
@@ -100,6 +101,32 @@ func main() {
 				}
 			}
 		}
+	}
+
+	// Validate each core-input baseline against core-input-baseline.yaml.
+	if blSch, ok := schemas["core-input-baseline"]; ok {
+		blFiles, globErr := filepath.Glob(filepath.Join("schemas", "core-inputs", "*.yaml"))
+		if globErr != nil {
+			errs = append(errs, fmt.Sprintf("glob core-inputs: %v", globErr))
+		}
+		if globErr == nil && len(blFiles) == 0 {
+			errs = append(errs, "no core-input baseline files found under schemas/core-inputs/")
+		}
+		sort.Strings(blFiles)
+		for _, p := range blFiles {
+			doc, err := loadYAMLAsAny(p)
+			if err != nil {
+				errs = append(errs, err.Error())
+				continue
+			}
+			if err := blSch.Validate(doc); err != nil {
+				errs = append(errs, fmt.Sprintf("FAIL %s: %v", p, err))
+			} else {
+				fmt.Printf("OK %s matches core-input-baseline.yaml\n", p)
+			}
+		}
+	} else {
+		errs = append(errs, "skipping core-input validation: core-input-baseline schema did not compile")
 	}
 
 	// Validate each example against its entity schema.

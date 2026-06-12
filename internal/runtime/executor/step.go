@@ -258,4 +258,3 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 		Outputs:           stepOut,
 	}, errors.Join(stdoutRes.err) // stderr errors are non-fatal
 }
-

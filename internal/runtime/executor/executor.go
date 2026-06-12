@@ -191,44 +191,44 @@ func (e *Executor) Run(
 		termReason = enums.TerminationError
 		stepErr = &MissingEnvError{Names: missing, EnvFile: view.source}
 	} else {
-	for _, step := range s.Steps {
-		// Build the step-output env from outputs collected by prior
-		// top-level steps. Computed fresh per top-level step so the inner
-		// steps of a uses-step also see earlier consumer-step outputs.
-		stepOutEnv := map[string]string{}
-		for sid, kv := range stepOutputs {
-			for name, val := range kv {
-				stepOutEnv[stepOutEnvName(sid, name)] = val
+		for _, step := range s.Steps {
+			// Build the step-output env from outputs collected by prior
+			// top-level steps. Computed fresh per top-level step so the inner
+			// steps of a uses-step also see earlier consumer-step outputs.
+			stepOutEnv := map[string]string{}
+			for sid, kv := range stepOutputs {
+				for name, val := range kv {
+					stepOutEnv[stepOutEnvName(sid, name)] = val
+				}
+			}
+
+			res := e.execTopStep(ctx, topStepArgs{
+				Sensor:      s,
+				Step:        step,
+				GlobalIdx:   &globalIdx,
+				RunDir:      runDir,
+				UseCase:     uc,
+				ExpectedObs: expectedObs,
+				Obs:         obs,
+				RawLog:      rl,
+				SignalsW:    sw,
+				Stop:        stop,
+				StepOutEnv:  stepOutEnv,
+				Redactor:    red,
+				EnvView:     view,
+			})
+
+			// Store re-exported outputs for use by subsequent steps.
+			stepOutputs[step.ID] = res.Outputs
+			allSignals = append(allSignals, toAggregateSignals(res.Signals)...)
+			observedKeys = append(observedKeys, res.ObservationKeys...)
+
+			if res.TermReason != enums.TerminationCompleted {
+				termReason = res.TermReason
+				stepErr = res.StepErr
+				break
 			}
 		}
-
-		res := e.execTopStep(ctx, topStepArgs{
-			Sensor:      s,
-			Step:        step,
-			GlobalIdx:   &globalIdx,
-			RunDir:      runDir,
-			UseCase:     uc,
-			ExpectedObs: expectedObs,
-			Obs:         obs,
-			RawLog:      rl,
-			SignalsW:    sw,
-			Stop:        stop,
-			StepOutEnv:  stepOutEnv,
-			Redactor:    red,
-			EnvView:     view,
-		})
-
-		// Store re-exported outputs for use by subsequent steps.
-		stepOutputs[step.ID] = res.Outputs
-		allSignals = append(allSignals, toAggregateSignals(res.Signals)...)
-		observedKeys = append(observedKeys, res.ObservationKeys...)
-
-		if res.TermReason != enums.TerminationCompleted {
-			termReason = res.TermReason
-			stepErr = res.StepErr
-			break
-		}
-	}
 	} // end env preflight else
 
 	endedAt := e.opts.Now()

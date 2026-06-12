@@ -2,6 +2,7 @@ package executor
 
 import (
 	"encoding/json"
+	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -23,6 +24,9 @@ type MissingEnvError struct {
 }
 
 func (e *MissingEnvError) Error() string {
+	if e.Step > 0 {
+		return fmt.Sprintf("executor: step %d: missing required env var(s): %s", e.Step, strings.Join(e.Names, ", "))
+	}
 	return "executor: missing required env var(s): " + strings.Join(e.Names, ", ")
 }
 
@@ -50,6 +54,7 @@ func missingEnvSignal(s sensor.Sensor, names []string, envFile string, now func(
 		sources += " and " + envFile
 	}
 	return envProblemSignal(s, "missing-env",
+		// comma-separated, no spaces: machine-parseable
 		signal.Evidence{"missing": strings.Join(names, ","), "sources": sources},
 		"Missing required env var(s): "+strings.Join(names, ", "),
 		"The step needs ambient configuration the harness could not find in the "+sources+

@@ -495,7 +495,8 @@ func TestRun_SensorDeclaredRequiredEnvBlocksAllSteps(t *testing.T) {
 		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
 		Now:           fixedExecNow,
 	})
-	agg, err := ex.Run(context.Background(), s, t.TempDir(), nil, nil)
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), s, runDir, nil, nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -504,6 +505,10 @@ func TestRun_SensorDeclaredRequiredEnvBlocksAllSteps(t *testing.T) {
 	}
 	if _, statErr := os.Stat(marker); statErr == nil {
 		t.Error("step ran despite missing required env (must be pre-spawn)")
+	}
+	b, _ := os.ReadFile(filepath.Join(runDir, "signals.jsonl"))
+	if !strings.Contains(string(b), "missing-env") || !strings.Contains(string(b), "HARNESS_T9_REQ") {
+		t.Errorf("signals.jsonl missing the typed missing-env record: %s", b)
 	}
 }
 

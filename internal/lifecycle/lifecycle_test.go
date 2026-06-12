@@ -535,9 +535,9 @@ func TestRunSensor_ForwardsEnvFileToPerRunExecutor(t *testing.T) {
 	store := &stubSensorStore{by: map[string]sensor.Sensor{s.ID: s}}
 	uc := &usecase.UseCase{ID: "lifecycle-uc"}
 	ex := rxexec.New(rxexec.Options{
-		RepoRoot: repo,
-		EnvFile:  envFile,
-		Resolver: &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		RepoRoot:      repo,
+		EnvFile:       envFile,
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
 		FixtureStore:  emptyStore{},
 		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
 	})

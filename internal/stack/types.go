@@ -41,12 +41,14 @@ func (e EvidenceRef) String() string {
 // archetype, applicable validation angles (derived from archetype), plus
 // the ordered list of detected StackComponents.
 type StackManifest struct {
-	SchemaVersion    string                  `json:"schema_version" yaml:"schema_version"`
-	Archetype        enums.Archetype         `json:"archetype" yaml:"archetype"`
+	SchemaVersion string          `json:"schema_version" yaml:"schema_version"`
+	Archetype     enums.Archetype `json:"archetype" yaml:"archetype"`
+
 	// EnvFile is the project-root-relative dotenv path the application
 	// loads (optional). Recorded by /detect-stack; the runtime injects its
 	// values into every step's process env, host environment winning.
-	EnvFile          string                  `json:"env_file,omitempty" yaml:"env_file,omitempty"`
+	EnvFile string `json:"env_file,omitempty" yaml:"env_file,omitempty"`
+
 	ApplicableAngles []enums.ValidationAngle `json:"applicable_angles" yaml:"applicable_angles"`
 	Components       []StackComponent        `json:"components" yaml:"components"`
 

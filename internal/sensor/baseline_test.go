@@ -326,3 +326,18 @@ func TestValidateInputReferences_ZeroStepsFails(t *testing.T) {
 		t.Fatal("inputs with no steps should fail: no step can reference them")
 	}
 }
+
+func TestValidateInputReferences_EnvValueCounts(t *testing.T) {
+	s := Sensor{
+		Scope:  enums.ScopeCore,
+		Inputs: map[string]InputSpec{"persona": {Default: "default", HasDefault: true}},
+		Steps: []Step{{
+			ID:  "mint",
+			Run: "echo ok",
+			Env: map[string]string{"PERSONA": "${{ inputs.persona }}"},
+		}},
+	}
+	if err := ValidateInputReferences(s); err != nil {
+		t.Errorf("input referenced in step env should count: %v", err)
+	}
+}

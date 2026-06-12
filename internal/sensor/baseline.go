@@ -177,6 +177,10 @@ func ValidateInputReferences(s Sensor) error {
 			blob.WriteString(v)
 			blob.WriteByte('\n')
 		}
+		for _, v := range st.Env {
+			blob.WriteString(v)
+			blob.WriteByte('\n')
+		}
 	}
 	// outputs.from references ${{ steps.<id>.outputs.<key> }} by schema
 	// convention, never ${{ inputs.<name> }}, so it is intentionally

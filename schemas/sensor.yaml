@@ -72,6 +72,22 @@ properties:
       properties:
         from:        { type: string, minLength: 1 }
         description: { type: string }
+  env:
+    type: object
+    description: |
+      Ambient environment variables this sensor's recipes read from the
+      process environment (secrets, connection strings — not declared
+      inputs). Before spawning any step the runtime verifies every
+      required name is present and non-empty in the merged host+env_file
+      view and emits a typed missing-env signal (verdict inconclusive)
+      otherwise. `required` defaults to true.
+    propertyNames: { pattern: "^[A-Z_][A-Z0-9_]*$" }
+    additionalProperties:
+      type: object
+      additionalProperties: false
+      properties:
+        required:    { type: boolean, default: true }
+        description: { type: string }
   observe_window:
     type: string
     description: |
@@ -138,4 +154,13 @@ $defs:
       uses: { $ref: "#/$defs/Id" }
       with:
         type: object
+        additionalProperties: { type: string }
+      env:
+        type: object
+        description: |
+          Environment variables injected into this step's process (and, on
+          a uses-step, into every inner step of the expansion). Values
+          support the full ${{ }} surface; values resolved from refs are
+          redacted in raw.log/signals.jsonl, inline literals are not.
+        propertyNames: { pattern: "^[A-Z_][A-Z0-9_]*$" }
         additionalProperties: { type: string }

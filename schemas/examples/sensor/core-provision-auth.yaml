@@ -31,6 +31,9 @@ inputs:
   persona: { required: false, default: default }
 outputs:
   header: { from: "${{ steps.mint.outputs.header }}" }
+env:
+  NEXTAUTH_SECRET:
+    description: "Session-signing secret the mint recipe encodes JWTs with; must equal the value the dev server loaded so encode/decode agree"
 signal_matches:
   - key: auth-provisioned
     pattern: "auth-provisioned kind=(?P<kind>\\S+) persona=(?P<persona>\\S+)"

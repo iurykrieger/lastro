@@ -77,17 +77,21 @@ unquotes the expansion and word-splits multi-word values (auth headers!).
 
 ### Auth provisioning (`provision-auth`)
 
-Emit when any detected route requires credentials (session middleware, API
-keys). Floor: `schemas/core-inputs/provision-auth.yaml` (`kind`:
-session|api-key|none, `persona`); canonical shape:
+Emit when any detected route requires credentials (session middleware,
+bearer/JWT guards, API keys, Basic). Floor:
+`schemas/core-inputs/provision-auth.yaml` (`kind`:
+session|bearer|api-key|basic|none, `persona`); canonical shape:
 `schemas/examples/sensor/core-provision-auth.yaml`. Contract:
 `angle: environment`, `assertion`/`single-shot`, `depends_on` the service
 the recipe needs; re-export output `header` — ONE ready-to-send header line
-(`Cookie: ...` or `Authorization: Bearer ...`, empty for kind=none) written
-as `header=` to `$HARNESS_OUTPUT`. Recipes are stack-native and derived
+(`Cookie: ...`, `Authorization: Bearer ...`, `Authorization: Basic ...`;
+empty for kind=none) written as `header=` to `$HARNESS_OUTPUT`. Implement
+every kind a detected route accepts; recipes are stack-native and derived
 from the manifest: mint the session credential with the app's own
 dependency and secret (e.g. NextAuth JWT via `node` + `NEXTAUTH_SECRET`),
-or seed an API-key row through the app's db tooling. When minting fails,
+obtain a bearer token from the app's login/token endpoint, seed an API-key
+row through the app's db tooling, or Base64 a seeded user's credentials
+for Basic. When minting fails,
 print `auth-not-provisioned kind=<k> reason=<r>` and exit 1 — covered by a
 `verdict: inconclusive` matcher (never `fail`: the endpoint under test was
 never reached). Use-case sensors compose it before their request step and

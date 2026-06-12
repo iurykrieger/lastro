@@ -87,7 +87,7 @@ the same line — the fail wins.
   steps:
     - id: auth
       uses: provision-auth
-      with: { kind: session, persona: seeded-owner }   # api-key for key-auth routes
+      with: { kind: session, persona: seeded-owner }   # or bearer | api-key | basic
     - id: request
       uses: e2e-test
       with:
@@ -95,8 +95,10 @@ the same line — the fail wins.
         # method/path/body/expect_status as usual
   ```
 
-  Pick `kind` from what the route accepts (session-only, key-or-session,
-  key-only). If `.harness/sensors/core/provision-auth.yaml` does not exist,
+  Pick `kind` from the scheme the route accepts: `session` (cookie),
+  `bearer` (JWT/opaque token), `api-key`, or `basic` — routes accepting
+  several get one sensor per asserted scheme, not a merged one. If
+  `.harness/sensors/core/provision-auth.yaml` does not exist,
   do NOT emit a sensor that asserts through the gate — it would fail (or
   coincidentally pass) for the wrong reason. Emit only the reachable
   variation (e.g. `failure-unauthenticated`) and report the others as

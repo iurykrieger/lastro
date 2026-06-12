@@ -55,11 +55,25 @@ steps:
           printf 'header=Cookie: session-token=%s\n' "$token" >> "$HARNESS_OUTPUT"
           printf 'auth-provisioned kind=session persona=%s\n' "${{ inputs.persona }}"
           ;;
+        bearer)
+          # Recipe: obtain a JWT from the app's login/token endpoint with the
+          # persona's seeded credentials (or mint one with the signing secret).
+          token=$(node .harness/recipes/login-token.js "${{ inputs.persona }}") || {
+            printf 'auth-not-provisioned kind=bearer reason=token-failed\n'; exit 1; }
+          printf 'header=Authorization: Bearer %s\n' "$token" >> "$HARNESS_OUTPUT"
+          printf 'auth-provisioned kind=bearer persona=%s\n' "${{ inputs.persona }}"
+          ;;
         api-key)
           key=$(node .harness/recipes/seed-api-key.js "${{ inputs.persona }}") || {
             printf 'auth-not-provisioned kind=api-key reason=seed-failed\n'; exit 1; }
           printf 'header=Authorization: Bearer %s\n' "$key" >> "$HARNESS_OUTPUT"
           printf 'auth-provisioned kind=api-key persona=%s\n' "${{ inputs.persona }}"
+          ;;
+        basic)
+          creds=$(node .harness/recipes/seeded-credentials.js "${{ inputs.persona }}") || {
+            printf 'auth-not-provisioned kind=basic reason=no-seeded-user\n'; exit 1; }
+          printf 'header=Authorization: Basic %s\n' "$(printf '%s' "$creds" | base64 | tr -d '\n')" >> "$HARNESS_OUTPUT"
+          printf 'auth-provisioned kind=basic persona=%s\n' "${{ inputs.persona }}"
           ;;
         *)
           printf 'auth-not-provisioned kind=%s reason=unknown-kind\n' "${{ inputs.kind }}"

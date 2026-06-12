@@ -341,3 +341,32 @@ func TestValidateInputReferences_EnvValueCounts(t *testing.T) {
 		t.Errorf("input referenced in step env should count: %v", err)
 	}
 }
+
+// TestValidateInputReferences_UnreferencedWithEnvPresentFails asserts that a
+// declared input that does not appear in any step's Run, With, or Env values
+// still fails validation even when the step carries an unrelated env entry.
+// This guards against Env scanning accidentally satisfying inputs by proximity
+// rather than by actual reference.
+func TestValidateInputReferences_UnreferencedWithEnvPresentFails(t *testing.T) {
+	s := Sensor{
+		ID:    "e2e-test",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleE2ETest,
+		Inputs: map[string]InputSpec{
+			"expect_status": {HasDefault: true},
+		},
+		Steps: []Step{{
+			ID:  "request",
+			Run: "curl http://x/",
+			// An unrelated env key is present; it must not satisfy expect_status.
+			Env: map[string]string{"OTHER": "literal"},
+		}},
+	}
+	err := ValidateInputReferences(s)
+	if err == nil {
+		t.Fatal("input unreferenced in any step Run/With/Env value must fail")
+	}
+	if !strings.Contains(err.Error(), "expect_status") {
+		t.Fatalf("error should name the unreferenced input, got: %v", err)
+	}
+}

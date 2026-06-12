@@ -298,6 +298,9 @@ steps:
 	if got := s.Steps[0].Env["NODE_ENV"]; got != "test" {
 		t.Errorf("step env NODE_ENV = %q, want test", got)
 	}
+	if got := s.Steps[0].Env["DATABASE_URL"]; got != "${{ env.DATABASE_URL }}" {
+		t.Errorf("step env DATABASE_URL = %q, want %q (unevaluated ref)", got, "${{ env.DATABASE_URL }}")
+	}
 }
 
 func TestLoadSensor_EnvRejectsBadNames(t *testing.T) {

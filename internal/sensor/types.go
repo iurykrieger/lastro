@@ -107,6 +107,9 @@ type EnvSpec struct {
 
 // IsRequired reports whether the variable must be present and non-empty
 // in the merged host+env_file view before any step spawns.
+// Zero-value caveat: indexing a nil or empty map with a missing key yields
+// the zero EnvSpec (Required == nil), so IsRequired returns true. Callers
+// must check map presence before indexing by name to avoid a false positive.
 func (e EnvSpec) IsRequired() bool { return e.Required == nil || *e.Required }
 
 // UseCaseFixtureOwnership is the seam between this package and the

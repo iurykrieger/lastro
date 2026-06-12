@@ -88,11 +88,15 @@ func Persist(content []byte, harnessDir string) error {
 			}
 		}
 		if err := ValidateBaselineInputs(s, baselines); err != nil {
+			floorFile := string(s.Angle)
+			if bl, ok := FloorFor(s, baselines); ok {
+				floorFile = bl.key()
+			}
 			return &persisterror.Error{
 				Kind:       persisterror.IncompleteInputSurface,
 				EntityType: "sensor",
 				EntityID:   s.ID,
-				Expected:   fmt.Sprintf("at least the inputs in schemas/core-inputs/%s.yaml, each with a default", s.Angle),
+				Expected:   fmt.Sprintf("at least the inputs in schemas/core-inputs/%s.yaml, each with a default", floorFile),
 				Message:    err.Error(),
 			}
 		}

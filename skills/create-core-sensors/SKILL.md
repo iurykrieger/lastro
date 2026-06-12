@@ -20,18 +20,21 @@ Use the Read tool to load:
 
 1. `.harness/stack-manifest.yaml` — note `archetype`, `applicable_angles`, and
    `components[*].id` (the only valid ids for sensor-level `uses:`).
-2. `<plugin-root>/schemas/core-inputs/<angle>.yaml` for each parameterized
-   angle you will emit — the **baseline input floor**: the inputs the
-   primitive MUST declare, with descriptions and suggested defaults.
+2. `<plugin-root>/schemas/core-inputs/*.yaml` for each parameterized
+   primitive you will emit — the **baseline input floor**: the inputs the
+   primitive MUST declare, with descriptions and suggested defaults. Floors
+   are keyed by angle (`e2e-test.yaml`) or by primitive id when the angle has
+   floorless siblings (`provision-auth.yaml`).
 
 ## Two categories of core sensor
 
-### Parameterized primitives (angle-typed, composable)
+### Parameterized primitives (composable)
 
-One per applicable parameterized angle: `e2e-test`, `database` (primitive id
-`database-query`), `performance`, `logs`, `metrics`. Use-case sensors compose
-them via `uses:` + `with:` to validate any journey variation — success,
-failure (expected rejections), alternative.
+One per applicable parameterized primitive: `e2e-test`, `database` (primitive
+id `database-query`), `performance`, `logs`, `metrics`, and — when the
+manifest shows an authenticated surface — `provision-auth`. Use-case sensors
+compose them via `uses:` + `with:` to validate any journey variation —
+success, failure (expected rejections), alternative.
 
 Rules:
 - Declare `inputs:` covering **at least** the angle's baseline floor; declare
@@ -63,19 +66,32 @@ Rules:
 
 The canonical full shape — inputs, outputs, matcher, and the graded curl
 run — is `schemas/examples/sensor/core-e2e-primitive.yaml`. Follow it
-closely; the e2e-test floor is:
+closely; the floor is `schemas/core-inputs/e2e-test.yaml` (`base_url`
+derived from the manifest's dev-server port, `method`, `path`, `query`,
+`headers`, `body`, `expect_status`, `timeout`).
 
-```yaml
-inputs:
-  base_url:      { required: true,  default: "http://localhost:8080" }  # from manifest
-  method:        { required: true,  default: GET }
-  path:          { required: true,  default: /health_check/ready }
-  query:         { required: false, default: "" }
-  headers:       { required: false, default: "" }   # newline-separated "K: v"
-  body:          { required: false, default: "" }   # fixture payload path
-  expect_status: { required: true,  default: 2xx }  # class (2xx/4xx) or exact (422)
-  timeout:       { required: false, default: "10" } # seconds
-```
+**Quoting rule (all run scripts):** never wrap a `${{ ... }}` ref in your
+own quotes — each ref already renders as a safely quoted `"${HARNESS_*}"`
+env reference. `'${{ inputs.method }}'` stays a literal; `"${{ inputs.headers }}"`
+unquotes the expansion and word-splits multi-word values (auth headers!).
+
+### Auth provisioning (`provision-auth`)
+
+Emit when any detected route requires credentials (session middleware, API
+keys). Floor: `schemas/core-inputs/provision-auth.yaml` (`kind`:
+session|api-key|none, `persona`); canonical shape:
+`schemas/examples/sensor/core-provision-auth.yaml`. Contract:
+`angle: environment`, `assertion`/`single-shot`, `depends_on` the service
+the recipe needs; re-export output `header` — ONE ready-to-send header line
+(`Cookie: ...` or `Authorization: Bearer ...`, empty for kind=none) written
+as `header=` to `$HARNESS_OUTPUT`. Recipes are stack-native and derived
+from the manifest: mint the session credential with the app's own
+dependency and secret (e.g. NextAuth JWT via `node` + `NEXTAUTH_SECRET`),
+or seed an API-key row through the app's db tooling. When minting fails,
+print `auth-not-provisioned kind=<k> reason=<r>` and exit 1 — covered by a
+`verdict: inconclusive` matcher (never `fail`: the endpoint under test was
+never reached). Use-case sensors compose it before their request step and
+bind `headers: "${{ steps.<auth-step>.outputs.header }}"`.
 
 ### Environment primitives (lifecycle, no inputs)
 
@@ -124,24 +140,10 @@ Derive patterns from the logging library in `stack-manifest.yaml`:
 - For fail/warn matchers, provide a `heal_hint: {summary, rationale}`.
 
 Example shape (environment primitive, observational/stream):
-
-```yaml
-id: run-dev
-scope: core
-angle: environment
-kind: observational
-nature: computational
-output_type: stream
-uses: [docker-compose]
-signal_matches:
-  - { key: ready,         pattern: "api ready|listening on", verdict: pass, expected: true }   # reserved readiness key
-  - { key: log-line,      pattern: ".+",                     verdict: pass }                    # firehose
-  - { key: startup-error, pattern: "Error|error|fatal",      verdict: fail, heal_hint: { summary: "Service failed to start", rationale: "Check container logs for the failing service." } }
-steps:
-  - id: up
-    run: |
-      docker compose --profile dev up   # foreground, blocking — NO -d
-```
+`schemas/examples/sensor/core-run-dev.yaml` — note the reserved
+`key: ready` matcher (`expected: true`), the `key: log-line` firehose, a
+`fail` matcher with `heal_hint` on startup errors, and the single
+foreground `docker compose --profile dev up` step (NO `-d`).
 
 ## What to emit
 

@@ -36,13 +36,30 @@ func Rollup(in RollupInput) (AggregateSignal, error) {
 }
 
 func computeVerdict(in RollupInput, a AggregateSignal) enums.Verdict {
-	// Rule 1: observational + missing observations → fail (overrides all).
+	// Rule 0: error termination → a step crashed before the run finished,
+	// so expected observations are vacuously missing — a harness problem,
+	// not behavioral evidence. Explicit fail signals still win; otherwise
+	// the sensor cannot judge (inconclusive). Ordered before completeness
+	// so an aborted precondition (e.g. auth provisioning, issue #45) does
+	// not masquerade as a behavioral fail. Timeout is NOT excused here: a
+	// watcher whose expected line never appeared within its window is a
+	// real fail, handled by Rule 1.
+	if in.TerminationReason == enums.TerminationError {
+		for _, s := range in.Signals {
+			if s.Verdict == enums.VerdictFail {
+				return enums.VerdictFail
+			}
+		}
+		return enums.VerdictInconclusive
+	}
+
+	// Rule 1: missing observations → fail (overrides all but Rule 0).
 	if a.Completeness != nil && len(a.Completeness.MissingObservations) > 0 {
 		return enums.VerdictFail
 	}
 
-	// Rules 2 + 3: timeout / error termination → fail wins, else inconclusive.
-	if in.TerminationReason == enums.TerminationTimeout || in.TerminationReason == enums.TerminationError {
+	// Rules 2 + 3: timeout termination → fail wins, else inconclusive.
+	if in.TerminationReason == enums.TerminationTimeout {
 		for _, s := range in.Signals {
 			if s.Verdict == enums.VerdictFail {
 				return enums.VerdictFail

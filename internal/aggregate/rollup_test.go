@@ -189,6 +189,56 @@ func TestRollupErrorTreatedLikeTimeout(t *testing.T) {
 	}
 }
 
+func TestRollupErrorTerminationBeatsCompleteness(t *testing.T) {
+	// A step crashed before the run could finish (e.g. an auth-provisioning
+	// recipe failed): the expected observations are vacuously missing — that
+	// is a harness problem, not behavioral evidence. The verdict must be
+	// inconclusive, not a misleading fail (issue #45).
+	in := baseInput(nil)
+	in.Kind = enums.KindAssertion
+	in.TerminationReason = enums.TerminationError
+	in.ExpectedObservations = []string{"created"}
+	in.ObservedKeys = nil
+	got, err := Rollup(in)
+	if err != nil {
+		t.Fatalf("Rollup: %v", err)
+	}
+	if got.Verdict != enums.VerdictInconclusive {
+		t.Errorf("Verdict = %q, want inconclusive (error termination must beat completeness)", got.Verdict)
+	}
+}
+
+func TestRollupErrorTerminationWithFailSignalStaysFail(t *testing.T) {
+	in := baseInput([]signalstub.Signal{sig(enums.VerdictFail)})
+	in.TerminationReason = enums.TerminationError
+	in.ExpectedObservations = []string{"created"}
+	got, err := Rollup(in)
+	if err != nil {
+		t.Fatalf("Rollup: %v", err)
+	}
+	if got.Verdict != enums.VerdictFail {
+		t.Errorf("Verdict = %q, want fail (explicit fail signal wins on errored runs)", got.Verdict)
+	}
+}
+
+func TestRollupTimeoutMissingObservationsStillFails(t *testing.T) {
+	// Timeout keeps completeness-first semantics: an observational watcher
+	// whose expected line never appeared within its window is a behavioral
+	// fail, not a harness error.
+	in := baseInput([]signalstub.Signal{sig(enums.VerdictPass)})
+	in.Kind = enums.KindObservational
+	in.TerminationReason = enums.TerminationTimeout
+	in.ExpectedObservations = []string{"ready"}
+	in.ObservedKeys = nil
+	got, err := Rollup(in)
+	if err != nil {
+		t.Fatalf("Rollup: %v", err)
+	}
+	if got.Verdict != enums.VerdictFail {
+		t.Errorf("Verdict = %q, want fail (timeout does not excuse missing observations)", got.Verdict)
+	}
+}
+
 func TestRollupObservationalMissingOverridesPasses(t *testing.T) {
 	in := baseInput([]signalstub.Signal{sig(enums.VerdictPass), sig(enums.VerdictPass)})
 	in.Kind = enums.KindObservational

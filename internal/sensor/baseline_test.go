@@ -11,21 +11,48 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func TestLoadBaselines_AllFiveAngles(t *testing.T) {
+func TestLoadBaselines_AllFloors(t *testing.T) {
 	baselines, err := LoadBaselines()
 	if err != nil {
 		t.Fatalf("LoadBaselines: %v", err)
 	}
-	wantAngles := []enums.ValidationAngle{
-		enums.AngleE2ETest, enums.AngleDatabase, enums.AnglePerformance,
-		enums.AngleLogs, enums.AngleMetrics,
+	wantKeys := []string{
+		"e2e-test", "database", "performance", "logs", "metrics",
+		"provision-auth",
 	}
-	if len(baselines) != len(wantAngles) {
-		t.Fatalf("got %d baselines, want %d: %v", len(baselines), len(wantAngles), baselines)
+	if len(baselines) != len(wantKeys) {
+		t.Fatalf("got %d baselines, want %d: %v", len(baselines), len(wantKeys), baselines)
 	}
-	for _, a := range wantAngles {
-		if _, ok := baselines[a]; !ok {
-			t.Errorf("missing baseline for angle %q", a)
+	for _, k := range wantKeys {
+		if _, ok := baselines[k]; !ok {
+			t.Errorf("missing baseline for key %q", k)
+		}
+	}
+}
+
+func TestLoadBaselines_ProvisionAuthIsPrimitiveKeyed(t *testing.T) {
+	baselines, err := LoadBaselines()
+	if err != nil {
+		t.Fatalf("LoadBaselines: %v", err)
+	}
+	pa, ok := baselines["provision-auth"]
+	if !ok {
+		t.Fatal("provision-auth floor must be keyed by primitive id")
+	}
+	if pa.Primitive != "provision-auth" {
+		t.Errorf("Primitive = %q, want provision-auth", pa.Primitive)
+	}
+	if pa.Angle != enums.AngleEnvironment {
+		t.Errorf("Angle = %q, want environment", pa.Angle)
+	}
+	for _, name := range []string{"kind", "persona"} {
+		spec, ok := pa.Inputs[name]
+		if !ok {
+			t.Errorf("provision-auth baseline missing input %q", name)
+			continue
+		}
+		if spec.Description == "" {
+			t.Errorf("provision-auth baseline input %q has empty description", name)
 		}
 	}
 }
@@ -35,7 +62,7 @@ func TestLoadBaselines_E2EFloorContents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadBaselines: %v", err)
 	}
-	e2e := baselines[enums.AngleE2ETest]
+	e2e := baselines["e2e-test"]
 	for _, name := range []string{
 		"base_url", "method", "path", "query", "headers", "body",
 		"expect_status", "timeout",
@@ -112,13 +139,67 @@ func fullE2EInputs() map[string]InputSpec {
 	return m
 }
 
-func mustBaselines(t *testing.T) map[enums.ValidationAngle]CoreInputBaseline {
+func mustBaselines(t *testing.T) map[string]CoreInputBaseline {
 	t.Helper()
 	baselines, err := LoadBaselines()
 	if err != nil {
 		t.Fatalf("LoadBaselines: %v", err)
 	}
 	return baselines
+}
+
+// fullProvisionAuthInputs returns an Inputs map satisfying the
+// provision-auth primitive floor.
+func fullProvisionAuthInputs() map[string]InputSpec {
+	return map[string]InputSpec{
+		"kind":    {HasDefault: true},
+		"persona": {HasDefault: true},
+	}
+}
+
+func TestValidateBaselineInputs_PrimitiveFloorFullPasses(t *testing.T) {
+	s := Sensor{ID: "provision-auth", Scope: enums.ScopeCore, Angle: enums.AngleEnvironment, Inputs: fullProvisionAuthInputs()}
+	if err := ValidateBaselineInputs(s, mustBaselines(t)); err != nil {
+		t.Fatalf("full provision-auth floor should pass: %v", err)
+	}
+}
+
+func TestValidateBaselineInputs_PrimitiveFloorMissingInputFails(t *testing.T) {
+	s := Sensor{ID: "provision-auth", Scope: enums.ScopeCore, Angle: enums.AngleEnvironment, Inputs: map[string]InputSpec{}}
+	err := ValidateBaselineInputs(s, mustBaselines(t))
+	if err == nil {
+		t.Fatal("provision-auth without its floor inputs must fail")
+	}
+	for _, want := range []string{"kind", "persona", "provision-auth.yaml"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("error should mention %q, got: %v", want, err)
+		}
+	}
+}
+
+func TestValidateBaselineInputs_LifecycleEnvPrimitivesStayFloorless(t *testing.T) {
+	// run-dev/datastore share angle=environment with provision-auth but are
+	// lifecycle primitives: no inputs, and the primitive-keyed floor must
+	// not leak onto them.
+	for _, id := range []string{"run-dev", "datastore"} {
+		s := Sensor{ID: id, Scope: enums.ScopeCore, Angle: enums.AngleEnvironment}
+		if err := ValidateBaselineInputs(s, mustBaselines(t)); err != nil {
+			t.Errorf("lifecycle environment primitive %q must pass floorless: %v", id, err)
+		}
+	}
+}
+
+func TestValidateBaselineInputs_AngleFallbackForRenamedPrimitive(t *testing.T) {
+	// A core sensor whose id differs from its angle still gets the angle
+	// floor (e.g. database-query gets the database floor today).
+	s := Sensor{ID: "my-http-probe", Scope: enums.ScopeCore, Angle: enums.AngleE2ETest, Inputs: map[string]InputSpec{}}
+	err := ValidateBaselineInputs(s, mustBaselines(t))
+	if err == nil {
+		t.Fatal("angle floor must still apply when the id does not match a primitive floor")
+	}
+	if !strings.Contains(err.Error(), "e2e-test.yaml") {
+		t.Fatalf("error should name the angle floor file, got: %v", err)
+	}
 }
 
 func TestValidateBaselineInputs_FullFloorPasses(t *testing.T) {

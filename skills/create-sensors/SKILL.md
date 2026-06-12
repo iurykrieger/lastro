@@ -97,8 +97,9 @@ Read the section for the angle you are generating — in particular:
 ### Composing core primitives + evolving their inputs
 
 A use-case sensor composes a core primitive via `uses:` + `with:`. Bind the inputs
-the use case needs — e.g. `headers` for an authenticated request, or
-`expect_status: "422"` so a failure variation *expects* the rejection. Every
+the use case needs — e.g. `expect_status: "422"` so a failure variation *expects*
+the rejection, or `headers` bound to a prior `provision-auth` step's output for
+an authenticated request (see the e2e-test section of `angles.md`). Every
 `with:` key MUST be a declared input of the composed primitive; an undeclared key
 fails validation with `unknown_with_key` (the check needs `.harness/sensors/core/`
 on disk — run `/create-core-sensors` first).

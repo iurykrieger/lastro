@@ -469,6 +469,9 @@ func TestRun_MissingEnvRefAggregatesInconclusive(t *testing.T) {
 	if agg.Verdict != enums.VerdictInconclusive {
 		t.Errorf("verdict = %q, want inconclusive", agg.Verdict)
 	}
+	if agg.HealHint != nil {
+		t.Errorf("inconclusive aggregate must not carry a heal hint, got %+v", agg.HealHint)
+	}
 	b, _ := os.ReadFile(filepath.Join(runDir, "signals.jsonl"))
 	if !strings.Contains(string(b), "missing-env") || !strings.Contains(string(b), "HARNESS_T9_ABSENT") {
 		t.Errorf("signals.jsonl missing the typed missing-env record: %s", b)
@@ -531,6 +534,9 @@ func TestRun_UnparseableEnvFileAggregatesInconclusive(t *testing.T) {
 	}
 	if agg.Verdict != enums.VerdictInconclusive {
 		t.Errorf("verdict = %q, want inconclusive", agg.Verdict)
+	}
+	if agg.HealHint != nil {
+		t.Errorf("inconclusive aggregate must not carry a heal hint, got %+v", agg.HealHint)
 	}
 	b, _ := os.ReadFile(filepath.Join(runDir, "signals.jsonl"))
 	if !strings.Contains(string(b), "env-file-invalid") {

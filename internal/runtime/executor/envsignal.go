@@ -26,6 +26,20 @@ func (e *MissingEnvError) Error() string {
 	return "executor: missing required env var(s): " + strings.Join(e.Names, ", ")
 }
 
+// EnvFileInvalidError reports an unparseable manifest-declared env_file.
+// Like MissingEnvError it is an environment problem, not an app crash —
+// the crash-hint synthesizer must not dress it up as one.
+type EnvFileInvalidError struct {
+	Path  string
+	Cause error
+}
+
+func (e *EnvFileInvalidError) Error() string {
+	return "executor: env_file " + e.Path + ": " + e.Cause.Error()
+}
+
+func (e *EnvFileInvalidError) Unwrap() error { return e.Cause }
+
 // missingEnvSignal synthesizes the typed pre-spawn signal for absent
 // ambient env vars. Verdict inconclusive: the application is not proven
 // broken, the environment is incomplete (mirrors provision-auth's

@@ -183,7 +183,7 @@ func (e *Executor) Run(
 		writeSignal(sw, sig)
 		allSignals = append(allSignals, toAggregateSignals([]signal.Signal{sig})...)
 		termReason = enums.TerminationError
-		stepErr = viewErr
+		stepErr = &EnvFileInvalidError{Path: e.opts.EnvFile, Cause: viewErr}
 	} else if missing := missingRequiredEnv(s.Env, view); len(missing) > 0 {
 		sig := missingEnvSignal(s, missing, view.source, e.opts.Now)
 		writeSignal(sw, sig)
@@ -252,15 +252,16 @@ func (e *Executor) Run(
 
 	// Crash-hint patch: if error termination produced an aggregate with
 	// no heal hint, synthesize one from raw.log.
-	// Skip for env-problem errors: they already carry heal_hint in their
-	// typed signals (missing-env / env-file-invalid). Synthesizing a
-	// crash hint for those would overwrite signal-level guidance with an
-	// irrelevant "no stderr" placeholder.
-	var isMissingEnv bool
-	if me := (*MissingEnvError)(nil); errors.As(stepErr, &me) {
-		isMissingEnv = true
-	}
-	if termReason == enums.TerminationError && agg.HealHint == nil && stepErr != nil && !isMissingEnv {
+	// Skip for env-problem errors (missing-env and env-file-invalid): they
+	// already carry heal_hint in their typed signals. Synthesizing a crash
+	// hint for those would overwrite signal-level guidance with an
+	// irrelevant "no stderr" placeholder, and inconclusive aggregates must
+	// not carry a heal hint per the signal contract.
+	var missingEnvTarget *MissingEnvError
+	var envFileInvalidTarget *EnvFileInvalidError
+	envProblem := errors.As(stepErr, &missingEnvTarget) ||
+		errors.As(stepErr, &envFileInvalidTarget)
+	if termReason == enums.TerminationError && agg.HealHint == nil && stepErr != nil && !envProblem {
 		// Flush the buffered rawLog writer before reading the file so that
 		// the stderr lines captured by pumpStderr are visible to synthesizeCrashHint.
 		_ = rl.Flush()

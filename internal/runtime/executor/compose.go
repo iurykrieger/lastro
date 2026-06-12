@@ -71,6 +71,11 @@ func (e *Executor) execTopStep(ctx context.Context, a topStepArgs) topStepResult
 // shared observational service. Falls back to inline expansion if no service
 // is registered (ServiceAttach nil or returns false) so non-validate callers
 // keep working.
+//
+// Note on env: the consumer uses-step's env: map is NOT applied on the attach
+// path — the shared service process was spawned elsewhere with its own
+// environment (design: shared services read their own .env). The env: map IS
+// applied when the step falls back to inline expansion via execUsesStep.
 func (e *Executor) attachToService(ctx context.Context, a topStepArgs, prim sensor.Sensor) topStepResult {
 	if e.opts.ServiceAttach == nil {
 		return e.execUsesStep(ctx, a)

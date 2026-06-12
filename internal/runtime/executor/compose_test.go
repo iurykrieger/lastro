@@ -749,15 +749,27 @@ func TestExecUsesStep_PrimitiveDeclaredEnvMissingIsInconclusive(t *testing.T) {
 // TestExecUsesStep_ConsumerEnvSatisfiesPrimitiveRequirement pins the positive
 // path of issue #49: a consumer uses-step's env: map injects the required
 // secret into every inner step of the expansion, satisfying the primitive's
-// declared requirement. The value is derived from an ambient env_file var
-// (via ${{ env.HARNESS_T10_AMBIENT }}) and is redacted from raw.log.
+// declared requirement. The value is derived from the HOST environment
+// (via ${{ env.HARNESS_T10_AMBIENT }}) so only the compose.go
+// ref-derived registration site masks it — the ambient env_file loop in
+// executor.go Run does NOT register host vars, isolating the new site.
+//
+// Mutation evidence: commenting out the compose.go `a.Redactor.Add(val)`
+// block (lines ~261-265) causes this test to fail because raw.log contains
+// the unredacted literal "long-secret-value".
 func TestExecUsesStep_ConsumerEnvSatisfiesPrimitiveRequirement(t *testing.T) {
 	uc := &usecase.UseCase{ID: "fake-uc"}
 
+	// Secret lives on the HOST — not in any env_file — so the ambient
+	// registration loop in executor.go never sees it.
+	t.Setenv("HARNESS_T10_AMBIENT", "long-secret-value")
+
 	// Primitive declares HARNESS_T10_SECRET as required. Its inner step
 	// uses a derived-fact pattern: compare the secret value and echo
-	// "got=present" or "got=absent" — never the literal secret. This avoids
-	// the redaction-vs-match trap.
+	// "got=present" or "got=absent" — never the literal secret on the
+	// matched line. A second "leak=" line deliberately prints the raw value
+	// so the redaction assertion is exercised even when the signal matcher
+	// avoids it.
 	prim := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: "core-env-prim", UseCaseID: "fake-uc",
 		Scope: enums.ScopeCore,
@@ -775,14 +787,17 @@ func TestExecUsesStep_ConsumerEnvSatisfiesPrimitiveRequirement(t *testing.T) {
 		},
 		Steps: []sensor.Step{
 			{
-				ID:  "inner",
-				Run: `[ "$HARNESS_T10_SECRET" = "long-secret-value" ] && echo "got=present" || echo "got=absent"`,
+				ID: "inner",
+				// Two lines: the derived-fact line (safe for matching) and the
+				// leak line (raw secret — must appear redacted in raw.log).
+				Run: `[ "$HARNESS_T10_SECRET" = "long-secret-value" ] && echo "got=present" || echo "got=absent"; echo "leak=$HARNESS_T10_SECRET"`,
 			},
 		},
 	}
 
-	// Consumer uses-step injects the secret from an ambient env_file var
-	// via ${{ env.HARNESS_T10_AMBIENT }}.
+	// Consumer uses-step injects the secret from the HOST var via
+	// ${{ env.HARNESS_T10_AMBIENT }}. No EnvFile is declared, so the
+	// ambient registration loop never fires for this value.
 	consumer := sensor.Sensor{
 		SchemaVersion: "1.0.0", ID: "consumer-t10-satisfies", UseCaseID: "fake-uc",
 		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
@@ -797,16 +812,7 @@ func TestExecUsesStep_ConsumerEnvSatisfiesPrimitiveRequirement(t *testing.T) {
 		},
 	}
 
-	// Write the env_file that provides HARNESS_T10_AMBIENT.
-	repo := t.TempDir()
-	envFile := filepath.Join(repo, ".env")
-	if err := os.WriteFile(envFile, []byte("HARNESS_T10_AMBIENT=long-secret-value\n"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-
 	opts := composeBaseOptions(t, uc, prim)
-	opts.RepoRoot = repo
-	opts.EnvFile = envFile
 	ex := New(opts)
 	runDir := t.TempDir()
 	agg, err := ex.Run(context.Background(), consumer, runDir, nil, nil)
@@ -819,9 +825,15 @@ func TestExecUsesStep_ConsumerEnvSatisfiesPrimitiveRequirement(t *testing.T) {
 	if agg.Rollup.TotalSignals == 0 {
 		t.Error("zero signals: the pass matcher never fired, test would be vacuous")
 	}
-	// raw.log must not contain the literal secret value — it is redacted.
+	// raw.log must contain the leak line with the value redacted, and must
+	// NOT contain the literal secret. This assertion fails when the
+	// compose.go ref-derived registration site is disabled.
 	rawBytes, _ := os.ReadFile(filepath.Join(runDir, "raw.log"))
-	if strings.Contains(string(rawBytes), "long-secret-value") {
-		t.Errorf("raw.log contains unredacted secret: %s", rawBytes)
+	rawStr := string(rawBytes)
+	if !strings.Contains(rawStr, "leak=***") {
+		t.Errorf("raw.log does not contain redacted leak line (leak=***): %s", rawStr)
+	}
+	if strings.Contains(rawStr, "long-secret-value") {
+		t.Errorf("raw.log contains unredacted secret: %s", rawStr)
 	}
 }

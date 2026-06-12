@@ -512,6 +512,64 @@ func TestRun_SensorDeclaredRequiredEnvBlocksAllSteps(t *testing.T) {
 	}
 }
 
+// TestRun_StepEnvRefDerivedValueIsRedacted proves that the step.go
+// ref-derived registration site (runStep's own env: block) is the sole
+// redaction source when the secret comes from the HOST environment. No
+// EnvFile is declared, so the ambient registration loop in executor.go Run
+// never fires. The ${{ env.HARNESS_T10_HOSTSECRET }} ref in the step's
+// env: map resolves from the host and the resolved value is registered via
+// a.Redactor.Add — the only masking path exercised by this test.
+//
+// Mutation evidence: commenting out the step.go `a.Redactor.Add(val)` block
+// (lines ~116-120) causes this test to fail because raw.log contains the
+// unredacted literal "host-secret-value".
+func TestRun_StepEnvRefDerivedValueIsRedacted(t *testing.T) {
+	t.Setenv("HARNESS_T10_HOSTSECRET", "host-secret-value")
+
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "step-env-redact", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{
+				ID: "leak",
+				// Inject the host var via the step's env: map using a ref.
+				// The step then leaks the injected value so redaction is
+				// exercised regardless of whether it matches a signal pattern.
+				Env: map[string]string{"INJECTED": "${{ env.HARNESS_T10_HOSTSECRET }}"},
+				Run: `echo "leak=$INJECTED"`,
+			},
+		},
+	}
+	// No EnvFile — host vars are deliberately NOT ambient-registered.
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+
+	runDir := t.TempDir()
+	_, err := ex.Run(context.Background(), s, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	// raw.log must contain the leak line with the value masked, and must
+	// NOT contain the literal secret. This assertion fails when the
+	// step.go ref-derived registration site is disabled.
+	rawBytes, _ := os.ReadFile(filepath.Join(runDir, "raw.log"))
+	rawStr := string(rawBytes)
+	if !strings.Contains(rawStr, "leak=***") {
+		t.Errorf("raw.log does not contain redacted leak line (leak=***): %s", rawStr)
+	}
+	if strings.Contains(rawStr, "host-secret-value") {
+		t.Errorf("raw.log contains unredacted secret: %s", rawStr)
+	}
+}
+
 func TestRun_UnparseableEnvFileAggregatesInconclusive(t *testing.T) {
 	repo := t.TempDir()
 	envFile := filepath.Join(repo, ".env")

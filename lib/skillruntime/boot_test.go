@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 			panic("build fakesensor: " + err.Error())
 		}
 		fakeSensorBin = bin
-		defer os.Remove(bin)
+		defer os.RemoveAll(filepath.Dir(bin))
 	}
 	os.Exit(m.Run())
 }

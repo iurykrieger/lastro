@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -71,20 +72,7 @@ func TestResolveStepEnv_InputRefUnboundErrors(t *testing.T) {
 	if err == nil {
 		t.Error("inputs.* with nil inputEnv must return an error")
 	}
-	if err != nil && !contains(err.Error(), "foo") {
+	if err != nil && !strings.Contains(err.Error(), "foo") {
 		t.Errorf("error should mention the input name %q, got: %v", "foo", err)
 	}
-}
-
-// contains is a small helper to avoid importing strings in test code.
-func contains(s, sub string) bool {
-	return len(s) >= len(sub) && (s == sub || len(sub) == 0 ||
-		func() bool {
-			for i := 0; i <= len(s)-len(sub); i++ {
-				if s[i:i+len(sub)] == sub {
-					return true
-				}
-			}
-			return false
-		}())
 }

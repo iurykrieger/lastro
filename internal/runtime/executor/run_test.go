@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 	}
 	fakeSensorBin = bin
 	code := m.Run()
-	_ = os.Remove(bin)
+	_ = os.RemoveAll(filepath.Dir(bin))
 	os.Exit(code)
 }
 

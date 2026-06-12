@@ -59,3 +59,32 @@ func TestResolveStepEnv_EntryPointRejected(t *testing.T) {
 		t.Error("entry_points.* must be rejected in env values")
 	}
 }
+
+func TestResolveStepEnv_InputRefUnboundErrors(t *testing.T) {
+	// inputs.* refs are only valid inside primitive inner steps where
+	// inputEnv is populated by the caller. At consumer (sensor) level
+	// inputEnv is nil, so any inputs.* ref must be an error — not silently
+	// resolved to empty — so compose.go can rely on that invariant.
+	_, _, _, err := resolveStepEnv(
+		map[string]string{"X": "${{ inputs.foo }}"},
+		envView{}, nil /* inputEnv = nil */, nil, nil)
+	if err == nil {
+		t.Error("inputs.* with nil inputEnv must return an error")
+	}
+	if err != nil && !contains(err.Error(), "foo") {
+		t.Errorf("error should mention the input name %q, got: %v", "foo", err)
+	}
+}
+
+// contains is a small helper to avoid importing strings in test code.
+func contains(s, sub string) bool {
+	return len(s) >= len(sub) && (s == sub || len(sub) == 0 ||
+		func() bool {
+			for i := 0; i <= len(s)-len(sub); i++ {
+				if s[i:i+len(sub)] == sub {
+					return true
+				}
+			}
+			return false
+		}())
+}

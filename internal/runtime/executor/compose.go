@@ -251,7 +251,16 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 		consumerMissing = append(consumerMissing, name)
 	}
 	if len(consumerMissing) > 0 {
-		consumerMissing = mergeKeys(consumerMissing, nil) // dedupe
+		// Dedupe: same env name may appear in multiple prim.Env iterations.
+		seen := make(map[string]struct{}, len(consumerMissing))
+		deduped := consumerMissing[:0]
+		for _, n := range consumerMissing {
+			if _, dup := seen[n]; !dup {
+				seen[n] = struct{}{}
+				deduped = append(deduped, n)
+			}
+		}
+		consumerMissing = deduped
 		sort.Strings(consumerMissing)
 		me := &MissingEnvError{Names: consumerMissing, EnvFile: a.EnvView.source}
 		sig := missingEnvSignal(a.Sensor, consumerMissing, a.EnvView.source, e.opts.Now)

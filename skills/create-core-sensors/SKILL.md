@@ -52,7 +52,8 @@ Rules:
   process environment (secrets, connection strings — see the floor's
   `env_guidance`). The runtime injects the manifest's `env_file` into every
   step and fails fast with `missing_env` when a required var is absent or
-  empty — never let a recipe diagnose a missing secret itself.
+  empty — never let a recipe diagnose a missing secret itself. Recipes read
+  injected vars as plain `$NAME`, never `${{ env.NAME }}` (ambient-view only).
 
 **Grade-and-emit contract** (every parameterized primitive):
 

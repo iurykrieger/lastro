@@ -502,3 +502,57 @@ func TestRunWatcher_ErrSensorNotFound(t *testing.T) {
 		t.Errorf("err = %v, want ErrSensorNotFound", err)
 	}
 }
+
+// TestRunSensor_ForwardsEnvFileToPerRunExecutor pins the fix that carries
+// the parent executor's EnvFile path through RunSensor's per-run executor
+// rebuild. Before the fix, EnvFile was silently dropped so a
+// manifest-declared env_file was inert when sensors ran via RunSensor.
+//
+// Signal matching cannot be used here because the redactor masks env_file
+// values in all output before pattern matching (by design). Instead the
+// step uses a shell conditional: if $HARNESS_LC_TOKEN equals the expected
+// value, fakeSensorBin emits a pass signal; otherwise it emits a fail
+// signal. The signal itself carries the verdict without exposing the secret.
+func TestRunSensor_ForwardsEnvFileToPerRunExecutor(t *testing.T) {
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	if err := os.WriteFile(envFile, []byte("HARNESS_LC_TOKEN=lcvalue\n"), 0o600); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	// The step conditionally emits pass or fail depending on whether the
+	// env_file value is visible in the child process. The signal is emitted
+	// as JSON by fakeSensorBin, so the secret value never appears in any
+	// output stream and the redactor does not interfere.
+	step := `if [ "$HARNESS_LC_TOKEN" = "lcvalue" ]; then ` + fakeSensorBin + ` signal pass; else ` + fakeSensorBin + ` signal fail; fi`
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "lc-env-inject", UseCaseID: "lifecycle-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:  []string{"fake"},
+		Steps: []sensor.Step{{ID: "only", Run: step}},
+	}
+
+	store := &stubSensorStore{by: map[string]sensor.Sensor{s.ID: s}}
+	uc := &usecase.UseCase{ID: "lifecycle-uc"}
+	ex := rxexec.New(rxexec.Options{
+		RepoRoot: repo,
+		EnvFile:  envFile,
+		Resolver: &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+	})
+	lc := New(Options{
+		Sensors:     store,
+		Executor:    ex,
+		RuntimeRoot: t.TempDir(),
+		Version:     "test-0.0.0",
+	})
+
+	agg, err := lc.RunSensor(context.Background(), s.ID, nil)
+	if err != nil {
+		t.Fatalf("RunSensor: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (EnvFile not forwarded to per-run executor)", agg.Verdict)
+	}
+}

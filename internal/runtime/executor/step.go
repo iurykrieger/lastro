@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -246,12 +245,3 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	}, errors.Join(stdoutRes.err) // stderr errors are non-fatal
 }
 
-// envBytes is only used in tests to verify env-var building is stable.
-func envBytes(env []string) []byte {
-	var b bytes.Buffer
-	for _, e := range env {
-		b.WriteString(e)
-		b.WriteByte('\n')
-	}
-	return b.Bytes()
-}

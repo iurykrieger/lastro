@@ -418,6 +418,7 @@ func TestRun_HostWinsOverEnvFile(t *testing.T) {
 		Uses: []string{"fake-stack"},
 		SignalMatches: []sensor.SignalMatch{
 			{Key: "host-won", Pattern: "clash=fromhost", Verdict: enums.VerdictPass},
+			// Canary: fires only if the env_file value overrides the host, flipping the verdict to fail.
 			{Key: "file-leaked", Pattern: "clash=fromfile", Verdict: enums.VerdictFail,
 				HealHint: &sensor.MatchHealHint{Summary: "file value leaked", Rationale: "host must win"}},
 		},

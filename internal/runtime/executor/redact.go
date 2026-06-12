@@ -42,6 +42,7 @@ func (r *redactor) Add(v string) {
 }
 
 // Apply returns b with every registered value replaced by the placeholder.
+// When no registered value occurs in b, the original slice is returned unchanged (not a copy).
 func (r *redactor) Apply(b []byte) []byte {
 	if r == nil {
 		return b

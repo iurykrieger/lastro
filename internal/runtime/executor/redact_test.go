@@ -42,3 +42,27 @@ func TestRedactor_NilSafe(t *testing.T) {
 		t.Errorf("nil redactor mutated input: %q", got)
 	}
 }
+
+func TestRedactor_DeduplicatesValues(t *testing.T) {
+	r := &redactor{}
+	r.Add("samevalue")
+	r.Add("samevalue")
+	got := r.Apply([]byte("x=samevalue"))
+	if !bytes.Equal(got, []byte("x=***")) {
+		t.Errorf("Apply = %q, want x=***", got)
+	}
+	r.mu.RLock()
+	n := len(r.values)
+	r.mu.RUnlock()
+	if n != 1 {
+		t.Errorf("registered %d values, want 1 (deduped)", n)
+	}
+}
+
+func TestRedactor_BoundaryLengthMasked(t *testing.T) {
+	r := &redactor{}
+	r.Add("abcd") // exactly minRedactLen
+	if got := r.Apply([]byte("v=abcd")); !bytes.Equal(got, []byte("v=***")) {
+		t.Errorf("Apply = %q, want v=***", got)
+	}
+}

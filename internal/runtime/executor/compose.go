@@ -34,6 +34,7 @@ type topStepArgs struct {
 	Stop        <-chan struct{}
 	StepOutEnv  map[string]string // outputs of prior top-level steps
 	Redactor    *redactor
+	EnvView     envView // merged host+env_file ambient view, loaded once per run
 }
 
 // topStepResult is the rolled-up outcome of one top-level step. Outputs
@@ -143,6 +144,7 @@ func (e *Executor) execRunStep(ctx context.Context, a topStepArgs) topStepResult
 		OnStart:     e.opts.OnStepStart,
 		StepOutEnv:  a.StepOutEnv,
 		Redactor:    a.Redactor,
+		EnvView:     a.EnvView,
 	})
 	term, stepErr := evalTermination(ctx, outcome, err)
 	return topStepResult{
@@ -254,6 +256,7 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 			InputEnv:    inputEnv,
 			StepOutEnv:  stepOutEnv,
 			Redactor:    a.Redactor,
+			EnvView:     a.EnvView,
 		})
 
 		innerOutputs[inner.ID] = outcome.Outputs

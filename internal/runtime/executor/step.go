@@ -48,6 +48,9 @@ type stepArgs struct {
 	OutTag string
 	// Redactor masks injected secret values in every persisted byte. May be nil.
 	Redactor *redactor
+	// EnvView is the merged host+env_file ambient view. Zero value = no
+	// env_file declared.
+	EnvView envView
 }
 
 // stepOutcome reports the per-step result.
@@ -87,6 +90,11 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	// that is deferred to a future task. The Resolver field on stepArgs is
 	// kept for callers that set it, but is no longer called in runStep.
 	env := os.Environ()
+	// Ambient env_file values first: pre-filtered to names the host does
+	// not set, so the host always wins, and later injections override.
+	for k, v := range a.EnvView.ambient {
+		env = append(env, k+"="+v)
+	}
 	for k, v := range binding.Env {
 		env = append(env, k+"="+v)
 	}

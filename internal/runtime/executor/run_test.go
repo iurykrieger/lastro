@@ -371,3 +371,70 @@ func TestRunAssertion_CrashedStepSynthesizesHint(t *testing.T) {
 		t.Errorf("heal_hint.rationale missing stderr: %q", agg.HealHint.Rationale)
 	}
 }
+
+func TestRun_EnvFileValueReachesStepProcess(t *testing.T) {
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	if err := os.WriteFile(envFile, []byte("HARNESS_T8_TOKEN=fromenvfile\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-inject", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "seen", Pattern: "token=fromenvfile", Verdict: enums.VerdictPass},
+		},
+		Steps: []sensor.Step{{ID: "only", Run: `echo "token=$HARNESS_T8_TOKEN"`}},
+	}
+	ex := New(Options{
+		RepoRoot: repo, EnvFile: envFile,
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	agg, err := ex.Run(context.Background(), s, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (env_file value did not reach the child)", agg.Verdict)
+	}
+}
+
+func TestRun_HostWinsOverEnvFile(t *testing.T) {
+	t.Setenv("HARNESS_T8_CLASH", "fromhost")
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	if err := os.WriteFile(envFile, []byte("HARNESS_T8_CLASH=fromfile\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-clash", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "host-won", Pattern: "clash=fromhost", Verdict: enums.VerdictPass},
+			{Key: "file-leaked", Pattern: "clash=fromfile", Verdict: enums.VerdictFail,
+				HealHint: &sensor.MatchHealHint{Summary: "file value leaked", Rationale: "host must win"}},
+		},
+		Steps: []sensor.Step{{ID: "only", Run: `echo "clash=$HARNESS_T8_CLASH"`}},
+	}
+	ex := New(Options{
+		RepoRoot: repo, EnvFile: envFile,
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	agg, err := ex.Run(context.Background(), s, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (host value should win)", agg.Verdict)
+	}
+}

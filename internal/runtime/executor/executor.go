@@ -39,7 +39,11 @@ func mergeKeys(a, b []string) []string {
 // Options is the dependency wiring an Executor needs. All fields are
 // read-only after New; concurrent Run calls are safe.
 type Options struct {
-	RepoRoot      string
+	RepoRoot string
+	// EnvFile is the resolved path of the manifest-declared dotenv file
+	// (stack-manifest env_file joined to the repo root). Empty means no
+	// env_file is declared; steps then see only the host environment.
+	EnvFile       string
 	Resolver      *template.Resolver
 	FixtureStore  fixture.FixtureStore
 	UseCaseLookup func(sensorID string) (*usecase.UseCase, bool)
@@ -144,6 +148,19 @@ func (e *Executor) Run(
 	rl.red = red
 	sw.red = red
 
+	view, envFileMissing, viewErr := loadEnvView(e.opts.EnvFile)
+	if viewErr != nil {
+		return aggregate.AggregateSignal{}, viewErr
+	}
+	// Every env_file-sourced value is a secret-by-injection (mask all
+	// injected values); host-only vars are untouched status quo.
+	for _, v := range view.ambient {
+		red.Add(v)
+	}
+	if envFileMissing {
+		rl.WriteAnnotated(0, "env-file-missing", []byte(e.opts.EnvFile))
+	}
+
 	startedAt := e.opts.Now()
 	allSignals := []aggregate.Signal{}
 	observedKeys := []string{}
@@ -184,6 +201,7 @@ func (e *Executor) Run(
 			Stop:        stop,
 			StepOutEnv:  stepOutEnv,
 			Redactor:    red,
+			EnvView:     view,
 		})
 
 		// Store re-exported outputs for use by subsequent steps.

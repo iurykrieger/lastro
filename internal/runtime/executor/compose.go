@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -193,13 +194,18 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 		}
 	}
 
-	// Collect and bind any ${{ fixtures.<id> }} refs in the with values before
-	// building the input env, so resolveWithValue can substitute them.
+	// Collect and bind any ${{ fixtures.<id> }} refs in the with values AND
+	// env values before building the input env and resolving consumer env.
 	fixturePaths := map[string]string{}
 	ids, err := fixturebinder.CollectFixtureRefs("", a.Step.With)
 	if err != nil {
 		return topStepResult{TermReason: enums.TerminationError, StepErr: fmt.Errorf("executor: collect fixture refs in with: %w", err)}
 	}
+	envIDs, err := fixturebinder.CollectFixtureRefs("", a.Step.Env)
+	if err != nil {
+		return topStepResult{TermReason: enums.TerminationError, StepErr: fmt.Errorf("executor: collect fixture refs in env: %w", err)}
+	}
+	ids = mergeKeys(ids, envIDs)
 	if len(ids) > 0 {
 		binder := &fixturebinder.Binder{ScratchDir: filepath.Join(a.RunDir, "scratch")}
 		if err := os.MkdirAll(binder.ScratchDir, 0o700); err != nil {
@@ -215,6 +221,47 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 	inputEnv, err := buildInputEnv(prim, a.Step.With, fixturePaths, a.StepOutEnv)
 	if err != nil {
 		return topStepResult{TermReason: enums.TerminationError, StepErr: err}
+	}
+
+	// Consumer-declared env: resolved once, injected into every inner step
+	// of the expansion (issue #49) — this is how a use-case sensor hands
+	// NEXTAUTH_SECRET to provision-auth's recipe. inputs.* is not valid at
+	// the consumer level (mirrors with-value semantics), hence nil.
+	consumerEnv, refDerived, consumerMissing, err := resolveStepEnv(a.Step.Env, a.EnvView, nil, a.StepOutEnv, fixturePaths)
+	if err != nil {
+		return topStepResult{TermReason: enums.TerminationError, StepErr: fmt.Errorf("executor: step %q: %w", a.Step.ID, err)}
+	}
+	// Primitive-declared ambient requirements: satisfied by the merged
+	// host+env_file view or by the consumer's own env: injection.
+	for name, spec := range prim.Env {
+		if !spec.IsRequired() {
+			continue
+		}
+		if v, ok := consumerEnv[name]; ok && v != "" {
+			continue
+		}
+		if v, ok := a.EnvView.lookup(name); ok && v != "" {
+			continue
+		}
+		consumerMissing = append(consumerMissing, name)
+	}
+	if len(consumerMissing) > 0 {
+		consumerMissing = mergeKeys(consumerMissing, nil) // dedupe
+		sort.Strings(consumerMissing)
+		me := &MissingEnvError{Names: consumerMissing, EnvFile: a.EnvView.source}
+		sig := missingEnvSignal(a.Sensor, consumerMissing, a.EnvView.source, e.opts.Now)
+		writeSignal(a.SignalsW, sig)
+		return topStepResult{
+			Signals:    []signal.Signal{sig},
+			Outputs:    map[string]string{},
+			TermReason: enums.TerminationError,
+			StepErr:    me,
+		}
+	}
+	for name, val := range consumerEnv {
+		if refDerived[name] {
+			a.Redactor.Add(val)
+		}
 	}
 
 	// Make the primitive's own signal_matches live for its inner steps
@@ -266,6 +313,7 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 			OnStart:     e.opts.OnStepStart,
 			InputEnv:    inputEnv,
 			StepOutEnv:  stepOutEnv,
+			ExtraEnv:    consumerEnv,
 			Redactor:    a.Redactor,
 			EnvView:     a.EnvView,
 		})

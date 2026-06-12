@@ -51,6 +51,10 @@ type stepArgs struct {
 	// EnvView is the merged host+env_file ambient view. Zero value = no
 	// env_file declared.
 	EnvView envView
+	// ExtraEnv carries already-resolved env entries a consumer uses-step
+	// declared; injected into every inner step of the expansion, after
+	// the ambient view and before the step's own env:.
+	ExtraEnv map[string]string
 }
 
 // stepOutcome reports the per-step result.
@@ -77,25 +81,42 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 
 	// Pre-spawn ambient floor: every ${{ env.NAME }} the run script
 	// references must be present and non-empty, or the step never spawns.
+	// Do NOT return yet — collect missing from env: map too, then merge.
 	var missingEnv []string
 	for _, name := range refs.Env {
 		if v, ok := a.EnvView.lookup(name); !ok || v == "" {
 			missingEnv = append(missingEnv, name)
 		}
 	}
-	if len(missingEnv) > 0 {
-		sort.Strings(missingEnv)
-		return stepOutcome{}, &MissingEnvError{Step: a.StepIdx, Names: missingEnv, EnvFile: a.EnvView.source}
-	}
 
-	// 2. Bind fixtures referenced by the compiled run.
+	// 2. Bind fixtures referenced by the compiled run AND by env: values.
 	binder := &fixturebinder.Binder{ScratchDir: filepath.Join(a.RunDir, "scratch")}
 	if err := os.MkdirAll(binder.ScratchDir, 0o700); err != nil {
 		return stepOutcome{}, fmt.Errorf("executor: mkdir scratch: %w", err)
 	}
-	binding, err := binder.Bind(refs.Fixtures, a.UseCase, a.Store)
+	envFixtures, err := fixturebinder.CollectFixtureRefs("", a.Step.Env)
+	if err != nil {
+		return stepOutcome{}, &TemplateError{Step: a.StepIdx, Cause: err}
+	}
+	binding, err := binder.Bind(mergeKeys(refs.Fixtures, envFixtures), a.UseCase, a.Store)
 	if err != nil {
 		return stepOutcome{}, err
+	}
+
+	// Resolve the step's env: map and merge any missing names into missingEnv.
+	stepEnv, refDerived, missing2, err := resolveStepEnv(a.Step.Env, a.EnvView, a.InputEnv, a.StepOutEnv, binding.Files)
+	if err != nil {
+		return stepOutcome{}, &TemplateError{Step: a.StepIdx, Cause: err}
+	}
+	missingEnv = mergeKeys(missingEnv, missing2)
+	if len(missingEnv) > 0 {
+		sort.Strings(missingEnv)
+		return stepOutcome{}, &MissingEnvError{Step: a.StepIdx, Names: missingEnv, EnvFile: a.EnvView.source}
+	}
+	for name, val := range stepEnv {
+		if refDerived[name] {
+			a.Redactor.Add(val)
+		}
 	}
 
 	// 3. Build environment.
@@ -115,6 +136,14 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 		env = append(env, k+"="+v)
 	}
 	for k, v := range a.StepOutEnv {
+		env = append(env, k+"="+v)
+	}
+	// ExtraEnv (consumer uses-step env:) injects after ambient/inputs/step-outputs;
+	// step's own env: injects last so it wins over the consumer's injection.
+	for k, v := range a.ExtraEnv {
+		env = append(env, k+"="+v)
+	}
+	for k, v := range stepEnv {
 		env = append(env, k+"="+v)
 	}
 	outTag := a.OutTag

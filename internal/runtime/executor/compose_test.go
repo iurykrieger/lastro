@@ -2,6 +2,9 @@ package executor
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/iurykrieger/lastro/internal/entrypoint"
@@ -680,5 +683,145 @@ func TestCompose_MissingSensorLookup(t *testing.T) {
 	}
 	if agg.TerminationReason != enums.TerminationError {
 		t.Errorf("termination_reason = %q, want error", agg.TerminationReason)
+	}
+}
+
+// TestExecUsesStep_PrimitiveDeclaredEnvMissingIsInconclusive pins issue #49:
+// when a composed primitive declares a required env var and neither the
+// consumer's uses-step env: injection nor the ambient view provides it, the
+// run terminates with verdict inconclusive (missing-env signal), and the
+// primitive's inner step is never spawned (the marker file is never created).
+func TestExecUsesStep_PrimitiveDeclaredEnvMissingIsInconclusive(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+
+	// Use a marker file to detect whether the inner step ran.
+	marker := filepath.Join(t.TempDir(), "never-runs")
+
+	// Primitive declares HARNESS_T10_SECRET as required (default).
+	prim := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-env-prim", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Env:  map[string]sensor.EnvSpec{"HARNESS_T10_SECRET": {Description: "required"}},
+		Steps: []sensor.Step{
+			// This line must never appear in raw.log.
+			{ID: "inner", Run: "touch " + marker + "; echo never-runs"},
+		},
+	}
+
+	// Consumer provides no env: for the primitive's requirement.
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer-t10-missing", UseCaseID: "fake-uc",
+		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{ID: "step1", Uses: "core-env-prim"}, // no env: injection
+		},
+	}
+
+	opts := composeBaseOptions(t, uc, prim)
+	ex := New(opts)
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), consumer, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictInconclusive {
+		t.Errorf("verdict = %q, want inconclusive (rollup=%+v)", agg.Verdict, agg.Rollup)
+	}
+	// signals.jsonl must contain a missing-env record naming the secret.
+	sigBytes, _ := os.ReadFile(filepath.Join(runDir, "signals.jsonl"))
+	if !strings.Contains(string(sigBytes), "missing-env") {
+		t.Errorf("signals.jsonl missing 'missing-env' key: %s", sigBytes)
+	}
+	if !strings.Contains(string(sigBytes), "HARNESS_T10_SECRET") {
+		t.Errorf("signals.jsonl does not name HARNESS_T10_SECRET: %s", sigBytes)
+	}
+	// The inner step must never have run (marker file absent).
+	if _, statErr := os.Stat(marker); statErr == nil {
+		t.Error("inner step ran despite missing required env (must be pre-spawn blocked)")
+	}
+}
+
+// TestExecUsesStep_ConsumerEnvSatisfiesPrimitiveRequirement pins the positive
+// path of issue #49: a consumer uses-step's env: map injects the required
+// secret into every inner step of the expansion, satisfying the primitive's
+// declared requirement. The value is derived from an ambient env_file var
+// (via ${{ env.HARNESS_T10_AMBIENT }}) and is redacted from raw.log.
+func TestExecUsesStep_ConsumerEnvSatisfiesPrimitiveRequirement(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+
+	// Primitive declares HARNESS_T10_SECRET as required. Its inner step
+	// uses a derived-fact pattern: compare the secret value and echo
+	// "got=present" or "got=absent" — never the literal secret. This avoids
+	// the redaction-vs-match trap.
+	prim := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-env-prim", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Env:  map[string]sensor.EnvSpec{"HARNESS_T10_SECRET": {Description: "required"}},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "secret-present", Pattern: `got=present`, Verdict: enums.VerdictPass},
+			{Key: "secret-absent", Pattern: `got=absent`, Verdict: enums.VerdictFail,
+				HealHint: &sensor.MatchHealHint{
+					Summary:   "secret was absent in expansion",
+					Rationale: "HARNESS_T10_SECRET was not injected into the inner step",
+				}},
+		},
+		Steps: []sensor.Step{
+			{
+				ID:  "inner",
+				Run: `[ "$HARNESS_T10_SECRET" = "long-secret-value" ] && echo "got=present" || echo "got=absent"`,
+			},
+		},
+	}
+
+	// Consumer uses-step injects the secret from an ambient env_file var
+	// via ${{ env.HARNESS_T10_AMBIENT }}.
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer-t10-satisfies", UseCaseID: "fake-uc",
+		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{
+				ID:   "step1",
+				Uses: "core-env-prim",
+				Env:  map[string]string{"HARNESS_T10_SECRET": "${{ env.HARNESS_T10_AMBIENT }}"},
+			},
+		},
+	}
+
+	// Write the env_file that provides HARNESS_T10_AMBIENT.
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	if err := os.WriteFile(envFile, []byte("HARNESS_T10_AMBIENT=long-secret-value\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	opts := composeBaseOptions(t, uc, prim)
+	opts.RepoRoot = repo
+	opts.EnvFile = envFile
+	ex := New(opts)
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), consumer, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (rollup=%+v)", agg.Verdict, agg.Rollup)
+	}
+	if agg.Rollup.TotalSignals == 0 {
+		t.Error("zero signals: the pass matcher never fired, test would be vacuous")
+	}
+	// raw.log must not contain the literal secret value — it is redacted.
+	rawBytes, _ := os.ReadFile(filepath.Join(runDir, "raw.log"))
+	if strings.Contains(string(rawBytes), "long-secret-value") {
+		t.Errorf("raw.log contains unredacted secret: %s", rawBytes)
 	}
 }

@@ -606,3 +606,59 @@ func TestRun_UnparseableEnvFileAggregatesInconclusive(t *testing.T) {
 		t.Errorf("signals.jsonl missing env-file-invalid: %s", b)
 	}
 }
+
+func TestRun_EnvEndToEnd_InjectionRedactionAndEvidence(t *testing.T) {
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	const secret = "nextauth-secret-value-1234"
+	if err := os.WriteFile(envFile, []byte("HARNESS_T13_SECRET="+secret+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-e2e", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "minted", Pattern: "minted=(?P<tok>\\S+)", Verdict: enums.VerdictPass},
+		},
+		Steps: []sensor.Step{{
+			ID:  "mint",
+			Run: `echo "minted=$INJECTED"`,
+			Env: map[string]string{"INJECTED": "${{ env.HARNESS_T13_SECRET }}"},
+		}},
+	}
+	ex := New(Options{
+		RepoRoot: repo, EnvFile: envFile,
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), s, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Fatalf("verdict = %q, want pass", agg.Verdict)
+	}
+	if agg.Rollup.TotalSignals == 0 {
+		t.Fatal("zero signals: matcher never fired, test would be vacuous")
+	}
+	for _, f := range []string{"raw.log", "signals.jsonl"} {
+		b, _ := os.ReadFile(filepath.Join(runDir, f))
+		if strings.Contains(string(b), secret) {
+			t.Errorf("%s leaked the secret", f)
+		}
+		if !strings.Contains(string(b), redactedPlaceholder) {
+			t.Errorf("%s carries no masked content: %s", f, b)
+		}
+	}
+	// Aggregate evidence must be clean too: the matched_line evidence came
+	// from a pre-redacted pump line.
+	rawAgg, _ := json.Marshal(agg)
+	if strings.Contains(string(rawAgg), secret) {
+		t.Error("aggregate evidence leaked the secret")
+	}
+}

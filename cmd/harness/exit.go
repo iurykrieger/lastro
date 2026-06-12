@@ -8,13 +8,13 @@ import (
 
 // Exit codes mirror the spec §3 row 6 and standard sysexits.h values.
 const (
-	ExitOK            = 0
-	ExitFail          = 1   // any obligatory-angle verdict was fail
-	ExitInconclusive  = 2   // any verdict was inconclusive and none failed
-	ExitInterrupt     = 130 // SIGINT
-	ExitSignalTerm    = 143 // SIGTERM
-	ExitUsage         = 64  // bad flag combination / missing required input — EX_USAGE
-	ExitSoftware      = 70  // internal error / unimplemented — EX_SOFTWARE
+	ExitOK           = 0
+	ExitFail         = 1   // any obligatory-angle verdict was fail
+	ExitInconclusive = 2   // any verdict was inconclusive and none failed
+	ExitInterrupt    = 130 // SIGINT
+	ExitSignalTerm   = 143 // SIGTERM
+	ExitUsage        = 64  // bad flag combination / missing required input — EX_USAGE
+	ExitSoftware     = 70  // internal error / unimplemented — EX_SOFTWARE
 )
 
 // UsageError is the sentinel for flag-combination failures. Wraps a

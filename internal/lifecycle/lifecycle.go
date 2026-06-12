@@ -172,6 +172,7 @@ func (l *Lifecycle) RunSensor(
 	base := l.opts.Executor.OptionsRef()
 	exec := executor.New(executor.Options{
 		RepoRoot:      base.RepoRoot,
+		EnvFile:       base.EnvFile,
 		Resolver:      base.Resolver,
 		FixtureStore:  base.FixtureStore,
 		UseCaseLookup: base.UseCaseLookup,
@@ -284,15 +285,17 @@ func (l *Lifecycle) StartSensor(
 	// watcher. Inherit only Values, not cancellation.
 	detached := context.WithoutCancel(ctx)
 
+	startBase := l.opts.Executor.OptionsRef()
 	exec := executor.New(executor.Options{
-		RepoRoot:      l.opts.Executor.OptionsRef().RepoRoot,
-		Resolver:      l.opts.Executor.OptionsRef().Resolver,
-		FixtureStore:  l.opts.Executor.OptionsRef().FixtureStore,
-		UseCaseLookup: l.opts.Executor.OptionsRef().UseCaseLookup,
-		SensorLookup:  l.opts.Executor.OptionsRef().SensorLookup,
-		Now:           l.opts.Executor.OptionsRef().Now,
-		Shell:         l.opts.Executor.OptionsRef().Shell,
-		ServiceAttach: l.opts.Executor.OptionsRef().ServiceAttach,
+		RepoRoot:      startBase.RepoRoot,
+		EnvFile:       startBase.EnvFile,
+		Resolver:      startBase.Resolver,
+		FixtureStore:  startBase.FixtureStore,
+		UseCaseLookup: startBase.UseCaseLookup,
+		SensorLookup:  startBase.SensorLookup,
+		Now:           startBase.Now,
+		Shell:         startBase.Shell,
+		ServiceAttach: startBase.ServiceAttach,
 		GroupSignaler: l.opts.Signaler,
 		OnStepStart:   onStart,
 	})

@@ -3,6 +3,7 @@ package stack
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -106,6 +107,22 @@ func (m StackManifest) Validate() error {
 	}
 	if len(m.Components) == 0 {
 		problems = append(problems, "components: at least one required")
+	}
+
+	if m.EnvFile != "" {
+		if filepath.IsAbs(m.EnvFile) {
+			problems = append(problems,
+				fmt.Sprintf("env_file: must be a relative path within the project root (got %q)", m.EnvFile))
+		} else {
+			// Reject any path whose cleaned form escapes the project root via
+			// ".." traversal. filepath.Clean normalizes "config/../../x" to
+			// "../x", so a clean result starting with ".." means escape.
+			clean := filepath.Clean(m.EnvFile)
+			if clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+				problems = append(problems,
+					fmt.Sprintf("env_file: must be a relative path within the project root (got %q)", m.EnvFile))
+			}
+		}
 	}
 
 	for i, c := range m.Components {

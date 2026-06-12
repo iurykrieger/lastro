@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 	}
 	fakeSensorBin = bin
 	code := m.Run()
-	_ = os.Remove(bin)
+	_ = os.RemoveAll(filepath.Dir(bin))
 	os.Exit(code)
 }
 
@@ -369,5 +369,296 @@ func TestRunAssertion_CrashedStepSynthesizesHint(t *testing.T) {
 	}
 	if !strings.Contains(agg.HealHint.Rationale, "could not connect to redis") {
 		t.Errorf("heal_hint.rationale missing stderr: %q", agg.HealHint.Rationale)
+	}
+}
+
+func TestRun_EnvFileValueReachesStepProcess(t *testing.T) {
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	if err := os.WriteFile(envFile, []byte("HARNESS_T8_TOKEN=fromenvfile\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-inject", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "seen", Pattern: "token=present", Verdict: enums.VerdictPass},
+			// Canary: fires when the env_file value did NOT reach the child.
+			{Key: "env-absent", Pattern: "token=absent", Verdict: enums.VerdictFail,
+				HealHint: &sensor.MatchHealHint{Summary: "env_file value missing", Rationale: "ambient injection failed"}},
+		},
+		Steps: []sensor.Step{{ID: "only", Run: `[ "$HARNESS_T8_TOKEN" = "fromenvfile" ] && echo "token=present" || echo "token=absent"`}},
+	}
+	ex := New(Options{
+		RepoRoot: repo, EnvFile: envFile,
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	agg, err := ex.Run(context.Background(), s, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (env_file value did not reach the child)", agg.Verdict)
+	}
+	if agg.Rollup.TotalSignals == 0 {
+		t.Error("zero signals: the pass matcher never fired, test would be vacuous")
+	}
+}
+
+func TestRun_HostWinsOverEnvFile(t *testing.T) {
+	t.Setenv("HARNESS_T8_CLASH", "fromhost")
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	if err := os.WriteFile(envFile, []byte("HARNESS_T8_CLASH=fromfile\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-clash", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "host-won", Pattern: "clash=fromhost", Verdict: enums.VerdictPass},
+			// Canary: fires only if the env_file value overrides the host, flipping the verdict to fail.
+			{Key: "file-leaked", Pattern: "clash=fromfile", Verdict: enums.VerdictFail,
+				HealHint: &sensor.MatchHealHint{Summary: "file value leaked", Rationale: "host must win"}},
+		},
+		Steps: []sensor.Step{{ID: "only", Run: `echo "clash=$HARNESS_T8_CLASH"`}},
+	}
+	ex := New(Options{
+		RepoRoot: repo, EnvFile: envFile,
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	agg, err := ex.Run(context.Background(), s, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (host value should win)", agg.Verdict)
+	}
+}
+
+func TestRun_MissingEnvRefAggregatesInconclusive(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-missing-ref", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:  []string{"fake-stack"},
+		Steps: []sensor.Step{{ID: "only", Run: `echo "t=${{ env.HARNESS_T9_ABSENT }}"`}},
+	}
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), s, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictInconclusive {
+		t.Errorf("verdict = %q, want inconclusive", agg.Verdict)
+	}
+	if agg.HealHint != nil {
+		t.Errorf("inconclusive aggregate must not carry a heal hint, got %+v", agg.HealHint)
+	}
+	b, _ := os.ReadFile(filepath.Join(runDir, "signals.jsonl"))
+	if !strings.Contains(string(b), "missing-env") || !strings.Contains(string(b), "HARNESS_T9_ABSENT") {
+		t.Errorf("signals.jsonl missing the typed missing-env record: %s", b)
+	}
+}
+
+func TestRun_SensorDeclaredRequiredEnvBlocksAllSteps(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	marker := filepath.Join(t.TempDir(), "ran")
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-declared", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:  []string{"fake-stack"},
+		Env:   map[string]sensor.EnvSpec{"HARNESS_T9_REQ": {Description: "needed"}},
+		Steps: []sensor.Step{{ID: "only", Run: "touch " + marker}},
+	}
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), s, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictInconclusive {
+		t.Errorf("verdict = %q, want inconclusive", agg.Verdict)
+	}
+	if _, statErr := os.Stat(marker); statErr == nil {
+		t.Error("step ran despite missing required env (must be pre-spawn)")
+	}
+	b, _ := os.ReadFile(filepath.Join(runDir, "signals.jsonl"))
+	if !strings.Contains(string(b), "missing-env") || !strings.Contains(string(b), "HARNESS_T9_REQ") {
+		t.Errorf("signals.jsonl missing the typed missing-env record: %s", b)
+	}
+}
+
+// TestRun_StepEnvRefDerivedValueIsRedacted proves that the step.go
+// ref-derived registration site (runStep's own env: block) is the sole
+// redaction source when the secret comes from the HOST environment. No
+// EnvFile is declared, so the ambient registration loop in executor.go Run
+// never fires. The ${{ env.HARNESS_T10_HOSTSECRET }} ref in the step's
+// env: map resolves from the host and the resolved value is registered via
+// a.Redactor.Add — the only masking path exercised by this test.
+//
+// Mutation evidence: commenting out the step.go `a.Redactor.Add(val)` block
+// (lines ~116-120) causes this test to fail because raw.log contains the
+// unredacted literal "host-secret-value".
+func TestRun_StepEnvRefDerivedValueIsRedacted(t *testing.T) {
+	t.Setenv("HARNESS_T10_HOSTSECRET", "host-secret-value")
+
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "step-env-redact", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{
+				ID: "leak",
+				// Inject the host var via the step's env: map using a ref.
+				// The step then leaks the injected value so redaction is
+				// exercised regardless of whether it matches a signal pattern.
+				Env: map[string]string{"INJECTED": "${{ env.HARNESS_T10_HOSTSECRET }}"},
+				Run: `echo "leak=$INJECTED"`,
+			},
+		},
+	}
+	// No EnvFile — host vars are deliberately NOT ambient-registered.
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+
+	runDir := t.TempDir()
+	_, err := ex.Run(context.Background(), s, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	// raw.log must contain the leak line with the value masked, and must
+	// NOT contain the literal secret. This assertion fails when the
+	// step.go ref-derived registration site is disabled.
+	rawBytes, _ := os.ReadFile(filepath.Join(runDir, "raw.log"))
+	rawStr := string(rawBytes)
+	if !strings.Contains(rawStr, "leak=***") {
+		t.Errorf("raw.log does not contain redacted leak line (leak=***): %s", rawStr)
+	}
+	if strings.Contains(rawStr, "host-secret-value") {
+		t.Errorf("raw.log contains unredacted secret: %s", rawStr)
+	}
+}
+
+func TestRun_UnparseableEnvFileAggregatesInconclusive(t *testing.T) {
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	if err := os.WriteFile(envFile, []byte("KEY=\"unterminated\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-bad-file", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:  []string{"fake-stack"},
+		Steps: []sensor.Step{{ID: "only", Run: "echo never"}},
+	}
+	ex := New(Options{
+		RepoRoot: repo, EnvFile: envFile,
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), s, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run must not error (signal instead): %v", err)
+	}
+	if agg.Verdict != enums.VerdictInconclusive {
+		t.Errorf("verdict = %q, want inconclusive", agg.Verdict)
+	}
+	if agg.HealHint != nil {
+		t.Errorf("inconclusive aggregate must not carry a heal hint, got %+v", agg.HealHint)
+	}
+	b, _ := os.ReadFile(filepath.Join(runDir, "signals.jsonl"))
+	if !strings.Contains(string(b), "env-file-invalid") {
+		t.Errorf("signals.jsonl missing env-file-invalid: %s", b)
+	}
+}
+
+func TestRun_EnvEndToEnd_InjectionRedactionAndEvidence(t *testing.T) {
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	const secret = "nextauth-secret-value-1234"
+	if err := os.WriteFile(envFile, []byte("HARNESS_T13_SECRET="+secret+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-e2e", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "minted", Pattern: "minted=(?P<tok>\\S+)", Verdict: enums.VerdictPass},
+		},
+		Steps: []sensor.Step{{
+			ID:  "mint",
+			Run: `echo "minted=$INJECTED"`,
+			Env: map[string]string{"INJECTED": "${{ env.HARNESS_T13_SECRET }}"},
+		}},
+	}
+	ex := New(Options{
+		RepoRoot: repo, EnvFile: envFile,
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), s, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Fatalf("verdict = %q, want pass", agg.Verdict)
+	}
+	if agg.Rollup.TotalSignals == 0 {
+		t.Fatal("zero signals: matcher never fired, test would be vacuous")
+	}
+	for _, f := range []string{"raw.log", "signals.jsonl"} {
+		b, _ := os.ReadFile(filepath.Join(runDir, f))
+		if strings.Contains(string(b), secret) {
+			t.Errorf("%s leaked the secret", f)
+		}
+		if !strings.Contains(string(b), redactedPlaceholder) {
+			t.Errorf("%s carries no masked content: %s", f, b)
+		}
+	}
+	// Aggregate evidence must be clean too: the matched_line evidence came
+	// from a pre-redacted pump line.
+	rawAgg, _ := json.Marshal(agg)
+	if strings.Contains(string(rawAgg), secret) {
+		t.Error("aggregate evidence leaked the secret")
 	}
 }

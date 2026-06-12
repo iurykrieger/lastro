@@ -16,9 +16,9 @@ const HarnessDirName = ".harness"
 var ErrNoHarnessDir = errors.New("harness: no .harness/ directory found")
 
 // resolveRepoRoot returns the effective repo root in priority order:
-//   1. cfg.RepoRoot (explicit flag)
-//   2. HARNESS_REPO_ROOT env var
-//   3. current working directory
+//  1. cfg.RepoRoot (explicit flag)
+//  2. HARNESS_REPO_ROOT env var
+//  3. current working directory
 //
 // The returned path is absolute and cleaned.
 func resolveRepoRoot(cfg *Config) (string, error) {
@@ -58,9 +58,9 @@ func resolveHarnessDir(repoRoot string) (string, error) {
 }
 
 // resolvePolicyPath returns the validation-policy.yaml path:
-//   1. cfg.Policy if set
-//   2. HARNESS_POLICY env var
-//   3. <harnessDir>/validation-policy.yaml
+//  1. cfg.Policy if set
+//  2. HARNESS_POLICY env var
+//  3. <harnessDir>/validation-policy.yaml
 func resolvePolicyPath(cfg *Config, harnessDir string) string {
 	if cfg.Policy != "" {
 		return cfg.Policy

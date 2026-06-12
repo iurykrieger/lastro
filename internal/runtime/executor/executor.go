@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -39,7 +40,11 @@ func mergeKeys(a, b []string) []string {
 // Options is the dependency wiring an Executor needs. All fields are
 // read-only after New; concurrent Run calls are safe.
 type Options struct {
-	RepoRoot      string
+	RepoRoot string
+	// EnvFile is the resolved path of the manifest-declared dotenv file
+	// (stack-manifest env_file joined to the repo root). Empty means no
+	// env_file is declared; steps then see only the host environment.
+	EnvFile       string
 	Resolver      *template.Resolver
 	FixtureStore  fixture.FixtureStore
 	UseCaseLookup func(sensorID string) (*usecase.UseCase, bool)
@@ -140,6 +145,20 @@ func (e *Executor) Run(
 	}
 	defer sw.Close()
 
+	red := &redactor{}
+	rl.red = red
+	sw.red = red
+
+	view, envFileMissing, viewErr := loadEnvView(e.opts.EnvFile)
+	// Every env_file-sourced value is a secret-by-injection (mask all
+	// injected values); host-only vars are untouched status quo.
+	for _, v := range view.ambient {
+		red.Add(v)
+	}
+	if envFileMissing {
+		rl.WriteAnnotated(0, "env-file-missing", []byte(e.opts.EnvFile))
+	}
+
 	startedAt := e.opts.Now()
 	allSignals := []aggregate.Signal{}
 	observedKeys := []string{}
@@ -156,42 +175,61 @@ func (e *Executor) Run(
 	// It feeds StepIdx (signal attribution) and the unique stepout tag.
 	globalIdx := 0
 
-	for _, step := range s.Steps {
-		// Build the step-output env from outputs collected by prior
-		// top-level steps. Computed fresh per top-level step so the inner
-		// steps of a uses-step also see earlier consumer-step outputs.
-		stepOutEnv := map[string]string{}
-		for sid, kv := range stepOutputs {
-			for name, val := range kv {
-				stepOutEnv[stepOutEnvName(sid, name)] = val
+	// Environment preflight: an unparseable env_file or a missing
+	// sensor-declared required var blocks every step (pre-spawn) and
+	// rolls up inconclusive — the app is not proven broken.
+	if viewErr != nil {
+		sig := envFileInvalidSignal(s, e.opts.EnvFile, viewErr.Error(), e.opts.Now)
+		writeSignal(sw, sig)
+		allSignals = append(allSignals, toAggregateSignals([]signal.Signal{sig})...)
+		termReason = enums.TerminationError
+		stepErr = &EnvFileInvalidError{Path: e.opts.EnvFile, Cause: viewErr}
+	} else if missing := missingRequiredEnv(s.Env, view); len(missing) > 0 {
+		sig := missingEnvSignal(s, missing, view.source, e.opts.Now)
+		writeSignal(sw, sig)
+		allSignals = append(allSignals, toAggregateSignals([]signal.Signal{sig})...)
+		termReason = enums.TerminationError
+		stepErr = &MissingEnvError{Names: missing, EnvFile: view.source}
+	} else {
+		for _, step := range s.Steps {
+			// Build the step-output env from outputs collected by prior
+			// top-level steps. Computed fresh per top-level step so the inner
+			// steps of a uses-step also see earlier consumer-step outputs.
+			stepOutEnv := map[string]string{}
+			for sid, kv := range stepOutputs {
+				for name, val := range kv {
+					stepOutEnv[stepOutEnvName(sid, name)] = val
+				}
+			}
+
+			res := e.execTopStep(ctx, topStepArgs{
+				Sensor:      s,
+				Step:        step,
+				GlobalIdx:   &globalIdx,
+				RunDir:      runDir,
+				UseCase:     uc,
+				ExpectedObs: expectedObs,
+				Obs:         obs,
+				RawLog:      rl,
+				SignalsW:    sw,
+				Stop:        stop,
+				StepOutEnv:  stepOutEnv,
+				Redactor:    red,
+				EnvView:     view,
+			})
+
+			// Store re-exported outputs for use by subsequent steps.
+			stepOutputs[step.ID] = res.Outputs
+			allSignals = append(allSignals, toAggregateSignals(res.Signals)...)
+			observedKeys = append(observedKeys, res.ObservationKeys...)
+
+			if res.TermReason != enums.TerminationCompleted {
+				termReason = res.TermReason
+				stepErr = res.StepErr
+				break
 			}
 		}
-
-		res := e.execTopStep(ctx, topStepArgs{
-			Sensor:      s,
-			Step:        step,
-			GlobalIdx:   &globalIdx,
-			RunDir:      runDir,
-			UseCase:     uc,
-			ExpectedObs: expectedObs,
-			Obs:         obs,
-			RawLog:      rl,
-			SignalsW:    sw,
-			Stop:        stop,
-			StepOutEnv:  stepOutEnv,
-		})
-
-		// Store re-exported outputs for use by subsequent steps.
-		stepOutputs[step.ID] = res.Outputs
-		allSignals = append(allSignals, toAggregateSignals(res.Signals)...)
-		observedKeys = append(observedKeys, res.ObservationKeys...)
-
-		if res.TermReason != enums.TerminationCompleted {
-			termReason = res.TermReason
-			stepErr = res.StepErr
-			break
-		}
-	}
+	} // end env preflight else
 
 	endedAt := e.opts.Now()
 
@@ -214,7 +252,16 @@ func (e *Executor) Run(
 
 	// Crash-hint patch: if error termination produced an aggregate with
 	// no heal hint, synthesize one from raw.log.
-	if termReason == enums.TerminationError && agg.HealHint == nil && stepErr != nil {
+	// Skip for env-problem errors (missing-env and env-file-invalid): they
+	// already carry heal_hint in their typed signals. Synthesizing a crash
+	// hint for those would overwrite signal-level guidance with an
+	// irrelevant "no stderr" placeholder, and inconclusive aggregates must
+	// not carry a heal hint per the signal contract.
+	var missingEnvTarget *MissingEnvError
+	var envFileInvalidTarget *EnvFileInvalidError
+	envProblem := errors.As(stepErr, &missingEnvTarget) ||
+		errors.As(stepErr, &envFileInvalidTarget)
+	if termReason == enums.TerminationError && agg.HealHint == nil && stepErr != nil && !envProblem {
 		// Flush the buffered rawLog writer before reading the file so that
 		// the stderr lines captured by pumpStderr are visible to synthesizeCrashHint.
 		_ = rl.Flush()

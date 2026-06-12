@@ -1,6 +1,7 @@
 schema_version: 1.0.0
 angle: environment
 primitive: provision-auth
+env_guidance: "Credential recipes read app secrets from the process environment (a session-signing secret such as NEXTAUTH_SECRET; the datastore connection string such as DATABASE_URL for api-key seeding). Declare every var the generated recipe reads in the sensor's top-level env: block — the signing secret MUST be the same value the dev server loaded, and a missing var must surface as missing_env, not mint-failed."
 inputs:
   kind:
     description: "Credential family to mint: 'session' (a logged-in user credential the app's session middleware accepts, e.g. a signed session cookie), 'bearer' (a JWT/opaque token sent as 'Authorization: Bearer ...', obtained from the app's login/token endpoint or minted with its signing secret), 'api-key' (a seeded machine credential, e.g. a key row inserted into the datastore), 'basic' (HTTP Basic from a seeded user's credentials), or 'none' (no auth — emit an empty header so the primitive self-runs as a smoke test)."

@@ -10,6 +10,7 @@ import (
 	"github.com/iurykrieger/lastro/internal/lifecycle"
 	"github.com/iurykrieger/lastro/internal/runtime/executor"
 	"github.com/iurykrieger/lastro/internal/sensor"
+	"github.com/iurykrieger/lastro/internal/stack"
 	"github.com/iurykrieger/lastro/internal/usecase"
 	"github.com/iurykrieger/lastro/internal/usecase/template"
 )
@@ -68,10 +69,26 @@ func BootLifecycle(repoRoot string) (*Booted, error) {
 		EntryPoints: entryPoints,
 	}
 
+	// Optional stack manifest: absence is normal before /detect-stack; a
+	// present-but-invalid manifest is an error. When it binds an env_file,
+	// every sensor step gets the merged host+dotenv view (issue #49).
+	var envFile string
+	manifestPath := filepath.Join(harnessDir, "stack-manifest.yaml")
+	if _, statErr := os.Stat(manifestPath); statErr == nil {
+		m, err := stack.Load(manifestPath)
+		if err != nil {
+			return nil, fmt.Errorf("skillruntime: load stack manifest: %w", err)
+		}
+		if m.EnvFile != "" {
+			envFile = filepath.Join(repoRoot, m.EnvFile)
+		}
+	}
+
 	services := &serviceHolder{}
 
 	exec := executor.New(executor.Options{
 		RepoRoot:     repoRoot,
+		EnvFile:      envFile,
 		Resolver:     resolver,
 		FixtureStore: fixtureStore,
 		UseCaseLookup: func(sensorID string) (*usecase.UseCase, bool) {

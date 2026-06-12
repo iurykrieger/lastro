@@ -46,6 +46,8 @@ func (r *Resolver) Resolve(segs []Segment) (string, error) {
 				return "", err
 			}
 			b.WriteString(stringify(val))
+		case EnvRef:
+			return "", fmt.Errorf("env.* is not valid in use-case text")
 		default:
 			return "", fmt.Errorf("unknown segment type %T", s)
 		}
@@ -64,6 +66,8 @@ func (r *Resolver) ResolveValue(seg Segment) (any, error) {
 		return r.resolveFixture(v)
 	case EntryPointRef:
 		return r.resolveEntryPoint(v)
+	case EnvRef:
+		return nil, fmt.Errorf("env.* is not valid in use-case text")
 	default:
 		return nil, fmt.Errorf("unknown segment type %T", seg)
 	}

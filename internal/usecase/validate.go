@@ -269,6 +269,13 @@ func checkRefsAndStore(uc *UseCase, segs []template.Segment, store fixture.Fixtu
 					Refs:     []string{v.ID},
 				})
 			}
+		case template.EnvRef:
+			errs = append(errs, &ValidationError{
+				Code:     "USECASE_TEMPLATE_ENV_NOT_ALLOWED",
+				Message:  "env." + v.Name + " is not valid in use-case text; env refs belong in sensor step run scripts",
+				Location: Position{Line: v.Pos.Line, Col: v.Pos.Col, Offset: v.Pos.Offset},
+				Refs:     []string{v.Name},
+			})
 		}
 	}
 

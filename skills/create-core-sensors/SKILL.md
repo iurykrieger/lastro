@@ -196,5 +196,4 @@ Common `kind` values on exit 2:
 
 ## Coverage check
 
-After writing all sensors, list `.harness/sensors/core/` and confirm that each
-expected primitive is present. Emit any missing primitive before finishing.
+List `.harness/sensors/core/` and emit any missing expected primitive before finishing.

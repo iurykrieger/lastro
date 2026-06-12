@@ -24,9 +24,9 @@ import (
 // The floor is a minimum, not a ceiling: a core primitive must declare at
 // least these inputs (each with a default) and may declare more.
 type CoreInputBaseline struct {
-	SchemaVersion string                       `json:"schema_version"`
-	Angle         enums.ValidationAngle        `json:"angle"`
-	Primitive     string                       `json:"primitive,omitempty"`
+	SchemaVersion string                `json:"schema_version"`
+	Angle         enums.ValidationAngle `json:"angle"`
+	Primitive     string                `json:"primitive,omitempty"`
 	// EnvGuidance tells the generating skill which ambient vars this
 	// primitive's recipes typically read; the generated sensor declares
 	// the concrete names in its top-level env: block.

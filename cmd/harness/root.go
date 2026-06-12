@@ -16,7 +16,7 @@ import (
 // closure newValidateCmd/newHealCmd/... establish over it.
 type Config struct {
 	// Persistent flags.
-	Output      string        // "text" | "json"
+	Output      string // "text" | "json"
 	Quiet       bool
 	Verbose     bool
 	Policy      string        // path to validation-policy.yaml override

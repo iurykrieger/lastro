@@ -75,6 +75,26 @@ func TestRawLog_ConcurrentWritersDoNotTear(t *testing.T) {
 	}
 }
 
+func TestRawLog_RedactsRegisteredValues(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "raw.log")
+	rl, err := newRawLog(path, fixedNow(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	red := &redactor{}
+	red.Add("supersecret")
+	rl.red = red
+	rl.WriteAnnotated(1, "stdout", []byte("token=supersecret"))
+	_ = rl.Close()
+	b, _ := os.ReadFile(path)
+	if strings.Contains(string(b), "supersecret") {
+		t.Errorf("raw.log leaked the secret: %s", b)
+	}
+	if !strings.Contains(string(b), "token=***") {
+		t.Errorf("raw.log missing masked content: %s", b)
+	}
+}
+
 // fixedNow returns a Now() that always returns 2026-05-24T10:00:00.000000000Z.
 func fixedNow(t *testing.T) func() time.Time {
 	t.Helper()

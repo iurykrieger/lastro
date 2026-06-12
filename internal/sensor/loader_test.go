@@ -261,3 +261,66 @@ steps:
 		t.Errorf("use_case_id: got %q, want empty for core", s.UseCaseID)
 	}
 }
+
+func TestLoadSensor_EnvDeclarations(t *testing.T) {
+	raw := []byte(`
+schema_version: 1.0.0
+id: env-demo
+scope: use-case
+use_case_id: demo-uc
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: [node]
+env:
+  NEXTAUTH_SECRET:
+    description: "session signing secret"
+  OPTIONAL_FLAG:
+    required: false
+steps:
+  - id: mint
+    run: echo ok
+    env:
+      DATABASE_URL: ${{ env.DATABASE_URL }}
+      NODE_ENV: test
+`)
+	s, err := LoadSensorBytes(raw)
+	if err != nil {
+		t.Fatalf("LoadSensorBytes: %v", err)
+	}
+	if !s.Env["NEXTAUTH_SECRET"].IsRequired() {
+		t.Error("NEXTAUTH_SECRET should default to required")
+	}
+	if s.Env["OPTIONAL_FLAG"].IsRequired() {
+		t.Error("OPTIONAL_FLAG declared required: false")
+	}
+	if got := s.Steps[0].Env["NODE_ENV"]; got != "test" {
+		t.Errorf("step env NODE_ENV = %q, want test", got)
+	}
+	if got := s.Steps[0].Env["DATABASE_URL"]; got != "${{ env.DATABASE_URL }}" {
+		t.Errorf("step env DATABASE_URL = %q, want %q (unevaluated ref)", got, "${{ env.DATABASE_URL }}")
+	}
+}
+
+func TestLoadSensor_EnvRejectsBadNames(t *testing.T) {
+	raw := []byte(`
+schema_version: 1.0.0
+id: env-bad
+scope: use-case
+use_case_id: bad-uc
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: [node]
+steps:
+  - id: only
+    run: echo ok
+    env:
+      lower_case: nope
+`)
+	if _, err := LoadSensorBytes(raw); err == nil {
+		t.Fatal("expected schema rejection of lowercase env name")
+	}
+}

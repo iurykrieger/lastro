@@ -48,6 +48,12 @@ Rules:
   `$HARNESS_OUTPUT` as `name=value` lines.
 - Top-level `uses:` contains only `StackComponent` ids from the manifest.
 - `depends_on:` lists core sensors that must start first (e.g. `run-dev`).
+- Declare top-level `env:` naming every ambient var a recipe reads from the
+  process environment (secrets, connection strings — see the floor's
+  `env_guidance`). The runtime injects the manifest's `env_file` into every
+  step and fails fast with `missing_env` when a required var is absent or
+  empty — never let a recipe diagnose a missing secret itself. Recipes read
+  injected vars as plain `$NAME`, never `${{ env.NAME }}` (ambient-view only).
 
 **Grade-and-emit contract** (every parameterized primitive):
 
@@ -191,5 +197,4 @@ Common `kind` values on exit 2:
 
 ## Coverage check
 
-After writing all sensors, list `.harness/sensors/core/` and confirm that each
-expected primitive is present. Emit any missing primitive before finishing.
+List `.harness/sensors/core/` and emit any missing expected primitive before finishing.

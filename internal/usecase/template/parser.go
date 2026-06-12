@@ -108,6 +108,8 @@ func (p *parser) parseRef() (Segment, error) {
 		return p.parseInputTail(nsStart)
 	case "steps":
 		return p.parseStepOutputTail(nsStart)
+	case "env":
+		return p.parseEnvTail(nsStart)
 	default:
 		return nil, &ParseError{Pos: nsStart, Msg: "unknown namespace: " + ns}
 	}
@@ -316,3 +318,44 @@ func (p *parser) readJSONKey() (string, bool) {
 func isAlpha(c byte) bool     { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') }
 func isDigit(c byte) bool     { return c >= '0' && c <= '9' }
 func isIdentByte(c byte) bool { return isAlpha(c) || c == '_' }
+
+// parseEnvTail reads `${{ env.<NAME> }}` where NAME is a POSIX-style
+// exported variable name: ^[A-Z_][A-Z0-9_]{0,127}$.
+func (p *parser) parseEnvTail(refPos Position) (Segment, error) {
+	name, ok := p.readEnvVarName()
+	if !ok {
+		return nil, &ParseError{Pos: p.here(), Msg: "expected env var name (UPPER_SNAKE_CASE)"}
+	}
+	if p.peekByte('.') {
+		return nil, &ParseError{Pos: p.here(), Msg: "env.<NAME> takes no further keys"}
+	}
+	if err := p.expectClose(); err != nil {
+		return nil, err
+	}
+	return EnvRef{Name: name, Pos: refPos}, nil
+}
+
+// readEnvVarName reads ENVNAME matching ^[A-Z_][A-Z0-9_]{0,127}$.
+func (p *parser) readEnvVarName() (string, bool) {
+	if p.pos >= len(p.input) {
+		return "", false
+	}
+	c := p.input[p.pos]
+	if !((c >= 'A' && c <= 'Z') || c == '_') {
+		return "", false
+	}
+	start := p.pos
+	for p.pos < len(p.input) {
+		c := p.input[p.pos]
+		if (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' {
+			p.advance(1)
+			continue
+		}
+		break
+	}
+	name := p.input[start:p.pos]
+	if len(name) > 128 {
+		return "", false
+	}
+	return name, true
+}

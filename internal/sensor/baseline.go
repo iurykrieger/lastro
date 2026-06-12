@@ -24,10 +24,14 @@ import (
 // The floor is a minimum, not a ceiling: a core primitive must declare at
 // least these inputs (each with a default) and may declare more.
 type CoreInputBaseline struct {
-	SchemaVersion string                       `json:"schema_version"`
-	Angle         enums.ValidationAngle        `json:"angle"`
-	Primitive     string                       `json:"primitive,omitempty"`
-	Inputs        map[string]BaselineInputSpec `json:"inputs"`
+	SchemaVersion string                `json:"schema_version"`
+	Angle         enums.ValidationAngle `json:"angle"`
+	Primitive     string                `json:"primitive,omitempty"`
+	// EnvGuidance tells the generating skill which ambient vars this
+	// primitive's recipes typically read; the generated sensor declares
+	// the concrete names in its top-level env: block.
+	EnvGuidance string                       `json:"env_guidance,omitempty"`
+	Inputs      map[string]BaselineInputSpec `json:"inputs"`
 }
 
 // key returns the map key (and filename stem) a baseline binds to: the
@@ -174,6 +178,10 @@ func ValidateInputReferences(s Sensor) error {
 		blob.WriteString(st.Run)
 		blob.WriteByte('\n')
 		for _, v := range st.With {
+			blob.WriteString(v)
+			blob.WriteByte('\n')
+		}
+		for _, v := range st.Env {
 			blob.WriteString(v)
 			blob.WriteByte('\n')
 		}

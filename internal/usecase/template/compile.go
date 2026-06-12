@@ -12,6 +12,7 @@ type Refs struct {
 	Fixtures    []string        // fixture ids, first-seen order, deduped
 	StepOutputs []StepOutputRef // step output refs, first-seen order
 	EntryPoints []EntryPointRef // entry point refs, first-seen order
+	Env         []string        // env var names, first-seen order, deduped
 }
 
 // Compile rewrites every ref segment into a POSIX shell variable reference
@@ -19,6 +20,8 @@ type Refs struct {
 // Refs. Values are NEVER inlined — this is the shell-injection safety boundary.
 // Env var names: HARNESS_INPUT_<U>, HARNESS_FIXTURE_<U>, HARNESS_STEPOUT_<STEP>_<U>,
 // HARNESS_ENTRYPOINT_<U> where <U> = upper(name) with '-' -> '_'.
+// Env refs compile to a bare "${NAME}" shell lookup (the name is already
+// UPPER_SNAKE_CASE per the grammar).
 func Compile(segs []Segment) (string, Refs, error) {
 	var b strings.Builder
 	var refs Refs
@@ -45,6 +48,12 @@ func Compile(segs []Segment) (string, Refs, error) {
 		case StepOutputRef:
 			b.WriteString(`"${` + "HARNESS_STEPOUT_" + upperEnv(v.StepID) + "_" + upperEnv(v.Name) + `}"`)
 			refs.StepOutputs = append(refs.StepOutputs, v)
+		case EnvRef:
+			b.WriteString(`"${` + v.Name + `}"`)
+			if !seen["e:"+v.Name] {
+				seen["e:"+v.Name] = true
+				refs.Env = append(refs.Env, v.Name)
+			}
 		case EntryPointRef:
 			return "", Refs{}, &ResolveError{Pos: v.Pos, Msg: "entry_points.* is not supported in sensor steps yet"}
 		default:

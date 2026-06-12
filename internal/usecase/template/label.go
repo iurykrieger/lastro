@@ -6,10 +6,13 @@ import "strings"
 // representation. Literals pass through; refs are bracketed with a
 // type-prefix and the ref's full dotted form. The format is locked here:
 //
-//	${{fixtures.fx-a}}            → [fixture: fx-a]
-//	${{fixtures.fx-a.u.n}}        → [fixture: fx-a.u.n]
-//	${{entry_points.ep-c}}        → [entry: ep-c]
-//	${{entry_points.ep-c.spec.k}} → [entry: ep-c.spec.k]
+//	${{fixtures.fx-a}}                  → [fixture: fx-a]
+//	${{fixtures.fx-a.u.n}}              → [fixture: fx-a.u.n]
+//	${{entry_points.ep-c}}              → [entry: ep-c]
+//	${{entry_points.ep-c.spec.k}}       → [entry: ep-c.spec.k]
+//	${{inputs.base_url}}                → [input: base_url]
+//	${{steps.create.outputs.id}}        → [step: create.outputs.id]
+//	${{env.MY_TOKEN}}                   → [env: MY_TOKEN]
 func RenderLabels(segs []Segment) string {
 	var b strings.Builder
 	for _, s := range segs {
@@ -40,6 +43,10 @@ func RenderLabels(segs []Segment) string {
 			b.WriteString("[step: ")
 			b.WriteString(v.StepID)
 			b.WriteString(".outputs.")
+			b.WriteString(v.Name)
+			b.WriteByte(']')
+		case EnvRef:
+			b.WriteString("[env: ")
 			b.WriteString(v.Name)
 			b.WriteByte(']')
 		}

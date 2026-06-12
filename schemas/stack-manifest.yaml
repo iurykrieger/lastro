@@ -25,6 +25,14 @@ properties:
       archetype via internal/enums.ApplicableAngles[archetype]. The
       canonical source of truth is schemas/enums/archetypes.yaml's
       per-value applicable_angles list. Never authored by the LLM.
+  env_file:
+    type: string
+    minLength: 1
+    description: |
+      Optional project-root-relative path to the dotenv file the
+      application itself loads (e.g. ".env", ".env.local"). The runtime
+      loads it for every sensor step, host environment winning on
+      conflicts, so recipes see the same configuration the app does.
   archetype:
     type: string
     description: |

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +34,8 @@ type topStepArgs struct {
 	SignalsW    *jsonlWriter
 	Stop        <-chan struct{}
 	StepOutEnv  map[string]string // outputs of prior top-level steps
+	Redactor    *redactor
+	EnvView     envView // merged host+env_file ambient view, loaded once per run
 }
 
 // topStepResult is the rolled-up outcome of one top-level step. Outputs
@@ -68,6 +71,11 @@ func (e *Executor) execTopStep(ctx context.Context, a topStepArgs) topStepResult
 // shared observational service. Falls back to inline expansion if no service
 // is registered (ServiceAttach nil or returns false) so non-validate callers
 // keep working.
+//
+// Note on env: the consumer uses-step's env: map is NOT applied on the attach
+// path — the shared service process was spawned elsewhere with its own
+// environment (design: shared services read their own .env). The env: map IS
+// applied when the step falls back to inline expansion via execUsesStep.
 func (e *Executor) attachToService(ctx context.Context, a topStepArgs, prim sensor.Sensor) topStepResult {
 	if e.opts.ServiceAttach == nil {
 		return e.execUsesStep(ctx, a)
@@ -141,7 +149,20 @@ func (e *Executor) execRunStep(ctx context.Context, a topStepArgs) topStepResult
 		Stop:        a.Stop,
 		OnStart:     e.opts.OnStepStart,
 		StepOutEnv:  a.StepOutEnv,
+		Redactor:    a.Redactor,
+		EnvView:     a.EnvView,
 	})
+	var me *MissingEnvError
+	if errors.As(err, &me) {
+		sig := missingEnvSignal(a.Sensor, me.Names, me.EnvFile, e.opts.Now)
+		writeSignal(a.SignalsW, sig)
+		return topStepResult{
+			Signals:    []signal.Signal{sig},
+			Outputs:    map[string]string{},
+			TermReason: enums.TerminationError,
+			StepErr:    me,
+		}
+	}
 	term, stepErr := evalTermination(ctx, outcome, err)
 	return topStepResult{
 		Signals:         outcome.Signals,
@@ -178,13 +199,18 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 		}
 	}
 
-	// Collect and bind any ${{ fixtures.<id> }} refs in the with values before
-	// building the input env, so resolveWithValue can substitute them.
+	// Collect and bind any ${{ fixtures.<id> }} refs in the with values AND
+	// env values before building the input env and resolving consumer env.
 	fixturePaths := map[string]string{}
 	ids, err := fixturebinder.CollectFixtureRefs("", a.Step.With)
 	if err != nil {
 		return topStepResult{TermReason: enums.TerminationError, StepErr: fmt.Errorf("executor: collect fixture refs in with: %w", err)}
 	}
+	envIDs, err := fixturebinder.CollectFixtureRefs("", a.Step.Env)
+	if err != nil {
+		return topStepResult{TermReason: enums.TerminationError, StepErr: fmt.Errorf("executor: collect fixture refs in env: %w", err)}
+	}
+	ids = mergeKeys(ids, envIDs)
 	if len(ids) > 0 {
 		binder := &fixturebinder.Binder{ScratchDir: filepath.Join(a.RunDir, "scratch")}
 		if err := os.MkdirAll(binder.ScratchDir, 0o700); err != nil {
@@ -200,6 +226,56 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 	inputEnv, err := buildInputEnv(prim, a.Step.With, fixturePaths, a.StepOutEnv)
 	if err != nil {
 		return topStepResult{TermReason: enums.TerminationError, StepErr: err}
+	}
+
+	// Consumer-declared env: resolved once, injected into every inner step
+	// of the expansion (issue #49) — this is how a use-case sensor hands
+	// NEXTAUTH_SECRET to provision-auth's recipe. inputs.* is not valid at
+	// the consumer level (mirrors with-value semantics), hence nil.
+	consumerEnv, refDerived, consumerMissing, err := resolveStepEnv(a.Step.Env, a.EnvView, nil, a.StepOutEnv, fixturePaths)
+	if err != nil {
+		return topStepResult{TermReason: enums.TerminationError, StepErr: fmt.Errorf("executor: step %q: %w", a.Step.ID, err)}
+	}
+	// Primitive-declared ambient requirements: satisfied by the merged
+	// host+env_file view or by the consumer's own env: injection.
+	for name, spec := range prim.Env {
+		if !spec.IsRequired() {
+			continue
+		}
+		if v, ok := consumerEnv[name]; ok && v != "" {
+			continue
+		}
+		if v, ok := a.EnvView.lookup(name); ok && v != "" {
+			continue
+		}
+		consumerMissing = append(consumerMissing, name)
+	}
+	if len(consumerMissing) > 0 {
+		// Dedupe: same env name may appear in multiple prim.Env iterations.
+		seen := make(map[string]struct{}, len(consumerMissing))
+		deduped := consumerMissing[:0]
+		for _, n := range consumerMissing {
+			if _, dup := seen[n]; !dup {
+				seen[n] = struct{}{}
+				deduped = append(deduped, n)
+			}
+		}
+		consumerMissing = deduped
+		sort.Strings(consumerMissing)
+		me := &MissingEnvError{Names: consumerMissing, EnvFile: a.EnvView.source}
+		sig := missingEnvSignal(a.Sensor, consumerMissing, a.EnvView.source, e.opts.Now)
+		writeSignal(a.SignalsW, sig)
+		return topStepResult{
+			Signals:    []signal.Signal{sig},
+			Outputs:    map[string]string{},
+			TermReason: enums.TerminationError,
+			StepErr:    me,
+		}
+	}
+	for name, val := range consumerEnv {
+		if refDerived[name] {
+			a.Redactor.Add(val)
+		}
 	}
 
 	// Make the primitive's own signal_matches live for its inner steps
@@ -251,7 +327,20 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 			OnStart:     e.opts.OnStepStart,
 			InputEnv:    inputEnv,
 			StepOutEnv:  stepOutEnv,
+			ExtraEnv:    consumerEnv,
+			Redactor:    a.Redactor,
+			EnvView:     a.EnvView,
 		})
+
+		var me *MissingEnvError
+		if errors.As(runErr, &me) {
+			sig := missingEnvSignal(a.Sensor, me.Names, me.EnvFile, e.opts.Now)
+			writeSignal(a.SignalsW, sig)
+			res.Signals = append(res.Signals, sig)
+			res.TermReason = enums.TerminationError
+			res.StepErr = me
+			return res
+		}
 
 		innerOutputs[inner.ID] = outcome.Outputs
 		res.Signals = append(res.Signals, outcome.Signals...)
@@ -404,6 +493,8 @@ func resolveWithValue(raw string, fixturePaths, stepOutEnv map[string]string) (s
 			return "", fmt.Errorf("inputs.* is not valid inside a with-value")
 		case template.EntryPointRef:
 			return "", fmt.Errorf("entry_points.* is not valid inside a with-value")
+		case template.EnvRef:
+			return "", fmt.Errorf("env.* is not valid inside a with-value; declare it under the step's env: map instead")
 		default:
 			return "", fmt.Errorf("unsupported segment %T in with-value", s)
 		}

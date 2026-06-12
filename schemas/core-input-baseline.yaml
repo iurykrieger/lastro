@@ -31,6 +31,15 @@ properties:
     pattern: "^[a-z][a-z0-9-]*$"
     minLength: 1
     maxLength: 128
+  env_guidance:
+    type: string
+    minLength: 1
+    description: |
+      Generator guidance: which ambient env vars (secrets, connection
+      strings) this primitive's recipes typically read. The generated
+      sensor MUST declare each concrete var in its top-level env: block
+      so the runtime fails fast with missing_env instead of a
+      recipe-specific failure.
   inputs:
     type: object
     minProperties: 1

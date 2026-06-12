@@ -54,3 +54,23 @@ func TestCompileRejectsEntryPointRef(t *testing.T) {
 		t.Fatal("expected error: entry_points.* is not supported in sensor steps yet")
 	}
 }
+
+func TestCompile_EnvRef(t *testing.T) {
+	segs, err := Parse(`echo "t=${{ env.MY_TOKEN }}" "${{ env.MY_TOKEN }}"`)
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	out, refs, err := Compile(segs)
+	if err != nil {
+		t.Fatalf("Compile: %v", err)
+	}
+	// Adjacent double-quoted strings concatenate in shell: "t=" + "${MY_TOKEN}" + ""
+	// and "" + "${MY_TOKEN}" + "" each render as one word.
+	want := `echo "t="${MY_TOKEN}"" ""${MY_TOKEN}""`
+	if out != want {
+		t.Errorf("compiled = %q, want %q", out, want)
+	}
+	if len(refs.Env) != 1 || refs.Env[0] != "MY_TOKEN" {
+		t.Errorf("refs.Env = %v, want [MY_TOKEN] (deduped)", refs.Env)
+	}
+}

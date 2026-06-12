@@ -1,13 +1,13 @@
 package executor
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"time"
 
@@ -46,6 +46,15 @@ type stepArgs struct {
 	// (composed primitive inner steps share consumer step ids, so the bare
 	// Step.ID is not unique). When empty, runStep falls back to Step.ID.
 	OutTag string
+	// Redactor masks injected secret values in every persisted byte. May be nil.
+	Redactor *redactor
+	// EnvView is the merged host+env_file ambient view. Zero value = no
+	// env_file declared.
+	EnvView envView
+	// ExtraEnv carries already-resolved env entries a consumer uses-step
+	// declared; injected into every inner step of the expansion, after
+	// the ambient view and before the step's own env:.
+	ExtraEnv map[string]string
 }
 
 // stepOutcome reports the per-step result.
@@ -70,14 +79,44 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 		return stepOutcome{}, &TemplateError{Step: a.StepIdx, Cause: err}
 	}
 
-	// 2. Bind fixtures referenced by the compiled run.
+	// Pre-spawn ambient floor: every ${{ env.NAME }} the run script
+	// references must be present and non-empty, or the step never spawns.
+	// Do NOT return yet — collect missing from env: map too, then merge.
+	var missingEnv []string
+	for _, name := range refs.Env {
+		if v, ok := a.EnvView.lookup(name); !ok || v == "" {
+			missingEnv = append(missingEnv, name)
+		}
+	}
+
+	// 2. Bind fixtures referenced by the compiled run AND by env: values.
 	binder := &fixturebinder.Binder{ScratchDir: filepath.Join(a.RunDir, "scratch")}
 	if err := os.MkdirAll(binder.ScratchDir, 0o700); err != nil {
 		return stepOutcome{}, fmt.Errorf("executor: mkdir scratch: %w", err)
 	}
-	binding, err := binder.Bind(refs.Fixtures, a.UseCase, a.Store)
+	envFixtures, err := fixturebinder.CollectFixtureRefs("", a.Step.Env)
+	if err != nil {
+		return stepOutcome{}, &TemplateError{Step: a.StepIdx, Cause: err}
+	}
+	binding, err := binder.Bind(mergeKeys(refs.Fixtures, envFixtures), a.UseCase, a.Store)
 	if err != nil {
 		return stepOutcome{}, err
+	}
+
+	// Resolve the step's env: map and merge any missing names into missingEnv.
+	stepEnv, refDerived, missing2, err := resolveStepEnv(a.Step.Env, a.EnvView, a.InputEnv, a.StepOutEnv, binding.Files)
+	if err != nil {
+		return stepOutcome{}, &TemplateError{Step: a.StepIdx, Cause: err}
+	}
+	missingEnv = mergeKeys(missingEnv, missing2)
+	if len(missingEnv) > 0 {
+		sort.Strings(missingEnv)
+		return stepOutcome{}, &MissingEnvError{Step: a.StepIdx, Names: missingEnv, EnvFile: a.EnvView.source}
+	}
+	for name, val := range stepEnv {
+		if refDerived[name] {
+			a.Redactor.Add(val)
+		}
 	}
 
 	// 3. Build environment.
@@ -85,6 +124,11 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	// that is deferred to a future task. The Resolver field on stepArgs is
 	// kept for callers that set it, but is no longer called in runStep.
 	env := os.Environ()
+	// Ambient env_file values first: pre-filtered to names the host does
+	// not set, so the host always wins, and later injections override.
+	for k, v := range a.EnvView.ambient {
+		env = append(env, k+"="+v)
+	}
 	for k, v := range binding.Env {
 		env = append(env, k+"="+v)
 	}
@@ -92,6 +136,14 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 		env = append(env, k+"="+v)
 	}
 	for k, v := range a.StepOutEnv {
+		env = append(env, k+"="+v)
+	}
+	// ExtraEnv (consumer uses-step env:) injects after ambient/inputs/step-outputs;
+	// step's own env: injects last so it wins over the consumer's injection.
+	for k, v := range a.ExtraEnv {
+		env = append(env, k+"="+v)
+	}
+	for k, v := range stepEnv {
 		env = append(env, k+"="+v)
 	}
 	outTag := a.OutTag
@@ -169,12 +221,12 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	stderrDone := make(chan pumpResult, 1)
 	go func() {
 		defer stdoutR.Close()
-		out, err := pumpStdout(stdoutR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
+		out, err := pumpStdout(stdoutR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs, a.Redactor)
 		stdoutDone <- pumpResult{out: out, err: err}
 	}()
 	go func() {
 		defer stderrR.Close()
-		out, err := pumpStderr(stderrR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
+		out, err := pumpStderr(stderrR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs, a.Redactor)
 		stderrDone <- pumpResult{out: out, err: err}
 	}()
 
@@ -234,14 +286,4 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 		CtxErr:            ctx.Err(),
 		Outputs:           stepOut,
 	}, errors.Join(stdoutRes.err) // stderr errors are non-fatal
-}
-
-// envBytes is only used in tests to verify env-var building is stable.
-func envBytes(env []string) []byte {
-	var b bytes.Buffer
-	for _, e := range env {
-		b.WriteString(e)
-		b.WriteByte('\n')
-	}
-	return b.Bytes()
 }

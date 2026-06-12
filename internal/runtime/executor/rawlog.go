@@ -16,6 +16,9 @@ type rawLog struct {
 	f   *os.File
 	w   *bufio.Writer
 	now func() time.Time
+	// red masks registered secret values before any line is persisted.
+	// Set by the Run that constructs this rawLog; nil-safe.
+	red *redactor
 }
 
 func newRawLog(path string, now func() time.Time) (*rawLog, error) {
@@ -45,6 +48,7 @@ func (r *rawLog) WriteAnnotated(stepIdx int, stream string, content []byte) {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	content = r.red.Apply(content)
 	ts := r.now().UTC().Format(time.RFC3339Nano)
 	// Pad to 9 fractional digits for stable golden tests; Go's RFC3339Nano
 	// trims trailing zeros, so pad explicitly.

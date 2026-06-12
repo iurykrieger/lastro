@@ -17,6 +17,8 @@ steps:
     with:
       kind: session
       persona: seeded-owner
+    env:
+      NEXTAUTH_SECRET: ${{ env.NEXTAUTH_SECRET }}
   - id: request
     uses: e2e-test
     with:

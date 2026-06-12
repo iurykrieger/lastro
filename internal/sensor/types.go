@@ -26,11 +26,16 @@ type Sensor struct {
 	// ObserveWindow optionally bounds how long an attaching observational
 	// sensor watches a shared service's signal stream before rolling up on
 	// completeness. A Go duration string ("45s"); empty means runtime default.
-	ObserveWindow string                 `json:"observe_window,omitempty"`
-	Uses          []string               `json:"uses"`                 // StackComponent ids (grounding invariant 1)
-	DependsOn     []string               `json:"depends_on,omitempty"` // Sensor ids (optional)
-	Inputs        map[string]InputSpec   `json:"inputs,omitempty"`
-	Outputs       map[string]OutputSpec  `json:"outputs,omitempty"`
+	ObserveWindow string                `json:"observe_window,omitempty"`
+	Uses          []string              `json:"uses"`                 // StackComponent ids (grounding invariant 1)
+	DependsOn     []string              `json:"depends_on,omitempty"` // Sensor ids (optional)
+	Inputs        map[string]InputSpec  `json:"inputs,omitempty"`
+	Outputs       map[string]OutputSpec `json:"outputs,omitempty"`
+	// Env declares ambient environment variables the sensor's recipes read
+	// (secrets, connection strings). The runtime enforces required entries
+	// pre-spawn; on a composed primitive a consumer step's env: injection
+	// also satisfies the requirement.
+	Env map[string]EnvSpec `json:"env,omitempty"`
 	// SignalMatches declares regex matchers applied to every stdout/stderr line.
 	// Each match synthesizes a Signal (see internal/runtime/executor). Valid on
 	// both assertion and observational sensors.
@@ -72,6 +77,10 @@ type Step struct {
 	Run  string            `json:"run,omitempty"`
 	Uses string            `json:"uses,omitempty"`
 	With map[string]string `json:"with,omitempty"`
+	// Env is the per-step environment injection map (issue #49). Values
+	// support ${{ }} interpolation and are resolved by the executor at
+	// spawn time, never inlined into script text.
+	Env map[string]string `json:"env,omitempty"`
 }
 
 // InputSpec declares a composable input on a primitive sensor.
@@ -87,6 +96,21 @@ type OutputSpec struct {
 	From        string `json:"from"`
 	Description string `json:"description,omitempty"`
 }
+
+// EnvSpec declares one ambient environment variable a sensor's recipes
+// read. Required is a pointer so the zero value distinguishes "unset"
+// (defaults to true) from an explicit false.
+type EnvSpec struct {
+	Required    *bool  `json:"required,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// IsRequired reports whether the variable must be present and non-empty
+// in the merged host+env_file view before any step spawns.
+// Zero-value caveat: indexing a nil or empty map with a missing key yields
+// the zero EnvSpec (Required == nil), so IsRequired returns true. Callers
+// must check map presence before indexing by name to avoid a false positive.
+func (e EnvSpec) IsRequired() bool { return e.Required == nil || *e.Required }
 
 // UseCaseFixtureOwnership is the seam between this package and the
 // authoritative source of "which fixtures does use case X own."

@@ -1,5 +1,6 @@
 schema_version: 1.0.0
 angle: database
+env_guidance: "Query recipes read the datastore connection string from the process environment (e.g. DATABASE_URL); declare it in the generated sensor's top-level env: block so an absent value fails fast as missing_env."
 inputs:
   query:
     description: "The query to run, in the detected datastore's native dialect"

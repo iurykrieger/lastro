@@ -133,6 +133,16 @@ func TestValidateRejectsDeclaredFixtureUnused(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsEnvRefInUseCaseText(t *testing.T) {
+	uc := validUseCase()
+	// env.* refs are tech-specific and must not appear in tech-agnostic use-case text.
+	uc.Given = []string{"the service token is ${{ env.SOME_NAME }}"}
+	err := Validate(uc, fixturestub.New(nil))
+	if !hasCode(err, "USECASE_TEMPLATE_ENV_NOT_ALLOWED") {
+		t.Errorf("want USECASE_TEMPLATE_ENV_NOT_ALLOWED, got %v", err)
+	}
+}
+
 func TestValidateAccumulatesMultipleErrors(t *testing.T) {
 	uc := validUseCase()
 	uc.Title = ""

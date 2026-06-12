@@ -27,7 +27,7 @@ type Position struct {
 }
 
 // Segment is the AST node interface. Concrete types: Literal, FixtureRef,
-// EntryPointRef.
+// EntryPointRef, InputRef, StepOutputRef, EnvRef.
 type Segment interface{ isSegment() }
 
 // Literal is plain text between or outside {{ }} blocks.

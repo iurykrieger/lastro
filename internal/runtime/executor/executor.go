@@ -2,11 +2,9 @@ package executor
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/aggregate"
@@ -104,39 +102,13 @@ func (e *Executor) Run(
 		return aggregate.AggregateSignal{}, fmt.Errorf("executor: use case lookup failed for sensor %q", s.ID)
 	}
 
-	// Compile signal_matches into matchers, applying defaults (verdict=pass,
-	// confidence=1) and synthesizing a heal_hint for fail/warn matchers that
-	// omit one (the Signal schema requires it). Expected (pass-only) keys feed
+	// Compile signal_matches into matchers. Expected (pass-only) keys feed
 	// completeness.
-	matchers := make([]signalMatcher, 0, len(s.SignalMatches))
-	for _, sm := range s.SignalMatches {
-		re, cerr := regexp.Compile(sm.Pattern)
-		if cerr != nil {
-			return aggregate.AggregateSignal{}, fmt.Errorf("executor: signal_match %q: bad pattern %q: %w", sm.Key, sm.Pattern, cerr)
-		}
-		verdict := sm.Verdict
-		if verdict == "" {
-			verdict = enums.VerdictPass
-		}
-		confidence := 1.0
-		if sm.Confidence != nil {
-			confidence = *sm.Confidence
-		}
-		var hh *signal.HealHint
-		if sm.HealHint != nil {
-			hh = &signal.HealHint{Summary: sm.HealHint.Summary, Rationale: sm.HealHint.Rationale}
-		}
-		if (verdict == enums.VerdictFail || verdict == enums.VerdictWarn) && hh == nil {
-			hh = &signal.HealHint{
-				Summary:   fmt.Sprintf("matched %s pattern %q", verdict, sm.Key),
-				Rationale: fmt.Sprintf("a stdout/stderr line matched signal_match %q", sm.Key),
-			}
-		}
-		matchers = append(matchers, signalMatcher{Key: sm.Key, Re: re, Verdict: verdict, Confidence: confidence, HealHint: hh})
-		if sm.Expected {
-			expectedObs = mergeKeys(expectedObs, []string{sm.Key})
-		}
+	matchers, expectedKeys, err := compileMatchers(s.SignalMatches)
+	if err != nil {
+		return aggregate.AggregateSignal{}, err
 	}
+	expectedObs = mergeKeys(expectedObs, expectedKeys)
 	var obs *signalConfig
 	if len(expectedObs) > 0 || len(matchers) > 0 {
 		obs = &signalConfig{
@@ -147,18 +119,8 @@ func (e *Executor) Run(
 			Now:           e.opts.Now,
 			Matchers:      matchers,
 		}
-		// Probe-validate each matcher's signal envelope (schema fields + heal_hint requirement). Evidence values are dynamic strings (additionalProperties), so only the envelope is checked here.
-		for _, m := range matchers {
-			probeSub := make([]string, m.Re.NumSubexp()+1)
-			probeSub[0] = "<probe>"
-			probe := obs.synthesize(m, probeSub)
-			b, mErr := json.Marshal(probe)
-			if mErr != nil {
-				return aggregate.AggregateSignal{}, fmt.Errorf("executor: marshal probe signal for %q: %w", m.Key, mErr)
-			}
-			if _, vErr := signal.DecodeLine(b); vErr != nil {
-				return aggregate.AggregateSignal{}, fmt.Errorf("executor: signal_match %q produces an invalid signal: %w", m.Key, vErr)
-			}
+		if err := probeValidate(obs, matchers); err != nil {
+			return aggregate.AggregateSignal{}, err
 		}
 	}
 

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/sensor"
 	"github.com/iurykrieger/lastro/internal/signal"
 )
 
@@ -23,6 +24,64 @@ type signalMatcher struct {
 	Verdict    enums.Verdict
 	Confidence float64
 	HealHint   *signal.HealHint
+}
+
+// compileMatchers compiles signal_matches into matchers, applying defaults
+// (verdict=pass, confidence=1) and synthesizing a heal_hint for fail/warn
+// matchers that omit one (the Signal schema requires it). The second return
+// is the keys of matchers flagged expected:true, in declaration order.
+func compileMatchers(sms []sensor.SignalMatch) ([]signalMatcher, []string, error) {
+	matchers := make([]signalMatcher, 0, len(sms))
+	var expectedKeys []string
+	for _, sm := range sms {
+		re, cerr := regexp.Compile(sm.Pattern)
+		if cerr != nil {
+			return nil, nil, fmt.Errorf("executor: signal_match %q: bad pattern %q: %w", sm.Key, sm.Pattern, cerr)
+		}
+		verdict := sm.Verdict
+		if verdict == "" {
+			verdict = enums.VerdictPass
+		}
+		confidence := 1.0
+		if sm.Confidence != nil {
+			confidence = *sm.Confidence
+		}
+		var hh *signal.HealHint
+		if sm.HealHint != nil {
+			hh = &signal.HealHint{Summary: sm.HealHint.Summary, Rationale: sm.HealHint.Rationale}
+		}
+		if (verdict == enums.VerdictFail || verdict == enums.VerdictWarn) && hh == nil {
+			hh = &signal.HealHint{
+				Summary:   fmt.Sprintf("matched %s pattern %q", verdict, sm.Key),
+				Rationale: fmt.Sprintf("a stdout/stderr line matched signal_match %q", sm.Key),
+			}
+		}
+		matchers = append(matchers, signalMatcher{Key: sm.Key, Re: re, Verdict: verdict, Confidence: confidence, HealHint: hh})
+		if sm.Expected {
+			expectedKeys = append(expectedKeys, sm.Key)
+		}
+	}
+	return matchers, expectedKeys, nil
+}
+
+// probeValidate checks each matcher's signal envelope (schema fields +
+// heal_hint requirement) by synthesizing a probe signal through obs.
+// Evidence values are dynamic strings (additionalProperties), so only the
+// envelope is checked here.
+func probeValidate(obs *signalConfig, matchers []signalMatcher) error {
+	for _, m := range matchers {
+		probeSub := make([]string, m.Re.NumSubexp()+1)
+		probeSub[0] = "<probe>"
+		probe := obs.synthesize(m, probeSub)
+		b, mErr := json.Marshal(probe)
+		if mErr != nil {
+			return fmt.Errorf("executor: marshal probe signal for %q: %w", m.Key, mErr)
+		}
+		if _, vErr := signal.DecodeLine(b); vErr != nil {
+			return fmt.Errorf("executor: signal_match %q produces an invalid signal: %w", m.Key, vErr)
+		}
+	}
+	return nil
 }
 
 // signalConfig carries what the pumps need to synthesize signals from matched

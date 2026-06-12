@@ -202,6 +202,15 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 		return topStepResult{TermReason: enums.TerminationError, StepErr: err}
 	}
 
+	// Make the primitive's own signal_matches live for its inner steps
+	// (issue #46): merge them under the consumer's matchers so the
+	// grade-and-emit contract holds when the primitive runs composed, not
+	// only when it self-runs. Signals stay attributed to the consumer.
+	obs, err := e.composeObs(a, prim)
+	if err != nil {
+		return topStepResult{TermReason: enums.TerminationError, StepErr: err}
+	}
+
 	// innerOutputs collects each inner step's parsed HARNESS_OUTPUT so the
 	// primitive's declared Outputs can reference them, and so later inner
 	// steps can read earlier inner steps' outputs.
@@ -235,7 +244,7 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 			Signaler:    e.opts.GroupSignaler,
 			Shell:       e.opts.Shell,
 			ExpectedObs: a.ExpectedObs,
-			Obs:         a.Obs,
+			Obs:         obs,
 			RawLog:      a.RawLog,
 			SignalsW:    a.SignalsW,
 			Stop:        a.Stop,
@@ -254,11 +263,86 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 			res.StepErr = stepErr
 			return res
 		}
+		// Grading gate: an inner step that exits non-zero after reporting a
+		// fail or inconclusive signal has terminally graded its work. End
+		// the expansion AND the run with TerminationError so the aggregate
+		// rolls up via Rule 0 (explicit fail wins, else inconclusive) — a
+		// downstream gated step must never run and outrank the grade
+		// (issue #45 / #46). Pass/warn signals and zero exits keep the
+		// run-step parity: exit non-zero with signals = completed.
+		if outcome.ExitErr != nil {
+			if v, gated := gradedVerdict(outcome.Signals); gated {
+				res.TermReason = enums.TerminationError
+				res.StepErr = fmt.Errorf("executor: composed primitive %q step %q graded %s and exited non-zero", prim.ID, inner.ID, v)
+				return res
+			}
+		}
 	}
 
 	// Re-export the primitive's declared outputs under the uses-step id.
 	res.Outputs = resolveOutputs(prim.Outputs, innerOutputs)
 	return res
+}
+
+// composeObs returns the signal config the expansion's inner steps run
+// under. When the primitive declares no signal_matches the consumer's
+// config passes through unchanged. Otherwise the primitive's matchers are
+// compiled and merged after the consumer's, deduplicated by key with the
+// consumer winning on collision, and the merged config keeps the
+// consumer's identity (sensor_id / use_case_id / angle) so synthesized
+// signals are attributed to the running sensor. The primitive's
+// expected:true flags do not feed the run-level completeness: expected
+// observations remain the consumer's declaration.
+func (e *Executor) composeObs(a topStepArgs, prim sensor.Sensor) (*signalConfig, error) {
+	if len(prim.SignalMatches) == 0 {
+		return a.Obs, nil
+	}
+	primMatchers, _, err := compileMatchers(prim.SignalMatches)
+	if err != nil {
+		return nil, fmt.Errorf("executor: composed primitive %q: %w", prim.ID, err)
+	}
+	seen := map[string]struct{}{}
+	var merged []signalMatcher
+	if a.Obs != nil {
+		merged = append(merged, a.Obs.Matchers...)
+		for _, m := range a.Obs.Matchers {
+			seen[m.Key] = struct{}{}
+		}
+	}
+	for _, m := range primMatchers {
+		if _, dup := seen[m.Key]; dup {
+			continue // consumer wins on key collision
+		}
+		merged = append(merged, m)
+	}
+	obs := &signalConfig{
+		SchemaVersion: observationSignalSchemaVersion,
+		SensorID:      a.Sensor.ID,
+		UseCaseID:     a.Sensor.UseCaseID,
+		Angle:         a.Sensor.Angle,
+		Now:           e.opts.Now,
+		Matchers:      merged,
+	}
+	if err := probeValidate(obs, primMatchers); err != nil {
+		return nil, fmt.Errorf("executor: composed primitive %q: %w", prim.ID, err)
+	}
+	return obs, nil
+}
+
+// gradedVerdict reports whether signals carry a terminally grading verdict
+// (fail outranks inconclusive). Pass/warn signals are not grading: they
+// never end an expansion.
+func gradedVerdict(signals []signal.Signal) (enums.Verdict, bool) {
+	var verdict enums.Verdict
+	for _, s := range signals {
+		switch s.Verdict {
+		case enums.VerdictFail:
+			return enums.VerdictFail, true
+		case enums.VerdictInconclusive:
+			verdict = enums.VerdictInconclusive
+		}
+	}
+	return verdict, verdict != ""
 }
 
 // buildInputEnv computes the HARNESS_INPUT_<NAME> env for a primitive's

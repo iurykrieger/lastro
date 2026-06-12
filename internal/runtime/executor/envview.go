@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -23,14 +24,14 @@ type envView struct {
 // unparseable file is an error the run surfaces as an inconclusive
 // env-file-invalid signal.
 func loadEnvView(path string) (view envView, fileMissing bool, err error) {
-	view = envView{ambient: map[string]string{}}
 	if path == "" {
-		return view, false, nil
+		return envView{}, false, nil
 	}
+	view = envView{ambient: map[string]string{}}
 	view.source = path
 	raw, err := godotenv.Read(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return view, true, nil
 		}
 		return envView{}, false, fmt.Errorf("executor: parse env_file %s: %w", path, err)

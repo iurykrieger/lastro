@@ -42,6 +42,10 @@ func RenderLabels(segs []Segment) string {
 			b.WriteString(".outputs.")
 			b.WriteString(v.Name)
 			b.WriteByte(']')
+		case EnvRef:
+			b.WriteString("[env: ")
+			b.WriteString(v.Name)
+			b.WriteByte(']')
 		}
 	}
 	return b.String()

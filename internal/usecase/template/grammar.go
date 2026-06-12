@@ -3,17 +3,19 @@
 // docs/harness-framework/plan.md §4.1.2 and recapped here:
 //
 //	template      := "${{" ws? ref ws? "}}"
-//	ref           := fixtureRef | entryPointRef | inputRef | stepOutputRef
+//	ref           := fixtureRef | entryPointRef | inputRef | stepOutputRef | envRef
 //	fixtureRef    := "fixtures" "." ID ( "." JSONKEY )*
 //	entryPointRef := "entry_points" "." ID ( "." "spec" "." JSONKEY )?
 //	inputRef      := "inputs" "." INPUTNAME
 //	stepOutputRef := "steps" "." ID "." "outputs" "." ID
+//	envRef        := "env" "." ENVNAME
 //
 // Tokens:
 //
 //	ID        := [a-z][a-z0-9-]{0,127}     (kebab-case per schema-freeze)
 //	INPUTNAME := [a-z][a-z0-9_-]{0,127}    (snake_case input names, e.g. base_url)
 //	JSONKEY   := [a-zA-Z_][a-zA-Z0-9_-]*   (allows hyphens for JSON keys)
+//	ENVNAME   := [A-Z_][A-Z0-9_]{0,127}    (POSIX-style exported variable name)
 package template
 
 // Position locates a token within its source string. Line and Col are
@@ -73,3 +75,15 @@ type StepOutputRef struct {
 }
 
 func (StepOutputRef) isSegment() {}
+
+// EnvRef is `${{ env.<NAME> }}` — an ambient environment variable resolved
+// from the harness host environment merged with the manifest-declared
+// env_file (host wins). Compiles to a quoted "${NAME}" shell lookup; the
+// executor injects the merged view into the child env and refuses to
+// spawn when a referenced name is unset or empty (missing_env).
+type EnvRef struct {
+	Name string
+	Pos  Position
+}
+
+func (EnvRef) isSegment() {}

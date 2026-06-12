@@ -245,3 +245,32 @@ func TestParseStepOutputRefRequiresOutputs(t *testing.T) {
 		t.Fatal("expected error for missing 'outputs' segment")
 	}
 }
+
+func TestParse_EnvRef(t *testing.T) {
+	segs, err := Parse("${{ env.NEXTAUTH_SECRET }}")
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if len(segs) != 1 {
+		t.Fatalf("segments = %d, want 1", len(segs))
+	}
+	ref, ok := segs[0].(EnvRef)
+	if !ok {
+		t.Fatalf("segment type = %T, want EnvRef", segs[0])
+	}
+	if ref.Name != "NEXTAUTH_SECRET" {
+		t.Errorf("name = %q, want NEXTAUTH_SECRET", ref.Name)
+	}
+}
+
+func TestParse_EnvRefRejectsBadNames(t *testing.T) {
+	for _, in := range []string{
+		"${{ env.lower }}",     // lowercase not an env var name
+		"${{ env.NAME.more }}", // no further keys
+		"${{ env. }}",          // empty name
+	} {
+		if _, err := Parse(in); err == nil {
+			t.Errorf("Parse(%q): expected error, got nil", in)
+		}
+	}
+}

@@ -404,6 +404,8 @@ func resolveWithValue(raw string, fixturePaths, stepOutEnv map[string]string) (s
 			return "", fmt.Errorf("inputs.* is not valid inside a with-value")
 		case template.EntryPointRef:
 			return "", fmt.Errorf("entry_points.* is not valid inside a with-value")
+		case template.EnvRef:
+			return "", fmt.Errorf("env.* is not valid inside a with-value; declare it under the step's env: map instead")
 		default:
 			return "", fmt.Errorf("unsupported segment %T in with-value", s)
 		}

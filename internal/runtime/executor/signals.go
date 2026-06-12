@@ -169,7 +169,7 @@ type pumpOutput struct {
 //
 // pumpStdout returns when r returns EOF or any scanner-level error. The
 // scanner error (if any) is returned wrapped; a bare EOF returns nil.
-func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter, obs *signalConfig) (pumpOutput, error) {
+func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter, obs *signalConfig, red *redactor) (pumpOutput, error) {
 	out := pumpOutput{}
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 64*1024), maxStdoutLineBytes)
@@ -177,6 +177,9 @@ func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter,
 		line := scanner.Bytes()
 		// Copy because scanner reuses the underlying buffer.
 		lineCopy := append([]byte(nil), line...)
+		// Redact before ANYTHING sees the line — raw.log, signal matching,
+		// JSON decode — so matched_line evidence and aggregates are clean.
+		lineCopy = red.Apply(lineCopy)
 		rl.WriteAnnotated(stepIdx, "stdout", lineCopy)
 
 		trimmed := bytes.TrimSpace(lineCopy)
@@ -230,12 +233,15 @@ func pumpStdout(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter,
 // against the expected-observation regexes, since tools like docker compose
 // print status ("Container X Healthy") to stderr rather than stdout.
 // Returns when r returns EOF.
-func pumpStderr(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter, obs *signalConfig) (pumpOutput, error) {
+func pumpStderr(r io.Reader, stepIdx int, rl *rawLog, signalsJSONL *jsonlWriter, obs *signalConfig, red *redactor) (pumpOutput, error) {
 	out := pumpOutput{}
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 64*1024), maxStdoutLineBytes)
 	for scanner.Scan() {
 		lineCopy := append([]byte(nil), scanner.Bytes()...)
+		// Redact before ANYTHING sees the line — raw.log, signal matching,
+		// JSON decode — so matched_line evidence and aggregates are clean.
+		lineCopy = red.Apply(lineCopy)
 		rl.WriteAnnotated(stepIdx, "stderr", lineCopy)
 		if obs != nil {
 			if trimmed := bytes.TrimSpace(lineCopy); len(trimmed) > 0 {
@@ -256,6 +262,8 @@ type jsonlWriter struct {
 	mu sync.Mutex
 	f  *os.File
 	w  *bufio.Writer
+	// red masks registered secret values in persisted signal lines. nil-safe.
+	red *redactor
 }
 
 func newJSONLWriter(path string) (*jsonlWriter, error) {
@@ -269,6 +277,7 @@ func newJSONLWriter(path string) (*jsonlWriter, error) {
 func (j *jsonlWriter) WriteLine(b []byte) error {
 	j.mu.Lock()
 	defer j.mu.Unlock()
+	b = j.red.Apply(b)
 	if _, err := j.w.Write(b); err != nil {
 		return err
 	}

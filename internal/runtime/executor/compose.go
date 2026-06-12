@@ -33,6 +33,7 @@ type topStepArgs struct {
 	SignalsW    *jsonlWriter
 	Stop        <-chan struct{}
 	StepOutEnv  map[string]string // outputs of prior top-level steps
+	Redactor    *redactor
 }
 
 // topStepResult is the rolled-up outcome of one top-level step. Outputs
@@ -141,6 +142,7 @@ func (e *Executor) execRunStep(ctx context.Context, a topStepArgs) topStepResult
 		Stop:        a.Stop,
 		OnStart:     e.opts.OnStepStart,
 		StepOutEnv:  a.StepOutEnv,
+		Redactor:    a.Redactor,
 	})
 	term, stepErr := evalTermination(ctx, outcome, err)
 	return topStepResult{
@@ -251,6 +253,7 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 			OnStart:     e.opts.OnStepStart,
 			InputEnv:    inputEnv,
 			StepOutEnv:  stepOutEnv,
+			Redactor:    a.Redactor,
 		})
 
 		innerOutputs[inner.ID] = outcome.Outputs

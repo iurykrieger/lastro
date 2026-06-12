@@ -140,6 +140,10 @@ func (e *Executor) Run(
 	}
 	defer sw.Close()
 
+	red := &redactor{}
+	rl.red = red
+	sw.red = red
+
 	startedAt := e.opts.Now()
 	allSignals := []aggregate.Signal{}
 	observedKeys := []string{}
@@ -179,6 +183,7 @@ func (e *Executor) Run(
 			SignalsW:    sw,
 			Stop:        stop,
 			StepOutEnv:  stepOutEnv,
+			Redactor:    red,
 		})
 
 		// Store re-exported outputs for use by subsequent steps.

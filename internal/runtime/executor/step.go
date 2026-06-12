@@ -46,6 +46,8 @@ type stepArgs struct {
 	// (composed primitive inner steps share consumer step ids, so the bare
 	// Step.ID is not unique). When empty, runStep falls back to Step.ID.
 	OutTag string
+	// Redactor masks injected secret values in every persisted byte. May be nil.
+	Redactor *redactor
 }
 
 // stepOutcome reports the per-step result.
@@ -169,12 +171,12 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	stderrDone := make(chan pumpResult, 1)
 	go func() {
 		defer stdoutR.Close()
-		out, err := pumpStdout(stdoutR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
+		out, err := pumpStdout(stdoutR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs, a.Redactor)
 		stdoutDone <- pumpResult{out: out, err: err}
 	}()
 	go func() {
 		defer stderrR.Close()
-		out, err := pumpStderr(stderrR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs)
+		out, err := pumpStderr(stderrR, a.StepIdx, a.RawLog, a.SignalsW, a.Obs, a.Redactor)
 		stderrDone <- pumpResult{out: out, err: err}
 	}()
 

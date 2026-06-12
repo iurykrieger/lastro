@@ -21,7 +21,7 @@ func TestPumpStdout_HappyPath(t *testing.T) {
 	signalsJSONL, _ := newJSONLWriter(dir + "/signals.jsonl")
 	defer signalsJSONL.Close()
 
-	out, err := pumpStdout(stdout, 1, rl, signalsJSONL, &signalConfig{} /*observational, no matchers*/)
+	out, err := pumpStdout(stdout, 1, rl, signalsJSONL, &signalConfig{} /*observational, no matchers*/, nil)
 	if err != nil {
 		t.Fatalf("pumpStdout: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestPumpStdout_BadJSONLineKeepsStreaming(t *testing.T) {
 	jw, _ := newJSONLWriter(dir + "/signals.jsonl")
 	defer jw.Close()
 
-	out, err := pumpStdout(stdout, 1, rl, jw, nil)
+	out, err := pumpStdout(stdout, 1, rl, jw, nil, nil)
 	if err != nil {
 		t.Fatalf("pumpStdout: %v", err)
 	}
@@ -82,7 +82,7 @@ func TestPumpStdout_RegexMatchSynthesizesObservationSignal(t *testing.T) {
 			{Key: "dynamodb-up", Re: regexp.MustCompile(`Container dynamodb\s+Started`), Verdict: "pass", Confidence: 1},
 		},
 	}
-	out, err := pumpStdout(stdout, 1, rl, jw, obs)
+	out, err := pumpStdout(stdout, 1, rl, jw, obs, nil)
 	if err != nil {
 		t.Fatalf("pumpStdout: %v", err)
 	}
@@ -132,7 +132,7 @@ func TestPumpStdout_SignalMatchSynthesis(t *testing.T) {
 				Verdict: "pass", Confidence: 1},
 		},
 	}
-	out, err := pumpStdout(stdout, 1, rl, jw, cfg)
+	out, err := pumpStdout(stdout, 1, rl, jw, cfg, nil)
 	if err != nil {
 		t.Fatalf("pumpStdout: %v", err)
 	}
@@ -176,7 +176,7 @@ func TestPumpStdout_JSONAppLogMatchedNoParseError(t *testing.T) {
 				HealHint: &signal.HealHint{Summary: "5xx", Rationale: "server error"}},
 		},
 	}
-	out, err := pumpStdout(stdout, 1, rl, jw, obs)
+	out, err := pumpStdout(stdout, 1, rl, jw, obs, nil)
 	if err != nil {
 		t.Fatalf("pumpStdout: %v", err)
 	}
@@ -224,7 +224,7 @@ func TestPumpStdout_PlainTextIsNotAParseError(t *testing.T) {
 	jw, _ := newJSONLWriter(dir + "/signals.jsonl")
 	defer jw.Close()
 
-	out, err := pumpStdout(stdout, 2, rl, jw, nil)
+	out, err := pumpStdout(stdout, 2, rl, jw, nil, nil)
 	if err != nil {
 		t.Fatalf("pumpStdout: %v", err)
 	}

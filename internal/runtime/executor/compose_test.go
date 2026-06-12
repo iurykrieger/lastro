@@ -147,6 +147,124 @@ func TestCompose_OutputReExport(t *testing.T) {
 	}
 }
 
+// TestCompose_AuthHeaderFlowsBetweenPrimitives is the issue-#45 path: a
+// provisioning primitive mints a credential and re-exports it as `header`;
+// a later uses-step feeds it into a request primitive via
+// `${{ steps.auth.outputs.header }}` in its with-value. The request
+// primitive asserts the exact header (spaces, colon, '=' inside the value)
+// arrived intact.
+func TestCompose_AuthHeaderFlowsBetweenPrimitives(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	const header = "Cookie: session-token=tok-abc123"
+
+	provision := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "provision-auth", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:    []string{"fake-stack"},
+		Inputs:  map[string]sensor.InputSpec{"kind": {Required: true}},
+		Outputs: map[string]sensor.OutputSpec{"header": {From: "${{ steps.mint.outputs.header }}"}},
+		Steps: []sensor.Step{
+			{ID: "mint", Run: `printf 'header=` + header + `\n' >> "$HARNESS_OUTPUT"; ` + fakeSensorBin + ` signal pass`},
+		},
+	}
+
+	request := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-request", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:   []string{"fake-stack"},
+		Inputs: map[string]sensor.InputSpec{"headers": {Required: true}},
+		Steps: []sensor.Step{
+			// NOTE: the ref carries its own safe quoting from template.Compile
+			// ("${VAR}") — wrapping it in additional quotes would unquote the
+			// expansion and word-split the header value.
+			{ID: "do", Run: `if [ ${{ inputs.headers }} = "` + header + `" ]; then ` + fakeSensorBin + ` signal pass; else ` + fakeSensorBin + ` signal fail; fi`},
+		},
+	}
+
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "fake-uc",
+		Angle: enums.AngleE2ETest, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{ID: "auth", Uses: "provision-auth", With: map[string]string{"kind": "session"}},
+			{ID: "request", Uses: "core-request", With: map[string]string{"headers": "${{ steps.auth.outputs.header }}"}},
+		},
+	}
+
+	ex := New(composeBaseOptions(t, uc, provision, request))
+	agg, err := ex.Run(context.Background(), consumer, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (rollup=%+v)", agg.Verdict, agg.Rollup)
+	}
+}
+
+// TestCompose_ProvisioningCrashAbortsBeforeRequest pins the fail-safe of
+// issue #45: when the provisioning step exits non-zero without emitting a
+// signal, the run aborts before the gated request step and aggregates
+// inconclusive — never a misleading behavioral fail, even when the
+// consumer declares expected matchers.
+func TestCompose_ProvisioningCrashAbortsBeforeRequest(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+
+	provision := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "provision-auth", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:   []string{"fake-stack"},
+		Inputs: map[string]sensor.InputSpec{"kind": {Required: true}},
+		Steps: []sensor.Step{
+			{ID: "mint", Run: `echo 'auth-not-provisioned kind=session reason=mint-failed'; exit 1`},
+		},
+	}
+
+	request := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-request", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:   []string{"fake-stack"},
+		Inputs: map[string]sensor.InputSpec{"headers": {Required: false}},
+		Steps: []sensor.Step{
+			{ID: "do", Run: `echo "${{ inputs.headers }}"; ` + fakeSensorBin + ` signal fail`},
+		},
+	}
+
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "fake-uc",
+		Angle: enums.AngleE2ETest, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "created", Pattern: "status=201", Verdict: enums.VerdictPass, Expected: true},
+		},
+		Steps: []sensor.Step{
+			{ID: "auth", Uses: "provision-auth", With: map[string]string{"kind": "session"}},
+			{ID: "request", Uses: "core-request", With: map[string]string{"headers": "${{ steps.auth.outputs.header }}"}},
+		},
+	}
+
+	ex := New(composeBaseOptions(t, uc, provision, request))
+	agg, err := ex.Run(context.Background(), consumer, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictInconclusive {
+		t.Errorf("verdict = %q, want inconclusive (rollup=%+v, term=%q)", agg.Verdict, agg.Rollup, agg.TerminationReason)
+	}
+	if agg.Rollup.FailCount != 0 {
+		t.Errorf("FailCount = %d, want 0 — the gated request step must never have run", agg.Rollup.FailCount)
+	}
+}
+
 // TestCompose_WithFixtureRefBound verifies that a consumer's with-value
 // containing ${{ fixtures.<id> }} resolves to the bound fixture file path.
 // The primitive's inner step reads the file via ${{ inputs.body }} and

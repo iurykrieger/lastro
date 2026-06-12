@@ -1,0 +1,10 @@
+schema_version: 1.0.0
+angle: environment
+primitive: provision-auth
+inputs:
+  kind:
+    description: "Credential family to mint: 'session' (a logged-in user credential the app's session middleware accepts, e.g. a signed session cookie), 'bearer' (a JWT/opaque token sent as 'Authorization: Bearer ...', obtained from the app's login/token endpoint or minted with its signing secret), 'api-key' (a seeded machine credential, e.g. a key row inserted into the datastore), 'basic' (HTTP Basic from a seeded user's credentials), or 'none' (no auth — emit an empty header so the primitive self-runs as a smoke test)."
+    suggested_default: "none"
+  persona:
+    description: "Which identity to provision: a seeded user/tenant/role the recipe knows how to materialize (e.g. 'seeded-owner'). Recipes map personas to concrete subjects deterministically."
+    suggested_default: "default"

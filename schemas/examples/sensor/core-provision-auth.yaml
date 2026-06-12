@@ -1,0 +1,82 @@
+# Parameterized environment primitive: mints the credential an auth-gated
+# use case needs and re-exports it as one ready-to-send HTTP header line.
+# Consumers compose it BEFORE their e2e-test step and feed the output into
+# the request's `headers` input:
+#
+#   - id: auth
+#     uses: provision-auth
+#     with: { kind: session, persona: seeded-owner }
+#   - id: request
+#     uses: e2e-test
+#     with: { headers: "${{ steps.auth.outputs.header }}", ... }
+#
+# The recipe bodies are stack-specific and generated per repo (e.g. encode
+# a NextAuth JWT with the app's secret via the app's own dependency, or
+# insert an API-key row through the app's db tooling). The contract is
+# fixed: emit `header=<one header line>` (empty for kind=none) on success;
+# emit `auth-not-provisioned kind=<k> reason=<r>` and exit 1 when the
+# credential cannot be minted — graded inconclusive, never a misleading
+# fail of the use case itself.
+schema_version: 1.0.0
+id: provision-auth
+scope: core
+angle: environment
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: [node]
+depends_on: [run-dev]
+inputs:
+  kind:    { required: true,  default: none }
+  persona: { required: false, default: default }
+outputs:
+  header: { from: "${{ steps.mint.outputs.header }}" }
+signal_matches:
+  - key: auth-provisioned
+    pattern: "auth-provisioned kind=(?P<kind>\\S+) persona=(?P<persona>\\S+)"
+    verdict: pass
+  - key: auth-not-provisioned
+    pattern: "auth-not-provisioned kind=(?P<kind>\\S+) reason=(?P<reason>\\S+)"
+    verdict: inconclusive
+    heal_hint:
+      summary: "Could not mint the credential this sensor needs"
+      rationale: "The asserted behavior sits behind an auth gate the harness could not satisfy. Fix the provisioning recipe (secret env var, seed script, datastore reachability) — the endpoint under test was never reached."
+steps:
+  - id: mint
+    run: |
+      case "${{ inputs.kind }}" in
+        none)
+          printf 'header=\n' >> "$HARNESS_OUTPUT"
+          printf 'auth-provisioned kind=none persona=%s\n' "${{ inputs.persona }}"
+          ;;
+        session)
+          token=$(node .harness/recipes/mint-session.js "${{ inputs.persona }}") || {
+            printf 'auth-not-provisioned kind=session reason=mint-failed\n'; exit 1; }
+          printf 'header=Cookie: session-token=%s\n' "$token" >> "$HARNESS_OUTPUT"
+          printf 'auth-provisioned kind=session persona=%s\n' "${{ inputs.persona }}"
+          ;;
+        bearer)
+          # Recipe: obtain a JWT from the app's login/token endpoint with the
+          # persona's seeded credentials (or mint one with the signing secret).
+          token=$(node .harness/recipes/login-token.js "${{ inputs.persona }}") || {
+            printf 'auth-not-provisioned kind=bearer reason=token-failed\n'; exit 1; }
+          printf 'header=Authorization: Bearer %s\n' "$token" >> "$HARNESS_OUTPUT"
+          printf 'auth-provisioned kind=bearer persona=%s\n' "${{ inputs.persona }}"
+          ;;
+        api-key)
+          key=$(node .harness/recipes/seed-api-key.js "${{ inputs.persona }}") || {
+            printf 'auth-not-provisioned kind=api-key reason=seed-failed\n'; exit 1; }
+          printf 'header=Authorization: Bearer %s\n' "$key" >> "$HARNESS_OUTPUT"
+          printf 'auth-provisioned kind=api-key persona=%s\n' "${{ inputs.persona }}"
+          ;;
+        basic)
+          creds=$(node .harness/recipes/seeded-credentials.js "${{ inputs.persona }}") || {
+            printf 'auth-not-provisioned kind=basic reason=no-seeded-user\n'; exit 1; }
+          printf 'header=Authorization: Basic %s\n' "$(printf '%s' "$creds" | base64 | tr -d '\n')" >> "$HARNESS_OUTPUT"
+          printf 'auth-provisioned kind=basic persona=%s\n' "${{ inputs.persona }}"
+          ;;
+        *)
+          printf 'auth-not-provisioned kind=%s reason=unknown-kind\n' "${{ inputs.kind }}"
+          exit 1
+          ;;
+      esac

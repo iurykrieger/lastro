@@ -77,6 +77,34 @@ the same line — the fail wins.
   clauses: an `expected: true` pass matcher on the expected status/body shape,
   fail matchers with `heal_hint`s for wrong status or missing fields. One
   sensor covers one use case; bind each variation to its own use case.
+- **Auth-gated entry points:** when the asserted outcome sits behind an auth
+  gate (a success 2xx, or a validation 4xx that only fires *after* auth), an
+  unauthenticated probe can never reach it — it observes the rejection branch
+  instead. Compose `provision-auth` as the step BEFORE the request and feed
+  its credential into the request's headers:
+
+  ```yaml
+  steps:
+    - id: auth
+      uses: provision-auth
+      with: { kind: session, persona: seeded-owner }   # or bearer | api-key | basic
+    - id: request
+      uses: e2e-test
+      with:
+        headers: "${{ steps.auth.outputs.header }}"
+        # method/path/body/expect_status as usual
+  ```
+
+  Pick `kind` from the scheme the route accepts: `session` (cookie),
+  `bearer` (JWT/opaque token), `api-key`, or `basic` — routes accepting
+  several get one sensor per asserted scheme, not a merged one. If
+  `.harness/sensors/core/provision-auth.yaml` does not exist,
+  do NOT emit a sensor that asserts through the gate — it would fail (or
+  coincidentally pass) for the wrong reason. Emit only the reachable
+  variation (e.g. `failure-unauthenticated`) and report the others as
+  blocked on auth provisioning. A failed provisioning recipe aborts the run
+  and aggregates `inconclusive`, never a behavioral fail.
+  Full example: `schemas/examples/sensor/uc-authenticated-consumer.yaml`.
 
 ## contracts
 

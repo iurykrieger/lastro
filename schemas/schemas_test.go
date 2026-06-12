@@ -16,6 +16,7 @@ func TestFSContainsKeySchemas(t *testing.T) {
 		"core-inputs/performance.yaml",
 		"core-inputs/logs.yaml",
 		"core-inputs/metrics.yaml",
+		"core-inputs/provision-auth.yaml",
 	}
 	for _, name := range wanted {
 		b, err := FS.ReadFile(name)

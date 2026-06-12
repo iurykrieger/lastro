@@ -1,0 +1,32 @@
+# Use-case sensor for a session-gated endpoint: provision the credential
+# first, then drive the request with it. The auth step's `header` output
+# flows into the e2e-test step's `headers` input via a step-output ref —
+# no schema extension needed, plain composition.
+schema_version: 1.0.0
+id: s-create-project-success-e2e-test
+scope: use-case
+use_case_id: uc-create-project-success
+angle: e2e-test
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+steps:
+  - id: auth
+    uses: provision-auth
+    with:
+      kind: session
+      persona: seeded-owner
+  - id: request
+    uses: e2e-test
+    with:
+      method: POST
+      path: /api/projects
+      headers: "${{ steps.auth.outputs.header }}"
+      body: ${{ fixtures.create-project-valid }}
+      expect_status: "201"
+signal_matches:
+  - key: created
+    pattern: "status=201"
+    verdict: pass
+    expected: true

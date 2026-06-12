@@ -17,6 +17,12 @@ signal_matches:
   - key: log-line
     pattern: ".+"
     verdict: pass
+  - key: startup-error
+    pattern: "Error|error|fatal"
+    verdict: fail
+    heal_hint:
+      summary: "Service failed to start"
+      rationale: "Check the server logs for the failing service."
 steps:
   - id: boot
     run: "make dev"

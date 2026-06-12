@@ -118,6 +118,13 @@ Grade over the primitive's normalized output lines (`status=`, `body=`, `rows=`,
 `p95_ms=`) with this sensor's `signal_matches`. Derive auth/merchant headers and
 regexes from the use case's preconditions and the manifest's logging library.
 
+**Ambient env:** the runtime injects the manifest's `env_file` into every
+step automatically — do NOT add `env:` maps that merely restate `.env`
+contents. Declare a step-level `env:` only to rename a var for a recipe
+(`SECRET: ${{ env.NEXTAUTH_SECRET }}`), to forward a prior step's output,
+or to satisfy a composed primitive's declared `env:` requirement from a
+non-default source. Values resolved from refs are redacted in all logs.
+
 ## How to write each sensor
 
 > **Plugin users:** `<plugin-root>` is the directory two levels above this skill file.

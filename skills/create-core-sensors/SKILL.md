@@ -48,6 +48,11 @@ Rules:
   `$HARNESS_OUTPUT` as `name=value` lines.
 - Top-level `uses:` contains only `StackComponent` ids from the manifest.
 - `depends_on:` lists core sensors that must start first (e.g. `run-dev`).
+- Declare top-level `env:` naming every ambient var a recipe reads from the
+  process environment (secrets, connection strings — see the floor's
+  `env_guidance`). The runtime injects the manifest's `env_file` into every
+  step and fails fast with `missing_env` when a required var is absent or
+  empty — never let a recipe diagnose a missing secret itself.
 
 **Grade-and-emit contract** (every parameterized primitive):
 

@@ -27,7 +27,11 @@ type CoreInputBaseline struct {
 	SchemaVersion string                       `json:"schema_version"`
 	Angle         enums.ValidationAngle        `json:"angle"`
 	Primitive     string                       `json:"primitive,omitempty"`
-	Inputs        map[string]BaselineInputSpec `json:"inputs"`
+	// EnvGuidance tells the generating skill which ambient vars this
+	// primitive's recipes typically read; the generated sensor declares
+	// the concrete names in its top-level env: block.
+	EnvGuidance string                       `json:"env_guidance,omitempty"`
+	Inputs      map[string]BaselineInputSpec `json:"inputs"`
 }
 
 // key returns the map key (and filename stem) a baseline binds to: the

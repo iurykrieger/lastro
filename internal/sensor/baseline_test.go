@@ -370,3 +370,16 @@ func TestValidateInputReferences_UnreferencedWithEnvPresentFails(t *testing.T) {
 		t.Fatalf("error should name the unreferenced input, got: %v", err)
 	}
 }
+
+func TestLoadBaselines_EnvGuidanceParsed(t *testing.T) {
+	bl, err := LoadBaselines()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bl["provision-auth"].EnvGuidance == "" {
+		t.Error("provision-auth baseline should carry env_guidance")
+	}
+	if bl["database"].EnvGuidance == "" {
+		t.Error("database baseline should carry env_guidance")
+	}
+}

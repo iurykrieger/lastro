@@ -384,9 +384,12 @@ func TestRun_EnvFileValueReachesStepProcess(t *testing.T) {
 		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
 		Uses: []string{"fake-stack"},
 		SignalMatches: []sensor.SignalMatch{
-			{Key: "seen", Pattern: "token=fromenvfile", Verdict: enums.VerdictPass},
+			{Key: "seen", Pattern: "token=present", Verdict: enums.VerdictPass},
+			// Canary: fires when the env_file value did NOT reach the child.
+			{Key: "env-absent", Pattern: "token=absent", Verdict: enums.VerdictFail,
+				HealHint: &sensor.MatchHealHint{Summary: "env_file value missing", Rationale: "ambient injection failed"}},
 		},
-		Steps: []sensor.Step{{ID: "only", Run: `echo "token=$HARNESS_T8_TOKEN"`}},
+		Steps: []sensor.Step{{ID: "only", Run: `[ "$HARNESS_T8_TOKEN" = "fromenvfile" ] && echo "token=present" || echo "token=absent"`}},
 	}
 	ex := New(Options{
 		RepoRoot: repo, EnvFile: envFile,
@@ -401,6 +404,9 @@ func TestRun_EnvFileValueReachesStepProcess(t *testing.T) {
 	}
 	if agg.Verdict != enums.VerdictPass {
 		t.Errorf("verdict = %q, want pass (env_file value did not reach the child)", agg.Verdict)
+	}
+	if agg.Rollup.TotalSignals == 0 {
+		t.Error("zero signals: the pass matcher never fired, test would be vacuous")
 	}
 }
 

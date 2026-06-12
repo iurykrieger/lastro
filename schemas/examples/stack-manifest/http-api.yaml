@@ -1,6 +1,7 @@
 # StackManifest example — http-api archetype, two components.
 schema_version: 1.0.0
 archetype: http-api
+env_file: .env
 applicable_angles:
   - security
   - build

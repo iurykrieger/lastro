@@ -525,3 +525,50 @@ func TestLoadBytes_RoundTripsExample(t *testing.T) {
 		t.Fatalf("Archetype=%q, want http-api", m.Archetype)
 	}
 }
+
+func TestLoadBytes_EnvFileRoundTrips(t *testing.T) {
+	// Manifest WITH env_file: field must round-trip through LoadBytes.
+	withEnvFile := `schema_version: 1.0.0
+archetype: http-api
+env_file: .env.local
+applicable_angles: [security, build, code-structure, unit-test, e2e-test, contracts, logs, metrics, database, performance]
+components:
+  - schema_version: 1.0.0
+    id: express
+    kind: framework
+    name: express
+    version: "4.18.2"
+    capabilities: [http-routing]
+    detection_evidence:
+      - {file: package.json, path: dependencies.express}
+`
+	m, err := LoadBytes([]byte(withEnvFile))
+	if err != nil {
+		t.Fatalf("LoadBytes with env_file: %v", err)
+	}
+	if m.EnvFile != ".env.local" {
+		t.Errorf("EnvFile = %q, want %q", m.EnvFile, ".env.local")
+	}
+
+	// Manifest WITHOUT env_file must still load; EnvFile must be empty string.
+	withoutEnvFile := `schema_version: 1.0.0
+archetype: http-api
+applicable_angles: [security, build, code-structure, unit-test, e2e-test, contracts, logs, metrics, database, performance]
+components:
+  - schema_version: 1.0.0
+    id: express
+    kind: framework
+    name: express
+    version: "4.18.2"
+    capabilities: [http-routing]
+    detection_evidence:
+      - {file: package.json, path: dependencies.express}
+`
+	m2, err := LoadBytes([]byte(withoutEnvFile))
+	if err != nil {
+		t.Fatalf("LoadBytes without env_file: %v", err)
+	}
+	if m2.EnvFile != "" {
+		t.Errorf("EnvFile = %q, want empty string when not set", m2.EnvFile)
+	}
+}

@@ -24,6 +24,12 @@ A single YAML file matching `schemas/stack-manifest.yaml`. Required fields:
 - `schema_version: 1.0.0` — the script patch-bumps this on subsequent re-runs.
 - `archetype` — one of the enum values in `schemas/enums/archetypes.yaml`:
   `http-api`, `event-consumer`, `event-producer`, `cli`, `sdk`, `library`, `worker`, `batch-job`, `static-site`.
+- `env_file` (optional) — when the repo has a dotenv file the app itself
+  loads (`.env`, `.env.local`), record its project-root-relative path
+  (prefer `.env.local` when both exist, matching Next.js precedence). The
+  runtime injects these values into every sensor step's process, with the
+  host environment winning on conflicts — this is what lets secret-reading
+  recipes run without a manual `set -a; . ./.env`.
 - `components` — a non-empty list of `StackComponent` entries, each with:
   - `schema_version: 1.0.0`
   - `id` — lowercase, hyphenated (`^[a-z][a-z0-9-]*$`); e.g., `express`, `gin`, `gorm`.

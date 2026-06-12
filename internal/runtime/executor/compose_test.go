@@ -391,6 +391,268 @@ func TestCompose_WithFixtureRefUnowned(t *testing.T) {
 	}
 }
 
+// TestCompose_PrimitiveFailMatcherGradesComposition pins issue #46: a
+// composed primitive's own signal_matches must fire on its inner steps.
+// The primitive follows the grade-and-emit contract (print
+// "expectation-unmet ..." and exit 1, covered by a fail matcher with a
+// heal_hint). The composition must aggregate fail and carry the
+// primitive's structured heal_hint — not crash to inconclusive.
+func TestCompose_PrimitiveFailMatcherGradesComposition(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+
+	prim := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-e2e", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleE2ETest, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{
+				Key:     "expectation-unmet",
+				Pattern: `expectation-unmet expected=(?P<expected>\S+) got=(?P<got>\S+)`,
+				Verdict: enums.VerdictFail,
+				HealHint: &sensor.MatchHealHint{
+					Summary:   "e2e expectation unmet",
+					Rationale: "the primitive graded its expectation inputs and they were not met",
+				},
+			},
+		},
+		Steps: []sensor.Step{
+			{ID: "grade", Run: `echo 'expectation-unmet expected=201 got=500'; exit 1`},
+		},
+	}
+
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "fake-uc",
+		Angle: enums.AngleE2ETest, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{ID: "step1", Uses: "core-e2e"},
+		},
+	}
+
+	ex := New(composeBaseOptions(t, uc, prim))
+	agg, err := ex.Run(context.Background(), consumer, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictFail {
+		t.Errorf("verdict = %q, want fail (rollup=%+v, term=%q)", agg.Verdict, agg.Rollup, agg.TerminationReason)
+	}
+	if agg.Rollup.FailCount != 1 {
+		t.Errorf("FailCount = %d, want 1 — the primitive's fail matcher must fire", agg.Rollup.FailCount)
+	}
+	if agg.HealHint == nil || agg.HealHint.Summary != "e2e expectation unmet" {
+		t.Errorf("HealHint = %+v, want the primitive matcher's structured hint", agg.HealHint)
+	}
+}
+
+// TestCompose_PrimitiveInconclusiveMatcherAbortsBeforeGatedStep pins the
+// #45 scenario with live primitive matchers (#46): provision-auth's own
+// inconclusive "auth-not-provisioned" matcher fires when composed, and the
+// graded non-zero exit ends the run before the gated request step — so the
+// aggregate is inconclusive, never outranked by a downstream fail.
+func TestCompose_PrimitiveInconclusiveMatcherAbortsBeforeGatedStep(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+
+	provision := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "provision-auth", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleEnvironment, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:   []string{"fake-stack"},
+		Inputs: map[string]sensor.InputSpec{"kind": {Required: true}},
+		SignalMatches: []sensor.SignalMatch{
+			{
+				Key:     "auth-not-provisioned",
+				Pattern: `auth-not-provisioned kind=(?P<kind>\S+) reason=(?P<reason>\S+)`,
+				Verdict: enums.VerdictInconclusive,
+			},
+		},
+		Steps: []sensor.Step{
+			{ID: "mint", Run: `echo 'auth-not-provisioned kind=session reason=mint-failed'; exit 1`},
+		},
+	}
+
+	request := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-request", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:   []string{"fake-stack"},
+		Inputs: map[string]sensor.InputSpec{"headers": {Required: false}},
+		Steps: []sensor.Step{
+			{ID: "do", Run: `echo "${{ inputs.headers }}"; ` + fakeSensorBin + ` signal fail`},
+		},
+	}
+
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "fake-uc",
+		Angle: enums.AngleE2ETest, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "created", Pattern: "status=201", Verdict: enums.VerdictPass, Expected: true},
+		},
+		Steps: []sensor.Step{
+			{ID: "auth", Uses: "provision-auth", With: map[string]string{"kind": "session"}},
+			{ID: "request", Uses: "core-request", With: map[string]string{"headers": "${{ steps.auth.outputs.header }}"}},
+		},
+	}
+
+	ex := New(composeBaseOptions(t, uc, provision, request))
+	agg, err := ex.Run(context.Background(), consumer, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictInconclusive {
+		t.Errorf("verdict = %q, want inconclusive (rollup=%+v, term=%q)", agg.Verdict, agg.Rollup, agg.TerminationReason)
+	}
+	if agg.Rollup.InconclusiveCount != 1 {
+		t.Errorf("InconclusiveCount = %d, want 1 — the primitive's diagnostic matcher must fire", agg.Rollup.InconclusiveCount)
+	}
+	if agg.Rollup.FailCount != 0 {
+		t.Errorf("FailCount = %d, want 0 — the gated request step must never have run", agg.Rollup.FailCount)
+	}
+}
+
+// TestCompose_ConsumerMatcherWinsOnKeyCollision verifies the merge rule:
+// when consumer and primitive declare the same matcher key, the consumer's
+// matcher wins and the line is matched exactly once (no double-emission).
+func TestCompose_ConsumerMatcherWinsOnKeyCollision(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+
+	prim := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-graded", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{
+				Key: "graded", Pattern: "outcome=bad", Verdict: enums.VerdictFail,
+				HealHint: &sensor.MatchHealHint{Summary: "primitive hint", Rationale: "primitive"},
+			},
+		},
+		Steps: []sensor.Step{
+			{ID: "do", Run: `echo 'outcome=bad'`},
+		},
+	}
+
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{
+				Key: "graded", Pattern: "outcome=bad", Verdict: enums.VerdictWarn,
+				HealHint: &sensor.MatchHealHint{Summary: "consumer hint", Rationale: "consumer"},
+			},
+		},
+		Steps: []sensor.Step{
+			{ID: "step1", Uses: "core-graded"},
+		},
+	}
+
+	ex := New(composeBaseOptions(t, uc, prim))
+	agg, err := ex.Run(context.Background(), consumer, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictWarn {
+		t.Errorf("verdict = %q, want warn (consumer matcher wins; rollup=%+v)", agg.Verdict, agg.Rollup)
+	}
+	if agg.Rollup.TotalSignals != 1 {
+		t.Errorf("TotalSignals = %d, want 1 — colliding keys must not double-match", agg.Rollup.TotalSignals)
+	}
+}
+
+// TestCompose_PrimitivePassMatcherDoesNotHaltExpansion verifies that a
+// primitive's pass matcher firing (with a clean exit) lets the expansion
+// continue to later inner steps.
+func TestCompose_PrimitivePassMatcherDoesNotHaltExpansion(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+
+	prim := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-multi", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "ready", Pattern: "service ready", Verdict: enums.VerdictPass},
+		},
+		Steps: []sensor.Step{
+			{ID: "boot", Run: `echo 'service ready'`},
+			{ID: "verify", Run: fakeSensorBin + ` signal pass`},
+		},
+	}
+
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{ID: "step1", Uses: "core-multi"},
+		},
+	}
+
+	ex := New(composeBaseOptions(t, uc, prim))
+	agg, err := ex.Run(context.Background(), consumer, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictPass {
+		t.Errorf("verdict = %q, want pass (rollup=%+v, term=%q)", agg.Verdict, agg.Rollup, agg.TerminationReason)
+	}
+	if agg.Rollup.PassCount != 2 {
+		t.Errorf("PassCount = %d, want 2 — both inner steps must have run", agg.Rollup.PassCount)
+	}
+}
+
+// TestCompose_PrimitiveBadMatcherPattern verifies a composed primitive with
+// an uncompilable signal_match pattern terminates the run with a clear
+// error instead of silently ignoring the matcher.
+func TestCompose_PrimitiveBadMatcherPattern(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+
+	prim := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "core-bad", UseCaseID: "fake-uc",
+		Scope: enums.ScopeCore,
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		SignalMatches: []sensor.SignalMatch{
+			{Key: "broken", Pattern: "([unclosed", Verdict: enums.VerdictFail},
+		},
+		Steps: []sensor.Step{
+			{ID: "do", Run: fakeSensorBin + ` signal pass`},
+		},
+	}
+
+	consumer := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "consumer", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion,
+		Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses: []string{"fake-stack"},
+		Steps: []sensor.Step{
+			{ID: "step1", Uses: "core-bad"},
+		},
+	}
+
+	ex := New(composeBaseOptions(t, uc, prim))
+	agg, err := ex.Run(context.Background(), consumer, t.TempDir(), nil, nil)
+	if err == nil && agg.Verdict == enums.VerdictPass {
+		t.Fatalf("expected non-pass verdict for uncompilable primitive matcher; got pass")
+	}
+	if agg.TerminationReason != enums.TerminationError {
+		t.Errorf("termination_reason = %q, want error", agg.TerminationReason)
+	}
+}
+
 // TestCompose_MissingSensorLookup verifies a uses-step with nil
 // SensorLookup yields a clear error.
 func TestCompose_MissingSensorLookup(t *testing.T) {

@@ -146,6 +146,17 @@ func (e *Executor) execRunStep(ctx context.Context, a topStepArgs) topStepResult
 		Redactor:    a.Redactor,
 		EnvView:     a.EnvView,
 	})
+	var me *MissingEnvError
+	if errors.As(err, &me) {
+		sig := missingEnvSignal(a.Sensor, me.Names, me.EnvFile, e.opts.Now)
+		writeSignal(a.SignalsW, sig)
+		return topStepResult{
+			Signals:    []signal.Signal{sig},
+			Outputs:    map[string]string{},
+			TermReason: enums.TerminationError,
+			StepErr:    me,
+		}
+	}
 	term, stepErr := evalTermination(ctx, outcome, err)
 	return topStepResult{
 		Signals:         outcome.Signals,
@@ -258,6 +269,16 @@ func (e *Executor) execUsesStep(ctx context.Context, a topStepArgs) topStepResul
 			Redactor:    a.Redactor,
 			EnvView:     a.EnvView,
 		})
+
+		var me *MissingEnvError
+		if errors.As(runErr, &me) {
+			sig := missingEnvSignal(a.Sensor, me.Names, me.EnvFile, e.opts.Now)
+			writeSignal(a.SignalsW, sig)
+			res.Signals = append(res.Signals, sig)
+			res.TermReason = enums.TerminationError
+			res.StepErr = me
+			return res
+		}
 
 		innerOutputs[inner.ID] = outcome.Outputs
 		res.Signals = append(res.Signals, outcome.Signals...)

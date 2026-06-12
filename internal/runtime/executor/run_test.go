@@ -445,3 +445,95 @@ func TestRun_HostWinsOverEnvFile(t *testing.T) {
 		t.Errorf("verdict = %q, want pass (host value should win)", agg.Verdict)
 	}
 }
+
+func TestRun_MissingEnvRefAggregatesInconclusive(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-missing-ref", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:  []string{"fake-stack"},
+		Steps: []sensor.Step{{ID: "only", Run: `echo "t=${{ env.HARNESS_T9_ABSENT }}"`}},
+	}
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), s, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictInconclusive {
+		t.Errorf("verdict = %q, want inconclusive", agg.Verdict)
+	}
+	b, _ := os.ReadFile(filepath.Join(runDir, "signals.jsonl"))
+	if !strings.Contains(string(b), "missing-env") || !strings.Contains(string(b), "HARNESS_T9_ABSENT") {
+		t.Errorf("signals.jsonl missing the typed missing-env record: %s", b)
+	}
+}
+
+func TestRun_SensorDeclaredRequiredEnvBlocksAllSteps(t *testing.T) {
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	marker := filepath.Join(t.TempDir(), "ran")
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-declared", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:  []string{"fake-stack"},
+		Env:   map[string]sensor.EnvSpec{"HARNESS_T9_REQ": {Description: "needed"}},
+		Steps: []sensor.Step{{ID: "only", Run: "touch " + marker}},
+	}
+	ex := New(Options{
+		RepoRoot:      t.TempDir(),
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	agg, err := ex.Run(context.Background(), s, t.TempDir(), nil, nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if agg.Verdict != enums.VerdictInconclusive {
+		t.Errorf("verdict = %q, want inconclusive", agg.Verdict)
+	}
+	if _, statErr := os.Stat(marker); statErr == nil {
+		t.Error("step ran despite missing required env (must be pre-spawn)")
+	}
+}
+
+func TestRun_UnparseableEnvFileAggregatesInconclusive(t *testing.T) {
+	repo := t.TempDir()
+	envFile := filepath.Join(repo, ".env")
+	if err := os.WriteFile(envFile, []byte("KEY=\"unterminated\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	uc := &usecase.UseCase{ID: "fake-uc"}
+	s := sensor.Sensor{
+		SchemaVersion: "1.0.0", ID: "env-bad-file", UseCaseID: "fake-uc",
+		Angle: enums.AngleBuild, Kind: enums.KindAssertion, Nature: enums.NatureComputational, OutputType: enums.OutputSingleShot,
+		Uses:  []string{"fake-stack"},
+		Steps: []sensor.Step{{ID: "only", Run: "echo never"}},
+	}
+	ex := New(Options{
+		RepoRoot: repo, EnvFile: envFile,
+		Resolver:      &template.Resolver{Fixtures: emptyStore{}, EntryPoints: map[string]entrypoint.EntryPoint{}},
+		FixtureStore:  emptyStore{},
+		UseCaseLookup: func(id string) (*usecase.UseCase, bool) { return uc, true },
+		Now:           fixedExecNow,
+	})
+	runDir := t.TempDir()
+	agg, err := ex.Run(context.Background(), s, runDir, nil, nil)
+	if err != nil {
+		t.Fatalf("Run must not error (signal instead): %v", err)
+	}
+	if agg.Verdict != enums.VerdictInconclusive {
+		t.Errorf("verdict = %q, want inconclusive", agg.Verdict)
+	}
+	b, _ := os.ReadFile(filepath.Join(runDir, "signals.jsonl"))
+	if !strings.Contains(string(b), "env-file-invalid") {
+		t.Errorf("signals.jsonl missing env-file-invalid: %s", b)
+	}
+}

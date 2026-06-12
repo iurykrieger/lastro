@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -149,9 +150,6 @@ func (e *Executor) Run(
 	sw.red = red
 
 	view, envFileMissing, viewErr := loadEnvView(e.opts.EnvFile)
-	if viewErr != nil {
-		return aggregate.AggregateSignal{}, viewErr
-	}
 	// Every env_file-sourced value is a secret-by-injection (mask all
 	// injected values); host-only vars are untouched status quo.
 	for _, v := range view.ambient {
@@ -177,6 +175,22 @@ func (e *Executor) Run(
 	// It feeds StepIdx (signal attribution) and the unique stepout tag.
 	globalIdx := 0
 
+	// Environment preflight: an unparseable env_file or a missing
+	// sensor-declared required var blocks every step (pre-spawn) and
+	// rolls up inconclusive — the app is not proven broken.
+	if viewErr != nil {
+		sig := envFileInvalidSignal(s, e.opts.EnvFile, viewErr.Error(), e.opts.Now)
+		writeSignal(sw, sig)
+		allSignals = append(allSignals, toAggregateSignals([]signal.Signal{sig})...)
+		termReason = enums.TerminationError
+		stepErr = viewErr
+	} else if missing := missingRequiredEnv(s.Env, view); len(missing) > 0 {
+		sig := missingEnvSignal(s, missing, view.source, e.opts.Now)
+		writeSignal(sw, sig)
+		allSignals = append(allSignals, toAggregateSignals([]signal.Signal{sig})...)
+		termReason = enums.TerminationError
+		stepErr = &MissingEnvError{Names: missing, EnvFile: view.source}
+	} else {
 	for _, step := range s.Steps {
 		// Build the step-output env from outputs collected by prior
 		// top-level steps. Computed fresh per top-level step so the inner
@@ -215,6 +229,7 @@ func (e *Executor) Run(
 			break
 		}
 	}
+	} // end env preflight else
 
 	endedAt := e.opts.Now()
 
@@ -237,7 +252,15 @@ func (e *Executor) Run(
 
 	// Crash-hint patch: if error termination produced an aggregate with
 	// no heal hint, synthesize one from raw.log.
-	if termReason == enums.TerminationError && agg.HealHint == nil && stepErr != nil {
+	// Skip for env-problem errors: they already carry heal_hint in their
+	// typed signals (missing-env / env-file-invalid). Synthesizing a
+	// crash hint for those would overwrite signal-level guidance with an
+	// irrelevant "no stderr" placeholder.
+	var isMissingEnv bool
+	if me := (*MissingEnvError)(nil); errors.As(stepErr, &me) {
+		isMissingEnv = true
+	}
+	if termReason == enums.TerminationError && agg.HealHint == nil && stepErr != nil && !isMissingEnv {
 		// Flush the buffered rawLog writer before reading the file so that
 		// the stderr lines captured by pumpStderr are visible to synthesizeCrashHint.
 		_ = rl.Flush()

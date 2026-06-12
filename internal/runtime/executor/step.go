@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"time"
 
@@ -72,6 +73,19 @@ func runStep(ctx context.Context, a stepArgs) (stepOutcome, error) {
 	resolved, refs, err := template.Compile(segs)
 	if err != nil {
 		return stepOutcome{}, &TemplateError{Step: a.StepIdx, Cause: err}
+	}
+
+	// Pre-spawn ambient floor: every ${{ env.NAME }} the run script
+	// references must be present and non-empty, or the step never spawns.
+	var missingEnv []string
+	for _, name := range refs.Env {
+		if v, ok := a.EnvView.lookup(name); !ok || v == "" {
+			missingEnv = append(missingEnv, name)
+		}
+	}
+	if len(missingEnv) > 0 {
+		sort.Strings(missingEnv)
+		return stepOutcome{}, &MissingEnvError{Step: a.StepIdx, Names: missingEnv, EnvFile: a.EnvView.source}
 	}
 
 	// 2. Bind fixtures referenced by the compiled run.

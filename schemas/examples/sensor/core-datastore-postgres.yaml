@@ -1,0 +1,23 @@
+# schemas/examples/sensor/core-datastore-postgres.yaml
+schema_version: 1.0.0
+id: core-datastore-postgres
+scope: core
+angle: environment
+kind: observational
+nature: computational
+output_type: stream
+uses: [compose]
+signal_matches:
+  - key: ready
+    pattern: "accepting connections"
+    verdict: pass
+    expected: true
+  - key: startup-error
+    pattern: "could not|FATAL"
+    verdict: fail
+    heal_hint:
+      summary: "Datastore failed to start"
+      rationale: "Inspect docker compose logs for the postgres service."
+steps:
+  - id: up
+    run: "docker compose up -d postgres && until docker compose exec -T postgres pg_isready -U postgres; do sleep 1; done && echo 'accepting connections' && docker compose logs -f postgres"

@@ -1,0 +1,23 @@
+# schemas/examples/sensor/core-migrate.yaml
+schema_version: 1.0.0
+id: core-migrate
+scope: core
+angle: environment
+kind: assertion
+nature: computational
+output_type: single-shot
+uses: []
+depends_on: [core-datastore-postgres]
+env:
+  DATABASE_URL:
+    description: "Connection string drizzle-kit migrate reads"
+signal_matches:
+  - key: migrate-failed
+    pattern: "error|Error|failed"
+    verdict: fail
+    heal_hint:
+      summary: "Migration failed"
+      rationale: "A migration step exited non-zero; inspect the migration output."
+steps:
+  - id: migrate
+    run: "npm run db:migrate"

@@ -11,6 +11,7 @@ package skillruntime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -297,6 +298,10 @@ func RunSensorWithServices(ctx context.Context, b *Booted, s sensor.Sensor) (agg
 // matching the spec's "sensor execution errors bubble up as inconclusive".
 func inconclusiveFromServiceError(s sensor.Sensor, serviceID string, err error) aggregate.AggregateSignal {
 	now := time.Now().UTC()
+	key := "missing-service"
+	if errors.Is(err, context.DeadlineExceeded) {
+		key = "unready-service"
+	}
 	return aggregate.AggregateSignal{
 		SchemaVersion:     "1.0.0",
 		Type:              aggregate.TypeAggregate,
@@ -308,12 +313,13 @@ func inconclusiveFromServiceError(s sensor.Sensor, serviceID string, err error) 
 		Verdict:           enums.VerdictInconclusive,
 		Confidence:        0,
 		TerminationReason: enums.TerminationError,
+		Evidence:          map[string]any{"observation_key": key, "service": serviceID},
 		Rollup: aggregate.RollupCounts{
 			InconclusiveCount: 1,
 		},
 		HealHint: &aggregate.HealHint{
-			Summary:   fmt.Sprintf("shared service %s failed to start: %v", serviceID, err),
-			Rationale: fmt.Sprintf("sensor %s attaches to %s; the service did not become ready, so the sensor did not run", s.ID, serviceID),
+			Summary:   fmt.Sprintf("shared service %s could not be established (%s): %v", serviceID, key, err),
+			Rationale: fmt.Sprintf("sensor %s attaches to %s; the precondition was not met, so the sensor did not run. This is an environment problem, not an application defect.", s.ID, serviceID),
 		},
 	}
 }

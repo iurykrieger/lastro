@@ -2,6 +2,7 @@ package skillruntime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/sensor"
 )
 
 // writeRepro lays a minimal .harness tree on disk: a shared run-dev core
@@ -448,5 +450,25 @@ func readPID(t *testing.T, pidPath string) int {
 			t.Fatalf("pid file never written: %v", err)
 		}
 		time.Sleep(50 * time.Millisecond)
+	}
+}
+
+func TestInconclusiveFromServiceError_Typed(t *testing.T) {
+	s := sensor.Sensor{ID: "e2e", Angle: enums.AngleE2ETest}
+	// readiness timeout → unready-service
+	got := inconclusiveFromServiceError(s, "core-run-dev", context.DeadlineExceeded)
+	if got.Verdict != enums.VerdictInconclusive {
+		t.Fatalf("verdict = %q", got.Verdict)
+	}
+	if k, _ := got.Evidence["observation_key"].(string); k != "unready-service" {
+		t.Fatalf("observation_key = %v, want unready-service", got.Evidence["observation_key"])
+	}
+	// generic start failure → missing-service
+	got2 := inconclusiveFromServiceError(s, "core-run-dev", errors.New("docker daemon not running"))
+	if k, _ := got2.Evidence["observation_key"].(string); k != "missing-service" {
+		t.Fatalf("observation_key = %v, want missing-service", got2.Evidence["observation_key"])
+	}
+	if !strings.Contains(got2.HealHint.Summary, "core-run-dev") {
+		t.Fatalf("heal hint missing service id: %q", got2.HealHint.Summary)
 	}
 }

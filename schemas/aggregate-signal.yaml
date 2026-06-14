@@ -64,6 +64,9 @@ properties:
       missing_observations:
         type: array
         items: { type: string, minLength: 1 }
+  evidence:
+    type: object
+    additionalProperties: true
   heal_hint:
     $ref: "#/$defs/HealHint"
 

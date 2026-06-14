@@ -1,0 +1,4 @@
+schema_version: 1.0.0
+application:
+  provided_by: { file: package.json, path: "scripts.start" }
+  depends_on: []

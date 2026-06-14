@@ -1,0 +1,10 @@
+{
+  "name": "nextjs-drizzle-sample",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed-events": "tsx scripts/seed-events.ts"
+  }
+}

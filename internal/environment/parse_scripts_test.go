@@ -38,3 +38,32 @@ func TestParseProcfile(t *testing.T) {
 		t.Fatalf("procfile = %v", got)
 	}
 }
+
+func TestParseMakeTargets(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "Makefile"),
+		"build:\n\tgo build ./...\n\n.PHONY: build test\n\nCC = gcc\n")
+	got := parseMakeTargets(dir)
+
+	if got["build"] != "make build" {
+		t.Fatalf("normal target: want %q, got %q", "make build", got["build"])
+	}
+	if _, ok := got[".PHONY"]; ok {
+		t.Fatalf(".PHONY line must be excluded, got %v", got)
+	}
+	if _, ok := got["CC"]; ok {
+		t.Fatalf("variable assignment must be excluded, got %v", got)
+	}
+	if _, ok := got["go build ./..."]; ok {
+		t.Fatalf("tab-indented recipe line must be excluded, got %v", got)
+	}
+	if len(got) != 1 {
+		t.Fatalf("want exactly one target, got %v", got)
+	}
+}
+
+func TestParseMakeTargets_Absent(t *testing.T) {
+	if got := parseMakeTargets(t.TempDir()); len(got) != 0 {
+		t.Fatalf("absent Makefile must yield empty, got %v", got)
+	}
+}

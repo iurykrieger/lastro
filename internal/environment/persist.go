@@ -53,7 +53,7 @@ func Persist(modelContent, factsContent []byte, harnessDir string) error {
 		return &persisterror.Error{Kind: persisterror.SchemaViolation, EntityType: "environment-model", Message: fmt.Sprintf("unmarshal facts: %v", err)}
 	}
 	if err := ValidateGrounding(model, facts); err != nil {
-		return &persisterror.Error{Kind: persisterror.SchemaViolation, EntityType: "environment-model", Message: err.Error()}
+		return &persisterror.Error{Kind: persisterror.Grounding, EntityType: "environment-model", Message: err.Error()}
 	}
 
 	targetPath := filepath.Join(harnessDir, modelFilename)

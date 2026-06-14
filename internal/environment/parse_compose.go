@@ -3,6 +3,7 @@ package environment
 
 import (
 	"bufio"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,7 +18,7 @@ var composeCandidates = []string{"docker-compose.yml", "docker-compose.yaml", "c
 func parseCompose(repoDir string) (map[string]ComposeService, string, error) {
 	for _, name := range composeCandidates {
 		b, err := os.ReadFile(filepath.Join(repoDir, name))
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			continue
 		}
 		if err != nil {
@@ -41,25 +42,31 @@ func parseCompose(repoDir string) (map[string]ComposeService, string, error) {
 // .env. Values are ignored. Absent → empty.
 func parseDotenvKeys(repoDir string) []string {
 	for _, name := range []string{".env.example", ".env.local", ".env"} {
-		f, err := os.Open(filepath.Join(repoDir, name))
-		if err != nil {
-			continue
+		if keys, ok := scanDotenvFile(filepath.Join(repoDir, name)); ok {
+			return keys
 		}
-		defer f.Close()
-		var keys []string
-		sc := bufio.NewScanner(f)
-		for sc.Scan() {
-			line := strings.TrimSpace(sc.Text())
-			if line == "" || strings.HasPrefix(line, "#") {
-				continue
-			}
-			key, _, ok := strings.Cut(line, "=")
-			key = strings.TrimSpace(strings.TrimPrefix(key, "export "))
-			if ok && key != "" {
-				keys = append(keys, key)
-			}
-		}
-		return keys
 	}
 	return nil
+}
+
+func scanDotenvFile(path string) ([]string, bool) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, false
+	}
+	defer f.Close()
+	var keys []string
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, _, ok := strings.Cut(line, "=")
+		key = strings.TrimSpace(strings.TrimPrefix(key, "export "))
+		if ok && key != "" {
+			keys = append(keys, key)
+		}
+	}
+	return keys, true
 }

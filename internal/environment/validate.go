@@ -38,7 +38,10 @@ func (m EnvironmentModel) Validate() error {
 	// Edge integrity: every target must be a declared node (not application).
 	for src, targets := range edges {
 		for _, tgt := range targets {
-			if tgt == appID || !nodes[tgt] {
+			if tgt == appID {
+				return fmt.Errorf("environment: node %q depends_on \"application\", which is the root and can never be a dependency target", src)
+			}
+			if !nodes[tgt] {
 				return fmt.Errorf("environment: node %q depends_on unknown node %q", src, tgt)
 			}
 		}

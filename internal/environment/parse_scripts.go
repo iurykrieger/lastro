@@ -4,6 +4,7 @@ package environment
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +14,7 @@ import (
 // empty map, no error (graceful degradation).
 func parsePackageScripts(repoDir string) (map[string]string, error) {
 	b, err := os.ReadFile(filepath.Join(repoDir, "package.json"))
-	if os.IsNotExist(err) {
+	if errors.Is(err, os.ErrNotExist) {
 		return map[string]string{}, nil
 	}
 	if err != nil {

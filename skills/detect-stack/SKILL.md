@@ -16,6 +16,10 @@ You are detecting the stack of the repository at the current working directory a
   - Queue/topic listeners → `event-consumer`
   - Pre-rendered HTML/CSS in a build dir → `static-site`
 - Framework conventions visible in source files (e.g., `gin.Default()`, `express()`, `FastAPI()`).
+- Container orchestration: when a `docker-compose.yml` / `compose.yaml` exists, record
+  a `kind: tool` component with `id: compose` (or `docker`) and capabilities like
+  `container-orchestration` — its evidence is the compose file. Core environment
+  sensors that bring up backing services must ground their `uses:` in this component.
 
 ## What to emit
 

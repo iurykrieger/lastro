@@ -21,7 +21,7 @@ func TestDogfood_NoComposeInHarnessRepo(t *testing.T) {
 	// A model with only an application node + no deps validates (no-op).
 	m := EnvironmentModel{
 		SchemaVersion: "1.0.0",
-		Application:   Application{ProvidedBy: ProvidedBy{"Makefile", "build"}},
+		Application:   Application{ProvidedBy: ProvidedBy{"Makefile", "build-all"}},
 	}
 	if err := m.Validate(); err != nil {
 		t.Fatalf("no-op model invalid: %v", err)

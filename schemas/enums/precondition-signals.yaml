@@ -9,6 +9,8 @@ description: |
 values:
   - id: missing-env
     purpose: "A required env var (sensor env: EnvSpec) was absent/empty pre-spawn"
+  - id: env-file-invalid
+    purpose: "The manifest's env_file is declared but could not be read/parsed pre-spawn"
   - id: missing-service
     purpose: "A dependency node's bring-up failed (no Docker daemon, image pull failed, port taken)"
   - id: unready-service

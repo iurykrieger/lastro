@@ -34,7 +34,7 @@ type RawFacts struct {
 	ComposeServices  map[string]ComposeService `json:"compose_services,omitempty" yaml:"compose_services,omitempty"`
 	ComposeFile      string                    `json:"compose_file,omitempty" yaml:"compose_file,omitempty"`
 	EnvKeys          []string                  `json:"env_keys,omitempty" yaml:"env_keys,omitempty"`
-	// RequiredEnvHints is reserved for config-throw detection (e.g. drizzle's DATABASE_URL throw); not yet populated. TODO(#52).
+	// RequiredEnvHints is reserved for config-throw detection (e.g. drizzle's "if (!process.env.DATABASE_URL) throw"). Not yet populated by Parse — deferred; env keys currently come from parseDotenvKeys. TODO(#52 follow-up).
 	RequiredEnvHints []string `json:"required_env_hints,omitempty" yaml:"required_env_hints,omitempty"`
 }
 

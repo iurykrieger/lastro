@@ -1,0 +1,17 @@
+schema_version: 1.0.0
+title: PreconditionSignal
+description: |
+  Reserved observation_key values emitted when a runtime precondition cannot be
+  established. All carry verdict: inconclusive (never fail) — the harness could
+  not set up the world, so it cannot claim the application is broken. Each
+  payload names the unmet piece and carries a human remediation hint.
+
+values:
+  - id: missing-env
+    purpose: "A required env var (sensor env: EnvSpec) was absent/empty pre-spawn"
+  - id: missing-service
+    purpose: "A dependency node's bring-up failed (no Docker daemon, image pull failed, port taken)"
+  - id: unready-service
+    purpose: "Bring-up ran but the readiness probe never passed within its timeout"
+  - id: setup-unavailable
+    purpose: "A setup node's command is absent or unresolvable"

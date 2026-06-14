@@ -100,7 +100,7 @@ literal; `"${{ inputs.headers }}"` unquotes and word-splits multi-word values
 
 ### Auth provisioning (`provision-auth`)
 
-Emit when a detected route requires credentials. Floor:
+Emit when any detected route requires credentials (session middleware, bearer/JWT guards, API keys, Basic). Floor:
 `schemas/core-inputs/provision-auth.yaml` (`kind`:
 session|bearer|api-key|basic|none, `persona`); shape:
 `schemas/examples/sensor/core-provision-auth.yaml`. Contract:

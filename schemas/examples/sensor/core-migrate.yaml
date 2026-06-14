@@ -1,4 +1,3 @@
-# schemas/examples/sensor/core-migrate.yaml
 schema_version: 1.0.0
 id: core-migrate
 scope: core

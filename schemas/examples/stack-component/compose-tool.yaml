@@ -1,4 +1,3 @@
-# schemas/examples/stack-component/compose-tool.yaml
 schema_version: 1.0.0
 id: compose
 kind: tool

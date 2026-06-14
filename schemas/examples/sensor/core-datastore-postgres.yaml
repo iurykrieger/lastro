@@ -1,4 +1,3 @@
-# schemas/examples/sensor/core-datastore-postgres.yaml
 schema_version: 1.0.0
 id: core-datastore-postgres
 scope: core
@@ -9,7 +8,7 @@ output_type: stream
 uses: [compose]
 signal_matches:
   - key: ready
-    pattern: "accepting connections"
+    pattern: "database system is ready to accept connections"
     verdict: pass
     expected: true
   - key: startup-error
@@ -20,4 +19,4 @@ signal_matches:
       rationale: "Inspect docker compose logs for the postgres service."
 steps:
   - id: up
-    run: "docker compose up -d postgres && until docker compose exec -T postgres pg_isready -U postgres; do sleep 1; done && echo 'accepting connections' && docker compose logs -f postgres"
+    run: "docker compose up postgres"

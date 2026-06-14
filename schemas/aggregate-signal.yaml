@@ -25,7 +25,7 @@ properties:
     type: string
     description: "Canonical source: schemas/enums/validation-angles.yaml"
     enum: [security, build, code-structure, unit-test, e2e-test,
-           contracts, logs, metrics, database, performance]
+           contracts, logs, metrics, database, performance, environment]
   started_at:
     type: string
     format: date-time

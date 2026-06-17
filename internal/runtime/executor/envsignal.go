@@ -73,6 +73,20 @@ func envFileInvalidSignal(s sensor.Sensor, envFile, parseErr string, now func() 
 		now)
 }
 
+// setupUnavailableSignal is emitted when a setup node's command cannot be
+// resolved/run. Verdict inconclusive: a missing setup step is an incomplete
+// environment, not an application defect.
+//
+// TODO(#52 Phase 7+): wire into the executor when setup-node command-resolution
+// detection lands. Added now as the typed-signal vocabulary (mirrors missingEnvSignal).
+func setupUnavailableSignal(s sensor.Sensor, ref string, now func() time.Time) signal.Signal {
+	return envProblemSignal(s, "setup-unavailable",
+		signal.Evidence{"setup": ref},
+		"Setup step unavailable: "+ref,
+		"The setup command ("+ref+") could not be resolved or executed. Provide the missing script/target — no behavioral conclusion was drawn.",
+		now)
+}
+
 func envProblemSignal(s sensor.Sensor, key string, ev signal.Evidence, summary, rationale string, now func() time.Time) signal.Signal {
 	ev["observation_key"] = key
 	return signal.Signal{

@@ -1,0 +1,22 @@
+schema_version: 1.0.0
+id: core-datastore-postgres
+scope: core
+angle: environment
+kind: observational
+nature: computational
+output_type: stream
+uses: [compose]
+signal_matches:
+  - key: ready
+    pattern: "database system is ready to accept connections"
+    verdict: pass
+    expected: true
+  - key: startup-error
+    pattern: "could not|FATAL"
+    verdict: fail
+    heal_hint:
+      summary: "Datastore failed to start"
+      rationale: "Inspect docker compose logs for the postgres service."
+steps:
+  - id: up
+    run: "docker compose up postgres"

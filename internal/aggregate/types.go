@@ -48,6 +48,7 @@ type AggregateSignal struct {
 	Confidence        float64                 `json:"confidence"`
 	Rollup            RollupCounts            `json:"rollup"`
 	Completeness      *Completeness           `json:"completeness,omitempty"`
+	Evidence          map[string]any          `json:"evidence,omitempty"`
 	HealHint          *HealHint               `json:"heal_hint,omitempty"`
 }
 

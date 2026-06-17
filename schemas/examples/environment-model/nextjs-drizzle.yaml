@@ -1,0 +1,15 @@
+schema_version: 1.0.0
+application:
+  provided_by: { file: package.json, path: "scripts.dev" }
+  depends_on: [postgres, migrate]
+dependencies:
+  postgres:
+    type: datastore
+    provided_by: { file: docker-compose.yml, path: services.postgres }
+    depends_on: []
+setup:
+  - id: migrate
+    type: setup
+    provided_by: { file: package.json, path: "scripts.db:migrate" }
+    depends_on: [postgres]
+    optional: false

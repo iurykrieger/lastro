@@ -1,0 +1,9 @@
+schema_version: 1.0.0
+id: compose
+kind: tool
+name: docker compose
+version: "2"
+capabilities: [container-orchestration, service-provisioning]
+detection_evidence:
+  - file: docker-compose.yml
+    path: services

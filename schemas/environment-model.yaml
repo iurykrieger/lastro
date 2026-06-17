@@ -1,0 +1,68 @@
+# schemas/environment-model.yaml
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://lastro.dev/harness/schemas/environment-model.yaml"
+title: EnvironmentModel
+description: >
+  The operational dependency model: every piece of software the application
+  depends on to execute. Produced by /detect-environment, consumed by
+  /create-core-sensors to emit one core sensor per node. References sensors via
+  grounded provided_by pointers; never restates commands, env, or readiness.
+type: object
+additionalProperties: false
+required: [schema_version, application]
+properties:
+  schema_version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+  application:
+    type: object
+    additionalProperties: false
+    required: [provided_by]
+    properties:
+      provided_by: { $ref: "#/$defs/ProvidedBy" }
+      depends_on:
+        type: array
+        items: { $ref: "#/$defs/NodeName" }
+  dependencies:
+    type: object
+    propertyNames: { $ref: "#/$defs/NodeName" }
+    additionalProperties: { $ref: "#/$defs/Dependency" }
+  setup:
+    type: array
+    items: { $ref: "#/$defs/SetupNode" }
+$defs:
+  NodeName:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*$"
+    maxLength: 128
+  ProvidedBy:
+    type: object
+    additionalProperties: false
+    required: [file, path]
+    properties:
+      file: { type: string, minLength: 1 }
+      path: { type: string, minLength: 1 }
+  Dependency:
+    type: object
+    additionalProperties: false
+    required: [type, provided_by]
+    properties:
+      type:
+        type: string
+        enum: [datastore, cache, broker]
+      provided_by: { $ref: "#/$defs/ProvidedBy" }
+      depends_on:
+        type: array
+        items: { $ref: "#/$defs/NodeName" }
+  SetupNode:
+    type: object
+    additionalProperties: false
+    required: [id, type, provided_by]
+    properties:
+      id: { $ref: "#/$defs/NodeName" }
+      type: { type: string, const: setup }
+      provided_by: { $ref: "#/$defs/ProvidedBy" }
+      depends_on:
+        type: array
+        items: { $ref: "#/$defs/NodeName" }
+      optional: { type: boolean, default: false }

@@ -2,6 +2,7 @@ package skillruntime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,7 +12,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/iurykrieger/lastro/internal/aggregate"
 	"github.com/iurykrieger/lastro/internal/enums"
+	"github.com/iurykrieger/lastro/internal/sensor"
 )
 
 // writeRepro lays a minimal .harness tree on disk: a shared run-dev core
@@ -448,5 +451,31 @@ func readPID(t *testing.T, pidPath string) int {
 			t.Fatalf("pid file never written: %v", err)
 		}
 		time.Sleep(50 * time.Millisecond)
+	}
+}
+
+func TestInconclusiveFromServiceError_Typed(t *testing.T) {
+	s := sensor.Sensor{ID: "e2e", Angle: enums.AngleE2ETest}
+	// readiness timeout → unready-service
+	got := inconclusiveFromServiceError(s, "core-run-dev", context.DeadlineExceeded)
+	if err := aggregate.Validate(got); err != nil {
+		t.Fatalf("aggregate invalid: %v", err)
+	}
+	if got.Verdict != enums.VerdictInconclusive {
+		t.Fatalf("verdict = %q", got.Verdict)
+	}
+	if k, _ := got.Evidence["observation_key"].(string); k != "unready-service" {
+		t.Fatalf("observation_key = %v, want unready-service", got.Evidence["observation_key"])
+	}
+	// generic start failure → missing-service
+	got2 := inconclusiveFromServiceError(s, "core-run-dev", errors.New("docker daemon not running"))
+	if err := aggregate.Validate(got2); err != nil {
+		t.Fatalf("aggregate invalid: %v", err)
+	}
+	if k, _ := got2.Evidence["observation_key"].(string); k != "missing-service" {
+		t.Fatalf("observation_key = %v, want missing-service", got2.Evidence["observation_key"])
+	}
+	if r, _ := got2.Evidence["remediation"].(string); !strings.Contains(r, "core-run-dev") {
+		t.Fatalf("remediation missing service id: %q", got2.Evidence["remediation"])
 	}
 }

@@ -51,9 +51,9 @@ export function Pipeline({ l }: { l: Lastro }) {
         <span className="col-span-2 border-t pt-1">People review intent</span>
         <span className="col-span-3 border-t pt-1">Machines check the code</span>
       </div>
-      <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <ol aria-label="Pipeline gates" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
         {stages.map((s, k) => (
-          <li key={s.title} className={cn("relative grid gap-0.5 rounded-lg border p-2.5", TONE[s.state])}>
+          <li key={s.title} aria-label={s.title} className={cn("relative grid gap-0.5 rounded-lg border p-2.5", TONE[s.state])}>
             <span className="flex items-center gap-1.5 text-sm font-semibold">
               <s.icon className="h-4 w-4" />
               {s.title}
@@ -172,7 +172,7 @@ function LastroFeedback({ l }: { l: Lastro }) {
     );
   } else body = <Item icon={<Loader2 className="animate-spin" />} who="Lastro" title="Proving…" />;
 
-  return <div className={cn("rounded-lg border-2 bg-card p-3", tone)}>{body}</div>;
+  return <section aria-label="Lastro feedback" aria-live="polite" className={cn("rounded-lg border-2 bg-card p-3", tone)}>{body}</section>;
 }
 
 function Item({ icon, who, title, action, children }: { icon: React.ReactNode; who: string; title: string; action?: React.ReactNode; children?: React.ReactNode }) {

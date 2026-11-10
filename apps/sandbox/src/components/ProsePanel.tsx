@@ -225,6 +225,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
               {a.intents.map((i) => (
                 <li
                   key={i.id}
+                  aria-label={`Intent ${i.id}`}
                   onMouseEnter={() => setHover(i.id)}
                   onMouseLeave={() => setHover(null)}
                   className={cn(
@@ -351,7 +352,7 @@ function DecisionBlock({ d, l, open }: { d: DecisionCard; l: Lastro; open: boole
   const answered = d.chosen !== undefined;
   const show = expanded || open;
   return (
-    <div className={cn("grid gap-2 rounded-md border p-3", answered ? "border-border bg-muted/40" : "border-evidence/60 bg-evidence-soft/40")}>
+    <div role="group" aria-label={`Decision ${d.id}`} className={cn("grid gap-2 rounded-md border p-3", answered ? "border-border bg-muted/40" : "border-evidence/60 bg-evidence-soft/40")}>
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <Badge variant={answered ? "secondary" : "evidence"}>Decision {d.id}</Badge>
         <span className="text-muted-foreground">

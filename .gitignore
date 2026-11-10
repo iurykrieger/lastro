@@ -9,3 +9,5 @@ packages/sdk/wasm/
 # Test screenshots belong in PR comments, never in the repo
 *.png
 !apps/sandbox/public/**/*.png
+apps/sandbox/test-results/
+apps/sandbox/playwright-report/

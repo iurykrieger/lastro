@@ -14,7 +14,7 @@ import { BEYOND_PROOF_REASONS } from "../types.js";
 import type { IntentExtractor, ProofDeriver } from "./interfaces.js";
 
 /** Ask an LLM for one JSON value matching `schema`. */
-export type AskJson = (request: { step: "extract" | "derive" | "implement"; system: string; user: string; schema: Record<string, unknown> }) => Promise<unknown>;
+export type AskJson = (request: { step: "extract" | "derive" | "gap-review"; system: string; user: string; schema: Record<string, unknown> }) => Promise<unknown>;
 
 // ---------------------------------------------------------------------------
 // Extraction
@@ -256,47 +256,6 @@ export function planFromDerivation(artifact: IntentArtifact, model: Model, out: 
 }
 
 // ---------------------------------------------------------------------------
-// Implementation (code generation)
-// ---------------------------------------------------------------------------
-
-export const IMPLEMENT_SYSTEM = `You write or update the implementation of a pure decision function so that it satisfies a reviewed specification.
-
-Rules:
-- The approved intents are the requirements. The clauses are their formal proof obligations: for every input of the model, "requires ⇒ ensures" must hold. Your code will be checked exhaustively against every clause.
-- Follow the host contract exactly (signature, helpers you may call, return shape). No imports, no I/O, no randomness, no clock.
-- Change the current source as little as needed: keep its structure, comments and step() calls where they still apply.
-- Return the complete new source as a single function expression, plus a short note on what changed.`;
-
-export const IMPLEMENT_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  required: ["source", "notes"],
-  properties: { source: { type: "string" }, notes: { type: "string" } },
-};
-
-export interface ImplementRequest {
-  artifact: IntentArtifact;
-  plan: ProofPlan;
-  /** The current implementation, as source text. */
-  source: string;
-  /** Signature, helpers and return shape the generated code must follow. */
-  hostContract: string;
-}
-
-export function implementUserPrompt(r: ImplementRequest): string {
-  const intents = approvedIntents(r.artifact).map((i) => `${i.id}: ${i.statement}`);
-  const clauses = r.plan.clauses.map((c) => `${c.id} (${c.intentIds.join(", ")}): ${c.description}\n    ${c.requires ? `requires ${show(c.requires)}\n    ` : ""}ensures ${show(c.ensures)}`);
-  return [
-    `<prose>\n${r.artifact.prose}\n</prose>`,
-    `<approved-intents>\n${intents.join("\n")}\n</approved-intents>`,
-    `<model>\n${JSON.stringify(r.plan.model, null, 2)}\n</model>`,
-    `<clauses>\n${clauses.join("\n")}\n</clauses>`,
-    `<host-contract>\n${r.hostContract}\n</host-contract>`,
-    `<current-source>\n${r.source}\n</current-source>`,
-  ].join("\n\n");
-}
-
-// ---------------------------------------------------------------------------
 // Transport-agnostic steps
 // ---------------------------------------------------------------------------
 
@@ -316,11 +275,66 @@ export class LlmProofDeriver implements ProofDeriver {
   }
 }
 
-export class LlmImplementer {
+// ---------------------------------------------------------------------------
+// LLM gap review (evidence, never proof)
+// ---------------------------------------------------------------------------
+
+export const GAP_REVIEW_SYSTEM = `You review a proof-driven change for gaps the proofs cannot see.
+
+You get the approved intents, the formal clauses that were proved, the trusted pieces, what is beyond proof, and the code.
+Report only real gaps, each tied to an intent:
+- an intent whose meaning is only partly captured by its clauses (the proof passes but the intent could still be broken),
+- code behavior that relies on a trusted piece or an input the model does not represent,
+- an intent with no clause and no beyond-proof reason.
+Do not restate what is already proved. An empty list is a fine answer.`;
+
+export const GAP_REVIEW_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["gaps"],
+  properties: {
+    gaps: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["intentId", "gap", "suggestion", "severity"],
+        properties: {
+          intentId: { type: "string" },
+          gap: { type: "string" },
+          suggestion: { type: "string" },
+          severity: { type: "string", enum: ["low", "medium", "high"] },
+        },
+      },
+    },
+  },
+};
+
+export interface Gap {
+  intentId: string;
+  gap: string;
+  suggestion: string;
+  severity: "low" | "medium" | "high";
+}
+
+export function gapReviewUserPrompt(artifact: IntentArtifact, plan: ProofPlan, source: string): string {
+  return JSON.stringify(
+    {
+      approvedIntents: approvedIntents(artifact).map((i) => ({ id: i.id, statement: i.statement })),
+      clauses: plan.clauses.map((c) => ({ id: c.id, intentIds: c.intentIds, description: c.description, formal: `${c.requires ? `${show(c.requires)} => ` : ""}${show(c.ensures)}` })),
+      trustedPieces: plan.assumptions.map((a) => ({ id: a.id, piece: a.piece, contract: a.contract })),
+      beyondProof: plan.beyondProof,
+      code: source,
+    },
+    null,
+    2,
+  );
+}
+
+export class LlmGapReviewer {
   constructor(private readonly ask: AskJson) {}
-  async implement(r: ImplementRequest): Promise<{ source: string; notes: string }> {
-    const out = (await this.ask({ step: "implement", system: IMPLEMENT_SYSTEM, user: implementUserPrompt(r), schema: IMPLEMENT_SCHEMA })) as { source?: unknown; notes?: unknown };
-    if (typeof out?.source !== "string" || !out.source.trim()) throw new Error("the implementer returned no source");
-    return { source: out.source.trim(), notes: String(out.notes ?? "") };
+  async review(artifact: IntentArtifact, plan: ProofPlan, source: string): Promise<Gap[]> {
+    const out = (await this.ask({ step: "gap-review", system: GAP_REVIEW_SYSTEM, user: gapReviewUserPrompt(artifact, plan, source), schema: GAP_REVIEW_SCHEMA })) as { gaps?: Gap[] };
+    return Array.isArray(out?.gaps) ? out.gaps : [];
   }
 }

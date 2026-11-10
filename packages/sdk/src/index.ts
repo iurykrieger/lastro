@@ -13,6 +13,9 @@ export {
   pendingReview,
   approvedIntents,
   carryReview,
+  raiseDecisions,
+  requiredApprovals,
+  approvalCount,
   canonicalJson,
   hashOf,
   ArtifactError,
@@ -26,20 +29,21 @@ export { StaticExtractor, StaticDeriver } from "./llm/interfaces.js";
 export {
   LlmIntentExtractor,
   LlmProofDeriver,
-  LlmImplementer,
+  LlmGapReviewer,
+  GAP_REVIEW_SYSTEM,
+  GAP_REVIEW_SCHEMA,
   EXTRACT_SYSTEM,
   EXTRACT_SCHEMA,
   DERIVE_SYSTEM,
   DERIVE_SCHEMA,
-  IMPLEMENT_SYSTEM,
-  IMPLEMENT_SCHEMA,
   extractUserPrompt,
   deriveUserPrompt,
-  implementUserPrompt,
   artifactFromExtraction,
   planFromDerivation,
 } from "./llm/llm.js";
-export type { AskJson, ExtractOut, DeriveOut, ImplementRequest } from "./llm/llm.js";
+export type { AskJson, ExtractOut, DeriveOut, Gap } from "./llm/llm.js";
+export { createLastro, failuresOf, specGapsOf, agentFeedback } from "./lastro.js";
+export type { Lastro, LastroOptions, Spec, Proof, ProofFailure } from "./lastro.js";
 export type { IntentExtractor, ProofDeriver } from "./llm/interfaces.js";
 export { loadRustProver, tabulate } from "./rust.js";
 export type { RustProver, RustProofReport, RustClauseProof, Row } from "./rust.js";

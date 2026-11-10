@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Lastro</PackageId>
+    <Description>Deterministic backing for non-deterministic plans: prose -> reviewable intents -> derived proofs -> verification receipts. .NET SDK, interoperable with the TypeScript SDK and the lastro-core Rust prover.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+</Project>

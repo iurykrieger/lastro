@@ -1,0 +1,33 @@
+{
+  "intents": [
+    { "statement": "When the prose is extracted again, an intent with the same statement keeps its review verdict (approved, amended or rejected).", "kind": "preserve", "provability": "formal", "beyondProofReason": "none", "quote": "an intent with the same statement keeps its verdict and its approvals" },
+    { "statement": "When the prose is extracted again, an intent with the same statement keeps its approvals.", "kind": "preserve", "provability": "formal", "beyondProofReason": "none", "quote": "an intent with the same statement keeps its verdict and its approvals" },
+    { "statement": "If a reviewer amended an intent and the AI proposes its original reading again for the same quote, the amendment is applied again.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "If a reviewer amended an intent and the AI proposes its original reading again for the same words, the amendment is applied again" },
+    { "statement": "Every other re-extracted intent comes back as proposed.", "kind": "invariant", "provability": "formal", "beyondProofReason": "none", "quote": "Everything else comes back as proposed" },
+    { "statement": "A decision asked again with the same question keeps its answer.", "kind": "preserve", "provability": "formal", "beyondProofReason": "none", "quote": "A decision asked again with the same question keeps its answer" }
+  ],
+  "decisions": [
+    {
+      "intentIndexes": [2],
+      "question": "When an amendment is applied again, do the approvals of the amended wording come back too?",
+      "options": [
+        { "label": "Yes, keep them", "consequence": "The reviewed wording is unchanged, so nobody has to approve it again." },
+        { "label": "No, approve again", "consequence": "Every edit near an amended intent sends it back to the reviewers." }
+      ],
+      "recommended": 0
+    },
+    {
+      "intentIndexes": [0, 1, 4],
+      "question": "Does \"the same statement\" (or question) ignore letter case and spacing?",
+      "options": [
+        { "label": "Ignore case and spacing", "consequence": "Re-wrapping a line or changing capitalization does not reopen the review." },
+        { "label": "Exact text only", "consequence": "Any cosmetic change in the AI's wording reopens the review of that intent." }
+      ],
+      "recommended": 0
+    }
+  ],
+  "notPromised": [
+    "That decisions raised by the consistency check, and the intents created from their answers, survive a new extraction.",
+    "That an intent keeps its id (I1, I2...) when intents are added or removed above it."
+  ]
+}

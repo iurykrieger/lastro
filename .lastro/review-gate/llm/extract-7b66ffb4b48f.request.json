@@ -1,0 +1,119 @@
+{
+  "instructions": "Act as the system described in \"system\". Read \"user\". Write ONLY a JSON value matching \"schema\" to /home/user/lastro/.lastro/review-gate/llm/extract-7b66ffb4b48f.answer.json, then run the same lastro command again.",
+  "step": "extract",
+  "system": "You turn a business rule or change request, written as prose, into a list of reviewable intents.\n\nRules:\n- One intent = one checkable promise. Split compound sentences (\"only X and always Y\" is two intents).\n- \"quote\" must be copied verbatim from the prose (it anchors the intent map). Never paraphrase the quote.\n- \"statement\" restates the promise precisely in the prose's language.\n- kind: behavior (must happen), invariant (must never happen), preserve (existing behavior to keep), non-functional.\n- provability: \"formal\" when it is a pure input→output fact about the program's decision logic; \"empirical\" when it can only be checked by running tests; \"beyond-proof\" when it falls where proof stops.\n- beyondProofReason (required for beyond-proof): external-code (libraries the verifier cannot see), world-facts (database, clock), termination-timing (whether/how fast it finishes), human-judgment (UX, clarity), unstated.\n- When the prose is ambiguous, DO NOT guess. Add a decision: one question, 2-4 options each with its consequence, and the index of the option you recommend. Prefer questions the author has not considered (e.g. \"must the right password ALWAYS get a token, or only must a wrong one be refused?\").\n- notPromised: things a reader might assume but the prose does not promise (timing, rate limits...).",
+  "user": "<prose>\nBefore any proof is derived, people review the intents. The team sets how many distinct reviewers must approve\neach intent when it creates the SDK, and the default is one. An intent reaches the spec only when it has that many\napprovals from different people; the same person approving twice counts once. When someone amends an intent, the\napprovals others gave to the old wording no longer count: the person who amended it counts as one approval, and\neveryone else must approve the new wording again. A rejected intent never reaches the spec, and it does not block\nthe others. An unanswered decision blocks the spec. The reviewed intents can be frozen only when nothing is\npending, and the freeze is all or nothing.\n</prose>\n\nIntents are numbered from 0 in the order you list them; decisions reference them by index.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "intents",
+      "decisions",
+      "notPromised"
+    ],
+    "properties": {
+      "intents": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "statement",
+            "kind",
+            "provability",
+            "beyondProofReason",
+            "quote"
+          ],
+          "properties": {
+            "statement": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "behavior",
+                "invariant",
+                "preserve",
+                "non-functional"
+              ]
+            },
+            "provability": {
+              "type": "string",
+              "enum": [
+                "formal",
+                "empirical",
+                "beyond-proof"
+              ]
+            },
+            "beyondProofReason": {
+              "type": "string",
+              "enum": [
+                "none",
+                "external-code",
+                "world-facts",
+                "termination-timing",
+                "human-judgment",
+                "unstated"
+              ]
+            },
+            "quote": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "decisions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "intentIndexes",
+            "question",
+            "options",
+            "recommended"
+          ],
+          "properties": {
+            "intentIndexes": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "question": {
+              "type": "string"
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "label",
+                  "consequence"
+                ],
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  },
+                  "consequence": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "recommended": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "notPromised": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

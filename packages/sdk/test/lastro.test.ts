@@ -357,7 +357,7 @@ import { mkdtempSync, writeFileSync as writeFile, readFileSync as readFile } fro
 import { tmpdir } from "node:os";
 import { join as joinPath } from "node:path";
 import { fileURLToPath as toPath } from "node:url";
-import { main as cli } from "../src/cli.js";
+import { main as cli, section } from "../src/cli.js";
 
 test("cli: plan → review → spec → prove, answering LLM steps by handoff", async () => {
   const dir = mkdtempSync(joinPath(tmpdir(), "lastro-"));
@@ -407,4 +407,11 @@ test("cli: plan → review → spec → prove, answering LLM steps by handoff", 
   assert.equal(r.code, 1);
   assert.match(r.body.feedback as string, /counterexample/);
   assert.equal((await cli(["feedback", ...ws])).code, 1);
+});
+
+test("cli: --section reads one Markdown section, up to the next heading of the same level", () => {
+  const md = "# Use cases\n\nIntro.\n\n## Review gate\n\nOne rule.\n\n### Detail\n\nStill in.\n\n## Clause verdicts\n\nOther rule.\n";
+  assert.equal(section(md, "review gate").trim(), "One rule.\n\n### Detail\n\nStill in.");
+  assert.equal(section(md, "Clause verdicts").trim(), "Other rule.");
+  assert.throws(() => section(md, "Missing"));
 });

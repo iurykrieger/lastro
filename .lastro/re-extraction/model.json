@@ -1,0 +1,14 @@
+{
+  "name": "re_extraction",
+  "inputs": {
+    "before": { "type": "enum", "values": ["proposed", "approved", "amended", "rejected"] },
+    "statement": { "type": "enum", "values": ["same", "original-reading", "new"] },
+    "quote": { "type": "enum", "values": ["same", "changed"] },
+    "question": { "type": "enum", "values": ["same", "changed"] }
+  },
+  "outputs": {
+    "after": { "type": "enum", "values": ["proposed", "approved", "amended", "rejected"] },
+    "approvalsKept": { "type": "bool" },
+    "answerKept": { "type": "bool" }
+  }
+}

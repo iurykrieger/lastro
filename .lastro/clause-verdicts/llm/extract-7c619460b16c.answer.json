@@ -1,0 +1,37 @@
+{
+  "intents": [
+    { "statement": "Every clause result states how much it can be trusted, through its verdict and its evidence label.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "Every proof result says how much it can be trusted" },
+    { "statement": "A clause is proved only when every input of a finite declared domain was checked and none broke it.", "kind": "invariant", "provability": "formal", "beyondProofReason": "none", "quote": "A clause is proved only when every input of a finite declared domain was checked and none broke it" },
+    { "statement": "A proved clause carries formal evidence.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "that evidence is formal" },
+    { "statement": "When the domain cannot be enumerated, a clause that holds on every sample is evidenced and never proved.", "kind": "invariant", "provability": "formal", "beyondProofReason": "none", "quote": "a clause that holds on every sample is evidenced, never proved" },
+    { "statement": "An evidenced clause carries empirical evidence.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "its evidence is empirical" },
+    { "statement": "A single counterexample makes the clause violated.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "One counterexample makes the clause violated" },
+    { "statement": "A clause whose if-part no input satisfies is vacuous.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "A clause whose if-part no input satisfies is vacuous" },
+    { "statement": "A clause that rejects none of the planted bugs is weak.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "A clause that rejects none of the planted bugs is weak" },
+    { "statement": "A recorded production run that breaks a clause makes it violated, even when the clause was proved on the model.", "kind": "invariant", "provability": "formal", "beyondProofReason": "none", "quote": "A recorded production run that breaks a clause makes it violated, even when it was proved on the model" }
+  ],
+  "decisions": [
+    {
+      "intentIndexes": [5, 8],
+      "question": "Which evidence label does a violated clause carry?",
+      "options": [
+        { "label": "Formal from the exhaustive check, empirical from samples or production runs", "consequence": "The label says where the counterexample came from; a production run that breaks a clause the model already broke is labeled empirical." },
+        { "label": "Always empirical", "consequence": "A counterexample found by enumerating the whole domain is reported with the same weight as one found by sampling." }
+      ],
+      "recommended": 0
+    },
+    {
+      "intentIndexes": [2, 7],
+      "question": "Which evidence label does a weak clause carry when it held on every input?",
+      "options": [
+        { "label": "None", "consequence": "A weak clause never counts as formal or empirical evidence in the receipt, like a vacuous one." },
+        { "label": "Keep formal or empirical", "consequence": "The receipt shows formal evidence for a clause that rules out no bug." }
+      ],
+      "recommended": 0
+    }
+  ],
+  "notPromised": [
+    "How many samples are drawn or which seed is used.",
+    "How large a domain must be before it counts as too large to enumerate."
+  ]
+}

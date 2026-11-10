@@ -1,0 +1,174 @@
+{
+  "lastro": "intent-artifact/v0",
+  "prose": "Before any proof is derived, people review the intents. The team sets how many distinct reviewers must approve\neach intent when it creates the SDK, and the default is one. An intent reaches the spec only when it has that many\napprovals from different people; the same person approving twice counts once. When someone amends an intent, the\napprovals others gave to the old wording no longer count: the person who amended it counts as one approval, and\neveryone else must approve the new wording again. A rejected intent never reaches the spec, and it does not block\nthe others. An unanswered decision blocks the spec. The reviewed intents can be frozen only when nothing is\npending, and the freeze is all or nothing.",
+  "intents": [
+    {
+      "id": "I1",
+      "statement": "An intent reaches the spec only when it has the required number of approvals, each from a different reviewer.",
+      "kind": "invariant",
+      "provability": "formal",
+      "source": {
+        "quote": "An intent reaches the spec only when it has that many approvals from different people",
+        "start": 172,
+        "end": 257
+      },
+      "status": "proposed"
+    },
+    {
+      "id": "I2",
+      "statement": "The same reviewer approving an intent more than once counts as one approval.",
+      "kind": "invariant",
+      "provability": "formal",
+      "source": {
+        "quote": "the same person approving twice counts once",
+        "start": 259,
+        "end": 302
+      },
+      "status": "proposed"
+    },
+    {
+      "id": "I3",
+      "statement": "When the team does not set a number, one approval per intent is required.",
+      "kind": "behavior",
+      "provability": "empirical",
+      "source": {
+        "quote": "the default is one",
+        "start": 152,
+        "end": 170
+      },
+      "status": "proposed"
+    },
+    {
+      "id": "I4",
+      "statement": "After an intent is amended, approvals given to its old wording no longer count.",
+      "kind": "invariant",
+      "provability": "formal",
+      "source": {
+        "quote": "the approvals others gave to the old wording no longer count",
+        "start": 335,
+        "end": 395
+      },
+      "status": "proposed"
+    },
+    {
+      "id": "I5",
+      "statement": "The reviewer who amends an intent counts as one approval of the new wording.",
+      "kind": "behavior",
+      "provability": "formal",
+      "source": {
+        "quote": "the person who amended it counts as one approval",
+        "start": 397,
+        "end": 445
+      },
+      "status": "proposed"
+    },
+    {
+      "id": "I6",
+      "statement": "A rejected intent never reaches the spec.",
+      "kind": "invariant",
+      "provability": "formal",
+      "source": {
+        "quote": "A rejected intent never reaches the spec",
+        "start": 501,
+        "end": 541
+      },
+      "status": "proposed"
+    },
+    {
+      "id": "I7",
+      "statement": "A rejected intent does not block the spec: the other intents can still be frozen.",
+      "kind": "behavior",
+      "provability": "formal",
+      "source": {
+        "quote": "it does not block the others",
+        "start": 547,
+        "end": 575
+      },
+      "status": "proposed"
+    },
+    {
+      "id": "I8",
+      "statement": "An unanswered decision blocks the spec.",
+      "kind": "invariant",
+      "provability": "formal",
+      "source": {
+        "quote": "An unanswered decision blocks the spec",
+        "start": 577,
+        "end": 615
+      },
+      "status": "proposed"
+    },
+    {
+      "id": "I9",
+      "statement": "The reviewed intents can be frozen only when nothing is pending: no intent is missing approvals and no decision is unanswered.",
+      "kind": "invariant",
+      "provability": "formal",
+      "source": {
+        "quote": "The reviewed intents can be frozen only when nothing is pending",
+        "start": 617,
+        "end": 680
+      },
+      "status": "proposed"
+    },
+    {
+      "id": "I10",
+      "statement": "Freezing is all or nothing: it freezes every intent at once or fails and freezes none.",
+      "kind": "invariant",
+      "provability": "formal",
+      "source": {
+        "quote": "the freeze is all or nothing",
+        "start": 686,
+        "end": 714
+      },
+      "status": "proposed"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "intentIds": [
+        "I9"
+      ],
+      "question": "Must the freeze always succeed when nothing is pending, or is it enough that it fails while something is pending?",
+      "options": [
+        {
+          "label": "Both ways",
+          "consequence": "A freeze that refuses everything is rejected by the proof."
+        },
+        {
+          "label": "Only refuse while pending",
+          "consequence": "A freeze that never succeeds still passes."
+        }
+      ],
+      "recommended": 0,
+      "origin": "extraction"
+    },
+    {
+      "id": "D2",
+      "intentIds": [
+        "I1",
+        "I5"
+      ],
+      "question": "When one approval is required, may the person who amended an intent be its only approver?",
+      "options": [
+        {
+          "label": "Yes, the amender's approval is enough",
+          "consequence": "With the default policy an amended intent goes straight to the spec, reviewed only by the person who rewrote it."
+        },
+        {
+          "label": "No, someone else must approve",
+          "consequence": "Every amendment needs a second person, even when the team policy asks for one approval."
+        }
+      ],
+      "recommended": 0,
+      "origin": "extraction"
+    }
+  ],
+  "notPromised": [
+    "Who may review: reviewer names are not authenticated or checked against a team list.",
+    "The order in which reviewers approve."
+  ],
+  "policy": {
+    "requiredApprovals": 1
+  }
+}

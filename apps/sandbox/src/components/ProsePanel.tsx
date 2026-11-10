@@ -10,7 +10,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { extractLogin } from "@lastro/example-login";
-import { AI_I5, PROSE, reviewedArtifact, type Lastro } from "@/state";
+import { AI_I5, PROSE, REVIEWERS, type Lastro } from "@/state";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { approvalCount } from "@lastro/sdk";
 import { PROVABILITY, REASON } from "./verdicts";
 
 const KIND: Record<string, string> = { behavior: "behavior", invariant: "invariant", preserve: "preserve", "non-functional": "non-functional" };
@@ -95,7 +97,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                     <Pencil /> Edit the business rule
                   </Button>
                   {!original && (
-                    <Button size="sm" variant="outline" onClick={() => l.setArtifact(reviewedArtifact())}>
+                    <Button size="sm" variant="outline" onClick={l.restoreExample}>
                       <Undo2 /> Restore original prose
                     </Button>
                   )}
@@ -154,13 +156,13 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        l.updateArtifact((a2) => {
-                          for (const it of a2.intents) if (it.status === "proposed") it.status = "approved";
-                          for (const d of a2.decisions) d.chosen ??= d.recommended;
+                        l.reviewAs((r) => {
+                          for (const d of a.decisions) if (d.chosen === undefined) r.answer(d.id, d.recommended);
+                          r.approveAll();
                         })
                       }
                     >
-                      <CheckCheck /> Approve all proposed and take recommended answers
+                      <CheckCheck /> Approve everything as {l.reviewer} (recommended answers)
                     </Button>
                   </span>
                 </AlertDescription>
@@ -172,11 +174,33 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
             ) : (
               <p className="text-xs text-muted-foreground">Intents extracted by Claude from your edited text. Review them like any AI draft.</p>
             )}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-muted/60 p-2 text-xs">
+              <span className="flex items-center gap-2">
+                <span className="text-muted-foreground">Reviewing as</span>
+                <ToggleGroup type="single" size="sm" variant="outline" value={l.reviewer} onValueChange={(v) => v && l.setReviewer(v)}>
+                  {REVIEWERS.map((r) => (
+                    <ToggleGroupItem key={r} value={r} className="h-7 px-2.5 data-[state=on]:border-foreground data-[state=on]:bg-background data-[state=on]:font-semibold">
+                      {r}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="text-muted-foreground">Team policy: approvals per intent</span>
+                <ToggleGroup type="single" size="sm" variant="outline" value={String(l.requiredApprovals)} onValueChange={(v) => v && l.setRequiredApprovals(Number(v))}>
+                  {[1, 2].map((n) => (
+                    <ToggleGroupItem key={n} value={String(n)} className="h-7 w-8 data-[state=on]:border-foreground data-[state=on]:bg-background data-[state=on]:font-semibold">
+                      {n}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </span>
+            </div>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => l.setArtifact(extractLogin())} disabled={!original}>
+              <Button size="sm" variant="outline" onClick={() => l.setArtifact({ ...extractLogin(), policy: { requiredApprovals: l.requiredApprovals } })} disabled={!original}>
                 <RotateCcw /> Start from the AI draft
               </Button>
-              <Button size="sm" variant="outline" onClick={() => l.setArtifact(reviewedArtifact())}>
+              <Button size="sm" variant="outline" onClick={l.restoreExample}>
                 <Undo2 /> Restore reviewed example
               </Button>
             </div>
@@ -201,8 +225,11 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                       {PROVABILITY[i.provability]!.label}
                       {i.beyondProofReason ? ` · ${REASON[i.beyondProofReason]}` : ""}
                     </Badge>
+                    {i.decisionId && <Badge variant="trusted">from decision {i.decisionId}</Badge>}
                     <span className={cn("ml-auto text-xs text-muted-foreground", i.status === "amended" && "text-trusted", i.status === "proposed" && "text-evidence")}>
                       {STATUS[i.status]}
+                      {i.status !== "rejected" && ` · ${approvalCount(i)}/${l.requiredApprovals}`}
+                      {i.approvals?.length ? ` (${i.approvals.join(", ")})` : ""}
                     </span>
                   </div>
                   {editing === i.id ? (
@@ -211,15 +238,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                       onSubmit={(e) => {
                         e.preventDefault();
                         const v = draft.trim();
-                        l.updateArtifact((a2) => {
-                          const it = a2.intents.find((x) => x.id === i.id)!;
-                          if (v && v !== it.statement) {
-                            it.originalStatement ??= it.statement;
-                            it.statement = v;
-                            it.status = "amended";
-                            it.reviewNote = "amended in review";
-                          }
-                        });
+                        if (v && v !== i.statement) l.reviewAs((r) => r.amend(i.id, v, {}, `amended by ${l.reviewer}`));
                         setEditing(null);
                       }}
                     >
@@ -244,10 +263,10 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                       The AI understood: <s className="text-fail">{i.originalStatement}</s>
                     </p>
                   )}
-                  <p className="text-xs italic text-muted-foreground">“{i.source.quote}”</p>
+                  {i.source.quote && <p className="text-xs italic text-muted-foreground">“{i.source.quote}”</p>}
                   <div className="flex flex-wrap gap-1.5">
-                    <Button size="sm" variant="outline" disabled={i.status === "approved"} onClick={() => l.updateArtifact((a2) => void (a2.intents.find((x) => x.id === i.id)!.status = "approved"))}>
-                      <Check /> Approve
+                    <Button size="sm" variant="outline" disabled={i.status !== "proposed" && i.status !== "rejected" && (i.approvals ?? []).includes(l.reviewer)} onClick={() => l.reviewAs((r) => r.approve(i.id))}>
+                      <Check /> Approve as {l.reviewer}
                     </Button>
                     <Button
                       size="sm"
@@ -263,13 +282,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                       size="sm"
                       variant="outline"
                       disabled={i.status === "rejected"}
-                      onClick={() =>
-                        l.updateArtifact((a2) => {
-                          const it = a2.intents.find((x) => x.id === i.id)!;
-                          it.status = "rejected";
-                          it.reviewNote = "rejected in review";
-                        })
-                      }
+                      onClick={() => l.reviewAs((r) => r.reject(i.id, "rejected in review"))}
                     >
                       <X /> Reject
                     </Button>
@@ -284,6 +297,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                             it.statement = AI_I5;
                             delete it.originalStatement;
                             it.status = "approved";
+                            it.approvals = [...REVIEWERS];
                           })
                         }
                       >
@@ -311,11 +325,12 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
               <div key={d.id} className="grid gap-3 rounded-lg border p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Decision {d.id} · affects {d.intentIds.join(", ")}
+                  {d.origin !== "extraction" && " · from the spec: your answer becomes an intent to approve"}
                 </p>
                 <p className="font-medium">{d.question}</p>
                 <RadioGroup
                   value={d.chosen === undefined ? "" : String(d.chosen)}
-                  onValueChange={(v) => l.updateArtifact((a2) => void (a2.decisions.find((x) => x.id === d.id)!.chosen = Number(v)))}
+                  onValueChange={(v) => l.reviewAs((r) => r.answer(d.id, Number(v)))}
                 >
                   {d.options.map((o, k) => (
                     <Label

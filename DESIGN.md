@@ -36,6 +36,21 @@ Direct inspiration: [PDD Kit (GitHub Next and Microsoft Research)](https://githu
    independent Rust prover `lastro-core`.
 5. **Receipt**. Per intent: the level of assurance and what it rests on.
 
+Lastro's only agentic steps are 1 and 3. Writing the implementation is out of scope: any coding agent or a
+person does it, and `prove()` judges the result. Its failures (clause, intents, counterexample) are plain data,
+and `agentFeedback()` renders them as a brief any agent can act on.
+
+**Review policy.** The team sets how many distinct reviewers must approve each intent when it creates the SDK
+(`createLastro({ requiredApprovals })`, default 1). Amending an intent resets the other approvals.
+
+**Contradictions.** After derivation, a consistency check looks for inputs where the clauses cannot all hold.
+Each contradiction returns to the team as a decision card (`returnDecisions`). Answering it adds an intent that
+records the decision, and that intent goes through review like any other before the spec is derived again.
+
+**Interfaces.** The library (`createLastro`) and the CLI (`lastro plan | review | spec | prove | feedback`) are
+the same pipeline. The CLI keeps state as JSON in `.lastro/` and can hand the two AI steps to the calling agent's
+own model (`--llm handoff`), so it works from any harness without an API key.
+
 ## 3. Proved vs confidence: verdict semantics
 
 | Verdict | When | Label |
@@ -88,8 +103,8 @@ planted bug.
 - **Prose**: the text with the intent map highlighted, intent cards (approve, amend, reject) and decision cards.
   The text is editable: Claude re-extracts intents, `carryReview()` keeps the reviewer's verdicts for intents that
   did not change, and once the review is done Claude derives a new plan, which runs against the current code.
-- **Code**: the generated implementation, editable, with one-click planted bugs shown as a diff, and a
-  "Regenerate code from the intents" step where Claude rewrites it to satisfy the plan.
+- **Code**: the implementation, editable, with one-click planted bugs shown as a diff, and the feedback the proofs
+  would hand to a coding agent.
 - **Contrast**: per-clause verdicts from both engines, mutants, counterexamples you can run, LSL and SMT-LIB2,
   the intent roll-up, trusted pieces, where proof stops, a single-login runner and the receipt.
 
@@ -107,6 +122,6 @@ quotes are anchored, LSL is validated, and generated code only counts through th
 ## 8. Next steps
 
 1. SMT backend (Z3 via WASM) using `toSmtLib`.
-2. CLI `lastro extract | review | derive | verify | receipt` and a GitHub Action that posts the receipt on the PR.
+2. An MCP server over the same pipeline, for harnesses that prefer tools over a CLI.
 3. Native bindings for `lastro-core` (N-API, PyO3) so other language SDKs share the prover.
 4. A comprehension quiz generated from the clauses, to confirm the reviewer understood what they approved.

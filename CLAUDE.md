@@ -17,6 +17,9 @@ obligations against what the code actually does. Read `DESIGN.md` before changin
 - The TS engine and the Rust prover must agree verdict by verdict. When you change one, change the other
   and keep the cross-check test in `packages/sdk/test/lastro.test.ts` green.
 - Verification is deterministic: fixed seeds, canonical JSON, hashes over frozen artifacts.
+- Lastro's only AI steps are intent extraction and proof derivation. Never add code generation to the SDK:
+  implementations come from any agent or person, and Lastro judges them.
+- Stay harness-agnostic: no dependency on a specific agent product. New surfaces wrap `createLastro`.
 
 ## Commands
 

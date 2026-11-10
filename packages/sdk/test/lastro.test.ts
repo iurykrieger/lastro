@@ -218,7 +218,7 @@ test("Rust prover refuses to call a partial table a proof", { skip: !existsSync(
 // LLM steps over a fake transport, and re-extraction
 // ---------------------------------------------------------------------------
 
-import { LlmIntentExtractor, LlmProofDeriver, LlmImplementer, carryReview, type AskJson } from "../src/index.js";
+import { LlmIntentExtractor, LlmProofDeriver, carryReview, type AskJson } from "../src/index.js";
 
 function reviewedLogin(): IntentArtifact {
   const a = extractLogin();
@@ -262,7 +262,6 @@ test("LLM steps turn JSON answers into checked Lastro objects", async () => {
       scenarios: reference.scenarios.map((s) => ({ ...s, inputJson: JSON.stringify(s.input), expect: JSON.stringify(s.expect) })),
       beyondProof: reference.beyondProof,
     },
-    implement: { source: LOGIN_SOURCE, notes: "unchanged" },
   };
   const ask: AskJson = async ({ step }) => answers[step];
 
@@ -274,10 +273,138 @@ test("LLM steps turn JSON answers into checked Lastro objects", async () => {
   const report = await verify(frozen, plan, { subject: makeLogin() });
   assert.equal(report.ok, true);
 
-  const code = await new LlmImplementer(ask).implement({ artifact: frozen, plan, source: LOGIN_SOURCE, hostContract: "" });
-  assert.equal(code.source, LOGIN_SOURCE);
-
   // A derivation that references a variable outside the model is refused.
   (answers.derive as { clauses: { ensures: string }[] }).clauses[0]!.ensures = JSON.stringify({ var: "out.cookie" });
   await assert.rejects(new LlmProofDeriver(ask).derive(frozen, MODEL), /cookie/);
+});
+
+// ---------------------------------------------------------------------------
+// The pipeline facade: two reviewers, contradictions as decisions, agent loop
+// ---------------------------------------------------------------------------
+
+import { agentFeedback, createLastro, raiseDecisions } from "../src/index.js";
+
+function loginPipeline(requiredApprovals?: number) {
+  return createLastro({
+    model: MODEL,
+    extractor: { extract: async (prose: string) => extractLogin(prose) },
+    deriver: { derive: async (a: IntentArtifact) => deriveLoginPlan(a) },
+    ...(requiredApprovals ? { requiredApprovals } : {}),
+  });
+}
+
+test("pipeline: one approval by default", async () => {
+  const lastro = loginPipeline();
+  const a = lastro.review(await lastro.plan(extractLogin().prose), "ana").approveAll().amend("I5", FIXED_I5).answer("D1", 0).answer("D2", 0).done();
+  assert.deepEqual(lastro.pending(a), []);
+});
+
+test("pipeline: a policy of two approvals needs two distinct reviewers before the spec", async () => {
+  const lastro = loginPipeline(2);
+  let a = await lastro.plan(extractLogin().prose);
+  a = lastro.review(a, "ana").approveAll().amend("I5", FIXED_I5).answer("D1", 0).answer("D2", 0).done();
+  assert.ok(lastro.pending(a).some((p) => /I1 needs 1 more approval/.test(p)));
+  await assert.rejects(lastro.spec(a));
+  // Ana's amendment resets I5: Bruno must approve the new wording too.
+  a = lastro.review(a, "ana").approveAll().done();
+  assert.ok(lastro.pending(a).some((p) => /I5 needs 1 more/.test(p)));
+  a = lastro.review(a, "bruno").approveAll().done();
+  assert.deepEqual(lastro.pending(a), []);
+  const spec = await lastro.spec(a);
+  assert.equal(spec.ok, true);
+  const proof = await lastro.prove(spec, makeLogin());
+  assert.equal(proof.ok, true);
+  assert.deepEqual(proof.failures, []);
+  assert.match(proof.receipt, /login_flow/);
+});
+
+test("pipeline: contradictions go back to the team as unanswered decisions", () => {
+  const a = freeze(reviewedLogin());
+  const raised = raiseDecisions(a, [{ id: "X1", intentIds: ["I5", "I7"], question: "C5 and C7 cannot both hold. Which gives way?", options: [{ label: "Relax C5", consequence: "" }, { label: "Relax C7", consequence: "" }], recommended: 0, origin: "consistency-check" }]);
+  assert.equal(raised.hash, undefined);
+  assert.equal(raised.decisions.at(-1)!.id, "D3");
+  assert.throws(() => freeze(raised), /D3 unanswered/);
+});
+
+test("pipeline: answering a contradiction adds an intent the team must approve", () => {
+  const raised = raiseDecisions(freeze(reviewedLogin()), [{ id: "X1", intentIds: ["I5", "I7"], question: "C5 and C7 cannot both hold for both+db-fails. Which gives way?", options: [{ label: "Relax C5", consequence: "the database error wins" }, { label: "Relax C7", consequence: "the 400 wins" }], recommended: 0, origin: "consistency-check" }]);
+  const answered = review(raised, "ana").answer("D3", 0).done();
+  const it = answered.intents.at(-1)!;
+  assert.equal(it.decisionId, "D3");
+  assert.equal(it.status, "proposed");
+  assert.match(it.statement, /Relax C5 \(the database error wins\)/);
+  assert.throws(() => freeze(answered), /I10 not reviewed/);
+  const approved = review(answered, "bruno").approve(it.id).done();
+  assert.ok(freeze(approved).hash);
+});
+
+test("pipeline: failures are structured feedback for whatever writes the code", async () => {
+  const lastro = loginPipeline();
+  const spec = await lastro.spec(review(reviewedLogin(), "ana").approveAll().done());
+  const proof = await lastro.prove(spec, makeLogin("skip-password"));
+  assert.equal(proof.ok, false);
+  const f = proof.failures.find((x) => x.kind === "clause")!;
+  assert.equal(f.input.password, "wrong");
+  assert.match(agentFeedback(proof), /counterexample: .*"password":"wrong"/);
+  assert.equal(agentFeedback(await lastro.prove(spec, makeLogin())), "Every proof passes.");
+});
+
+// ---------------------------------------------------------------------------
+// CLI: the same pipeline from any harness, with the agent's own model (handoff)
+// ---------------------------------------------------------------------------
+
+import { mkdtempSync, writeFileSync as writeFile, readFileSync as readFile } from "node:fs";
+import { tmpdir } from "node:os";
+import { join as joinPath } from "node:path";
+import { fileURLToPath as toPath } from "node:url";
+import { main as cli } from "../src/cli.js";
+
+test("cli: plan → review → spec → prove, answering LLM steps by handoff", async () => {
+  const dir = mkdtempSync(joinPath(tmpdir(), "lastro-"));
+  const ws = ["--dir", joinPath(dir, ".lastro"), "--llm", "handoff"];
+  writeFile(joinPath(dir, "model.json"), JSON.stringify(MODEL));
+  writeFile(joinPath(dir, "prose.md"), extractLogin().prose);
+  const loginModule = joinPath(toPath(new URL(".", import.meta.url)), "..", "examples", "login", "login.js");
+  writeFile(joinPath(dir, "impl.mjs"), `import { makeLogin } from ${JSON.stringify(loginModule)};\nexport default makeLogin();\nexport const buggy = makeLogin("skip-password");\n`);
+
+  assert.equal((await cli(["init", "--model", joinPath(dir, "model.json"), ...ws])).code, 0);
+
+  // The agent is asked to extract; it answers with the example's extraction.
+  let r = await cli(["plan", joinPath(dir, "prose.md"), ...ws]);
+  assert.equal(r.code, 3);
+  const ex = extractLogin();
+  writeFile(r.body.answer as string, JSON.stringify({
+    intents: ex.intents.map((i) => ({ statement: i.statement, kind: i.kind, provability: i.provability, beyondProofReason: i.beyondProofReason ?? "none", quote: i.source.quote })),
+    decisions: ex.decisions.map((d) => ({ intentIndexes: d.intentIds.map((x) => Number(x.slice(1)) - 1), question: d.question, options: d.options, recommended: d.recommended })),
+    notPromised: ex.notPromised,
+  }));
+  r = await cli(["plan", joinPath(dir, "prose.md"), ...ws]);
+  assert.equal(r.code, 1, "planned, review pending");
+
+  assert.equal((await cli(["spec", ...ws])).body.status, "review-pending");
+  await cli(["review", "--as", "ana", "approve-all", ...ws]);
+  await cli(["review", "--as", "ana", "amend", "I5", FIXED_I5, ...ws]);
+  await cli(["review", "--as", "ana", "answer", "D1", "0", ...ws]);
+  await cli(["review", "--as", "ana", "answer", "D2", "0", ...ws]);
+  assert.equal((await cli(["status", ...ws])).code, 0);
+
+  r = await cli(["spec", ...ws]);
+  assert.equal(r.code, 3);
+  const frozen = freeze(JSON.parse(readFile(joinPath(dir, ".lastro", "intents.json"), "utf8")));
+  const plan = deriveLoginPlan(frozen);
+  writeFile(r.body.answer as string, JSON.stringify({
+    clauses: plan.clauses.map((c) => ({ ...c, requires: c.requires ? JSON.stringify(c.requires) : "", ensures: JSON.stringify(c.ensures), assumes: c.assumes ?? [] })),
+    assumptions: plan.assumptions,
+    scenarios: plan.scenarios.map((s) => ({ ...s, inputJson: JSON.stringify(s.input), expect: JSON.stringify(s.expect) })),
+    beyondProof: plan.beyondProof,
+  }));
+  r = await cli(["spec", ...ws]);
+  assert.equal(r.code, 0, JSON.stringify(r.body));
+
+  r = await cli(["prove", joinPath(dir, "impl.mjs"), ...ws]);
+  assert.equal(r.code, 0, JSON.stringify(r.body));
+  r = await cli(["prove", joinPath(dir, "impl.mjs"), "--export", "buggy", ...ws]);
+  assert.equal(r.code, 1);
+  assert.match(r.body.feedback as string, /counterexample/);
+  assert.equal((await cli(["feedback", ...ws])).code, 1);
 });

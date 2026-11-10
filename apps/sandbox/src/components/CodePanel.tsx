@@ -1,5 +1,7 @@
 import { useMemo } from "react";
-import { Bug as BugIcon, Code2, Loader2, RotateCcw, Sparkles } from "lucide-react";
+import { Bot, Bug as BugIcon, Code2, Copy, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { agentFeedback, failuresOf, specGapsOf } from "@lastro/sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -109,27 +111,11 @@ export function CodePanel({ l }: { l: Lastro }) {
             decideLogin · {changed.size ? `${changed.size} line(s) changed` : "reference"}
           </Badge>
         </div>
-        <CardDescription>The generated implementation. Edit it, plant a bug, or regenerate it from the intents: the proof re-runs on every change.</CardDescription>
+        <CardDescription>
+          Written by any coding agent or by hand: Lastro does not generate code, it judges it. Edit it or plant a bug, and the proofs re-run on every change.
+        </CardDescription>
       </CardHeader>
       <CardContent className="grid flex-1 content-start gap-3">
-        <div className="grid gap-1.5 rounded-lg border border-dashed p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" onClick={() => void l.regenerateCode()} disabled={!l.plan || !l.ai.available || !!l.ai.busy}>
-              {l.ai.busy === "implement" ? <Loader2 className="animate-spin" /> : <Sparkles />}
-              {l.ai.busy === "implement" ? "Claude is writing the code…" : "Regenerate code from the intents"}
-            </Button>
-            <span className="text-xs text-muted-foreground">
-              {!l.plan ? "Needs reviewed intents and their proofs first." : l.ai.available === false ? "Needs Claude (published sandbox or dev server)." : "Claude updates the code to satisfy every clause; the proofs then decide."}
-            </span>
-          </div>
-          {l.ai.codeNote && <p className="text-xs"><span className="font-semibold">Claude: </span>{l.ai.codeNote}</p>}
-          {l.ai.error?.step === "implement" && (
-            <Alert variant="destructive">
-              <AlertTitle>Code generation failed</AlertTitle>
-              <AlertDescription className="text-xs">{l.ai.error.message}</AlertDescription>
-            </Alert>
-          )}
-        </div>
         <div className="grid gap-1.5">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Plant one bug</p>
           <div className="flex flex-wrap gap-1.5">
@@ -157,10 +143,49 @@ export function CodePanel({ l }: { l: Lastro }) {
             <AlertDescription className="font-mono text-xs">{l.compiled.error}</AlertDescription>
           </Alert>
         )}
+        <AgentFeedback l={l} />
         <p className="text-xs text-muted-foreground">
           Calls to <code className="font-mono">step()</code> only draw the timeline in the run view. <code className="font-mono">deny(code)</code> returns a response without a token.
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+/** What `lastro prove` hands back to whatever writes the code: failures with counterexamples. */
+function AgentFeedback({ l }: { l: Lastro }) {
+  const [copied, setCopied] = useState(false);
+  const ts = l.results.ts;
+  if (!ts || !l.plan) return null;
+  const proof = { failures: failuresOf(l.plan, ts), specGaps: specGapsOf(ts) };
+  const text = agentFeedback(proof);
+  const failing = proof.failures.length > 0;
+  return (
+    <div className={cn("grid gap-2 rounded-lg border p-3", failing ? "border-fail/40" : "border-proved/40")}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Bot className={cn("h-4 w-4", failing ? "text-fail" : "text-proved")} />
+        <p className="text-sm font-medium">Feedback for the coding agent</p>
+        <span className="text-xs text-muted-foreground">{failing ? `${proof.failures.length} failing obligation(s)` : "nothing to fix"}</span>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="ml-auto h-7"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(text);
+              setCopied(true);
+            } catch {
+              setCopied(false);
+            }
+          }}
+        >
+          <Copy /> {copied ? "Copied" : "Copy"}
+        </Button>
+      </div>
+      <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-md bg-muted p-2 font-mono text-[11px]">{text}</pre>
+      <p className="text-[11px] text-muted-foreground">
+        The same text <code className="font-mono">lastro prove</code> and <code className="font-mono">agentFeedback()</code> return. Paste it into Claude Code, Codex or any agent; it fixes the code, the proofs decide.
+      </p>
+    </div>
   );
 }

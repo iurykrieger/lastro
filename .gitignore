@@ -5,3 +5,7 @@ target/
 packages/sdk/wasm/
 *.tsbuildinfo
 .DS_Store
+
+# Test screenshots belong in PR comments, never in the repo
+*.png
+!apps/sandbox/public/**/*.png

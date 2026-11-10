@@ -14,8 +14,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@lastro/sdk": ["../../packages/sdk/src/index.ts"],
-      "@lastro/example-login": ["../../packages/sdk/examples/login/login.ts"]
+      "@lastro/sdk": ["../../sdks/typescript/src/index.ts"],
+      "@lastro/example-login": ["../../sdks/typescript/examples/login/login.ts"]
     }
   },
   "include": ["src", "vite.config.ts"]

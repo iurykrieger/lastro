@@ -23,7 +23,7 @@ function lastroAsk(): Plugin {
         let raw = "";
         for await (const chunk of req) raw += chunk;
         try {
-          const { claudeAsk } = await server.ssrLoadModule(path.resolve(__dirname, "../../packages/sdk/src/llm/claude.ts"));
+          const { claudeAsk } = await server.ssrLoadModule(path.resolve(__dirname, "../../sdks/typescript/src/llm/claude.ts"));
           send(200, { ok: true, value: await claudeAsk()(JSON.parse(raw)) });
         } catch (e) {
           send(200, { ok: false, error: (e as Error).message });
@@ -39,9 +39,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
-      "@lastro/sdk": path.resolve(__dirname, "../../packages/sdk/src/index.ts"),
-      "@lastro/example-login": path.resolve(__dirname, "../../packages/sdk/examples/login/login.ts"),
-      "@lastro/wasm": path.resolve(__dirname, "../../packages/sdk/wasm"),
+      "@lastro/sdk": path.resolve(__dirname, "../../sdks/typescript/src/index.ts"),
+      "@lastro/example-login": path.resolve(__dirname, "../../sdks/typescript/examples/login/login.ts"),
+      "@lastro/wasm": path.resolve(__dirname, "../../sdks/typescript/wasm"),
     },
   },
   assetsInclude: ["**/*.wasm"],

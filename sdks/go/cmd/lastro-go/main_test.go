@@ -160,7 +160,7 @@ func toStrings(v any) []string {
 // TestSharedWorkspaceWithTheTSCLI runs one .lastro/ workspace through both CLIs: the TS CLI plans,
 // the Go CLI reviews and derives the spec, both prove the same spec.
 func TestSharedWorkspaceWithTheTSCLI(t *testing.T) {
-	sdk := must(filepath.Abs(filepath.Join("..", "..", "..", "..", "packages", "sdk")))
+	sdk := must(filepath.Abs(filepath.Join("..", "..", "..", "typescript")))
 	cli := filepath.Join(sdk, "dist", "src", "cli.js")
 	loginJS := filepath.Join(sdk, "dist", "examples", "login", "login.js")
 	if _, err := os.Stat(loginJS); err != nil {

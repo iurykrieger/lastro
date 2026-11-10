@@ -1,7 +1,7 @@
 # Lastro Go SDK
 
 The Go SDK of Lastro: prose → reviewable intents → derived proofs → a deterministic check of what the code
-actually does. It is the same pipeline as the TypeScript SDK (`packages/sdk`), with the same data model,
+actually does. It is the same pipeline as the TypeScript SDK (`sdks/typescript`), with the same data model,
 hashes and `.lastro/` workspace, so the two interoperate:
 
 - an artifact frozen by one SDK is intact for the other, and both compute the same plan hash;

@@ -1,4 +1,4 @@
-// Package login is the worked example of the TS SDK (packages/sdk/examples/login), ported to Go:
+// Package login is the worked example of the TS SDK (sdks/typescript/examples/login), ported to Go:
 // a store login, from prose to proof. Everything an LLM extractor or deriver would produce is
 // written by hand, so it runs offline and deterministically, and the same planted bugs are
 // available as Go implementations.

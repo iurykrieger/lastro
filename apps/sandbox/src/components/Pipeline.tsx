@@ -40,7 +40,7 @@ export function Pipeline({ l }: { l: Lastro }) {
         ? "waits for the spec"
         : proved
           ? "every proof passes"
-          : `${ts.clauses.filter((c) => c.verdict === "violated").length} clause(s) fail · ${ts.summary.gap} intent gap(s)`,
+          : `${ts.clauses.filter((c) => c.verdict === "violated").length + ts.scenarios.filter((s) => s.status === "failed").length} obligation(s) fail · ${ts.summary.gap} intent gap(s)`,
       state: !ts ? "waiting" : proved ? "done" : "blocked",
     },
     { icon: GitPullRequest, title: "Pull request", detail: proved ? "proved code and receipt" : "blocked until proofs pass", state: proved ? "done" : "waiting" },

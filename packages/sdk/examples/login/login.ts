@@ -303,3 +303,18 @@ export function compileLogin(source: string): LoginFn {
 export function makeLogin(bug?: string): LoginFn {
   return compileLogin(plantBug(LOGIN_SOURCE, bug));
 }
+
+/** What generated code must look like to run in compileLogin(). Given to the implementer. */
+export const LOGIN_HOST_CONTRACT = `Write ONE JavaScript function expression (no TypeScript, no imports, no exports):
+
+  function decideLogin({ sends, accountFound, password, infra }, step) { ... }
+
+Inputs (exactly the model's inputs):
+  sends: "email" | "username" | "both" | "neither"   which identifier fields the request carries
+  accountFound: boolean                                the lookup found the account in the chosen table
+  password: "right" | "wrong" | "bad-hash"           result of check_password (bcrypt)
+  infra: "ok" | "db-fails" | "signer-fails"          infrastructure outcome
+
+Return { status, token, role } with status in 200 | 400 | 401 | 500, token boolean, role "none" | "customer" | "admin".
+A helper deny(status) is in scope and returns { status, token: false, role: "none" }.
+step(name, "stop"?) only draws the timeline. Use these names, in order: ${STEPS.map((s) => JSON.stringify(s.name)).join(", ")}. Pass "stop" on the step where the function returns early.`;

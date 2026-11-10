@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Bug as BugIcon, Code2, RotateCcw } from "lucide-react";
+import { Bug as BugIcon, Code2, Loader2, RotateCcw, Sparkles } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -109,9 +109,27 @@ export function CodePanel({ l }: { l: Lastro }) {
             decideLogin · {changed.size ? `${changed.size} line(s) changed` : "reference"}
           </Badge>
         </div>
-        <CardDescription>The generated implementation. Edit it, or plant a bug, and the proof re-runs on every change.</CardDescription>
+        <CardDescription>The generated implementation. Edit it, plant a bug, or regenerate it from the intents: the proof re-runs on every change.</CardDescription>
       </CardHeader>
       <CardContent className="grid flex-1 content-start gap-3">
+        <div className="grid gap-1.5 rounded-lg border border-dashed p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" onClick={() => void l.regenerateCode()} disabled={!l.plan || !l.ai.available || !!l.ai.busy}>
+              {l.ai.busy === "implement" ? <Loader2 className="animate-spin" /> : <Sparkles />}
+              {l.ai.busy === "implement" ? "Claude is writing the code…" : "Regenerate code from the intents"}
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              {!l.plan ? "Needs reviewed intents and their proofs first." : l.ai.available === false ? "Needs Claude (published sandbox or dev server)." : "Claude updates the code to satisfy every clause; the proofs then decide."}
+            </span>
+          </div>
+          {l.ai.codeNote && <p className="text-xs"><span className="font-semibold">Claude: </span>{l.ai.codeNote}</p>}
+          {l.ai.error?.step === "implement" && (
+            <Alert variant="destructive">
+              <AlertTitle>Code generation failed</AlertTitle>
+              <AlertDescription className="text-xs">{l.ai.error.message}</AlertDescription>
+            </Alert>
+          )}
+        </div>
         <div className="grid gap-1.5">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Plant one bug</p>
           <div className="flex flex-wrap gap-1.5">

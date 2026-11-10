@@ -86,11 +86,17 @@ planted bug.
 `apps/sandbox` is the review surface. It has three parts:
 
 - **Prose**: the text with the intent map highlighted, intent cards (approve, amend, reject) and decision cards.
-- **Code**: the generated implementation, editable, with one-click planted bugs shown as a diff.
+  The text is editable: Claude re-extracts intents, `carryReview()` keeps the reviewer's verdicts for intents that
+  did not change, and once the review is done Claude derives a new plan, which runs against the current code.
+- **Code**: the generated implementation, editable, with one-click planted bugs shown as a diff, and a
+  "Regenerate code from the intents" step where Claude rewrites it to satisfy the plan.
 - **Contrast**: per-clause verdicts from both engines, mutants, counterexamples you can run, LSL and SMT-LIB2,
   the intent roll-up, trusted pieces, where proof stops, a single-login runner and the receipt.
 
-Every verdict on screen comes from the real SDK and the WASM prover running in the page.
+Every verdict on screen comes from the real SDK and the WASM prover running in the page. The LLM steps live in the
+SDK as transport-free prompts and checks (`src/llm/llm.ts`, `AskJson`): the sandbox plugs in the page's Claude on
+claude.ai, or a dev-server endpoint over the Anthropic API locally. Claude's answers are never trusted directly:
+quotes are anchored, LSL is validated, and generated code only counts through the proofs it passes.
 
 ## 7. Out of scope for v0
 

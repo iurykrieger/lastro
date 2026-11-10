@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, CircleSlash, Copy, Cpu, GitCompareArrows, Play, ScrollText, ShieldCheck, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleSlash, Copy, Cpu, GitCompareArrows, Loader2, Play, ScrollText, ShieldCheck, XCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -80,15 +80,42 @@ export function ContrastPanel({ l, hover, setHover }: { l: Lastro; hover: string
 
   const receipt = useMemo(() => (ts && plan ? renderReceipt(ts, plan, rust ?? undefined) : ""), [ts, plan, rust]);
 
-  if (!plan)
+  if (!plan) {
+    const deriving = l.ai.busy === "derive";
+    const failed = l.ai.error?.step === "derive";
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Contrast</CardTitle>
-          <CardDescription>Finish reviewing the intents: proofs are derived only from approved, frozen intents.</CardDescription>
+          <div className="flex items-center gap-2">
+            {deriving ? <Loader2 className="h-4 w-4 animate-spin text-brass" /> : <GitCompareArrows className="h-4 w-4 text-brass" />}
+            <CardTitle className="text-base">Contrast: prose × code</CardTitle>
+          </div>
+          <CardDescription>
+            {!l.frozen
+              ? "Finish reviewing the intents: proofs are derived only from approved, frozen intents."
+              : deriving
+                ? "Claude is deriving proof obligations (LSL clauses) from the reviewed intents. This can take a minute."
+                : l.ai.available === false
+                  ? "Deriving proofs for edited prose needs Claude (published sandbox or dev server)."
+                  : "Waiting for the proof obligations."}
+          </CardDescription>
         </CardHeader>
+        {failed && (
+          <CardContent className="grid gap-2">
+            <Alert variant="destructive">
+              <AlertTitle>Derivation failed</AlertTitle>
+              <AlertDescription className="whitespace-pre-wrap text-xs">{l.ai.error!.message}</AlertDescription>
+            </Alert>
+            <div>
+              <Button size="sm" variant="outline" onClick={l.retryDerive}>
+                Try again
+              </Button>
+            </div>
+          </CardContent>
+        )}
       </Card>
     );
+  }
 
   const loadCounterexample = (inp: Env) => {
     setInput({ ...inp });
@@ -101,7 +128,9 @@ export function ContrastPanel({ l, hover, setHover }: { l: Lastro; hover: string
         <div className="flex flex-wrap items-center gap-2">
           <GitCompareArrows className="h-4 w-4 text-brass" />
           <CardTitle className="text-base">Contrast: prose × code</CardTitle>
-          <span className="text-xs text-muted-foreground">{plan.clauses.length} clauses derived from the approved intents, checked against the code above</span>
+          <span className="text-xs text-muted-foreground">
+            {plan.clauses.length} clauses derived from the approved intents {l.planOrigin === "claude" ? "by Claude" : "(reference derivation)"}, checked against the code above
+          </span>
         </div>
         <div className="grid gap-2 sm:grid-cols-3">
           <Stat

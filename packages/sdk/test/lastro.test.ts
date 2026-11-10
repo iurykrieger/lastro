@@ -213,3 +213,71 @@ test("Rust prover refuses to call a partial table a proof", { skip: !existsSync(
   assert.equal(rs.coverage.missing, 22);
   assert.ok(rs.clauses.every((c) => c.verdict !== "proved"));
 });
+
+// ---------------------------------------------------------------------------
+// LLM steps over a fake transport, and re-extraction
+// ---------------------------------------------------------------------------
+
+import { LlmIntentExtractor, LlmProofDeriver, LlmImplementer, carryReview, type AskJson } from "../src/index.js";
+
+function reviewedLogin(): IntentArtifact {
+  const a = extractLogin();
+  for (const it of a.intents) it.status = "approved";
+  const i5 = a.intents.find((i) => i.id === "I5")!;
+  i5.originalStatement = i5.statement;
+  i5.statement = FIXED_I5;
+  i5.status = "amended";
+  for (const d of a.decisions) d.chosen = d.recommended;
+  return a;
+}
+
+test("carryReview keeps verdicts for unchanged intents and reapplies amendments", () => {
+  const before = reviewedLogin();
+  const prose = before.prose.replace("a database failure gets 500", "a database failure gets 503");
+  const fresh = extractLogin(prose.replace("gets 503", "gets 500")); // same wording, re-extracted
+  const next = carryReview(before, fresh);
+  assert.ok(next.intents.every((i) => i.status !== "proposed"), "nothing changed, nothing to review");
+  const i5 = next.intents.find((i) => i.id === "I5")!;
+  assert.equal(i5.status, "amended");
+  assert.equal(i5.statement, FIXED_I5);
+  assert.deepEqual(next.decisions.map((d) => d.chosen), [0, 0]);
+
+  fresh.intents[6]!.statement = "A database failure gets 503 and no token.";
+  const changed = carryReview(before, fresh);
+  assert.deepEqual(changed.intents.filter((i) => i.status === "proposed").map((i) => i.id), ["I7"]);
+});
+
+test("LLM steps turn JSON answers into checked Lastro objects", async () => {
+  const frozen = freeze(reviewedLogin());
+  const reference = deriveLoginPlan(frozen);
+  const answers: Record<string, unknown> = {
+    extract: {
+      intents: [{ statement: "Only the right password gets a token.", kind: "invariant", provability: "formal", beyondProofReason: "none", quote: "only the right password gets a token" }],
+      decisions: [],
+      notPromised: [],
+    },
+    derive: {
+      clauses: reference.clauses.map((c) => ({ ...c, requires: c.requires ? JSON.stringify(c.requires) : "", ensures: JSON.stringify(c.ensures), assumes: c.assumes ?? [] })),
+      assumptions: reference.assumptions,
+      scenarios: reference.scenarios.map((s) => ({ ...s, inputJson: JSON.stringify(s.input), expect: JSON.stringify(s.expect) })),
+      beyondProof: reference.beyondProof,
+    },
+    implement: { source: LOGIN_SOURCE, notes: "unchanged" },
+  };
+  const ask: AskJson = async ({ step }) => answers[step];
+
+  const extracted = await new LlmIntentExtractor(ask).extract(frozen.prose);
+  assert.equal(extracted.intents[0]!.source.quote, "only the right password gets a token");
+
+  const plan = await new LlmProofDeriver(ask).derive(frozen, MODEL);
+  validatePlan(frozen, plan);
+  const report = await verify(frozen, plan, { subject: makeLogin() });
+  assert.equal(report.ok, true);
+
+  const code = await new LlmImplementer(ask).implement({ artifact: frozen, plan, source: LOGIN_SOURCE, hostContract: "" });
+  assert.equal(code.source, LOGIN_SOURCE);
+
+  // A derivation that references a variable outside the model is refused.
+  (answers.derive as { clauses: { ensures: string }[] }).clauses[0]!.ensures = JSON.stringify({ var: "out.cookie" });
+  await assert.rejects(new LlmProofDeriver(ask).derive(frozen, MODEL), /cookie/);
+});

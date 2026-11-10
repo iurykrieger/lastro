@@ -220,3 +220,44 @@ export function canonicalJson(v: unknown): string {
 export function hashOf(v: unknown): string {
   return "sha256:" + sha256Hex(canonicalJson(v));
 }
+
+// ---------------------------------------------------------------------------
+// Re-extraction
+// ---------------------------------------------------------------------------
+
+/**
+ * Carry a previous review over to a fresh extraction of edited prose.
+ *
+ * An intent whose statement matches one the reviewer already approved or
+ * rejected keeps that verdict. If the reviewer had amended it and the AI
+ * proposes the same original reading of the same quote, the amendment is reapplied.
+ * Everything else stays `proposed`, so only what the edit changed needs a
+ * new look. Decisions with the same question keep their answer.
+ */
+export function carryReview(previous: IntentArtifact, next: IntentArtifact): IntentArtifact {
+  const out = structuredClone(next);
+  const norm = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase();
+  const reviewed = previous.intents.filter((i) => i.status !== "proposed");
+  for (const it of out.intents) {
+    const same = reviewed.find((p) => norm(p.statement) === norm(it.statement));
+    // Reapply an amendment only when the AI repeats its old reading of the SAME words.
+    const amended = reviewed.find(
+      (p) => p.status === "amended" && p.originalStatement && norm(p.originalStatement) === norm(it.statement) && norm(p.source.quote) === norm(it.source.quote),
+    );
+    if (same) {
+      it.status = same.status;
+      if (same.reviewNote) it.reviewNote = same.reviewNote;
+      if (same.originalStatement) it.originalStatement = same.originalStatement;
+    } else if (amended) {
+      it.originalStatement = it.statement;
+      it.statement = amended.statement;
+      it.status = "amended";
+      if (amended.reviewNote) it.reviewNote = amended.reviewNote;
+    }
+  }
+  for (const d of out.decisions) {
+    const prev = previous.decisions.find((p) => norm(p.question) === norm(d.question));
+    if (prev?.chosen !== undefined && prev.chosen < d.options.length) d.chosen = prev.chosen;
+  }
+  return out;
+}

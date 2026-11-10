@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, FileText, Pencil, RotateCcw, Undo2, X } from "lucide-react";
+import { Check, CheckCheck, FileText, Loader2, Pencil, RotateCcw, Sparkles, Undo2, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { extractLogin } from "@lastro/example-login";
-import { AI_I5, reviewedArtifact, type Lastro } from "@/state";
+import { AI_I5, PROSE, reviewedArtifact, type Lastro } from "@/state";
 import { PROVABILITY, REASON } from "./verdicts";
 
 const KIND: Record<string, string> = { behavior: "behavior", invariant: "invariant", preserve: "preserve", "non-functional": "non-functional" };
@@ -20,6 +20,22 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
   const a = l.artifact;
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [tab, setTab] = useState("intents");
+  const [proseDraft, setProseDraft] = useState<string | null>(null);
+  const extracting = l.ai.busy === "extract";
+  const original = a.prose === PROSE;
+
+  const applyProse = async () => {
+    if (proseDraft === null) return;
+    if (proseDraft.trim() === a.prose) {
+      setProseDraft(null);
+      return;
+    }
+    if (await l.applyProse(proseDraft)) {
+      setProseDraft(null);
+      setTab("intents");
+    }
+  };
 
   // Highlighted prose: cut at every quote boundary.
   const marks = a.intents.filter((i) => i.status !== "rejected").map((i) => ({ ...i.source, id: i.id }));
@@ -43,7 +59,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
         <CardDescription>The business rule as written, the intents the AI extracted, and your review.</CardDescription>
       </CardHeader>
       <CardContent className="flex-1">
-        <Tabs defaultValue="intents">
+        <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="prose">Text</TabsTrigger>
             <TabsTrigger value="intents">Intents ({a.intents.length})</TabsTrigger>
@@ -51,42 +67,113 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
           </TabsList>
 
           <TabsContent value="prose" className="space-y-3">
-            <p className="max-w-[65ch] text-[15px] leading-8">
-              {pieces.map((p, k) =>
-                p.ids.length ? (
-                  <mark
-                    key={k}
-                    className={cn(
-                      "rounded-sm border-b-2 border-brass/60 bg-brass/15 px-0.5 text-foreground",
-                      p.ids.includes(hover ?? "") && "bg-brass/35",
-                    )}
-                    onMouseEnter={() => setHover(p.ids[0]!)}
-                    onMouseLeave={() => setHover(null)}
-                  >
-                    {p.text}
-                    <sup className="ml-0.5 font-mono text-[10px] text-brass">{p.ids.join("·")}</sup>
-                  </mark>
-                ) : (
-                  <span key={k}>{p.text}</span>
-                ),
-              )}
-            </p>
-            <p className="text-xs text-muted-foreground">Each highlight is the exact quote an intent came from (the intent map).</p>
+            {proseDraft === null ? (
+              <>
+                <p className="max-w-[65ch] text-[15px] leading-8">
+                  {pieces.map((p, k) =>
+                    p.ids.length ? (
+                      <mark
+                        key={k}
+                        className={cn(
+                          "rounded-sm border-b-2 border-brass/60 bg-brass/15 px-0.5 text-foreground",
+                          p.ids.includes(hover ?? "") && "bg-brass/35",
+                        )}
+                        onMouseEnter={() => setHover(p.ids[0]!)}
+                        onMouseLeave={() => setHover(null)}
+                      >
+                        {p.text}
+                        <sup className="ml-0.5 font-mono text-[10px] text-brass">{p.ids.join("·")}</sup>
+                      </mark>
+                    ) : (
+                      <span key={k}>{p.text}</span>
+                    ),
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground">Each highlight is the exact quote an intent came from (the intent map).</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => setProseDraft(a.prose)}>
+                    <Pencil /> Edit the business rule
+                  </Button>
+                  {!original && (
+                    <Button size="sm" variant="outline" onClick={() => l.setArtifact(reviewedArtifact())}>
+                      <Undo2 /> Restore original prose
+                    </Button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="grid gap-2">
+                <Label htmlFor="prose-editor">Business rule</Label>
+                <Textarea id="prose-editor" rows={9} value={proseDraft} onChange={(e) => setProseDraft(e.target.value)} disabled={extracting} className="text-[15px] leading-7" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" onClick={applyProse} disabled={extracting || l.ai.available === false || !proseDraft.trim()}>
+                    {extracting ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                    {extracting ? "Claude is extracting intents…" : "Re-extract intents"}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setProseDraft(null)} disabled={extracting}>
+                    Cancel
+                  </Button>
+                  {proseDraft.trim() !== PROSE && (
+                    <Button size="sm" variant="ghost" onClick={() => setProseDraft(PROSE)} disabled={extracting}>
+                      <Undo2 /> Original text
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Claude reads the new text and proposes intents. Intents you already reviewed keep your verdict; only what the edit changed comes back for review.
+                  Then Claude derives new proof obligations, and they run against the current code. The model's inputs and outputs stay fixed: anything
+                  outside them lands in "Where proof stops".
+                </p>
+                {l.ai.available === false && (
+                  <Alert variant="warning">
+                    <AlertTitle>Claude is not available here</AlertTitle>
+                    <AlertDescription>
+                      Open the sandbox published on claude.ai, or run <code className="font-mono">npm run sandbox</code> with <code className="font-mono">ANTHROPIC_API_KEY</code> set.
+                      Restoring the original text works without Claude.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {l.ai.error?.step === "extract" && (
+                  <Alert variant="destructive">
+                    <AlertTitle>Extraction failed</AlertTitle>
+                    <AlertDescription className="whitespace-pre-wrap text-xs">{l.ai.error.message}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="intents" className="space-y-3">
             {l.pending.length > 0 ? (
               <Alert variant="warning">
                 <AlertTitle>Review not finished</AlertTitle>
-                <AlertDescription>Proofs are derived only from approved, frozen intents. Pending: {l.pending.join("; ")}.</AlertDescription>
+                <AlertDescription className="grid gap-2">
+                  <span>Proofs are derived only from approved, frozen intents. Pending: {l.pending.join("; ")}.</span>
+                  <span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        l.updateArtifact((a2) => {
+                          for (const it of a2.intents) if (it.status === "proposed") it.status = "approved";
+                          for (const d of a2.decisions) d.chosen ??= d.recommended;
+                        })
+                      }
+                    >
+                      <CheckCheck /> Approve all proposed and take recommended answers
+                    </Button>
+                  </span>
+                </AlertDescription>
               </Alert>
-            ) : (
+            ) : original ? (
               <p className="text-xs text-muted-foreground">
                 The AI misread I5 and the reviewer fixed it. Approve the AI's wrong version and watch the contrast below.
               </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Intents extracted by Claude from your edited text. Review them like any AI draft.</p>
             )}
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => l.setArtifact(extractLogin())}>
+              <Button size="sm" variant="outline" onClick={() => l.setArtifact(extractLogin())} disabled={!original}>
                 <RotateCcw /> Start from the AI draft
               </Button>
               <Button size="sm" variant="outline" onClick={() => l.setArtifact(reviewedArtifact())}>
@@ -186,7 +273,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                     >
                       <X /> Reject
                     </Button>
-                    {i.id === "I5" && i.statement !== AI_I5 && (
+                    {original && i.id === "I5" && i.statement !== AI_I5 && (
                       <Button
                         size="sm"
                         variant="ghost"

@@ -40,6 +40,10 @@ npm run sandbox     # opens the sandbox on http://localhost:5173
 
 The sandbox walks through a store login. Things to try:
 
+- **Edit the business rule** in the prose panel. Claude re-extracts the intents (your earlier review is kept where
+  nothing changed), derives new proof obligations, and they run against the current code, so you see which proofs
+  break. **Regenerate code from the intents** then asks Claude to update the code, and the proofs decide whether it did.
+  This needs Claude: it works in the sandbox published on claude.ai, or locally with `ANTHROPIC_API_KEY` set.
 - **Plant a bug** in the code panel and watch the clause that catches it fail in both engines, with a counterexample you can run.
 - **Approve the AI's wrong version of I5** in the prose panel: the plan changes, and the reference code now violates it.
 - **Turn on the production trace**: the model still proves, but the trusted piece T2 (bcrypt) is broken by a real run.
@@ -49,7 +53,7 @@ The sandbox walks through a store login. Things to try:
 
 ```ts
 import { createArtifact, review, freeze, validatePlan, verify, renderReceipt, loadRustProver, tabulate } from "lastro";
-import { ClaudeIntentExtractor, ClaudeProofDeriver } from "lastro/claude";
+import { ClaudeIntentExtractor, ClaudeProofDeriver } from "lastro/claude"; // or LlmIntentExtractor(ask) over any transport
 
 const draft = await new ClaudeIntentExtractor().extract(prose);            // 1. extract (AI)
 const reviewed = review(draft).approve("I1").amend("I5", "...").answer("D1", 0).done(); // 2. review (human)

@@ -2,6 +2,6 @@ node_modules/
 dist/
 dist-single/
 target/
-packages/sdk/wasm/
+sdks/typescript/wasm/
 *.tsbuildinfo
 .DS_Store

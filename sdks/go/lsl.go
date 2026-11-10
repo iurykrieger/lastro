@@ -11,7 +11,7 @@ import (
 
 // LSL, the Lastro Spec Language: a JSON expression AST shared by every engine.
 // It is never eval'ed; this file interprets it with the same semantics as the
-// TS SDK (packages/sdk/src/spec/expr.ts) and the Rust prover.
+// TS SDK (sdks/typescript/src/spec/expr.ts) and the Rust prover.
 //
 // Variables are namespaced: in.<name> for model inputs, out.<name> for
 // outputs. Inside a def body, parameters are referenced by bare name.

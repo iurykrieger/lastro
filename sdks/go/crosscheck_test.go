@@ -14,7 +14,7 @@ import (
 
 // The Go SDK must agree with the TypeScript SDK byte for byte where it matters:
 // artifact and plan hashes, prompts, and every verification report. This test
-// runs the TS SDK (packages/sdk/dist, built by `npm test -w lastro` or
+// runs the TS SDK (sdks/typescript/dist, built by `npm test -w lastro` or
 // `npm run build -w lastro`) on the login example and compares.
 
 const tsScript = `
@@ -60,7 +60,7 @@ type tsOut struct {
 }
 
 func sdkDir(t *testing.T) string {
-	dir, err := filepath.Abs(filepath.Join("..", "..", "packages", "sdk"))
+	dir, err := filepath.Abs(filepath.Join("..", "typescript"))
 	if err != nil {
 		t.Fatal(err)
 	}

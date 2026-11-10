@@ -1,4 +1,4 @@
-// Code generated from packages/sdk/src/llm/llm.ts by sdks/go/internal/gen-prompts.mjs. DO NOT EDIT.
+// Code generated from sdks/typescript/src/llm/llm.ts by sdks/go/internal/gen-prompts.mjs. DO NOT EDIT.
 // The TS and Go SDKs must send the same prompts and schemas; crosscheck_test.go checks they agree.
 
 package lastro

@@ -1,5 +1,0 @@
-# EntryPoint example — sdk archetype.
-id: create-client-symbol
-archetype: sdk
-spec:
-  exported_symbol: createClient

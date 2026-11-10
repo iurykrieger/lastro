@@ -1,78 +1,74 @@
-# Harness Framework
+# Lastro
 
-> A use-case-driven validation framework that detects what an application *is* and *does*, then dynamically synthesizes angle-specific sensors to validate it.
+**Lastro** (Portuguese for "backing", as in the reserves behind a currency) gives a plan written in prose a
+deterministic backing: intents a human reviewed, proof obligations derived from them, and a reproducible check
+of those obligations against what the program actually does.
 
-**Status:** design phase. The framework specification is complete; implementation has not started. See [`docs/harness-framework/plan.md`](docs/harness-framework/plan.md) for the canonical design and [`docs/harness-framework/`](docs/harness-framework/) for the per-entity decomposition.
-
-## The idea
-
-Most validation tools take a fixed shape — "run these tests," "check this lint config," "scan for these CVEs." Harness inverts that: it first detects what the application is (its archetype and stack), reverse-engineers the behaviors it exhibits (use cases), then generates the sensors needed to validate each behavior from every angle that makes sense for that archetype.
-
-The four primitives:
-
-- **Use cases** describe *what* the application does, in `given / when / then` text. Tech-agnostic, no code, no assertions. They reference structured `entry_points` (HTTP routes, queue channels, CLI commands…) and `fixtures` (concrete I/O payloads) via `${{ }}` interpolation.
-- **The stack** is the toolbox — detected libraries and capabilities. Sensors may only use what the toolbox provides.
-- **Sensors** are the solution. One per `(use case × applicable validation angle)`. They orchestrate execution and emit signals; they do not solve the use case, they validate it.
-- **Signals** are the contract with the LLM. Structured JSON, never raw logs. Every failure carries a `heal_hint` — a compressed, actionable instruction the LLM can act on.
-
-## Validation angles
-
-Each use case is validated from one or more angles, gated by a per-archetype `ValidationPolicy`:
-
-`security`, `build`, `code-structure`, `unit-test`, `e2e-test`, `contracts`, `logs`, `metrics`, `database`, `performance`.
-
-Angles are extensible only by framework version bump; users control *which* angles apply to their archetype, not *which angles exist*.
-
-## How a run works
+It follows the ideas of GitHub Next's [PDD Kit](https://githubnext.com/projects/pdd-kit/) (Proof Driven
+Development): review moves up from code to intent, and every result says plainly whether it is **proved**,
+**proved under trusted assumptions**, **evidenced** to a stated confidence, or **beyond proof**.
 
 ```
-detect-stack              # what the app is built with (+ archetype)
-  └─→ detect-use-cases    # what the app does (+ fixtures, paired atomically)
-       └─→ create-sensors # one pass, generates all applicable-angle sensors
-            └─→ validate-use-case
-                 ├─→ run-sensor (assertion)         → Signals + AggregateSignal
-                 ├─→ start-sensor / stop-sensor     → AggregateSignal at stop
-                 └─→ aggregate per use case         → use case verdict
-                      └─→ heal (on failure)         → fix proposal + re-validate
+prose ──extract──▶ intents ──review──▶ frozen intents (hash)
+                                            │
+                                     derive ▼
+                         proof plan (LSL clauses, trusted pieces, scenarios, beyond-proof)
+                                            │
+code / production traces ──────── verify ───┤──▶ TypeScript engine
+                                            └──▶ lastro-core (Rust, independent)
+                                            ▼
+                                        receipt
 ```
 
-Each sensor terminates with exactly one `AggregateSignal`. The per-use-case aggregator gates on obligatory angles defined in the `ValidationPolicy`.
+## What is in this repository
 
-## Design principles
+| Path | What it is |
+|---|---|
+| [`crates/lastro-core`](crates/lastro-core) | Rust prover. Enumerates the declared input space itself and only says "proved" when every point is covered. Also checks vacuity, mutants and contradictions. Ships as a CLI and as WASM. |
+| [`packages/sdk`](packages/sdk) | TypeScript SDK (`lastro`): intent artifacts and review, LSL spec language (compiles to SMT-LIB2), plan validation, verification engine, receipts, Claude adapters, and the bridge to the Rust prover. |
+| [`apps/sandbox`](apps/sandbox) | Interactive sandbox built with shadcn/ui: the prose and its intents, the generated code, and a contrast section that proves one against the other live, in both engines. |
 
-- **Determinism over prediction.** Anything that can be deterministic Go code is deterministic Go code. LLM inference is reserved for detection and sensor generation.
-- **Schema-first.** All entities are YAML with a `schema_version` field. Filenames are unversioned; versioning is data, not filename metadata.
-- **Grounded generation.** Sensors may only reference stack components the detector actually found. No phantom dependencies.
-- **Self-healing as a first-class signal.** A `heal_hint` is required on every failing signal. The LLM eats structured instructions, not log dumps.
-- **Dogfood.** The framework validates itself — its own use cases drive its own sensors.
+## Quick start
 
-## Implementation conventions
+Requires Rust (with the `wasm32-unknown-unknown` target) and Node 20+.
 
-- **Language:** Go. Every package ships with tests; no untested code lands.
-- **Skill size budget:** each skill is 200 lines maximum; synthesize past 100.
-- **Skill scripts layout:** each skill carries its own `scripts/` folder; reusable logic lives in shared `lib/` packages.
-- **Libraries:** prefer mature, widely-used Go libraries before writing bespoke implementations. Custom code, when required, is structured and reviewed.
-- **Language of artifacts:** English (US), always — for code, docs, schemas, skills, commits, and comments.
-
-## Repository layout (planned)
-
-```
-cmd/harness/           CLI entry point
-schemas/               YAML schemas + enums + golden examples
-internal/              Go packages (detect, sensors, runtime, lifecycle, schema, policy)
-skills/                Slash-command primitives, each with scripts/
-lib/                   Shared Go code reused across skill scripts
-examples/              Sample repos exercised by the framework
-docs/                  Design documents (plan, per-entity decomposition)
+```sh
+npm install
+npm test            # cargo tests, WASM build, SDK tests (including the Rust cross-check)
+npm run sandbox     # opens the sandbox on http://localhost:5173
 ```
 
-## Documentation
+The sandbox walks through a store login. Things to try:
 
-- [`docs/harness-framework/plan.md`](docs/harness-framework/plan.md) — the canonical specification. Read this first.
-- [`docs/harness-framework/README.md`](docs/harness-framework/README.md) — parallel implementation decomposition.
-- [`docs/harness-framework/00-schema-freeze.md`](docs/harness-framework/00-schema-freeze.md) — the sequential gate that must land before parallel entity work.
-- `E1`…`E9` — per-entity brainstorming starters (enums, stack component, entry point, use case, fixture, sensor, signal, aggregate signal, validation policy).
+- **Edit the business rule** in the prose panel. Claude re-extracts the intents (your earlier review is kept where
+  nothing changed), derives new proof obligations, and they run against the current code, so you see which proofs
+  break. **Regenerate code from the intents** then asks Claude to update the code, and the proofs decide whether it did.
+  This needs Claude: it works in the sandbox published on claude.ai, or locally with `ANTHROPIC_API_KEY` set.
+- **Plant a bug** in the code panel and watch the clause that catches it fail in both engines, with a counterexample you can run.
+- **Approve the AI's wrong version of I5** in the prose panel: the plan changes, and the reference code now violates it.
+- **Turn on the production trace**: the model still proves, but the trusted piece T2 (bcrypt) is broken by a real run.
+- Open the **Receipt** tab for the Markdown that would go into a pull request.
 
-## License
+## Using the SDK
 
-To be determined.
+```ts
+import { createArtifact, review, freeze, validatePlan, verify, renderReceipt, loadRustProver, tabulate } from "lastro";
+import { ClaudeIntentExtractor, ClaudeProofDeriver } from "lastro/claude"; // or LlmIntentExtractor(ask) over any transport
+
+const draft = await new ClaudeIntentExtractor().extract(prose);            // 1. extract (AI)
+const reviewed = review(draft).approve("I1").amend("I5", "...").answer("D1", 0).done(); // 2. review (human)
+const frozen = freeze(reviewed);                                          //    hash
+const plan = await new ClaudeProofDeriver().derive(frozen, model);        // 3. derive (AI)
+validatePlan(frozen, plan);                                               //    deterministic gate
+const report = await verify(frozen, plan, { subject: decideLogin });      // 4. verify
+const rust = (await loadRustProver(wasmBytes)).prove(plan, await tabulate(plan.model, decideLogin)); // independent check
+console.log(renderReceipt(report, plan, rust));                           // 5. receipt
+```
+
+See [`DESIGN.md`](DESIGN.md) for the semantics of each verdict and where proof stops.
+
+## Status
+
+v0. "Proved" means exhaustive checking over a finite declared domain. An SMT backend (via `toSmtLib`) and a
+CLI/GitHub Action are the next steps. The Claude adapters are typed against the Anthropic SDK but have not
+been exercised against the live API yet.

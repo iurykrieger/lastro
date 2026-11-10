@@ -1,5 +1,0 @@
-id: extra-field
-archetype: cli
-spec:
-  command: x
-  bogus: extra

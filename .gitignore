@@ -1,10 +1,7 @@
-# Harness framework runtime + report directories (generated, never committed)
-.harness/runtime/
-.harness/reports/
-**/.harness/runtime/
-**/.harness/reports/
-
-# Compiled sample binaries (left over from `go build` in sample dirs)
-/examples/http-api-sample/http-api-sample
-/examples/http-api-sample-broken/http-api-sample-broken
-/examples/cli-sample/cli-sample
+node_modules/
+dist/
+dist-single/
+target/
+packages/sdk/wasm/
+*.tsbuildinfo
+.DS_Store

@@ -25,5 +25,17 @@ jobs:
         run: npm run wasm
       - name: SDK tests
         run: npm test -w lastro
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: sdks/go/go.mod
+          cache-dependency-path: sdks/go/go.sum
+      - name: Rust prover binary (for the Go cross-check)
+        run: cargo build --release -p lastro-core --bin lastro-prove
+      - name: Go SDK tests (cross-checked with the TS SDK and the Rust prover)
+        working-directory: sdks/go
+        run: |
+          test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+          go vet ./...
+          go test ./...
       - name: Sandbox build
         run: npm run build -w @lastro/sandbox

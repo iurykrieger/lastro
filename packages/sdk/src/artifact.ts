@@ -91,9 +91,19 @@ function locate(prose: string, quote: string): number {
 export class Review {
   private a: IntentArtifact;
 
-  constructor(artifact: IntentArtifact) {
+  /** `reviewer` names who is reviewing; it is required when the artifact's policy asks for several approvals. */
+  constructor(
+    artifact: IntentArtifact,
+    private readonly reviewer?: string,
+  ) {
     if (artifact.hash) throw new Error("Artifact is frozen; review a copy created with thaw()");
     this.a = structuredClone(artifact);
+  }
+
+  private sign(it: Intent, reset = false): void {
+    if (!this.reviewer) return;
+    const prev = reset ? [] : (it.approvals ?? []);
+    it.approvals = prev.includes(this.reviewer) ? prev : [...prev, this.reviewer];
   }
 
   private intent(id: string): Intent {
@@ -103,12 +113,17 @@ export class Review {
   }
 
   approve(...ids: string[]): this {
-    for (const id of ids) this.intent(id).status = "approved";
+    for (const id of ids) {
+      const it = this.intent(id);
+      if (it.status !== "amended") it.status = "approved";
+      this.sign(it);
+    }
     return this;
   }
 
+  /** Approve every intent this reviewer has not signed yet (rejected ones stay rejected). */
   approveAll(): this {
-    for (const it of this.a.intents) if (it.status === "proposed") it.status = "approved";
+    for (const it of this.a.intents) if (it.status !== "rejected") this.approve(it.id);
     return this;
   }
 
@@ -116,7 +131,8 @@ export class Review {
   reject(id: string, note: string): this {
     const it = this.intent(id);
     it.status = "rejected";
-    it.reviewNote = note;
+    it.reviewNote = this.reviewer ? `${note} (${this.reviewer})` : note;
+    delete it.approvals;
     return this;
   }
 
@@ -128,6 +144,8 @@ export class Review {
     Object.assign(it, patch);
     it.status = "amended";
     it.reviewNote = note;
+    // A new wording needs fresh approvals from everyone else.
+    this.sign(it, true);
     return this;
   }
 
@@ -153,6 +171,28 @@ export class Review {
     if (!d) throw new Error(`Unknown decision ${decisionId}`);
     if (option < 0 || option >= d.options.length) throw new Error(`Option ${option} out of range for ${decisionId}`);
     d.chosen = option;
+    // A decision raised after extraction (a contradiction in the spec) changes what is promised:
+    // its answer becomes an intent, and the team approves it like any other.
+    if (d.origin !== "extraction") {
+      const o = d.options[option]!;
+      const statement = `${d.question} Decided: ${o.label}${o.consequence ? ` (${o.consequence})` : ""}.`;
+      const existing = this.a.intents.find((x) => x.decisionId === d.id);
+      const it: Intent = existing ?? {
+        id: `I${this.a.intents.length + 1}`,
+        statement,
+        kind: "behavior",
+        provability: "formal",
+        source: { quote: "", start: 0, end: 0 },
+        status: "proposed",
+        decisionId: d.id,
+      };
+      it.statement = statement;
+      it.status = "proposed";
+      it.reviewNote = `answer to decision ${d.id}`;
+      delete it.approvals;
+      delete it.originalStatement;
+      if (!existing) this.a.intents.push(it);
+    }
     return this;
   }
 
@@ -166,12 +206,26 @@ export class Review {
   }
 }
 
-export const review = (artifact: IntentArtifact) => new Review(artifact);
+export const review = (artifact: IntentArtifact, reviewer?: string) => new Review(artifact, reviewer);
 
-/** Problems that block freezing: everything must be reviewed and every decision answered. */
+export function requiredApprovals(a: IntentArtifact): number {
+  return Math.max(1, a.policy?.requiredApprovals ?? 1);
+}
+
+/** Approvals an intent has collected (legacy single-reviewer approvals count as one). */
+export function approvalCount(it: Intent): number {
+  if (it.status !== "approved" && it.status !== "amended") return 0;
+  return it.approvals?.length ?? 1;
+}
+
+/** Problems that block freezing: every intent reviewed by enough people and every decision answered. */
 export function pendingReview(a: IntentArtifact): string[] {
   const p: string[] = [];
-  for (const it of a.intents) if (it.status === "proposed") p.push(`${it.id} not reviewed`);
+  const need = requiredApprovals(a);
+  for (const it of a.intents) {
+    if (it.status === "proposed" && !it.approvals?.length) p.push(`${it.id} not reviewed`);
+    else if (it.status !== "rejected" && approvalCount(it) < need) p.push(`${it.id} needs ${need - approvalCount(it)} more approval(s)`);
+  }
   for (const d of a.decisions) if (d.chosen === undefined) p.push(`${d.id} unanswered: ${d.question}`);
   return p;
 }
@@ -199,7 +253,24 @@ export function isIntact(a: IntentArtifact): boolean {
 }
 
 export function approvedIntents(a: IntentArtifact): Intent[] {
-  return a.intents.filter((x) => x.status === "approved" || x.status === "amended");
+  const need = requiredApprovals(a);
+  return a.intents.filter((x) => approvalCount(x) >= need);
+}
+
+/**
+ * Send spec problems back to the team: contradictions found by the
+ * consistency check (or any decision raised after derivation) become
+ * unanswered decision cards on a thawed copy, so the artifact cannot be
+ * frozen again until someone answers them.
+ */
+export function raiseDecisions(a: IntentArtifact, cards: DecisionCard[]): IntentArtifact {
+  const out = thaw(a);
+  const known = new Set(out.decisions.map((d) => d.question));
+  for (const c of cards) {
+    if (known.has(c.question)) continue;
+    out.decisions.push({ ...structuredClone(c), id: `D${out.decisions.length + 1}`, chosen: undefined });
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -246,12 +317,14 @@ export function carryReview(previous: IntentArtifact, next: IntentArtifact): Int
     );
     if (same) {
       it.status = same.status;
+      if (same.approvals) it.approvals = [...same.approvals];
       if (same.reviewNote) it.reviewNote = same.reviewNote;
       if (same.originalStatement) it.originalStatement = same.originalStatement;
     } else if (amended) {
       it.originalStatement = it.statement;
       it.statement = amended.statement;
       it.status = "amended";
+      if (amended.approvals) it.approvals = [...amended.approvals];
       if (amended.reviewNote) it.reviewNote = amended.reviewNote;
     }
   }
@@ -259,5 +332,6 @@ export function carryReview(previous: IntentArtifact, next: IntentArtifact): Int
     const prev = previous.decisions.find((p) => norm(p.question) === norm(d.question));
     if (prev?.chosen !== undefined && prev.chosen < d.options.length) d.chosen = prev.chosen;
   }
+  if (previous.policy) out.policy = { ...previous.policy };
   return out;
 }

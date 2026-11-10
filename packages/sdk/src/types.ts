@@ -56,6 +56,10 @@ export interface Intent {
   reviewNote?: string;
   /** The original statement, kept when a reviewer amends it. */
   originalStatement?: string;
+  /** Reviewers who approved the current statement. Absent on single-reviewer artifacts. */
+  approvals?: string[];
+  /** Set when the intent records the answer to a decision (for example a contradiction in the spec). */
+  decisionId?: string;
 }
 
 export interface DecisionOption {
@@ -81,8 +85,15 @@ export interface IntentArtifact {
   decisions: DecisionCard[];
   /** Explicitly not promised (timing, rate limits...). */
   notPromised: string[];
+  /** Review rules. Without one, a single approval is enough. */
+  policy?: ReviewPolicy;
   /** Set by freeze(). */
   hash?: string;
+}
+
+export interface ReviewPolicy {
+  /** Distinct reviewers who must approve each intent before it reaches the spec. */
+  requiredApprovals: number;
 }
 
 // ---------------------------------------------------------------------------

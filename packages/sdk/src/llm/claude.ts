@@ -1,12 +1,12 @@
 /**
- * Claude-backed extractor, deriver and implementer over the Anthropic API.
+ * Claude-backed extractor, deriver and gap reviewer over the Anthropic API.
  *
  * The prompts, schemas and checks live in ./llm.ts and are shared with any
  * other transport. `@anthropic-ai/sdk` is an optional peer dependency,
  * imported from the `lastro/claude` entry point only.
  */
 import Anthropic from "@anthropic-ai/sdk";
-import { LlmImplementer, LlmIntentExtractor, LlmProofDeriver, type AskJson } from "./llm.js";
+import { LlmGapReviewer, LlmIntentExtractor, LlmProofDeriver, type AskJson } from "./llm.js";
 
 export interface ClaudeOptions {
   client?: Anthropic;
@@ -51,7 +51,7 @@ export class ClaudeProofDeriver extends LlmProofDeriver {
   }
 }
 
-export class ClaudeImplementer extends LlmImplementer {
+export class ClaudeGapReviewer extends LlmGapReviewer {
   constructor(opts: ClaudeOptions = {}) {
     super(claudeAsk(opts));
   }

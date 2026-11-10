@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  LlmImplementer,
   LlmIntentExtractor,
   LlmProofDeriver,
   carryReview,
+  createLastro,
+  raiseDecisions,
+  review,
+  type DecisionCard,
+  type Gap,
   freeze,
   loadRustProver,
   pendingReview,
@@ -18,16 +22,22 @@ import {
   type Trace,
   type VerificationReport,
 } from "@lastro/sdk";
-import { AI_I5, FIXED_I5, LOGIN_HOST_CONTRACT, LOGIN_SOURCE, MODEL, PROSE, compileLogin, deriveLoginPlan, extractLogin, plantBug, type LoginFn } from "@lastro/example-login";
+import { AI_I5, FIXED_I5, LOGIN_SOURCE, MODEL, PROSE, compileLogin, deriveLoginPlan, extractLogin, plantBug, type LoginFn } from "@lastro/example-login";
 import { detectAi, type Ai } from "./ai";
 import wasmDataUrl from "@lastro/wasm/lastro_core.wasm?inline";
 
 export { AI_I5, FIXED_I5, LOGIN_SOURCE, PROSE };
 
-/** The example as a reviewer would leave it: everything approved, I5 corrected. */
-export function reviewedArtifact(): IntentArtifact {
+export const REVIEWERS = ["Ana", "Bruno"] as const;
+
+/** The example as the team left it: Ana and Bruno approved everything, I5 corrected. */
+export function reviewedArtifact(requiredApprovals = 1): IntentArtifact {
   const a = extractLogin();
-  for (const it of a.intents) it.status = "approved";
+  a.policy = { requiredApprovals };
+  for (const it of a.intents) {
+    it.status = "approved";
+    it.approvals = [...REVIEWERS];
+  }
   const i5 = a.intents.find((i) => i.id === "I5")!;
   i5.originalStatement = i5.statement;
   i5.statement = FIXED_I5;
@@ -62,15 +72,13 @@ export interface Results {
   ms: number;
 }
 
-export type AiStep = "extract" | "derive" | "implement";
+export type AiStep = "extract" | "derive" | "gap-review";
 export interface AiState {
   /** Claude is available in this view (null while detecting). */
   available: boolean | null;
   kind: Ai["kind"] | null;
   busy: AiStep | null;
   error: { step: AiStep; message: string } | null;
-  /** What the last code generation said it changed. */
-  codeNote: string | null;
 }
 
 export function useLastro() {
@@ -82,8 +90,11 @@ export function useLastro() {
   const [results, setResults] = useState<Results>({ ts: null, rust: null, error: null, ms: 0 });
   const [rustStatus, setRustStatus] = useState<"loading" | "ready" | "failed">("loading");
   const aiRef = useRef<Ai | null>(null);
-  const [ai, setAi] = useState<AiState>({ available: null, kind: null, busy: null, error: null, codeNote: null });
+  const [ai, setAi] = useState<AiState>({ available: null, kind: null, busy: null, error: null });
   const [aiPlans, setAiPlans] = useState<Record<string, ProofPlan>>({});
+  const [reviewer, setReviewer] = useState<string>(REVIEWERS[0]);
+  const [requiredApprovals, setRequiredApprovals] = useState(1);
+  const [gaps, setGaps] = useState<{ hash: string; source: string; gaps: Gap[] } | null>(null);
   const tried = useRef(new Set<string>());
 
   useEffect(() => {
@@ -179,11 +190,8 @@ export function useLastro() {
     };
   }, [frozen, plan, compiled, withTrace, rustStatus]);
 
-  const setCode = (s: string) => {
-    setBug(null);
-    setSource(s);
-    setDebounced(s);
-  };
+  const pipeline = (a: Ai) => createLastro({ model: MODEL, ask: a.ask, requiredApprovals });
+  const currentSpec = () => (frozen && plan ? { artifact: frozen, plan, contradictions: results.ts?.decisions ?? [], ok: !results.ts?.decisions.length } : null);
 
   return {
     artifact,
@@ -193,24 +201,42 @@ export function useLastro() {
     /** Re-extract intents from edited prose with Claude, keeping the review where nothing changed. */
     applyProse: async (prose: string) => {
       if (prose.trim() === PROSE) {
-        setArtifact(reviewedArtifact());
+        setArtifact(reviewedArtifact(requiredApprovals));
         return true;
       }
       const next = await runAi("extract", (a) => new LlmIntentExtractor(a.ask).extract(prose.trim()));
       if (!next) return false;
-      setArtifact((prev) => carryReview(prev, next));
+      setArtifact((prev) => carryReview(prev, { ...next, policy: { requiredApprovals } }));
       return true;
     },
     retryDerive: () => {
       if (frozen) void deriveFor(frozen);
     },
-    /** Ask Claude to change the code so it satisfies the current plan. */
-    regenerateCode: async () => {
-      if (!frozen || !plan) return;
-      const out = await runAi("implement", (a) => new LlmImplementer(a.ask).implement({ artifact: frozen, plan, source, hostContract: LOGIN_HOST_CONTRACT }));
-      if (!out) return;
-      setCode(out.source.replace(/^```\w*\n?|\n?```$/g, ""));
-      setAi((s) => ({ ...s, codeNote: out.notes || null }));
+    reviewer,
+    setReviewer,
+    requiredApprovals,
+    /** The team's review policy: approvals each intent needs. */
+    setRequiredApprovals: (n: number) => {
+      setRequiredApprovals(n);
+      setArtifact((prev) => ({ ...prev, policy: { requiredApprovals: n } }));
+    },
+    restoreExample: () => setArtifact(reviewedArtifact(requiredApprovals)),
+    /** Review as the current reviewer (approve, amend, reject, answer). */
+    reviewAs: (fn: (r: ReturnType<typeof review>) => void) =>
+      setArtifact((prev) => {
+        const r = review({ ...prev, policy: { requiredApprovals } }, reviewer);
+        fn(r);
+        return r.done();
+      }),
+    /** Contradictions in the spec go back to the team as decisions. */
+    returnDecisions: (cards: DecisionCard[]) => setArtifact((prev) => raiseDecisions(prev, cards)),
+    gaps: gaps && frozen && gaps.hash === frozen.hash && gaps.source === source ? gaps.gaps : null,
+    /** LLM gap review: what the proofs cannot see. */
+    runGapReview: async () => {
+      const spec = currentSpec();
+      if (!spec) return;
+      const out = await runAi("gap-review", (a) => pipeline(a).gapReview(spec, source));
+      if (out) setGaps({ hash: spec.artifact.hash!, source, gaps: out });
     },
     updateArtifact: (fn: (a: IntentArtifact) => void) =>
       setArtifact((prev) => {
@@ -232,7 +258,6 @@ export function useLastro() {
       setSource(s);
       setDebounced(s);
       setBug(id);
-      setAi((x) => ({ ...x, codeNote: null }));
     },
     compiled,
     withTrace,

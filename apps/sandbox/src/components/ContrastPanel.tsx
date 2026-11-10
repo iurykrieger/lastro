@@ -187,7 +187,14 @@ export function ContrastPanel({ l, hover, setHover }: { l: Lastro; hover: string
             {ts?.decisions.length ? (
               <Alert variant="warning">
                 <AlertTitle>The spec contradicts itself</AlertTitle>
-                <AlertDescription>{ts.decisions.map((d) => d.question).join(" ")}</AlertDescription>
+                <AlertDescription className="grid gap-2">
+                  <span>{ts.decisions.map((d) => d.question).join(" ")}</span>
+                  <span>
+                    <Button size="sm" variant="outline" onClick={() => l.returnDecisions(ts.decisions)}>
+                      Send back to the team as decisions
+                    </Button>
+                  </span>
+                </AlertDescription>
               </Alert>
             ) : null}
 
@@ -337,6 +344,37 @@ export function ContrastPanel({ l, hover, setHover }: { l: Lastro; hover: string
                 ))}
               </section>
             </div>
+
+            <section className="grid gap-2 rounded-lg border border-dashed p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-semibold">LLM gap review</h3>
+                <Badge variant="evidence">evidence, not proof</Badge>
+                <Button size="sm" variant="outline" className="ml-auto h-7" onClick={() => void l.runGapReview()} disabled={!l.ai.available || !!l.ai.busy}>
+                  {l.ai.busy === "gap-review" ? <Loader2 className="animate-spin" /> : null}
+                  {l.ai.busy === "gap-review" ? "Claude is reviewing…" : "Ask Claude what the proofs cannot see"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Claude reads the intents, the clauses, the trusted pieces and the code, and points at intents only partly captured by the proofs.
+              </p>
+              {l.ai.error?.step === "gap-review" && <p className="text-xs text-fail">{l.ai.error.message}</p>}
+              {l.gaps && (l.gaps.length === 0 ? (
+                <p className="text-xs">No gaps reported.</p>
+              ) : (
+                <ul className="grid gap-1.5">
+                  {l.gaps.map((g, k) => (
+                    <li key={k} className="grid gap-0.5 rounded-md bg-muted p-2 text-xs">
+                      <span className="flex items-center gap-2">
+                        <span className="font-mono font-semibold">{g.intentId}</span>
+                        <Badge variant={g.severity === "high" ? "fail" : g.severity === "medium" ? "evidence" : "secondary"}>{g.severity}</Badge>
+                      </span>
+                      <span>{g.gap}</span>
+                      <span className="text-muted-foreground">{g.suggestion}</span>
+                    </li>
+                  ))}
+                </ul>
+              ))}
+            </section>
           </TabsContent>
 
           {/* ---------------- Run ---------------- */}

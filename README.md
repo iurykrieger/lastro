@@ -26,6 +26,7 @@ code / production traces ──────── verify ───┤──▶ T
 |---|---|
 | [`crates/lastro-core`](crates/lastro-core) | Rust prover. Enumerates the declared input space itself and only says "proved" when every point is covered. Also checks vacuity, mutants and contradictions. Ships as a CLI and as WASM. |
 | [`packages/sdk`](packages/sdk) | TypeScript SDK (`lastro`): intent artifacts and review, LSL spec language (compiles to SMT-LIB2), plan validation, verification engine, receipts, Claude adapters, and the bridge to the Rust prover. |
+| [`packages/dotnet`](packages/dotnet) | .NET SDK and CLI. Same wire format, hashes, verdicts, receipts and prompts as the TypeScript SDK, so both CLIs work on one `.lastro/` workspace. |
 | [`apps/sandbox`](apps/sandbox) | Interactive sandbox built with shadcn/ui: the prose and its intents, the generated code, and a contrast section that proves one against the other live, in both engines. |
 
 ## Quick start

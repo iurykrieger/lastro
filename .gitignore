@@ -5,3 +5,6 @@ target/
 packages/sdk/wasm/
 *.tsbuildinfo
 .DS_Store
+bin/
+obj/
+*.nupkg

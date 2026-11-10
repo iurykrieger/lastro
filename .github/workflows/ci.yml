@@ -27,3 +27,22 @@ jobs:
         run: npm test -w lastro
       - name: Sandbox build
         run: npm run build -w @lastro/sandbox
+  dotnet:
+    runs-on: ubuntu-latest
+    env:
+      LASTRO_REQUIRE_CROSSCHECK: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build the Rust prover CLI
+        run: cargo build --release -p lastro-core --bin lastro-prove
+      - name: Build the TypeScript SDK (for the cross-check)
+        run: npm install && npx tsc -p packages/sdk
+      - name: .NET SDK tests
+        run: dotnet test packages/dotnet

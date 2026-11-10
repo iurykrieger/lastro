@@ -1,4 +1,7 @@
-import { ArrowRight, FileCode2, GitPullRequest, ListChecks, ShieldCheck, User } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Bot, CheckCircle2, Copy, FileCode2, GitPullRequest, ListChecks, Loader2, ShieldCheck, User, Users } from "lucide-react";
+import { agentFeedback, failuresOf, specGapsOf } from "@lastro/sdk";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Lastro } from "@/state";
 
@@ -33,7 +36,11 @@ export function Pipeline({ l }: { l: Lastro }) {
     {
       icon: ShieldCheck,
       title: "Prove",
-      detail: !ts ? "waits for the spec" : proved ? "every proof passes" : `${ts.summary.violated} violated · ${ts.summary.gap} gaps`,
+      detail: !ts
+        ? "waits for the spec"
+        : proved
+          ? "every proof passes"
+          : `${ts.clauses.filter((c) => c.verdict === "violated").length} clause(s) fail · ${ts.summary.gap} intent gap(s)`,
       state: !ts ? "waiting" : proved ? "done" : "blocked",
     },
     { icon: GitPullRequest, title: "Pull request", detail: proved ? "proved code and receipt" : "blocked until proofs pass", state: proved ? "done" : "waiting" },
@@ -56,7 +63,128 @@ export function Pipeline({ l }: { l: Lastro }) {
           </li>
         ))}
       </ol>
-      {contradictions > 0 && <p className="text-xs text-fail">Contradictions in the spec come back to the team as decisions (see the Contrast panel).</p>}
+      <LastroFeedback l={l} />
+    </div>
+  );
+}
+
+/** What Lastro says right now, gate by gate: who has to act, and on what. */
+function LastroFeedback({ l }: { l: Lastro }) {
+  const [copied, setCopied] = useState(false);
+  const ts = l.results.ts;
+  const contradictions = ts?.decisions ?? [];
+  const proof = ts && l.plan ? { failures: failuresOf(l.plan, ts), specGaps: specGapsOf(ts).filter((g) => !g.startsWith("Contradiction")) } : null;
+  const brief = proof ? agentFeedback(proof) : "";
+
+  let tone = "border-proved/50";
+  let body: React.ReactNode;
+  if (l.pending.length) {
+    tone = "border-evidence/60";
+    body = (
+      <Item icon={<Users className="text-evidence" />} who="The team" title={`Review is not finished (${l.pending.length} item${l.pending.length > 1 ? "s" : ""})`}>
+        <ul className="list-disc pl-4">
+          {l.pending.slice(0, 6).map((p) => (
+            <li key={p}>{p}</li>
+          ))}
+          {l.pending.length > 6 && <li>and {l.pending.length - 6} more</li>}
+        </ul>
+        <p className="text-muted-foreground">Decisions sit under the intents they affect, in the Intents tab.</p>
+      </Item>
+    );
+  } else if (!l.plan) {
+    tone = l.ai.error?.step === "derive" ? "border-fail/50" : "border-brass/60";
+    body = (
+      <Item icon={l.ai.busy === "derive" ? <Loader2 className="animate-spin text-brass" /> : <FileCode2 className="text-brass" />} who="Lastro" title={l.ai.busy === "derive" ? "Deriving the formal spec from the approved intents…" : "No formal spec yet"}>
+        {l.ai.error?.step === "derive" && <p className="text-fail">{l.ai.error.message}</p>}
+        {l.ai.available === false && <p className="text-muted-foreground">Deriving a spec for edited prose needs Claude.</p>}
+      </Item>
+    );
+  } else if (contradictions.length) {
+    tone = "border-fail/50";
+    body = (
+      <Item icon={<Users className="text-fail" />} who="The team" title={`The spec contradicts itself (${contradictions.length})`}>
+        <ul className="list-disc pl-4">
+          {contradictions.map((d) => (
+            <li key={d.id}>{d.question}</li>
+          ))}
+        </ul>
+        <div>
+          <Button size="sm" variant="outline" className="h-7" onClick={() => l.returnDecisions(contradictions)}>
+            Send back to the team as decisions
+          </Button>
+        </div>
+      </Item>
+    );
+  } else if (proof && proof.failures.length) {
+    tone = "border-fail/50";
+    body = (
+      <Item
+        icon={<Bot className="text-fail" />}
+        who="Whoever writes the code"
+        title={`${proof.failures.length} proof obligation${proof.failures.length > 1 ? "s" : ""} fail`}
+        action={
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(brief);
+                setCopied(true);
+              } catch {
+                setCopied(false);
+              }
+            }}
+          >
+            <Copy /> {copied ? "Copied" : "Copy for the agent"}
+          </Button>
+        }
+      >
+        <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md bg-muted p-2 font-mono text-[11px]">{brief}</pre>
+        <p className="text-muted-foreground">
+          The same text <code className="font-mono">lastro feedback</code> and <code className="font-mono">agentFeedback()</code> return. Any coding agent or person fixes the code; the proofs decide.
+        </p>
+      </Item>
+    );
+  } else if (proof && proof.specGaps.length) {
+    tone = "border-evidence/60";
+    body = (
+      <Item icon={<Users className="text-evidence" />} who="The team" title="The code satisfies every clause, but the spec has gaps">
+        <ul className="list-disc pl-4">
+          {proof.specGaps.map((g) => (
+            <li key={g}>{g}</li>
+          ))}
+        </ul>
+      </Item>
+    );
+  } else if (ts && !ts.ok) {
+    tone = "border-fail/50";
+    body = (
+      <Item icon={<ShieldCheck className="text-fail" />} who="The team" title="A trusted piece does not hold">
+        <p>A production trace breaks an assumption the proof relies on. See the trusted pieces in the Contrast panel.</p>
+      </Item>
+    );
+  } else if (ts) {
+    body = (
+      <Item icon={<CheckCircle2 className="text-proved" />} who="Lastro" title="Every gate passes">
+        <p className="text-muted-foreground">Proved code and a receipt for the pull request (Contrast → Receipt).</p>
+      </Item>
+    );
+  } else body = <Item icon={<Loader2 className="animate-spin" />} who="Lastro" title="Proving…" />;
+
+  return <div className={cn("rounded-lg border-2 bg-card p-3", tone)}>{body}</div>;
+}
+
+function Item({ icon, who, title, action, children }: { icon: React.ReactNode; who: string; title: string; action?: React.ReactNode; children?: React.ReactNode }) {
+  return (
+    <div className="grid gap-1.5 text-xs [&_svg]:h-4 [&_svg]:w-4">
+      <div className="flex flex-wrap items-center gap-2">
+        {icon}
+        <span className="text-sm font-semibold">{title}</span>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">next: {who}</span>
+        {action && <span className="ml-auto">{action}</span>}
+      </div>
+      {children}
     </div>
   );
 }

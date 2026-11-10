@@ -100,7 +100,10 @@ planted bug.
 
 `apps/sandbox` is the review surface. It has three parts:
 
-- **Prose**: the text with the intent map highlighted, intent cards (approve, amend, reject) and decision cards.
+- **Pipeline and feedback** (top): the stages from the PDD flow, and one banner saying what Lastro needs next and
+  from whom (the team's review, a contradiction, or failures with counterexamples for whoever writes the code).
+- **Prose**: the text with the intent map highlighted, and intent cards (approve, amend, reject) with each decision
+  card shown under the intents it affects that still wait for approval.
   The text is editable: Claude re-extracts intents, `carryReview()` keeps the reviewer's verdicts for intents that
   did not change, and once the review is done Claude derives a new plan, which runs against the current code.
 - **Code**: the implementation, editable, with one-click planted bugs shown as a diff, and the feedback the proofs

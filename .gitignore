@@ -8,3 +8,6 @@ sdks/typescript/wasm/
 bin/
 obj/
 *.nupkg
+test-results/
+playwright-report/
+*.png

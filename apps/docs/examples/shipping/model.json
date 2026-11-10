@@ -1,0 +1,10 @@
+{
+  "name": "shipping_fee",
+  "inputs": {
+    "subtotal": { "type": "int", "min": 0, "max": 200 },
+    "member": { "type": "bool" }
+  },
+  "outputs": {
+    "fee": { "type": "enum", "values": [0, 15] }
+  }
+}

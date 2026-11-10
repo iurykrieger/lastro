@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The quickstart as .NET library calls. Run with Claude: ANTHROPIC_API_KEY=... dotnet run
+       or offline with the replay flag (see Program.cs), which answers from ../answers -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../../sdks/dotnet/src/Lastro/Lastro.csproj" />
+    <ProjectReference Include="../../../../../sdks/dotnet/src/Lastro.Claude/Lastro.Claude.csproj" />
+  </ItemGroup>
+</Project>

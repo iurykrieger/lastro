@@ -1,0 +1,14 @@
+{
+  "clauses": [
+    { "id": "C1", "intentIds": ["I1"], "description": "A subtotal of 100 or more ships free.", "requires": "{\"op\":\"ge\",\"args\":[{\"var\":\"in.subtotal\"},{\"const\":100}]}", "ensures": "{\"op\":\"eq\",\"args\":[{\"var\":\"out.fee\"},{\"const\":0}]}", "assumes": [] },
+    { "id": "C2", "intentIds": ["I2"], "description": "Members always ship free.", "requires": "{\"var\":\"in.member\"}", "ensures": "{\"op\":\"eq\",\"args\":[{\"var\":\"out.fee\"},{\"const\":0}]}", "assumes": [] },
+    { "id": "C3", "intentIds": ["I3"], "description": "A non-member under 100 pays exactly 15.", "requires": "{\"op\":\"and\",\"args\":[{\"op\":\"not\",\"args\":[{\"var\":\"in.member\"}]},{\"op\":\"lt\",\"args\":[{\"var\":\"in.subtotal\"},{\"const\":100}]}]}", "ensures": "{\"op\":\"eq\",\"args\":[{\"var\":\"out.fee\"},{\"const\":15}]}", "assumes": [] }
+  ],
+  "assumptions": [],
+  "scenarios": [
+    { "id": "S1", "intentIds": ["I3"], "given": "a guest with a 40 cart", "when": "they reach checkout", "then": "shipping costs 15", "inputJson": "{\"subtotal\":40,\"member\":false}", "expect": "{\"op\":\"eq\",\"args\":[{\"var\":\"out.fee\"},{\"const\":15}]}" }
+  ],
+  "beyondProof": [
+    { "intentId": "I4", "reason": "termination-timing", "note": "How fast the fee renders is not a property of the decision; measure it in the checkout page." }
+  ]
+}

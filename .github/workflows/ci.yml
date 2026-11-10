@@ -58,3 +58,42 @@ jobs:
         run: npm install && npx tsc -p sdks/typescript
       - name: .NET SDK tests
         run: dotnet test sdks/dotnet
+      - name: .NET docs example (replays the quickstart answers)
+        working-directory: apps/docs/examples/shipping/dotnet
+        run: dotnet run -- --replay
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: sdks/go/go.mod
+          cache-dependency-path: apps/docs/examples/shipping/go-library/go.sum
+      - name: Install
+        run: npm install
+      - name: Build the WASM prover and the TS SDK
+        run: npm run wasm && npm run build -w lastro
+      - name: Docs examples (the quickstart and the library example, through the real SDK)
+        run: npm run test:examples -w @lastro/docs
+      - name: Go docs example
+        working-directory: apps/docs/examples/shipping/go-library
+        run: |
+          test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+          go vet ./... && go test ./...
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/docs
+      - name: Docs UI tests (Playwright)
+        run: npm run test:e2e -w @lastro/docs
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: docs-playwright-report
+          path: apps/docs/playwright-report
+          retention-days: 7

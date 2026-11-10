@@ -1,5 +1,0 @@
-id: bad-trigger
-archetype: worker
-spec:
-  trigger_kind: webhook
-  schedule_or_signal: x

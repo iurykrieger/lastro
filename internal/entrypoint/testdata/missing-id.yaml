@@ -1,4 +1,0 @@
-archetype: http-api
-spec:
-  method: GET
-  path: /x

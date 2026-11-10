@@ -1,6 +1,0 @@
-# EntryPoint example — event-producer archetype.
-id: emit-payment-processed
-archetype: event-producer
-spec:
-  target_channel_kind: topic
-  target_channel_name: payments.processed

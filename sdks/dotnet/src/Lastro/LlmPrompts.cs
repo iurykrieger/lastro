@@ -1,4 +1,4 @@
-// Generated from packages/sdk/src/llm/llm.ts. Keep identical: both SDKs must send the same prompts,
+// Generated from sdks/typescript/src/llm/llm.ts. Keep identical: both SDKs must send the same prompts,
 // so a handoff request written by one CLI is answered once for both.
 namespace Lastro;
 

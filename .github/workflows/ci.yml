@@ -55,6 +55,6 @@ jobs:
       - name: Build the Rust prover CLI
         run: cargo build --release -p lastro-core --bin lastro-prove
       - name: Build the TypeScript SDK (for the cross-check)
-        run: npm install && npx tsc -p packages/sdk
+        run: npm install && npx tsc -p sdks/typescript
       - name: .NET SDK tests
-        run: dotnet test packages/dotnet
+        run: dotnet test sdks/dotnet

@@ -1,7 +1,7 @@
 # Lastro for .NET
 
 The .NET SDK for Lastro: prose → reviewed intents → derived proofs → a deterministic check of the code
-against them. It is a port of the TypeScript SDK in [`packages/sdk`](../sdk), not a wrapper around it, and the
+against them. It is a port of the TypeScript SDK in [`sdks/typescript`](../typescript), not a wrapper around it, and the
 two agree byte for byte where it matters:
 
 - the same wire format (camelCase JSON, kebab-case enums), so a `.lastro/` workspace written by one CLI is
@@ -79,12 +79,12 @@ dictionary of string to object (integers arrive as `long`), and returns the same
 
 ```sh
 cargo build --release -p lastro-core          # lastro-prove, for the Rust cross-check
-npm install && npx tsc -p packages/sdk        # the TypeScript SDK, for the TS cross-check
-dotnet test packages/dotnet
+npm install && npx tsc -p sdks/typescript        # the TypeScript SDK, for the TS cross-check
+dotnet test sdks/dotnet
 ```
 
 Without node or `lastro-prove`, the cross-check tests are skipped. CI sets `LASTRO_REQUIRE_CROSSCHECK=1`,
 which turns a skip into a failure.
 
-The prompts in `src/Lastro/LlmPrompts.cs` are generated from `packages/sdk/src/llm/llm.ts`. When you change a
+The prompts in `src/Lastro/LlmPrompts.cs` are generated from `sdks/typescript/src/llm/llm.ts`. When you change a
 prompt or schema in one SDK, change it in the other: the handoff-id test fails until they match.

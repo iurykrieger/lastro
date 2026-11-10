@@ -160,7 +160,7 @@ public class InteropTests
 
     private static (int Code, JsonObject Body) Node(string dir, params string[] args)
     {
-        var (code, stdout, stderr) = Run("node", [Path.Combine(RepoRoot, "packages/sdk/dist/src/cli.js"), .. args, "--dir", Path.Combine(dir, ".lastro"), "--llm", "handoff"]);
+        var (code, stdout, stderr) = Run("node", [Path.Combine(RepoRoot, "sdks/typescript/dist/src/cli.js"), .. args, "--dir", Path.Combine(dir, ".lastro"), "--llm", "handoff"]);
         return (code, JsonNode.Parse(stdout) as JsonObject ?? throw new InvalidOperationException(stderr));
     }
 

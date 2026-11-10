@@ -9,7 +9,7 @@ import (
 
 // The verification engine: contrasts a ProofPlan with the program's final
 // output (a decision function and/or recorded traces). It is a port of
-// packages/sdk/src/verify/engine.ts and must agree with it verdict by verdict.
+// sdks/typescript/src/verify/engine.ts and must agree with it verdict by verdict.
 //
 //   - Finite input space -> exhaustive enumeration -> proved (formal).
 //   - Otherwise          -> seeded sampling        -> evidenced (empirical, rule of three).

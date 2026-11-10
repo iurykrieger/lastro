@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-// The data model, field for field the TS SDK's (packages/sdk/src/types.ts), so
+// The data model, field for field the TS SDK's (sdks/typescript/src/types.ts), so
 // both SDKs read and write the same JSON and compute the same hashes.
 //
 //	prose -> IntentArtifact (reviewed, frozen) -> ProofPlan (LSL) -> VerificationReport -> receipt

@@ -1,15 +1,15 @@
 // Runs the TypeScript SDK on the login example and prints what the .NET SDK must reproduce exactly:
 // artifact and plan hashes, verdicts for every planted bug, receipts and LLM handoff ids.
-// Usage: node crosscheck.mjs <repo-root>   (needs `npx tsc -p packages/sdk` first)
+// Usage: node crosscheck.mjs <repo-root>   (needs `npx tsc -p sdks/typescript` first)
 import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 
 const root = process.argv[2];
-const sdk = await import(pathToFileURL(join(root, "packages/sdk/dist/src/index.js")).href);
-const login = await import(pathToFileURL(join(root, "packages/sdk/dist/examples/login/login.js")).href);
+const sdk = await import(pathToFileURL(join(root, "sdks/typescript/dist/src/index.js")).href);
+const login = await import(pathToFileURL(join(root, "sdks/typescript/dist/examples/login/login.js")).href);
 const { review, freeze, verify, renderReceipt, sha256Hex, EXTRACT_SYSTEM, EXTRACT_SCHEMA, DERIVE_SYSTEM, DERIVE_SCHEMA, extractUserPrompt, deriveUserPrompt, checkConsistency } = {
   ...sdk,
-  sha256Hex: (await import(pathToFileURL(join(root, "packages/sdk/dist/src/sha256.js")).href)).sha256Hex,
+  sha256Hex: (await import(pathToFileURL(join(root, "sdks/typescript/dist/src/sha256.js")).href)).sha256Hex,
 };
 
 const handoffId = (req) => `${req.step}-${sha256Hex(JSON.stringify(req)).slice(0, 12)}`;

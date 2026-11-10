@@ -10,7 +10,7 @@ internal static class Support
         get
         {
             for (var d = new DirectoryInfo(AppContext.BaseDirectory); d is not null; d = d.Parent)
-                if (File.Exists(Path.Combine(d.FullName, "Cargo.toml")) && Directory.Exists(Path.Combine(d.FullName, "packages"))) return d.FullName;
+                if (File.Exists(Path.Combine(d.FullName, "Cargo.toml")) && Directory.Exists(Path.Combine(d.FullName, "sdks"))) return d.FullName;
             throw new InvalidOperationException("repository root not found");
         }
     }
@@ -27,9 +27,9 @@ internal static class Support
         (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
         .Select(d => Path.Combine(d, exe)).FirstOrDefault(File.Exists);
 
-    public static bool TsBuilt => File.Exists(Path.Combine(RepoRoot, "packages/sdk/dist/examples/login/login.js")) && Which("node") is not null;
+    public static bool TsBuilt => File.Exists(Path.Combine(RepoRoot, "sdks/typescript/dist/examples/login/login.js")) && Which("node") is not null;
 
-    public const string TsMissing = "the TypeScript SDK is not built (run `npm install && npx tsc -p packages/sdk`) or node is not on PATH";
+    public const string TsMissing = "the TypeScript SDK is not built (run `npm install && npx tsc -p sdks/typescript`) or node is not on PATH";
 
     public static (int Code, string Stdout, string Stderr) Run(string exe, IEnumerable<string> args, string? cwd = null)
     {

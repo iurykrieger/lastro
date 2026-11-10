@@ -3,7 +3,7 @@ using Lastro;
 namespace Lastro.Tests;
 
 /// <summary>
-/// The store login worked example, ported from packages/sdk/examples/login/login.ts. Everything an LLM
+/// The store login worked example, ported from sdks/typescript/examples/login/login.ts. Everything an LLM
 /// would produce is written by hand so the tests run offline. It must stay identical to the TypeScript
 /// example: the cross-check compares hashes, verdicts and receipts between the two SDKs.
 /// </summary>

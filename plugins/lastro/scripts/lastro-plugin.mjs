@@ -116,15 +116,35 @@ export function prove(ws, proposal = "") {
   return { ok: body.ok === true, body };
 }
 
+/** What the agent of this session last got from the plugin (kept in .lastro/plugin/state.json). */
+function seen(ws, input) {
+  const c = readState(ws).context;
+  return c && c.session === (input.session_id ?? "") ? c : {};
+}
+
+function remember(ws, input, patch) {
+  const state = readState(ws);
+  const session = input.session_id ?? "";
+  const before = state.context?.session === session ? state.context : {};
+  writeState(ws, { ...state, context: { ...before, ...patch, session } });
+}
+
+/** The proposal's intents and decisions, without their review state: a new key means a new review to show. */
+function proposalKey(s) {
+  const p = s.proposal;
+  return JSON.stringify([p.id, (p.intents ?? []).map((i) => [i.id, i.description]), (p.decisions ?? []).map((d) => d.id)]);
+}
+
 export function handle(event, input, env = process.env) {
   const ws = loadWorkspace(input.cwd ?? process.cwd(), env);
   if (!ws) return {}; // the repository does not use the plugin
   const harness = harnessOf(input, env);
 
   switch (event) {
-    case "SessionStart":
-    case "UserPromptSubmit": {
+    case "SessionStart": {
+      // Once per session (and again after a compaction): the rules and the full board.
       const s = snapshot(ws);
+      remember(ws, input, { line: renderLine(s), review: null });
       const context = [
         "This repository uses Lastro: every change in behavior goes through reviewed intents before any code is written.",
         "Intents are the code review. You are the author: write the proposal, never approve it. The user reviews it like a pull request.",
@@ -133,6 +153,15 @@ export function handle(event, input, env = process.env) {
         "",
         renderBoard(s),
       ].join("\n");
+      return { hookSpecificOutput: { hookEventName: event, additionalContext: context } };
+    }
+    case "UserPromptSubmit": {
+      // Every prompt stays in the conversation, so this adds one short line, and only when the board moved since the
+      // agent last saw it in this session.
+      const line = renderLine(snapshot(ws));
+      if (seen(ws, input).line === line) return {};
+      remember(ws, input, { line });
+      const context = `${line}. Reminder: you author Lastro proposals and never approve them; extract the intents before the first source edit (lastro \`propose\` skill).`;
       return { hookSpecificOutput: { hookEventName: event, additionalContext: context } };
     }
 
@@ -181,8 +210,17 @@ export function handle(event, input, env = process.env) {
       if (tool === "Bash" || tool === "exec_command" || tool === "shell") {
         if (!isLastroCommand(String(input.tool_input?.command ?? ""))) return {};
         const s = snapshot(ws);
+        // systemMessage is shown to the user only; additionalContext is what costs the agent tokens.
         if (s.phase !== "review-pending") return { systemMessage: renderBoard(s) };
-        // The review goes to the user as the plugin renders it: one line per decision and intent, grouped.
+        const line = renderLine(s);
+        const key = proposalKey(s);
+        if (seen(ws, input).review === key) {
+          // The same proposal, one more answer recorded: a one-line update, not the whole review again.
+          remember(ws, input, { line });
+          return { systemMessage: renderBoard(s), hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `${line}.` } };
+        }
+        // A new or re-extracted proposal: the review goes to the user as the plugin renders it, once.
+        remember(ws, input, { line, review: key });
         return {
           systemMessage: renderBoard(s),
           hookSpecificOutput: {

@@ -115,7 +115,7 @@
       "id": "P-001.I-07",
       "slug": "intent-changes-one-use-case",
       "name": "An intent changes one use case",
-      "description": "Each intent has id, slug, name and a natural-language description of the addition, removal or change of exactly one use case; kind goes away.",
+      "description": "Each intent has id, slug, name and a natural-language description of the addition, removal or change of exactly one use case, and its provability (formal, empirical or beyond-proof with a reason); the old kind (behavior, invariant, preserve, non-functional) goes away.",
       "change": "modify",
       "useCase": "UC-001",
       "provability": "formal",

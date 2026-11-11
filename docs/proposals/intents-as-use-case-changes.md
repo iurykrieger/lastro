@@ -132,6 +132,26 @@ on to the implementation, the way a pull request author can adjust everything an
 protection allows it. A repository that wants a second pair of eyes sets `submitterCanApprove: false` in the
 review policy in `.lastro/config.json`; the submitter's approvals then do not count toward `approvals`.
 
+### The review policy lives in `.lastro/config.json`
+
+How many reviewers each intent needs and whether the submitter counts are repository settings, kept with the
+rest of the workspace and versioned with the code:
+
+```json
+{
+  "model": { "...": "..." },
+  "review": {
+    "approvals": 2,
+    "submitterCanApprove": true
+  }
+}
+```
+
+`approvals` defaults to 1 and `submitterCanApprove` to true. `lastro init --approvals N` writes it (today it writes
+`requiredApprovals`, which becomes `review.approvals`; the old key is still read). The library takes the same
+policy when the SDK is instantiated, and an artifact records the policy it was reviewed under, so a later change
+to the config never turns an approved change request into an unapproved one or the reverse.
+
 Everything stays in the artifact in `.lastro/`, so the review works the same from the library, any of the CLIs
 (`lastro review --as ana comment I3 "..."`, `approve I3`, `amend I3 "..."`, `reject I3`, `resolve`), an agent or
 a UI such as the sandbox. Lastro does not depend on a code host; a GitHub integration could mirror threads later.

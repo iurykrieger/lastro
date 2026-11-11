@@ -28,8 +28,9 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
 - Verification is deterministic: fixed seeds, canonical JSON, hashes over frozen artifacts.
 - Lastro's only AI steps are intent extraction and proof derivation. Never add code generation to the SDK:
   implementations come from any agent or person, and Lastro judges them.
-- `use-cases.json` is the catalog of Lastro's use cases (`slug`, `name`, `description`). When a change adds or
-  alters a use case, update its entry in the same change; slugs are stable kebab-case ids.
+- `use-cases.json` is the catalog of Lastro's current use cases (`slug`, `name`, `description`), each description
+  stating the complete behavior as the source implements it. When a change adds, alters or removes behavior,
+  update the catalog in the same change; slugs are stable kebab-case ids.
 - Stay harness-agnostic: no dependency on a specific agent product. New surfaces wrap `createLastro`.
 
 ## Commands

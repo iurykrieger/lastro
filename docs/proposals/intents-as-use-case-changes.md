@@ -134,12 +134,12 @@ The receipt gains a section with the catalog diff: each use case added, modified
    clause showing the old behavior no longer happens? Recommendation: beyond proof by default; the deriver may
    add a clause when the model can express it.
 3. **When to apply.** Only after the proof is ok (recommended), or right after approval?
-5. **Approval scope.** On a pull request, an approval covers the whole PR. Should a reviewer's approval cover
-   the whole change request (recommended, as on a PR), or keep today's per-intent approvals?
-6. **Who is the author.** The person who submitted the prose (recommended), or whoever last edited an intent?
 4. **Where proofs live.** Should each use case keep its clauses so the next change re-proves the whole catalog,
    or are proofs per change request as today? Recommendation: per change request in v1; a persistent spec per
    use case is a later step.
+5. **Approval scope.** On a pull request, an approval covers the whole PR. Should a reviewer's approval cover
+   the whole change request (recommended, as on a PR), or keep today's per-intent approvals?
+6. **Who is the author.** The person who submitted the prose (recommended), or whoever last edited an intent?
 
 ## Cost
 

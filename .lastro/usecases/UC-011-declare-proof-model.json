@@ -1,0 +1,8 @@
+{
+  "id": "UC-011",
+  "slug": "declare-proof-model",
+  "name": "Declare the proof vocabulary",
+  "description": "A model has a name, inputs and outputs, each a domain: bool, enum of strings or numbers, int with optional min and max, or string with optional examples; plus named defs (parameters and an LSL body). Bool, enum and bounded int domains are finite and enumerable in a fixed, sorted-key order; unbounded ints and strings are not. Facts supplied by trusted external pieces enter as inputs. A model with no outputs is rejected by plan validation.",
+  "proofs": [],
+  "history": []
+}

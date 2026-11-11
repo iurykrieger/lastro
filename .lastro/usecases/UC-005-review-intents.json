@@ -1,0 +1,8 @@
+{
+  "id": "UC-005",
+  "slug": "review-intents",
+  "name": "Review intents",
+  "description": "review(artifact, reviewer) returns a chainable review on a copy of the artifact (an approved artifact is reopened first). approve(ids) marks intents approved (an amended intent stays amended) and adds the reviewer to approvals once; approveAll() approves every intent that is not rejected; reject(id, note) sets status rejected, records the note with the reviewer's name and clears approvals; amend(id, statement, patch?, note?) keeps the first original statement, rewrites the statement (optionally kind, provability or beyond-proof reason), sets status amended and resets approvals to the amender alone. done() returns the new artifact; unknown ids throw.",
+  "proofs": [],
+  "history": []
+}

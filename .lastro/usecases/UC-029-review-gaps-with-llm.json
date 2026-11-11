@@ -1,0 +1,8 @@
+{
+  "id": "UC-029",
+  "slug": "review-gaps-with-llm",
+  "name": "Review gaps the proofs cannot see",
+  "description": "gapReview(spec, source) sends the approved intents, the clauses in readable notation, the trusted pieces, the beyond-proof items and the source code to the LLM (step \"gap-review\"). It returns gaps tied to intents (partly captured meaning, reliance on an unmodeled input or trusted piece, an intent with no clause), each with a suggestion and a severity. They are evidence for humans, never proof, and an empty list is valid.",
+  "proofs": [],
+  "history": []
+}

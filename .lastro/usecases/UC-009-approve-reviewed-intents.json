@@ -1,0 +1,8 @@
+{
+  "id": "UC-009",
+  "slug": "approve-reviewed-intents",
+  "name": "Approve the reviewed intents",
+  "description": "approve() refuses with every pending item while anything is pending. Otherwise it returns an approved copy whose hash = sha256 over canonical JSON (keys sorted, undefined dropped) of the artifact without its hash. Only an approved artifact can be sent to proof derivation, so only approved intents generate proofs and reach whoever implements the change. An approved artifact cannot be reviewed; reopen() returns a copy without the hash, which must be approved again. isApproved() recomputes the hash, so any edit after approval is detected, and plan validation rejects an artifact that is not approved or was modified after approval.",
+  "proofs": [],
+  "history": []
+}

@@ -353,7 +353,7 @@ test("pipeline: failures are structured feedback for whatever writes the code", 
 // CLI: the same pipeline from any harness, with the agent's own model (handoff)
 // ---------------------------------------------------------------------------
 
-import { mkdtempSync, writeFileSync as writeFile, readFileSync as readFile } from "node:fs";
+import { mkdtempSync, readdirSync, writeFileSync as writeFile, readFileSync as readFile } from "node:fs";
 import { tmpdir } from "node:os";
 import { join as joinPath } from "node:path";
 import { fileURLToPath as toPath } from "node:url";
@@ -430,16 +430,37 @@ test("cli: --section reads one Markdown section, up to the next heading of the s
   assert.throws(() => section(md, "Missing"));
 });
 
-test(".lastro/use-cases.json: the catalog of Lastro's use cases is well formed", () => {
-  const file = joinPath(toPath(new URL(".", import.meta.url)), "..", "..", "..", "..", ".lastro", "use-cases.json");
-  const cases = JSON.parse(readFile(file, "utf8")) as Record<string, unknown>[];
-  assert.ok(Array.isArray(cases) && cases.length > 0);
+test(".lastro/usecases and .lastro/proposals: Lastro's own use cases and proposals are well formed", () => {
+  const lastro = joinPath(toPath(new URL(".", import.meta.url)), "..", "..", "..", "..", ".lastro");
+  const kebab = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+  const ids = new Set<string>();
   const slugs = new Set<string>();
-  for (const c of cases) {
-    assert.deepEqual(Object.keys(c).sort(), ["description", "name", "slug"], JSON.stringify(c));
-    assert.match(String(c.slug), /^[a-z0-9]+(-[a-z0-9]+)*$/, `slug ${c.slug} is not kebab-case`);
-    assert.ok(!slugs.has(c.slug as string), `duplicate slug ${c.slug}`);
-    slugs.add(c.slug as string);
-    assert.ok(String(c.name).trim() && String(c.description).trim(), `${c.slug} needs a name and a description`);
+  const files = readdirSync(joinPath(lastro, "usecases")).sort();
+  assert.ok(files.length > 0);
+  for (const f of files) {
+    const u = JSON.parse(readFile(joinPath(lastro, "usecases", f), "utf8")) as Record<string, unknown>;
+    assert.deepEqual(Object.keys(u).sort(), ["description", "history", "id", "name", "proofs", "slug"], f);
+    assert.match(String(u.id), /^UC-\d{3,}$/, `${f}: bad id`);
+    assert.match(String(u.slug), kebab, `${f}: slug is not kebab-case`);
+    assert.equal(f, `${u.id}-${u.slug}.json`, `${f}: file name must be <id>-<slug>.json`);
+    assert.ok(!ids.has(u.id as string) && !slugs.has(u.slug as string), `${f}: duplicate id or slug`);
+    ids.add(u.id as string);
+    slugs.add(u.slug as string);
+    assert.ok(String(u.name).trim() && String(u.description).trim(), `${f}: needs a name and a description`);
+    assert.ok(Array.isArray(u.proofs) && Array.isArray(u.history), `${f}: proofs and history are lists`);
+  }
+  for (const f of readdirSync(joinPath(lastro, "proposals")).filter((f) => f.endsWith(".json"))) {
+    const p = JSON.parse(readFile(joinPath(lastro, "proposals", f), "utf8")) as {
+      id: string; slug: string; prose: string; useCases: { useCase: string; change: string }[];
+      intents: { id: string; slug: string; name: string; description: string; useCase: string; change: string; source: { quote: string; start: number; end: number } }[];
+    };
+    assert.equal(f, `${p.id}-${p.slug}.json`, `${f}: file name must be <id>-<slug>.json`);
+    for (const i of p.intents) {
+      assert.ok(i.id.startsWith(`${p.id}.I-`) && kebab.test(i.slug) && i.name && i.description, `${f}: ${i.id} is incomplete`);
+      assert.equal(p.prose.slice(i.source.start, i.source.end), i.source.quote, `${f}: ${i.id} quote is not anchored`);
+      const change = p.useCases.find((c) => c.useCase === i.useCase);
+      assert.ok(change && change.change === i.change, `${f}: ${i.id} has no matching use-case change`);
+      assert.equal(ids.has(i.useCase), i.change !== "add", `${f}: ${i.id} ${i.change} must ${i.change === "add" ? "reserve a new" : "name an existing"} use case`);
+    }
   }
 });

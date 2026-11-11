@@ -1,0 +1,8 @@
+{
+  "id": "UC-016",
+  "slug": "prove-exhaustively",
+  "name": "Prove a clause over a finite domain",
+  "description": "prove(spec, subject) runs the code on every input of the model when the input space has at most 100,000 points. Outputs outside their domain and inputs where the code throws are recorded as invalid runs and noted on every clause. A clause whose if-part applies to at least one run and whose then-part holds on every applicable run is proved, with formal evidence and the number of inputs checked.",
+  "proofs": [],
+  "history": []
+}

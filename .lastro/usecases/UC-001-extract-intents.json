@@ -1,0 +1,8 @@
+{
+  "id": "UC-001",
+  "slug": "extract-intents",
+  "name": "Extract intents from prose",
+  "description": "plan(prose) sends the prose to an LLM through an AskJson transport with a fixed system prompt and JSON Schema (step \"extract\"). The answer lists intents, each with a statement, a kind (behavior, invariant, preserve, non-functional), a provability (formal, empirical, beyond-proof), a beyondProofReason (\"none\" or one of the five reasons) and a verbatim quote; decisions that reference intents by zero-based index; and notPromised items. The answer becomes an intent artifact (lastro: intent-artifact/v0) with ids I1, I2... in answer order, every intent in status proposed, decisions D1, D2... with origin extraction, and the team's review policy attached. Without an LLM transport or a custom extractor, plan() throws.",
+  "proofs": [],
+  "history": []
+}

@@ -1,0 +1,8 @@
+{
+  "id": "UC-043",
+  "slug": "stream-proof-progress",
+  "name": "Stream a proof run as it happens",
+  "description": "lastro prove --stream (TypeScript, Go and .NET CLIs) prints one compact JSON object per line instead of the single result: start (model, clause ids, scenario ids), progress every 100 runs of the code under proof, one clause event per clause in plan order (clauseId, intentIds, verdict, evidence, and the counterexample when there is one), one scenario event per scenario (scenarioId, status), crosscheck (enginesAgree) when the Rust prover ran, and result with the body prove prints without --stream. Exit codes and the files written are the same as without it. The Go and .NET tests compare their stream with the TypeScript CLI's on one workspace.",
+  "proofs": [],
+  "history": []
+}

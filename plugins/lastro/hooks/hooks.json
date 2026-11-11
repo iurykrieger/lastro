@@ -15,7 +15,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit|apply_patch|Bash",
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|apply_patch|Bash|ExitPlanMode|update_plan",
         "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/lastro-plugin.mjs\" hook PostToolUse", "timeout": 30 }]
       }
     ],

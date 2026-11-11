@@ -44,18 +44,31 @@ const usage = `lastro-go <command> [options]
   review --as <name> <action> ...               approve <I1 I2..> | approve-all | amend <I> <text>
                                                 reject <I> <note> | answer <D> <option-index>
   spec                                          derive the formal spec; contradictions come back as decisions
-  prove --cmd "<command>" | --table rows.json [--traces file.json] [--prover path/to/lastro-prove]
-                                                check the code against the spec; writes proof.json, receipt.md
+  prove --cmd "<command>" | --table rows.json [--traces file.json] [--prover path/to/lastro-prove] [--stream]
+                                                check the code against the spec; writes proof.json, receipt.md;
+                                                --stream prints one JSON line per event, as the TS CLI does
   feedback                                      the last proof's failures, as a brief for whoever writes the code
 
   --dir <path>          workspace (default .lastro)
   --llm anthropic|handoff`
 
 func main() {
-	code, body := run(context.Background(), os.Args[1:])
-	os.Stdout.WriteString(lastro.StringifyIndent(body) + "\n")
+	argv := os.Args[1:]
+	code, body := runWith(context.Background(), argv, func(event obj) { os.Stdout.WriteString(lastro.Stringify(event) + "\n") })
+	if parse(argv).flags["stream"] == "true" {
+		os.Stdout.WriteString(lastro.Stringify(append(obj{{"event", "result"}}, body...)) + "\n")
+	} else {
+		os.Stdout.WriteString(lastro.StringifyIndent(body) + "\n")
+	}
 	os.Exit(code)
 }
+
+// streamProgressEvery matches the TS CLI: one progress event every 100 runs of the code under proof.
+const streamProgressEvery = 100
+
+// emitter receives the `prove --stream` events (start, progress, clause, scenario, crosscheck), in the
+// TS CLI's order and shape. The CLI prints the closing {"event":"result",...} itself.
+type emitter func(event obj)
 
 // obj is a JSON object that keeps its key order, like the TS CLI's object literals.
 type obj []kv
@@ -100,13 +113,16 @@ type args struct {
 	flags map[string]string
 }
 
+// booleanFlags never take a value.
+var booleanFlags = map[string]bool{"stream": true}
+
 func parse(argv []string) args {
 	a := args{flags: map[string]string{}}
 	for i := 0; i < len(argv); i++ {
 		s := argv[i]
 		if strings.HasPrefix(s, "--") {
 			k := s[2:]
-			if i+1 >= len(argv) || strings.HasPrefix(argv[i+1], "--") {
+			if i+1 >= len(argv) || strings.HasPrefix(argv[i+1], "--") || booleanFlags[k] {
 				a.flags[k] = "true"
 			} else {
 				a.flags[k] = argv[i+1]
@@ -227,8 +243,10 @@ func exitIf(pending []string) int {
 	return 0
 }
 
-func run(ctx context.Context, argv []string) (int, obj) {
-	code, body, err := dispatch(ctx, parse(argv))
+func run(ctx context.Context, argv []string) (int, obj) { return runWith(ctx, argv, nil) }
+
+func runWith(ctx context.Context, argv []string, emit emitter) (int, obj) {
+	code, body, err := dispatch(ctx, parse(argv), emit)
 	if err != nil {
 		var e *exit
 		if errors.As(err, &e) {
@@ -239,7 +257,7 @@ func run(ctx context.Context, argv []string) (int, obj) {
 	return code, body
 }
 
-func dispatch(ctx context.Context, a args) (int, obj, error) {
+func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 	dir := a.flags["dir"]
 	if dir == "" {
 		dir = ".lastro"
@@ -457,9 +475,49 @@ func dispatch(ctx context.Context, a args) (int, obj, error) {
 		} else if p := lastro.FindRustProver(); p != nil {
 			opts.Rust = p
 		}
+		stream := a.flags["stream"] == "true" && emit != nil
+		if stream {
+			inner, runs := subject, 0
+			subject = func(in lastro.Env) (lastro.Env, error) {
+				runs++
+				if runs%streamProgressEvery == 0 {
+					emit(obj{{"event", "progress"}, {"runs", runs}})
+				}
+				return inner(in)
+			}
+			clauses, scenarios := []string{}, []string{}
+			for _, c := range spec.Plan.Clauses {
+				clauses = append(clauses, c.ID)
+			}
+			for _, x := range spec.Plan.Scenarios {
+				scenarios = append(scenarios, x.ID)
+			}
+			emit(obj{{"event", "start"}, {"model", spec.Plan.Model.Name}, {"clauses", clauses}, {"scenarios", scenarios}})
+		}
 		proof, err := lastro.New(opts).Prove(ctx, spec, subject, traces)
 		if err != nil {
 			return 0, nil, err
+		}
+		if stream {
+			for _, r := range proof.Report.Clauses {
+				intentIDs := []string{}
+				for _, c := range spec.Plan.Clauses {
+					if c.ID == r.ClauseID {
+						intentIDs = nonNil(c.IntentIDs)
+					}
+				}
+				ev := obj{{"event", "clause"}, {"clauseId", r.ClauseID}, {"intentIds", intentIDs}, {"verdict", r.Verdict}, {"evidence", r.Evidence}}
+				if r.Counterexample != nil {
+					ev = append(ev, kv{"counterexample", r.Counterexample})
+				}
+				emit(ev)
+			}
+			for _, r := range proof.Report.Scenarios {
+				emit(obj{{"event", "scenario"}, {"scenarioId", r.ScenarioID}, {"status", r.Status}})
+			}
+			if proof.EnginesAgree != nil {
+				emit(obj{{"event", "crosscheck"}, {"enginesAgree", *proof.EnginesAgree}})
+			}
 		}
 		if err := writeJSON(ws.file("proof.json"), proof); err != nil {
 			return 0, nil, err

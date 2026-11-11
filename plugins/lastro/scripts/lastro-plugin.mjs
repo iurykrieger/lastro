@@ -8,7 +8,8 @@
 // Both harnesses send the same hook fields (hook_event_name, cwd, tool_name, tool_input, stop_hook_active)
 // and read the same answers (hookSpecificOutput.permissionDecision, additionalContext, decision/reason,
 // systemMessage), so one script serves both.
-import { readFileSync, realpathSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import {
@@ -33,6 +34,44 @@ export const harnessOf = (input, env = process.env) => env.LASTRO_HARNESS ?? (en
 
 const deny = (reason) => ({ hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason } });
 const ask = (reason) => ({ hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "ask", permissionDecisionReason: reason } });
+
+/**
+ * Why a source edit waits, and what the agent does now. This is where intents get extracted in every mode
+ * (plan mode, auto mode, an informal plan or none): the first attempt to edit source code is the trigger.
+ */
+export function gateReason(ws, s, paths) {
+  const cli = ws.config.cli;
+  const extract = [
+    `Before editing ${paths.join(", ")}, Lastro needs the intents of this change, reviewed by the user:`,
+    `1. Write the change you are about to make as prose in .lastro/proposals/<slug>.md: the behavior that must hold after it, from the user's request and your plan (formal or not). No code.`,
+    `2. Run \`${cli} plan .lastro/proposals/<slug>.md\` (exit 3: answer the handoff request with your own model and run it again).`,
+    `3. Start the review: ask the user each decision, then approve / request changes / reject per intent (lastro \`propose\` skill). Then \`${cli} spec\`.`,
+  ];
+  switch (s.phase) {
+    case "no-workspace":
+      return `Lastro: this repository is not set up yet. ${nextStep(s)}`;
+    case "no-proposal":
+      return extract.join("\n");
+    case "passed":
+      return [`Lastro: the approved change is done and every proof passes, so this edit is a new change.`, ...extract.slice(1)].join("\n") + `\n\n${renderLine(s)}`;
+    case "review-pending":
+      return `Lastro: the review is not done. ${nextStep(s)}\nPending: ${s.pending.join("; ")}.\n\n${renderLine(s)}`;
+    default:
+      return `Lastro: no code before the proofs are derived. ${nextStep(s)}\n\n${renderLine(s)}`;
+  }
+}
+
+/** Saves a plan as a proposal draft under .lastro/proposals/, named after its first heading. */
+export function saveProposal(ws, plan) {
+  const title = (plan.match(/^#+\s*(.+)$/m)?.[1] ?? plan.trim().split("\n")[0]).trim();
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "plan";
+  const dir = join(ws.dir, "proposals");
+  mkdirSync(dir, { recursive: true });
+  let file = join(dir, `${slug}.md`);
+  for (let i = 2; existsSync(file); i++) file = join(dir, `${slug}-${i}.md`);
+  writeFileSync(file, plan.trim() + "\n");
+  return relative(ws.root, file);
+}
 
 /** Builds and proves; records the result in the plugin state. */
 export function prove(ws) {
@@ -60,7 +99,7 @@ export function handle(event, input, env = process.env) {
       const context = [
         "This repository uses Lastro: every change in behavior goes through reviewed intents before any code is written.",
         "Intents are the code review. You are the author: write the proposal, never approve it. The user reviews it like a pull request.",
-        "If this request changes behavior, follow the lastro `propose` skill before editing code.",
+        "Before you edit any source file, in any mode (plan mode, auto mode, a quick fix), extract the intents of the change and start the user's review: lastro `propose` skill.",
         "",
         renderBoard(s),
       ].join("\n");
@@ -84,13 +123,31 @@ export function handle(event, input, env = process.env) {
       if (kinds.some(([, k]) => k === "config")) return harness === "claude" ? ask("This changes how Lastro gates and proves this repository (.lastro/plugin.json).") : deny("Only the user changes .lastro/plugin.json.");
       if (ws.config.gate === "off" || !kinds.some(([, k]) => k === "code")) return {};
       const s = snapshot(ws);
-      if (["implementing", "failed", "passed"].includes(s.phase)) return {};
-      const pending = s.phase === "review-pending" ? `\nPending: ${s.pending.join("; ")}.` : "";
-      return deny(`Lastro: no code before the intents are approved and the proofs derived. ${nextStep(s)}${pending}\n\n${renderLine(s)}`);
+      // Code edits belong to an approved proposal whose proofs are not passing yet. Anything else is a new change.
+      if (["implementing", "failed"].includes(s.phase)) return {};
+      const code = kinds.filter(([, k]) => k === "code").map(([p]) => p);
+      return deny(gateReason(ws, s, code));
     }
 
     case "PostToolUse": {
       const tool = input.tool_name ?? "";
+      if (tool === "ExitPlanMode") {
+        // Claude Code's plan mode: the approved plan becomes the proposal's draft right away.
+        const plan = input.tool_response?.plan ?? input.tool_input?.plan;
+        if (typeof plan !== "string" || !plan.trim()) return {};
+        const file = saveProposal(ws, plan);
+        return {
+          hookSpecificOutput: {
+            hookEventName: "PostToolUse",
+            additionalContext: `Lastro saved this plan as ${file}. Before editing any source file, rewrite it there as behavior (what must be true after the change, no code), run \`${ws.config.cli} plan ${file}\`, and start the user's review (lastro \`propose\` skill).`,
+          },
+          systemMessage: `Lastro: plan saved as ${file}; intents come next, then your review.`,
+        };
+      }
+      if (tool === "update_plan") {
+        // Codex's step list: a reminder that the plan goes through Lastro before the first edit.
+        return { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `Lastro: before the first source edit of this plan, write the change as prose in .lastro/proposals/<slug>.md, run \`${ws.config.cli} plan\` on it, and start the user's review (lastro \`propose\` skill).` } };
+      }
       if (tool === "Bash" || tool === "exec_command" || tool === "shell") {
         if (!isLastroCommand(String(input.tool_input?.command ?? ""))) return {};
         return { systemMessage: renderBoard(snapshot(ws)) };

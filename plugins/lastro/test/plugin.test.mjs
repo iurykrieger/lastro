@@ -249,3 +249,37 @@ test("the boards the docs show are the real ones", { skip }, () => {
   assert.equal(asDocs(renderBoard(snapshot(loadWorkspace(dir)))), docs.implementing);
   assert.equal(asDocs(handle("Stop", { cwd: dir }, claude).systemMessage), docs.failed);
 });
+
+test("in any mode, the first source edit triggers the extraction: the reason says how", { skip }, () => {
+  const dir = repoWith();
+  lastro(dir, "init", "--model", "model.json");
+  const reason = edit(dir, "src/fee.js").hookSpecificOutput.permissionDecisionReason;
+  assert.match(reason, /^Before editing src\/fee\.js, Lastro needs the intents of this change, reviewed by the user:/);
+  assert.match(reason, /formal or not/);
+  assert.match(reason, / plan \.lastro\/proposals\/<slug>\.md/);
+  assert.match(reason, /approve \/ request changes \/ reject per intent/);
+});
+
+test("once every proof passes, the next source edit is a new change and needs new intents", { skip }, () => {
+  const dir = specified({ prove: "./shipping.mjs" });
+  assert.equal(decision(edit(dir, "shipping.mjs")), "allow", "implementing the approved change");
+  handle("Stop", { cwd: dir }, claude);
+  assert.equal(snapshot(loadWorkspace(dir)).phase, "passed");
+  const out = edit(dir, "shipping.mjs", codex);
+  assert.equal(decision(out), "deny");
+  assert.match(out.hookSpecificOutput.permissionDecisionReason, /the approved change is done and every proof passes, so this edit is a new change/);
+  assert.equal(decision(edit(dir, ".lastro/proposals/next.md")), "allow", "writing the next proposal is fine");
+});
+
+test("plan mode: the approved plan is saved as a proposal draft; Codex's update_plan gets a reminder", { skip }, () => {
+  const dir = repoWith();
+  lastro(dir, "init", "--model", "model.json");
+  const plan = "# Free shipping for members\n\n1. Members never pay shipping.\n2. Update the fee function.";
+  const out = handle("PostToolUse", { cwd: dir, tool_name: "ExitPlanMode", tool_input: {}, tool_response: { plan, filePath: "/home/u/.claude/plans/x.md" } }, claude);
+  assert.match(out.hookSpecificOutput.additionalContext, /saved this plan as \.lastro\/proposals\/free-shipping-for-members\.md/);
+  assert.equal(readFileSync(join(dir, ".lastro", "proposals", "free-shipping-for-members.md"), "utf8"), plan + "\n");
+  const again = handle("PostToolUse", { cwd: dir, tool_name: "ExitPlanMode", tool_input: {}, tool_response: { plan } }, claude);
+  assert.match(again.hookSpecificOutput.additionalContext, /free-shipping-for-members-2\.md/, "an earlier proposal is never overwritten");
+  const codexPlan = handle("PostToolUse", { cwd: dir, tool_name: "update_plan", tool_input: { plan: [{ step: "edit fee", status: "pending" }] } }, codex);
+  assert.match(codexPlan.hookSpecificOutput.additionalContext, /before the first source edit of this plan/);
+});

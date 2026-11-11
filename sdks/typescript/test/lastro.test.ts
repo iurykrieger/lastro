@@ -416,8 +416,8 @@ test("cli: --section reads one Markdown section, up to the next heading of the s
   assert.throws(() => section(md, "Missing"));
 });
 
-test("use-cases.json: the catalog of Lastro's use cases is well formed", () => {
-  const file = joinPath(toPath(new URL(".", import.meta.url)), "..", "..", "..", "..", "use-cases.json");
+test(".lastro/use-cases.json: the catalog of Lastro's use cases is well formed", () => {
+  const file = joinPath(toPath(new URL(".", import.meta.url)), "..", "..", "..", "..", ".lastro", "use-cases.json");
   const cases = JSON.parse(readFile(file, "utf8")) as Record<string, unknown>[];
   assert.ok(Array.isArray(cases) && cases.length > 0);
   const slugs = new Set<string>();

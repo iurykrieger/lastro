@@ -6,7 +6,7 @@ Status: **draft for review**. Nothing here is implemented yet.
 
 Today an intent is a standalone promise read from the prose. The model this proposal moves to:
 
-- **Use cases** describe what the application does now. The catalog (`use-cases.json`: `slug`, `name`,
+- **Use cases** describe what the application does now. The catalog (`.lastro/use-cases.json`: `slug`, `name`,
   `description`) is the baseline, with each description stating the complete current behavior.
 - **Prose** is a change request against that baseline.
 - **Intents** are the changes the prose implies. Each one **adds**, **modifies** or **removes** exactly one use
@@ -59,6 +59,23 @@ interface IntentArtifact {
 `kind` goes away: `preserve` is what every untouched use case already is, and `behavior`, `invariant` and
 `non-functional` move into the use case's description.
 
+## Where files live
+
+Everything the framework generates or keeps lives in `.lastro/` (or the folder given with `--dir`):
+
+```
+.lastro/
+  use-cases.json     the catalog: the baseline, versioned with the code
+  config.json        model and review policy
+  intents.json       the current change request's intents and their review
+  spec.json          the frozen intents and the derived proof plan
+  proof.json         the last verification
+  receipt.md         the last receipt
+  llm/               handoff requests and answers
+```
+
+`apply` rewrites `.lastro/use-cases.json`. No framework file is written outside the workspace folder.
+
 ## Pipeline changes
 
 | Step | Today | Proposed |
@@ -85,8 +102,6 @@ The receipt gains a section with the catalog diff: each use case added, modified
 4. **Where proofs live.** Should each use case keep its clauses so the next change re-proves the whole catalog,
    or are proofs per change request as today? Recommendation: per change request in v1; a persistent spec per
    use case is a later step.
-5. **Catalog location.** Fixed `use-cases.json` at the repository root, or passed in (`--catalog`)?
-   Recommendation: passed in, default `use-cases.json`.
 
 ## Cost
 

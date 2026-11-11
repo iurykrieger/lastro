@@ -106,7 +106,7 @@ The AI steps run on the Anthropic API when `ANTHROPIC_API_KEY` is set. Otherwise
 writes the request (instructions, data and JSON Schema) to `.lastro/llm/`, exits 3, and the calling agent
 answers with its own model and runs the command again. No API key or harness-specific plugin is needed.
 
-Every use case of the framework, with its complete current behavior, is listed in [`use-cases.json`](use-cases.json).
+Every use case of the framework, with its complete current behavior, is listed in [`.lastro/use-cases.json`](.lastro/use-cases.json). Everything the framework generates lives in `.lastro/`.
 
 See [`DESIGN.md`](DESIGN.md) for the semantics of each verdict and where proof stops.
 

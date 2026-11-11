@@ -14,7 +14,8 @@ the [Lastro plugin](../lastro)'s Stop hook fills with `lastro prove --stream`). 
 opens the pane.
 
 ```
-/plugin install lastro-board --marketplace iurykrieger/lastro
+/plugin marketplace add iurykrieger/lastro
+/plugin install lastro-board@lastro
 ```
 
 Mods are a Claude Code feature: in Codex, the Lastro plugin's text board is shown instead.

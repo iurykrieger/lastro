@@ -40,7 +40,8 @@ Lastro · shipping_fee · proofs FAILED
 Claude Code:
 
 ```
-/plugin install lastro --marketplace iurykrieger/lastro
+/plugin marketplace add iurykrieger/lastro
+/plugin install lastro@lastro
 ```
 
 Codex (hooks need `[features] codex_hooks = true` in `~/.codex/config.toml` on versions where they are still
@@ -52,6 +53,10 @@ codex plugin marketplace add iurykrieger/lastro
 
 then enable `lastro` from `/plugins`. The plugin needs Node 20+ and the Lastro CLI (`npm i -D lastro`, or
 `lastro-go`).
+
+To enable it for everyone in a repository, commit a `.claude/settings.json` that declares the marketplace
+(`"extraKnownMarketplaces": { "lastro": { "source": { "source": "github", "repo": "iurykrieger/lastro" } } }`) and
+`"enabledPlugins": { "lastro@lastro": true }`. This repository does that for itself.
 
 Then ask the agent to "set up Lastro" (the `setup` skill), or write `.lastro/plugin.json` yourself.
 

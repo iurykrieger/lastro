@@ -21,8 +21,21 @@ export function PluginAgents() {
       </P>
 
       <H2>Install</H2>
-      <Code lang="text" title="Claude Code" code={`/plugin install lastro --marketplace iurykrieger/lastro`} />
+      <Code lang="text" title="Claude Code" code={`/plugin marketplace add iurykrieger/lastro
+/plugin install lastro@lastro`} />
       <Code lang="bash" title="Codex" code={`$ codex plugin marketplace add iurykrieger/lastro`} />
+      <P>
+        To turn it on for everyone who works in a repository, commit a <C>.claude/settings.json</C> that declares the marketplace and enables the plugin; Claude
+        Code offers to install it when someone trusts the folder. The Lastro repository does this for itself.
+      </P>
+      <Code
+        lang="json"
+        title=".claude/settings.json"
+        code={`{
+  "extraKnownMarketplaces": { "lastro": { "source": { "source": "github", "repo": "iurykrieger/lastro" } } },
+  "enabledPlugins": { "lastro@lastro": true, "lastro-board@lastro": true }
+}`}
+      />
       <P>
         In Codex, enable <C>lastro</C> from <C>/plugins</C>. On Codex versions where hooks are still behind a flag, set <C>codex_hooks = true</C> under{" "}
         <C>[features]</C> in <C>~/.codex/config.toml</C>. The plugin needs Node 20 or later and a Lastro CLI (<C>npm i -D lastro</C>, or <C>lastro-go</C>).
@@ -125,7 +138,7 @@ export function PluginAgents() {
         every intent is approved and when a run ends. It reads <C>.lastro/</C> and decides nothing. Mods are a Claude Code feature; Codex shows the text
         board.
       </P>
-      <Code lang="text" title="Claude Code" code={`/plugin install lastro-board --marketplace iurykrieger/lastro`} />
+      <Code lang="text" title="Claude Code" code={`/plugin install lastro-board@lastro`} />
 
       <H2>A status line</H2>
       <P>In Claude Code, the board fits a status line:</P>

@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Lastro.Cli;
 using Xunit;
 using static Lastro.Tests.Support;
@@ -146,12 +147,16 @@ public class InteropTests
     // CLI
     // -----------------------------------------------------------------------
 
+    // The shipping example of the docs: prose, model, and the answers an agent writes to the two handoffs.
+    private static string Example => Path.Combine(RepoRoot, "apps", "docs", "examples", "shipping");
+
+    private static readonly string Assembly = typeof(ShippingExample).Assembly.Location;
+
     private static string Workspace()
     {
         var dir = Path.Combine(Path.GetTempPath(), "lastro-dotnet-" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(dir);
-        File.WriteAllText(Path.Combine(dir, "model.json"), LastroJson.Serialize(LoginExample.Model));
-        File.WriteAllText(Path.Combine(dir, "prose.md"), LoginExample.Prose);
+        foreach (var f in new[] { "model.json", "prose.md", "shipping.mjs", "shipping-buggy.mjs" }) File.Copy(Path.Combine(Example, f), Path.Combine(dir, f));
         return dir;
     }
 
@@ -160,46 +165,94 @@ public class InteropTests
 
     private static (int Code, JsonObject Body) Node(string dir, params string[] args)
     {
-        var (code, stdout, stderr) = Run("node", [Path.Combine(RepoRoot, "sdks/typescript/dist/src/cli.js"), .. args, "--dir", Path.Combine(dir, ".lastro"), "--llm", "handoff"]);
+        var (code, stdout, stderr) = Run("node", [Path.Combine(RepoRoot, "sdks/typescript/dist/src/cli.js"), .. args, "--dir", Path.Combine(dir, ".lastro"), "--llm", "handoff"], dir);
         return (code, JsonNode.Parse(stdout) as JsonObject ?? throw new InvalidOperationException(stderr));
     }
 
-    private static void Answer(JsonObject body, JsonNode answer) => File.WriteAllText(body["answer"]!.GetValue<string>(), answer.ToJsonString());
+    private static void Answer(JsonObject body, string answer) => File.Copy(Path.Combine(Example, "answers", answer), body["answer"]!.GetValue<string>(), overwrite: true);
+
+    private static void Same(string what, JsonNode? ts, JsonNode? dotnet) =>
+        Assert.True(JsonNode.DeepEquals(ts, dotnet), $"{what} differs:\nTS     {ts?.ToJsonString()}\n.NET   {dotnet?.ToJsonString()}");
+
+    private static string Text(JsonObject body, string key) => body[key]!.GetValue<string>();
 
     [Fact]
-    public async Task CliRunsPlanReviewSpecProveAnsweringLlmStepsByHandoff()
+    public async Task CliRunsProposeReviewDeriveProveApplyAnsweringLlmStepsByHandoff()
     {
         var dir = Workspace();
-        Assert.Equal(0, (await DotNet(dir, "init", "--model", Path.Combine(dir, "model.json"))).Code);
-
-        var r = await DotNet(dir, "plan", Path.Combine(dir, "prose.md"));
-        Assert.Equal(3, r.Code);
-        Answer(r.Body, CoreTests.ExtractAnswer(LoginExample.Extract()));
-        r = await DotNet(dir, "plan", Path.Combine(dir, "prose.md"));
-        Assert.Equal(1, r.Code);
-
-        Assert.Equal("review-pending", (await DotNet(dir, "spec")).Body["status"]!.GetValue<string>());
-        await DotNet(dir, "review", "--as", "ana", "approve-all");
-        await DotNet(dir, "review", "--as", "ana", "amend", "I5", LoginExample.FixedI5);
-        await DotNet(dir, "review", "--as", "ana", "answer", "D1", "0");
-        await DotNet(dir, "review", "--as", "ana", "answer", "D2", "0");
-        Assert.Equal(0, (await DotNet(dir, "status")).Code);
-
-        r = await DotNet(dir, "spec");
-        Assert.Equal(3, r.Code);
-        var approved = Artifacts.Approve(LastroJson.Deserialize<IntentArtifact>(File.ReadAllText(Path.Combine(dir, ".lastro", "intents.json"))));
-        Answer(r.Body, CoreTests.DeriveAnswerFor(approved));
-        r = await DotNet(dir, "spec");
+        var lastro = Path.Combine(dir, ".lastro");
+        var r = await DotNet(dir, "init", "--model", Path.Combine(dir, "model.json"), "--subject", $"{Assembly}#Lastro.Tests.ShippingExample.Fee", "--approvals", "2");
         Assert.True(r.Code == 0, r.Body.ToJsonString());
 
-        var asm = typeof(LoginExample).Assembly.Location;
-        r = await DotNet(dir, "prove", asm, "--export", "Lastro.Tests.LoginExample.Reference");
+        r = await DotNet(dir, "propose", Path.Combine(dir, "prose.md"), "--as", "ana");
+        Assert.Equal(3, r.Code);
+        Assert.Equal("extract", Text(r.Body, "step"));
+        Answer(r.Body, "propose.json");
+        r = await DotNet(dir, "propose", Path.Combine(dir, "prose.md"), "--as", "ana");
+        Assert.True(r.Code == 1, r.Body.ToJsonString());
+        Assert.Equal("P-001", Text(r.Body["proposal"]!.AsObject(), "id"));
+        Assert.True(File.Exists(Path.Combine(lastro, "proposals", "P-001-shipping-fee.md")));
+
+        Assert.Equal("review-pending", Text((await DotNet(dir, "derive", "P-001")).Body, "status"));
+        await DotNet(dir, "review", "P-001", "--as", "ana", "answer", "D1", "1");
+        await DotNet(dir, "review", "P-001", "--as", "ana", "comment", "I-01", "Is 100 included?");
+        r = await DotNet(dir, "review", "P-001", "--as", "ana", "approve-all");
+        Assert.False(r.Body["proposal"]!["approved"]!.GetValue<bool>());
+        Assert.Contains(r.Body["pending"]!.AsArray(), x => x!.GetValue<string>().StartsWith("T1 open thread", StringComparison.Ordinal));
+        await DotNet(dir, "review", "P-001", "--as", "bruno", "reply", "T1", "Yes: 100 or more.");
+        await DotNet(dir, "review", "P-001", "--as", "ana", "resolve", "T1");
+        r = await DotNet(dir, "review", "P-001", "--as", "bruno", "approve-all");
+        Assert.True(r.Body["proposal"]!["approved"]!.GetValue<bool>(), r.Body.ToJsonString());
+        Assert.Equal("approved", Text(r.Body["proposal"]!.AsObject(), "status"));
+
+        r = await DotNet(dir, "derive", "P-001");
+        Assert.Equal(3, r.Code);
+        Assert.Equal("derive", Text(r.Body, "step"));
+        Answer(r.Body, "proofs.json");
+        r = await DotNet(dir, "derive", "P-001");
         Assert.True(r.Code == 0, r.Body.ToJsonString());
-        r = await DotNet(dir, "prove", asm, "--export", "Lastro.Tests.LoginExample.SkipPassword");
+        Assert.Equal("proving", Text(r.Body["proposal"]!.AsObject(), "status"));
+
+        r = await DotNet(dir, "prove", "P-001", Assembly, "--export", "Lastro.Tests.ShippingExample.BuggyFee");
+        Assert.True(r.Code == 1, r.Body.ToJsonString());
+        Assert.Contains("counterexample", Text(r.Body, "feedback"));
+        Assert.Equal(1, (await DotNet(dir, "feedback", "P-001")).Code);
+        Assert.Equal(1, (await DotNet(dir, "apply", "P-001")).Code);
+
+        // The subject declared at init.
+        r = await DotNet(dir, "prove", "P-001");
+        Assert.True(r.Code == 0, r.Body.ToJsonString());
+        var runs = File.ReadAllLines(Path.Combine(lastro, "proposals", "P-001-shipping-fee.runs.jsonl")).Select(l => JsonNode.Parse(l)!).ToList();
+        Assert.Equal([1, 2], runs.Select(x => x["run"]!.GetValue<int>()));
+        Assert.Equal([false, true], runs.Select(x => x["ok"]!.GetValue<bool>()));
+        Assert.Contains("Every proof passes", Text((await DotNet(dir, "feedback", "P-001")).Body, "feedback"));
+
+        r = await DotNet(dir, "apply", "P-001");
+        Assert.True(r.Code == 0, r.Body.ToJsonString());
+        var useCase = LastroJson.Deserialize<UseCase>(File.ReadAllText(Path.Combine(lastro, "usecases", "UC-001-charge-shipping.json")));
+        Assert.Equal(["P-001"], useCase.History);
+        Assert.NotEmpty(useCase.Proofs);
+        Assert.Contains("➕ UC-001", File.ReadAllText(Path.Combine(lastro, "proposals", "P-001-shipping-fee.receipt.md")));
+
+        Assert.Equal(0, (await DotNet(dir, "regress")).Code);
+        r = await DotNet(dir, "regress", Assembly, "--export", "Lastro.Tests.ShippingExample.BuggyFee");
         Assert.Equal(1, r.Code);
-        Assert.Contains("counterexample", r.Body["feedback"]!.GetValue<string>());
-        Assert.Equal(1, (await DotNet(dir, "feedback")).Code);
-        Assert.True(File.Exists(Path.Combine(dir, ".lastro", "receipt.md")));
+        Assert.Equal("regressions", Text(r.Body, "status"));
+        r = await DotNet(dir, "status");
+        Assert.Equal(0, r.Code);
+        Assert.Equal(1, r.Body["useCases"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public async Task OldWorkspacesAndCommandsAreRefused()
+    {
+        var dir = Workspace();
+        Assert.Equal(2, (await DotNet(dir, "plan", Path.Combine(dir, "prose.md"))).Code);
+        await DotNet(dir, "init", "--model", Path.Combine(dir, "model.json"));
+        File.WriteAllText(Path.Combine(dir, ".lastro", "intents.json"), "{}");
+        var r = await DotNet(dir, "status");
+        Assert.Equal(2, r.Code);
+        Assert.Equal(["intents.json"], r.Body["legacy"]!.AsArray().Select(x => x!.GetValue<string>()));
     }
 
     [SkippableFact]
@@ -207,67 +260,81 @@ public class InteropTests
     {
         Require(TsBuilt, TsMissing);
         var dir = Workspace();
+        var lastro = Path.Combine(dir, ".lastro");
 
-        // .NET starts the workspace and asks for the extraction.
-        Assert.Equal(0, (await DotNet(dir, "init", "--model", Path.Combine(dir, "model.json"), "--approvals", "2")).Code);
-        var r = await DotNet(dir, "plan", Path.Combine(dir, "prose.md"));
-        Assert.Equal(3, r.Code);
-        Answer(r.Body, CoreTests.ExtractAnswer(LoginExample.Extract()));
+        Assert.Equal(0, Node(dir, "init", "--model", Path.Combine(dir, "model.json"), "--subject", "./shipping.mjs").Code);
+        Same("init", Node(dir, "init", "--model", Path.Combine(dir, "model.json")).Body, (await DotNet(dir, "init", "--model", Path.Combine(dir, "model.json"))).Body);
 
-        // TypeScript picks up the same handoff answer (same request id) and plans.
-        var n = Node(dir, "plan", Path.Combine(dir, "prose.md"));
-        Assert.True(n.Code == 1, n.Body.ToJsonString());
-        Assert.Equal(9, n.Body["intents"]!.AsArray().Count);
-
-        // Two reviewers, one per SDK, under the policy of two approvals.
-        await DotNet(dir, "review", "--as", "ana", "approve-all");
-        await DotNet(dir, "review", "--as", "ana", "amend", "I5", LoginExample.FixedI5);
-        await DotNet(dir, "review", "--as", "ana", "answer", "D1", "0");
-        await DotNet(dir, "review", "--as", "ana", "answer", "D2", "0");
-        Assert.Equal(1, Node(dir, "status").Code);
-        Assert.Equal(0, Node(dir, "review", "--as", "bruno", "approve-all").Code);
-        Assert.Equal(0, (await DotNet(dir, "status")).Code);
-
-        // TypeScript derives the spec (handoff answered by the .NET test), .NET proves against it.
-        n = Node(dir, "spec");
+        // Both CLIs ask the very same extract question (same request id, so one answer serves both).
+        var n = Node(dir, "propose", Path.Combine(dir, "prose.md"), "--as", "ana");
         Assert.Equal(3, n.Code);
-        var approved = Artifacts.Approve(LastroJson.Deserialize<IntentArtifact>(File.ReadAllText(Path.Combine(dir, ".lastro", "intents.json"))));
-        Assert.Equal(new LlmRequest("derive", LlmPrompts.DeriveSystem, LlmPrompts.DeriveUserPrompt(approved, LoginExample.Model), LlmPrompts.DeriveSchema).Id,
-            Path.GetFileName(n.Body["answer"]!.GetValue<string>()).Replace(".answer.json", ""));
-        Answer(n.Body, CoreTests.DeriveAnswerFor(approved));
-        n = Node(dir, "spec");
-        Assert.True(n.Code == 0, n.Body.ToJsonString());
-        Assert.Equal(approved.Hash, n.Body["artifactHash"]!.GetValue<string>());
+        Same("the propose handoff", n.Body, (await DotNet(dir, "propose", Path.Combine(dir, "prose.md"), "--as", "ana")).Body);
+        Answer(n.Body, "propose.json");
+        Assert.Equal(1, Node(dir, "propose", Path.Combine(dir, "prose.md"), "--as", "ana").Code);
+        Same("status of a TS proposal", Node(dir, "status", "P-001").Body, (await DotNet(dir, "status", "P-001")).Body);
 
-        r = await DotNet(dir, "prove", typeof(LoginExample).Assembly.Location, "--export", "Lastro.Tests.LoginExample.SkipPassword");
+        // .NET reviews what TypeScript proposed; TypeScript sees the approval as valid (same hash).
+        await DotNet(dir, "review", "P-001", "--as", "ana", "answer", "D1", "1");
+        Assert.True((await DotNet(dir, "review", "P-001", "--as", "ana", "approve-all")).Body["proposal"]!["approved"]!.GetValue<bool>());
+        var ts = Node(dir, "status", "P-001").Body;
+        Same("status of a .NET-approved proposal", ts, (await DotNet(dir, "status", "P-001")).Body);
+        Assert.Equal("approved", Text(ts["proposal"]!.AsObject(), "status"));
+
+        // Both ask the same derive question; TypeScript derives, .NET proves.
+        n = Node(dir, "derive", "P-001");
+        Same("the derive handoff", n.Body, (await DotNet(dir, "derive", "P-001")).Body);
+        Answer(n.Body, "proofs.json");
+        Assert.Equal(0, Node(dir, "derive", "P-001").Code);
+        var file = Path.Combine(lastro, "proposals", "P-001-shipping-fee.json");
+        Assert.Equal(File.ReadAllText(file), JsJson.Stringify(LastroJson.ToNode(LastroJson.Deserialize<Proposal>(File.ReadAllText(file))), 2) + "\n");
+
+        var receipt = Path.Combine(lastro, "proposals", "P-001-shipping-fee.receipt.md");
+        static string NoEngines(string s) => Regex.Replace(s, " Engines agree: \\w+\\.", "");
+        static JsonObject Comparable(JsonObject body)
+        {
+            var c = (JsonObject)body.DeepClone();
+            c.Remove("enginesAgree");
+            c.Remove("receipt");
+            return c;
+        }
+        n = Node(dir, "prove", "P-001", Path.Combine(dir, "shipping-buggy.mjs"));
+        Assert.Equal(1, n.Code);
+        var tsReceipt = File.ReadAllText(receipt);
+        var r = await DotNet(dir, "prove", "P-001", Assembly, "--export", "Lastro.Tests.ShippingExample.BuggyFee");
         Assert.Equal(1, r.Code);
-        var feedback = Node(dir, "feedback");
-        Assert.Equal(1, feedback.Code);
-        Assert.Equal(r.Body["feedback"]!.GetValue<string>(), feedback.Body["feedback"]!.GetValue<string>());
+        Same("prove (failing)", Comparable(n.Body), Comparable(r.Body));
+        Assert.Equal(NoEngines(tsReceipt), NoEngines(File.ReadAllText(receipt)));
+        Same("feedback", Node(dir, "feedback", "P-001").Body, (await DotNet(dir, "feedback", "P-001")).Body);
 
-        // prove --stream: both CLIs print the same events for the same bug (progress counts and the Rust check aside).
+        // prove --stream: the same events (progress and crosscheck aside: they depend on the subject and the provers found).
         var events = new List<JsonObject>();
-        var streamed = await Cli.Cli.RunAsync(["prove", "--stream", typeof(LoginExample).Assembly.Location, "--export", "Lastro.Tests.LoginExample.SkipPassword",
-            "--dir", Path.Combine(dir, ".lastro")], events.Add);
+        var streamed = await Cli.Cli.RunAsync(["prove", "P-001", Assembly, "--export", "Lastro.Tests.ShippingExample.BuggyFee", "--stream", "--dir", lastro], events.Add);
         Assert.Equal(1, streamed.Code);
-        var dotnetResult = new JsonObject { ["event"] = "result" };
-        foreach (var (k, v) in streamed.Body) dotnetResult[k] = v?.DeepClone();
-        events.Add(dotnetResult);
-        var login = Path.Combine(RepoRoot, "sdks/typescript/dist/examples/login/login.js");
-        File.WriteAllText(Path.Combine(dir, "impl.mjs"), $"import {{ makeLogin }} from {JsonValue.Create(login).ToJsonString()};\nexport const buggy = makeLogin(\"skip-password\");\n");
-        var (code, stdout, stderr) = Run("node", [Path.Combine(RepoRoot, "sdks/typescript/dist/src/cli.js"), "prove", Path.Combine(dir, "impl.mjs"), "--export", "buggy", "--stream", "--dir", Path.Combine(dir, ".lastro")]);
+        events.Add(With(new JsonObject { ["event"] = "result" }, streamed.Body));
+        var (code, stdout, stderr) = Run("node", [Path.Combine(RepoRoot, "sdks/typescript/dist/src/cli.js"), "prove", "P-001", Path.Combine(dir, "shipping-buggy.mjs"), "--stream", "--dir", lastro], dir);
         Assert.True(code == 1, stderr);
-        static List<string> Comparable(IEnumerable<JsonObject> evs) => evs
+        static List<string> Events(IEnumerable<JsonObject> evs) => evs
             .Where(e => e["event"]!.GetValue<string>() is not ("progress" or "crosscheck"))
-            .Select(e =>
-            {
-                var c = (JsonObject)e.DeepClone();
-                if (c["event"]!.GetValue<string>() == "result") c.Remove("enginesAgree");
-                return JsJson.Stringify(c);
-            })
+            .Select(e => JsJson.Stringify(Comparable(e)))
             .ToList();
-        var ts = Comparable(stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(l => (JsonObject)JsonNode.Parse(l)!));
-        Assert.StartsWith("{\"event\":\"start\",\"model\":\"login_flow\"", ts[0]);
-        Assert.Equal(ts, Comparable(events));
+        var tsEvents = Events(stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(l => (JsonObject)JsonNode.Parse(l)!));
+        Assert.StartsWith("{\"event\":\"start\",\"proposal\":\"P-001\"", tsEvents[0]);
+        Assert.Equal(tsEvents, Events(events));
+
+        // .NET proves the fixed code; TypeScript applies what .NET proved.
+        r = await DotNet(dir, "prove", "P-001", Assembly, "--export", "Lastro.Tests.ShippingExample.Fee");
+        Assert.True(r.Code == 0, r.Body.ToJsonString());
+        n = Node(dir, "apply", "P-001");
+        Assert.True(n.Code == 0, n.Body.ToJsonString());
+        var uc = Path.Combine(lastro, "usecases", "UC-001-charge-shipping.json");
+        Assert.Equal(File.ReadAllText(uc), JsJson.Stringify(LastroJson.ToNode(LastroJson.Deserialize<UseCase>(File.ReadAllText(uc))), 2) + "\n");
+        Same("status after apply", Node(dir, "status").Body, (await DotNet(dir, "status")).Body);
+        Same("regress", Comparable(Node(dir, "regress", Path.Combine(dir, "shipping.mjs")).Body), Comparable((await DotNet(dir, "regress", Assembly, "--export", "Lastro.Tests.ShippingExample.Fee")).Body));
+    }
+
+    private static JsonObject With(JsonObject head, JsonObject tail)
+    {
+        foreach (var (k, v) in tail) head[k] = v?.DeepClone();
+        return head;
     }
 }

@@ -1,0 +1,8 @@
+{
+  "id": "UC-040",
+  "slug": "review-intents-like-a-pull-request",
+  "name": "Review an agent's proposal like a pull request",
+  "description": "The plugin's propose skill has the agent write the change as prose in .lastro/proposals/<slug>.md, run lastro plan (answering handoffs itself), then ask the user every open decision and, per intent, approve, request changes (amend) or reject, recording only the user's answers with lastro review --as <user>, until lastro status is ready; then lastro spec derives the proofs into the repository's .lastro/. The PreToolUse hook makes every lastro review command that approves, answers, amends or rejects show a Claude Code permission prompt, and denies it in both harnesses when --as names an agent (claude, codex, agent, assistant, ai, bot). With a policy above one approval the board shows each intent's approvals out of the required number and the proposal waits for the other reviewers.",
+  "proofs": [],
+  "history": []
+}

@@ -53,6 +53,11 @@ own model (`--llm handoff`), so it works from any harness without an API key. Th
 `lastro-go`) is a port of the same pipeline with the same hashes and `.lastro/` files; its tests run the TS SDK
 and require identical reports, so either SDK can pick up a workspace the other started.
 
+**Agent plugins.** `plugins/lastro` is one plugin for Claude Code and Codex over the CLI. In a repository with
+`.lastro/plugin.json`, the agent's proposal becomes intents the user reviews like a pull request (the agent is the
+author and never approves); code edits wait until the intents are approved and the spec matches the review; and when
+the agent stops, a hook proves the code and returns failing proofs to it. The plugin holds no semantics of its own.
+
 ## 3. Proved vs confidence: verdict semantics
 
 | Verdict | When | Label |
@@ -102,7 +107,10 @@ planted bug.
 
 `apps/sandbox` is the review surface. It has three parts:
 
-- **Prose**: the text with the intent map highlighted, intent cards (approve, amend, reject) and decision cards.
+- **Pipeline and feedback** (top): the stages from the PDD flow, and one banner saying what Lastro needs next and
+  from whom (the team's review, a contradiction, or failures with counterexamples for whoever writes the code).
+- **Prose**: the text with the intent map highlighted, and intent cards (approve, amend, reject) with each decision
+  card shown under the intents it affects that still wait for approval.
   The text is editable: Claude re-extracts intents, `carryReview()` keeps the reviewer's verdicts for intents that
   did not change, and once the review is done Claude derives a new plan, which runs against the current code.
 - **Code**: the implementation, editable, with one-click planted bugs shown as a diff, and the feedback the proofs

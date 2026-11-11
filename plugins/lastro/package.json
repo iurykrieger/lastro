@@ -1,0 +1,10 @@
+{
+  "name": "@lastro/plugin",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The Lastro plugin for Claude Code and Codex: hooks, skills and the progress board.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

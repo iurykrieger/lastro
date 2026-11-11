@@ -263,12 +263,16 @@ Everything the framework generates or keeps lives in `.lastro/` (or the folder g
 .lastro/
   config.json                         models, subjects and the review policy
   usecases/<id>-<slug>.json           the application: one file per use case, with its regression proofs
+  proposals/<id>-<slug>.md            the proposal's prose, written by a person or by an agent through the plugin
   proposals/<id>-<slug>.json          one file per proposal: prose, intents, review, proofs
   proposals/<id>-<slug>.receipt.md    the proposal's last receipt
   llm/                                handoff requests and answers
 ```
 
-`intents.json`, `spec.json` and `proof.json` go away: their content now lives in the proposal. `apply` rewrites
+`intents.json`, `spec.json` and `proof.json` go away: their content now lives in the proposal. The agent plugin
+(`plugins/lastro`) and the live board (`plugins/lastro-board`) follow: the gate, the review skill, the stop hook and
+both boards read the current proposal and the use cases instead of those files, and an agent's plan is saved as the
+prose of a new proposal. `apply` rewrites
 `.lastro/usecases/`. No framework file is written outside the workspace folder.
 
 ## CLI

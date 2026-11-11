@@ -25,6 +25,14 @@ jobs:
         run: npm run wasm
       - name: SDK tests
         run: npm test -w lastro
+      - name: Plugin tests (Claude Code and Codex hooks, through the real CLI)
+        run: npm test -w @lastro/plugin
+      - name: Claude Code plugin checks (manifests, the lastro-board mod's tests)
+        run: |
+          npx -y @anthropic-ai/claude-code@2.1.322 plugin validate .
+          npx -y @anthropic-ai/claude-code@2.1.322 plugin validate plugins/lastro
+          npx -y @anthropic-ai/claude-code@2.1.322 plugin validate plugins/lastro-board
+          npx -y @anthropic-ai/claude-code@2.1.322 plugin test plugins/lastro-board
       - uses: actions/setup-go@v5
         with:
           go-version-file: sdks/go/go.mod
@@ -39,6 +47,10 @@ jobs:
           go test ./...
       - name: Sandbox build
         run: npm run build -w @lastro/sandbox
+      - name: Install Playwright browser
+        run: npx -w @lastro/sandbox playwright install --with-deps chromium
+      - name: Sandbox UI tests
+        run: npm run test:e2e -w @lastro/sandbox
   dotnet:
     runs-on: ubuntu-latest
     env:

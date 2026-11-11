@@ -24,8 +24,9 @@ public static class Cli
           review --as <name> <action> ...               approve <I1 I2..> | approve-all | amend <I> <text>
                                                         reject <I> <note> | answer <D> <option-index>
           spec                                          derive the formal spec; contradictions come back as decisions
-          prove <assembly.dll> --export <Namespace.Type.Method> [--traces file.json]
-                                                        check the code against the spec; writes proof.json, receipt.md
+          prove <assembly.dll> --export <Namespace.Type.Method> [--traces file.json] [--stream]
+                                                        check the code against the spec; writes proof.json, receipt.md;
+                                                        --stream prints one JSON line per event, as the TS CLI does
           feedback                                      the last proof's failures, as a brief for whoever writes the code
 
           --dir <path>          workspace (default .lastro)
@@ -38,6 +39,15 @@ public static class Cli
         public JsonObject Body { get; } = body;
     }
 
+    /// <summary>Flags that never take a value.</summary>
+    private static readonly HashSet<string> BooleanFlags = new(StringComparer.Ordinal) { "stream" };
+
+    /// <summary>One <c>prove --stream</c> progress event every this many runs of the code, as in the TS CLI.</summary>
+    public const int StreamProgressEvery = 100;
+
+    /// <summary>True when <c>--stream</c> is on the command line.</summary>
+    public static bool IsStreaming(string[] argv) => Parse(argv).Flags.ContainsKey("stream");
+
     private sealed record Args(List<string> Positional, Dictionary<string, string> Flags);
 
     private static Args Parse(string[] argv)
@@ -49,7 +59,7 @@ public static class Cli
             if (a.StartsWith("--", StringComparison.Ordinal))
             {
                 var k = a[2..];
-                if (i + 1 >= argv.Length || argv[i + 1].StartsWith("--", StringComparison.Ordinal)) args.Flags[k] = "true";
+                if (i + 1 >= argv.Length || argv[i + 1].StartsWith("--", StringComparison.Ordinal) || BooleanFlags.Contains(k)) args.Flags[k] = "true";
                 else args.Flags[k] = argv[++i];
             }
             else args.Positional.Add(a);
@@ -127,7 +137,9 @@ public static class Cli
         return head;
     }
 
-    public static async Task<(int Code, JsonObject Body)> RunAsync(string[] argv)
+    /// <param name="emit">Receives the <c>prove --stream</c> events (start, progress, clause, scenario, crosscheck) in the
+    /// TS CLI's order and shape; the caller prints the closing <c>{"event":"result",...}</c>.</param>
+    public static async Task<(int Code, JsonObject Body)> RunAsync(string[] argv, Action<JsonObject>? emit = null)
     {
         var args = Parse(argv);
         var cmd = args.Positional.FirstOrDefault();
@@ -228,8 +240,33 @@ public static class Cli
                     var spec = ReadJson<Spec>(F("spec.json"));
                     var subject = LoadSubject(Path.GetFullPath(rest[0]), args.Flags.GetValueOrDefault("export"));
                     var traces = args.Flags.TryGetValue("traces", out var tp) ? ReadJson<List<Trace>>(Path.GetFullPath(tp)) : [];
+                    var stream = args.Flags.ContainsKey("stream") ? emit : null;
+                    if (stream is not null)
+                    {
+                        var inner = subject;
+                        var runs = 0;
+                        subject = input =>
+                        {
+                            if (++runs % StreamProgressEvery == 0) stream(Obj(("event", "progress"), ("runs", runs)));
+                            return inner(input);
+                        };
+                        stream(Obj(("event", "start"), ("model", spec.Plan.Model.Name), ("clauses", LastroJson.ToNode(spec.Plan.Clauses.Select(c => c.Id).ToList())),
+                            ("scenarios", LastroJson.ToNode(spec.Plan.Scenarios.Select(x => x.Id).ToList()))));
+                    }
                     var lastro = new LastroClient(new LastroOptions { Model = cfg.Model, RequiredApprovals = cfg.RequiredApprovals, Rust = RustProver.Locate() });
                     var proof = await lastro.ProveAsync(spec, subject, traces).ConfigureAwait(false);
+                    if (stream is not null)
+                    {
+                        foreach (var r in proof.Report.Clauses)
+                        {
+                            var clause = spec.Plan.Clauses.First(c => c.Id == r.ClauseId);
+                            var ev = Obj(("event", "clause"), ("clauseId", r.ClauseId), ("intentIds", LastroJson.ToNode(clause.IntentIds)), ("verdict", LastroJson.ToNode(r.Verdict)), ("evidence", LastroJson.ToNode(r.Evidence)));
+                            if (r.Counterexample is { } cx) ev["counterexample"] = LastroJson.ToNode(cx);
+                            stream(ev);
+                        }
+                        foreach (var r in proof.Report.Scenarios) stream(Obj(("event", "scenario"), ("scenarioId", r.ScenarioId), ("status", LastroJson.ToNode(r.Status))));
+                        if (proof.EnginesAgree is { } agree) stream(Obj(("event", "crosscheck"), ("enginesAgree", agree)));
+                    }
                     WriteJson(F("proof.json"), proof);
                     File.WriteAllText(F("receipt.md"), proof.Receipt + "\n");
                     return (proof.Ok ? 0 : 1, Obj(("status", proof.Ok ? "proved" : "not-proved"), ("ok", proof.Ok), ("enginesAgree", proof.EnginesAgree is { } ea ? JsonValue.Create(ea) : null),
@@ -303,8 +340,15 @@ public static class Program
 {
     public static async Task<int> Main(string[] argv)
     {
-        var (code, body) = await Cli.RunAsync(argv).ConfigureAwait(false);
-        Console.Out.Write(JsJson.Stringify(body, indent: 2) + "\n");
+        var streaming = Cli.IsStreaming(argv);
+        var (code, body) = await Cli.RunAsync(argv, e => Console.Out.Write(JsJson.Stringify(e) + "\n")).ConfigureAwait(false);
+        if (streaming)
+        {
+            var result = new JsonObject { ["event"] = "result" };
+            foreach (var (k, v) in body) result[k] = v?.DeepClone();
+            Console.Out.Write(JsJson.Stringify(result) + "\n");
+        }
+        else Console.Out.Write(JsJson.Stringify(body, indent: 2) + "\n");
         return code;
     }
 }

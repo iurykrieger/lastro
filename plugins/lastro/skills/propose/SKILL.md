@@ -30,8 +30,10 @@ Run `<cli> plan .lastro/proposals/<slug>.md`.
 
 ## 3. The review (the user's, like a pull request)
 
-Present the proposal as a pull request for review: a one-line summary, then every intent with its id, statement and
-the quote it came from. Then:
+Present the proposal as a pull request for review. After each `lastro` command the plugin hands you the review as
+Markdown (also printed by `node "${CLAUDE_PLUGIN_ROOT}/scripts/lastro-plugin.mjs" review`): show it to the user exactly
+as written. It puts every decision and every intent on its own list item, grouped, with the quote each came from; never
+retype it as bare lines, which chat apps join into one paragraph. Then:
 
 - **Decisions first.** Each open decision is a review question. Ask it with its options and the recommended one
   first (Claude Code: the `AskUserQuestion` tool, one question per decision; Codex: ask in the chat and wait).

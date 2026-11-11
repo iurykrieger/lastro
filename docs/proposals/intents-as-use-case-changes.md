@@ -66,11 +66,11 @@ meets the team's review policy, and the change request is approved when every in
 and every decision is answered. Approval is what gates everything downstream:
 
 - Only approved intents are sent to proof derivation. Proposed, amended-but-unapproved and rejected intents never are.
-- Only approved intents are handed to whoever implements the change (an agent or a person). A new
-  `brief()` (library) and `lastro brief` (CLI) render the approved changes (use case, before and after) as the
-  implementation brief; failing proofs keep coming back through `feedback`.
+- The approved intents are the brief for whoever implements the change (an agent or a person): there is no
+  separate brief artifact. The implementer reads the approved intents (use case, before and after) from the
+  approved artifact; failing proofs keep coming back through `feedback`.
 - Changing an approved intent (amend, reject, a new extraction) withdraws the approval of the change request,
-  so derivation, the brief and `apply` refuse until it is approved again.
+  so derivation and `apply` refuse until it is approved again.
 
 ## Where files live
 

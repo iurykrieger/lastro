@@ -58,7 +58,7 @@ interface UseCaseChange {
 interface IntentArtifact {
   lastro: "intent-artifact/v1";
   baseline: string;                   // hash of the canonical catalog the prose was read against
-  author: string;                     // who submitted the prose
+  submittedBy: string;                // who wrote the prose (the intents' author is the extractor)
   prose: string;
   intents: Intent[];
   useCases: UseCaseChange[];          // one entry per touched use case
@@ -66,6 +66,11 @@ interface IntentArtifact {
   notPromised: string[];
   policy?: ReviewPolicy;
   hash?: string;
+}
+
+interface ReviewPolicy {
+  approvals: number;                  // reviewers each intent needs (default 1)
+  submitterCanApprove: boolean;       // default true; false for teams that want a second person
 }
 ```
 
@@ -110,19 +115,22 @@ change in it that gets resolved like a review comment.
 
 | Pull request today | Change request in Lastro |
 |---|---|
-| Author opens a PR with a description | An author submits prose; extraction turns it into the change request's intents. The author is recorded on the artifact. |
+| Author opens a PR with a description | Someone submits prose; extraction turns it into the change request's intents. The extractor (the LLM) is the author of the intents, and the person who wrote the prose is recorded as the submitter. |
 | Diff per file | Diff per use case: before and after, with the intents that produce it. |
-| Line comment, starting a thread | A comment on one intent (or on the prose), starting a thread. Threads are resolved by the author or the commenter. |
+| Line comment, starting a thread | A comment on one intent (or on the prose), starting a thread. Threads are resolved by the commenter or the submitter. |
 | Suggested change | An amended statement (the current `amend`), which recombines the use case's `after`. |
 | Resolving every comment | Every intent ends approved, amended or rejected; only non-rejected intents go forward. |
-| Author pushes new commits | The author edits the prose and extracts again. Intents that changed lose their approvals (stale review dismissed); untouched intents keep them. |
-| Required approvals, no self-approval | The team's policy: N distinct reviewers per intent, never the author. |
+| Author pushes new commits | The prose is edited and extracted again. Intents that changed lose their approvals (stale review dismissed); untouched intents keep them. |
+| Required approvals, branch protection | The repository's policy in `.lastro/config.json`: N distinct reviewers per intent, and whether the submitter counts as one. |
 | Unresolved conversations block the merge | Open threads, unresolved intents and unanswered decisions block approval. |
 | Approved, then merged | Approved (proofs can be derived and the implementer works from the approved intents), then applied to the catalog once every proof passes. |
 | PR status | `open`, `changes-requested`, `approved`, `applied`, `closed`. |
 
-The author is whoever submitted the prose. That person never counts as an approver of any intent in the change
-request, including intents another reviewer amended.
+The intents are what the LLM understood from the prose, so the LLM is their author and every person is a
+reviewer, including whoever wrote the prose. By default the submitter can approve and amend the intents and go
+on to the implementation, the way a pull request author can adjust everything and still merge when branch
+protection allows it. A repository that wants a second pair of eyes sets `submitterCanApprove: false` in the
+review policy in `.lastro/config.json`; the submitter's approvals then do not count toward `approvals`.
 
 Everything stays in the artifact in `.lastro/`, so the review works the same from the library, any of the CLIs
 (`lastro review --as ana comment I3 "..."`, `approve I3`, `amend I3 "..."`, `reject I3`, `resolve`), an agent or
@@ -164,7 +172,7 @@ Everything the framework generates or keeps lives in `.lastro/` (or the folder g
 .lastro/
   use-cases.json     the catalog: the baseline, versioned with the code
   specs/<slug>.json  the clauses of each use case, versioned with the code
-  config.json        model and review policy
+  config.json        model and review policy (approvals, submitterCanApprove)
   intents.json       the current change request's intents and their review
   spec.json          the clauses derived for the current change request
   proof.json         the last verification
@@ -179,8 +187,8 @@ workspace folder.
 
 | Step | Today | Proposed |
 |---|---|---|
-| Extract | `plan(prose)` | `plan(prose, catalog, author)`. The prompt gets the catalog and must return intents and one `UseCaseChange` per touched use case. Deterministic checks: `modify`/`remove` name an existing slug; `add` uses a new kebab-case slug; `after` is present for add/modify; change kinds on one slug are compatible; quotes are anchored as today. `before` is filled from the catalog. |
-| Review | approve / amend / reject statements | Same actions per intent, by reviewers other than the author. Rejecting or amending recombines the use case's `after`. |
+| Extract | `plan(prose)` | `plan(prose, catalog, submittedBy)`. The prompt gets the catalog and must return intents and one `UseCaseChange` per touched use case. Deterministic checks: `modify`/`remove` name an existing slug; `add` uses a new kebab-case slug; `after` is present for add/modify; change kinds on one slug are compatible; quotes are anchored as today. `before` is filled from the catalog. |
+| Review | approve / amend / reject statements | Same actions per intent; the policy decides whether the submitter's approval counts. Rejecting or amending recombines the use case's `after`. |
 | Approve | `approve()` (formerly `freeze()`) hashes the reviewed artifact | Every intent resolved and every decision answered. The hash also binds `baseline`: if the catalog changed since extraction, the approval is stale and the prose must be extracted again. |
 | Derive | clauses from the approved intents | Clauses for the `after` state of each touched use case; a removal clause (or a decision) for each `remove`. |
 | Prove | the change's clauses | The change's clauses plus the kept clauses of every untouched use case. |
@@ -202,13 +210,14 @@ Answered by Iury on 2026-11-11:
 4. **Where proofs live:** per use case, persistent; every change re-proves the whole catalog.
 5. **Approval scope:** per intent. The change request is approved when every intent is approved, amended or
    rejected and every decision is answered; only non-rejected intents go forward.
-6. **Who is the author:** whoever submitted the prose, who never approves any intent of the change request.
+6. **Who is the author:** the LLM that extracted the intents; the person who wrote the prose is a reviewer. Whether
+   the submitter's approval counts is a per-repository policy in `.lastro/config.json`, and by default it does.
 
 ## Cost
 
 A semantic change in all three SDKs (TypeScript, .NET, Go): data model, extraction prompt and schema (and
-`go generate`), the recombination step, artifact checks, review with authors, carry-over, persistent specs,
-receipt and CLI (`plan --catalog`, `review`, `apply`), with the cross-check tests and the sandbox example updated
+`go generate`), the recombination step, artifact checks, review with the submitter policy, carry-over, persistent specs,
+receipt, the review policy in `.lastro/config.json`, and CLI (`plan --catalog`, `review`, `apply`), with the cross-check tests and the sandbox example updated
 to the new format. The Rust prover does not change: it only sees models, clauses and tables.
 
 Persistent specs need a one-time bootstrap: deriving and reviewing clauses for the 38 use cases already in the

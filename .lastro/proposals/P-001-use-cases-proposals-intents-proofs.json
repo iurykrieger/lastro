@@ -1115,7 +1115,9 @@
       "intents": [
         "P-001.I-32",
         "P-001.I-34"
-      ]
+      ],
+      "chosen": 0,
+      "answeredBy": "iury"
     },
     {
       "id": "D2",

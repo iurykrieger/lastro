@@ -49,7 +49,9 @@ records the decision, and that intent goes through review like any other before 
 
 **Interfaces.** The library (`createLastro`) and the CLI (`lastro plan | review | spec | prove | feedback`) are
 the same pipeline. The CLI keeps state as JSON in `.lastro/` and can hand the two AI steps to the calling agent's
-own model (`--llm handoff`), so it works from any harness without an API key.
+own model (`--llm handoff`), so it works from any harness without an API key. The Go SDK (`sdks/go`, CLI
+`lastro-go`) is a port of the same pipeline with the same hashes and `.lastro/` files; its tests run the TS SDK
+and require identical reports, so either SDK can pick up a workspace the other started.
 
 ## 3. Proved vs confidence: verdict semantics
 

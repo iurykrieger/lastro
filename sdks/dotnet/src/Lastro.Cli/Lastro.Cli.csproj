@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Lastro.Cli</AssemblyName>
+    <RootNamespace>Lastro.Cli</RootNamespace>
+    <PackageId>Lastro.Cli</PackageId>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>lastro</ToolCommandName>
+    <Description>The lastro command line on .NET: the same commands and .lastro/ workspace as the TypeScript CLI.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lastro\Lastro.csproj" />
+    <ProjectReference Include="..\Lastro.Claude\Lastro.Claude.csproj" />
+  </ItemGroup>
+</Project>

@@ -48,7 +48,7 @@ process.stdout.write(JSON.stringify({
 `
 
 type tsOut struct {
-	Approved   lastro.IntentArtifact      `json:"approved"`
+	Approved lastro.IntentArtifact      `json:"approved"`
 	Plan     lastro.ProofPlan           `json:"plan"`
 	PlanHash string                     `json:"planHash"`
 	Reports  map[string]json.RawMessage `json:"reports"`

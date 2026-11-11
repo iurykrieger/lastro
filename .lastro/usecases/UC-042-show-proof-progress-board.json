@@ -2,7 +2,9 @@
   "id": "UC-042",
   "slug": "show-proof-progress-board",
   "name": "Show the proposal's progress board",
-  "description": "The plugin renders, from the CLI's status output and the files in .lastro/, a board with the stages (intents extracted, decisions answered, intents approved per the policy, proofs derived, verification) the intents grouped by kind while the review is open, and one line per proof: ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, ○ pending, plus the beyond-proof intents and the next step; lines longer than 100 columns wrap under their text. It is shown to the user after every lastro command and on every stop, added to the agent's context on session start and on each prompt, and printed by lastro-plugin.mjs board (or one line with --line, for a status line); lastro-plugin.mjs prove builds, proves and prints it.",
+  "description": "The plugin renders, from the CLI's status output and the files in .lastro/, a board for the current proposal with the stages (intents extracted, decisions answered, intents approved per the policy, proofs derived, verification), the existing proofs its intents replace, any regression in other use cases, and one line per proof: ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, ○ pending, plus the beyond-proof intents and the next step. It is shown to the user after every lastro command and on every stop, added to the agent's context on session start and on each prompt, and printed by lastro-plugin.mjs board (or one line with --line, for a status line); lastro-plugin.mjs prove builds, proves and prints it.",
   "proofs": [],
-  "history": []
+  "history": [
+    "P-001"
+  ]
 }

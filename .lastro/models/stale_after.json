@@ -1,0 +1,21 @@
+{
+  "name": "stale_after",
+  "inputs": {
+    "action": {
+      "type": "enum",
+      "values": [
+        "approve",
+        "amend",
+        "reject"
+      ]
+    },
+    "sibling": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "stale": {
+      "type": "bool"
+    }
+  }
+}

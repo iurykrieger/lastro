@@ -2,7 +2,9 @@
   "id": "UC-044",
   "slug": "capture-plan-as-proposal",
   "name": "Turn an agent's plan into a proposal",
-  "description": "When Claude Code leaves plan mode (ExitPlanMode), the plugin's PostToolUse hook saves the approved plan as .lastro/proposals/<slug>.md, the slug taken from its first heading and never overwriting an earlier proposal, and tells the agent to rewrite it as behavior, run lastro plan on it and start the user's review before editing source. After Codex's update_plan it adds the same reminder. Plans made any other way are caught by the gate on the first source edit.",
+  "description": "When Claude Code leaves plan mode (ExitPlanMode), the plugin's PostToolUse hook saves the approved plan as the prose of a new proposal, .lastro/proposals/<id>-<slug>.md with the next proposal id and the slug taken from its first heading, and tells the agent to rewrite it as behavior, run lastro propose on it and start the user's review before editing source. After Codex's update_plan it adds the same reminder. Plans made any other way are caught by the gate on the first source edit.",
   "proofs": [],
-  "history": []
+  "history": [
+    "P-001"
+  ]
 }

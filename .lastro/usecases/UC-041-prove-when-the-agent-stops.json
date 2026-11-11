@@ -2,7 +2,9 @@
   "id": "UC-041",
   "slug": "prove-when-the-agent-stops",
   "name": "Prove the agent's implementation when it stops",
-  "description": "With a current spec, the plugin's Stop hook runs the configured build command and lastro prove --stream with the configured arguments, appending the events to .lastro/plugin/progress.jsonl after a build event. Failing proofs (or a failed build, recorded as a result event with its error) block the stop and return the failures and counterexamples to the agent as its next instruction, numbered against maxIterations (default 5) per spec; after that the stop goes through and the user takes over. Passing proofs, or an unchanged code base whose last proof passed, end the turn. A code edit after a proof marks it stale in .lastro/plugin/state.json, so the next stop proves again.",
+  "description": "With a derived proposal, the plugin's Stop hook runs the configured build command and lastro prove --stream with the configured arguments, appending the events to .lastro/plugin/progress.jsonl after a build event. Failing proofs or regressions in other use cases (or a failed build, recorded as a result event with its error) block the stop and return the failures and counterexamples to the agent as its next instruction, numbered against maxIterations (default 5) per proposal; after that the stop goes through and the user takes over. Passing proofs, or an unchanged code base whose last proof passed, end the turn. A code edit after a proof marks it stale in .lastro/plugin/state.json, so the next stop proves again.",
   "proofs": [],
-  "history": []
+  "history": [
+    "P-001"
+  ]
 }

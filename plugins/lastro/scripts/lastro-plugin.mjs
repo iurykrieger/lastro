@@ -13,6 +13,7 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import {
+  allowsCodeEdits,
   classify,
   editedPaths,
   isLastroCommand,
@@ -155,7 +156,7 @@ export function handle(event, input, env = process.env) {
       if (!kinds.some(([, k]) => k === "code")) return {};
       const s = snapshot(ws);
       // Code edits belong to an approved proposal whose proofs are not passing yet. Anything else is a new change.
-      if (["implementing", "failed"].includes(s.phase)) return {};
+      if (allowsCodeEdits(s.phase)) return {};
       const code = kinds.filter(([, k]) => k === "code").map(([p]) => p);
       return deny(gateReason(ws, s, code));
     }

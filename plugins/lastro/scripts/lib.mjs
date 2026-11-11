@@ -126,14 +126,20 @@ export function snapshot(ws) {
   // A code edit after the last run makes it stale until the next one.
   const stale = !!run && state.dirty && state.proposalHash === proposal.hash;
 
-  let phase;
-  if (!proposal.hash) phase = "review-pending";
-  else if (!proposal.proofs.length) phase = "needs-proofs";
-  else if (!run || stale) phase = "implementing";
-  else phase = run.ok ? "passed" : "failed";
-
-  return { phase, ws, proposal, pending: proposal.hash ? [] : pending, run: run && !stale ? run : null, stale, state, useCases: readUseCases(ws), cliError: status.body.error };
+  return { phase: phaseOf(proposal, stale), ws, proposal, pending: proposal.hash ? [] : pending, run: run && !stale ? run : null, stale, state, useCases: readUseCases(ws), cliError: status.body.error };
 }
+
+/** The phase of an open proposal: whether it is approved, has proofs, and how its last run (unless stale) went. */
+export function phaseOf(proposal, stale = false) {
+  const run = proposal.lastRun;
+  if (!proposal.hash) return "review-pending";
+  if (!proposal.proofs?.length) return "needs-proofs";
+  if (!run || stale) return "implementing";
+  return run.ok ? "passed" : "failed";
+}
+
+/** The gate lets the agent edit source code only while the current proposal is being implemented. */
+export const allowsCodeEdits = (phase) => phase === "implementing" || phase === "failed";
 
 /** The next thing to do, as an instruction for the agent. */
 export function nextStep(s) {

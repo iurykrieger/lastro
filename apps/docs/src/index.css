@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* shadcn/ui tokens (zinc), plus Lastro's semantic proof colors (shared with the sandbox). Dark mode follows the OS unless a theme is forced. */
+@layer base {
+  :root {
+    --background: 240 6% 97%;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+    --primary: 240 6% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 5% 94%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 94%;
+    --muted-foreground: 240 4% 42%;
+    --accent: 240 5% 92%;
+    --accent-foreground: 240 6% 10%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 88%;
+    --input: 240 6% 86%;
+    --ring: 37 73% 38%;
+    --radius: 0.6rem;
+    --brass: 37 73% 38%;
+    --proved: 145 63% 32%;   --proved-soft: 140 45% 93%;
+    --trusted: 212 64% 40%;  --trusted-soft: 213 70% 94%;
+    --evidence: 36 94% 34%;  --evidence-soft: 40 85% 92%;
+    --fail: 4 70% 47%;       --fail-soft: 5 80% 95%;
+    --beyond: 220 9% 46%;    --beyond-soft: 220 14% 94%;
+    --code-added: 140 50% 90%;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --background: 240 8% 6%;
+      --foreground: 0 0% 96%;
+      --card: 240 7% 9%;
+      --card-foreground: 0 0% 96%;
+      --popover: 240 7% 9%;
+      --popover-foreground: 0 0% 96%;
+      --primary: 0 0% 96%;
+      --primary-foreground: 240 6% 10%;
+      --secondary: 240 5% 15%;
+      --secondary-foreground: 0 0% 96%;
+      --muted: 240 5% 15%;
+      --muted-foreground: 240 5% 65%;
+      --accent: 240 5% 17%;
+      --accent-foreground: 0 0% 96%;
+      --destructive: 0 63% 52%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 5% 18%;
+      --input: 240 5% 20%;
+      --ring: 38 62% 58%;
+      --brass: 38 62% 58%;
+      --proved: 145 50% 55%;   --proved-soft: 145 40% 14%;
+      --trusted: 212 75% 68%;  --trusted-soft: 213 45% 17%;
+      --evidence: 39 80% 58%;  --evidence-soft: 38 50% 14%;
+      --fail: 4 85% 66%;       --fail-soft: 4 45% 15%;
+      --beyond: 220 10% 66%;   --beyond-soft: 220 10% 16%;
+      --code-added: 140 35% 16%;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --background: 240 8% 6%;
+    --foreground: 0 0% 96%;
+    --card: 240 7% 9%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 7% 9%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 240 6% 10%;
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 5% 17%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 63% 52%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 18%;
+    --input: 240 5% 20%;
+    --ring: 38 62% 58%;
+    --brass: 38 62% 58%;
+    --proved: 145 50% 55%;   --proved-soft: 145 40% 14%;
+    --trusted: 212 75% 68%;  --trusted-soft: 213 45% 17%;
+    --evidence: 39 80% 58%;  --evidence-soft: 38 50% 14%;
+    --fail: 4 85% 66%;       --fail-soft: 4 45% 15%;
+    --beyond: 220 10% 66%;   --beyond-soft: 220 10% 16%;
+    --code-added: 140 35% 16%;
+    color-scheme: dark;
+  }
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 15px;
+  }
+  h1, h2, h3 { text-wrap: balance; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Code blocks: a small token palette that works on the muted surface in both themes.
+   Plain CSS (not @layer components): the class names are built at runtime, so Tailwind cannot see them. */
+.tok-comment { font-style: italic; color: hsl(var(--muted-foreground)); }
+.tok-string { color: hsl(var(--proved)); }
+.tok-number { color: hsl(var(--evidence)); }
+.tok-keyword { color: hsl(var(--trusted)); }
+.tok-prompt { user-select: none; color: hsl(var(--muted-foreground)); }
+html { scroll-padding-top: 5rem; }

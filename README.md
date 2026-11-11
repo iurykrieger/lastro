@@ -30,7 +30,7 @@ code / production traces ──────── verify ───┤──▶ T
 | [`sdks/go`](sdks/go) | Go SDK and the `lastro-go` CLI. Same data model, hashes and `.lastro/` workspace as the TypeScript SDK; its engine is cross-checked against the TS engine and the Rust prover. |
 | [`plugins/lastro`](plugins/lastro) | Plugin for Claude Code and Codex: each implementation proposal becomes intents the user reviews like a pull request; approved intents become proofs in the repository, and the code is checked against them when the agent stops, with a progress board. Install in Claude Code with `/plugin install lastro --marketplace iurykrieger/lastro`. |
 | [`apps/sandbox`](apps/sandbox) | Interactive sandbox built with shadcn/ui: the prose and its intents, the generated code, and a contrast section that proves one against the other live, in both engines. |
-| [`apps/docs`](apps/docs) | Developer docs site built with shadcn/ui: getting started, concepts, the CLI and examples for every SDK. Its examples run in CI, so the docs stay true. Published at [iurykrieger.github.io/lastro](https://iurykrieger.github.io/lastro/). |
+| [`apps/docs`](apps/docs) | Developer docs site built with shadcn/ui: getting started, concepts, the CLI, examples for every SDK, and interactive examples that run the real SDK and the WASM prover in the browser. Its examples run in CI, so the docs stay true. Published at [iurykrieger.github.io/lastro](https://iurykrieger.github.io/lastro/). |
 
 ## Quick start
 

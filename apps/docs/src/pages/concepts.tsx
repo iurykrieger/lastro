@@ -2,6 +2,7 @@ import { A, C, Callout, Code, CodeTabs, DataTable, H1, H2, H3, Lead, Ol, P, Ul }
 import { Badge } from "@/components/ui/badge";
 import { Pipeline } from "@/components/Pipeline";
 import { OUT } from "@/content/outputs";
+import { ClauseAnatomy, SamplingPlayground } from "@/live/shipping";
 
 // ---------------------------------------------------------------------------
 // Pipeline
@@ -412,6 +413,7 @@ export function ConceptSpec() {
         clause lets a program that refuses everyone pass.
       </P>
       <Code lang="ts" title="a clause" code={CLAUSE} />
+      <ClauseAnatomy />
       <H3>Trusted pieces (assumptions)</H3>
       <P>The boundary of the proof, written as a trust card: what you accept, what breaks if it is wrong, and which scenarios check it.</P>
       <Code lang="ts" title="a trusted piece" code={TRUST} />
@@ -481,6 +483,7 @@ export function ConceptVerdicts() {
         When the input space is too large, the engine checks a deterministic sample (fixed seed). With <em>N</em> failure-free samples, the failure rate is at most{" "}
         <C>3/N</C> at 95% confidence (the rule of three), and the receipt says exactly that.
       </P>
+      <SamplingPlayground />
 
       <H2>Clauses that prove nothing</H2>
       <P>Passing is not enough. Each clause is also checked for being useful:</P>
@@ -500,6 +503,7 @@ export function ConceptVerdicts() {
       <P>
         You can also pass recorded real executions (<C>traces</C>). A model proof can hold while reality disagrees: if a trace violates a proved clause, the clause
         becomes <C>violated</C> with the note "proved on the model, but a real trace violates it: a trusted piece (assumption) does not hold".
+ Try it on <A to="examples/trust">Trusted pieces and traces</A>.
       </P>
 
       <H2>Where proof stops</H2>

@@ -66,11 +66,33 @@ meets the team's review policy, and the change request is approved when every in
 and every decision is answered. Approval is what gates everything downstream:
 
 - Only approved intents are sent to proof derivation. Proposed, amended-but-unapproved and rejected intents never are.
-- Only approved intents are handed to whoever implements the change (an agent or a person). A new
-  `brief()` (library) and `lastro brief` (CLI) render the approved changes (use case, before and after) as the
-  implementation brief; failing proofs keep coming back through `feedback`.
+- The approved intents are the brief for whoever implements the change (an agent or a person): there is no
+  separate brief artifact. The implementer reads the approved intents (use case, before and after) from the
+  approved artifact; failing proofs keep coming back through `feedback`.
 - Changing an approved intent (amend, reject, a new extraction) withdraws the approval of the change request,
-  so derivation, the brief and `apply` refuse until it is approved again.
+  so derivation and `apply` refuse until it is approved again.
+
+## Reviewing intents like a pull request
+
+Intents replace code as what a developer reviews. Reviewing a change request should feel like reviewing a pull
+request today: the prose is the description, each intent is a changed file, and the review happens per line.
+
+| Pull request today | Change request in Lastro |
+|---|---|
+| Author opens a PR with a description | An author submits prose; extraction turns it into the change request's intents. The author is recorded on the artifact. |
+| Diff per file | Diff per use case: before and after, for each intent. |
+| Line comment, starting a thread | A comment on one intent (or on the prose), starting a thread. Threads are resolved by the author or the commenter. |
+| Suggested change | A suggested `after` (the current `amend`), which the author accepts or not. |
+| Review verdict: approve, request changes, comment | The same three, per reviewer, on the whole change request, each with optional per-intent comments. Rejecting one intent becomes a comment that requests changes on it. |
+| Author pushes new commits | The author edits the prose and extracts again, or accepts a suggestion. Intents that changed lose their approvals (stale review dismissed); untouched intents keep them. |
+| Required approvals, no self-approval | The team's policy: N distinct reviewers, never the author. |
+| Unresolved conversations block the merge | Open threads and unanswered decisions block approval. |
+| Approved, then merged | Approved (proofs can be derived and the implementer works from the approved intents), then applied to the catalog once the proof is ok. |
+| PR status | `open`, `changes-requested`, `approved`, `applied`, `closed`. |
+
+Everything stays in the artifact in `.lastro/`, so the review works the same from the library, any of the CLIs
+(`lastro review --as ana comment I3 "..."`, `request-changes`, `approve`, `resolve`), an agent or a UI such as the
+sandbox. Lastro does not depend on a code host; a GitHub integration could mirror threads later.
 
 ## Where files live
 
@@ -115,6 +137,9 @@ The receipt gains a section with the catalog diff: each use case added, modified
 4. **Where proofs live.** Should each use case keep its clauses so the next change re-proves the whole catalog,
    or are proofs per change request as today? Recommendation: per change request in v1; a persistent spec per
    use case is a later step.
+5. **Approval scope.** On a pull request, an approval covers the whole PR. Should a reviewer's approval cover
+   the whole change request (recommended, as on a PR), or keep today's per-intent approvals?
+6. **Who is the author.** The person who submitted the prose (recommended), or whoever last edited an intent?
 
 ## Cost
 

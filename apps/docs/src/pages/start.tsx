@@ -59,6 +59,10 @@ export function Introduction() {
           </a>
         ))}
       </div>
+      <Callout kind="tip" title="Try it without installing anything">
+        The <A to="examples/overview">examples</A> run the real SDK and the Rust prover in your browser: fix a bug until the proof passes, plant one in a login,
+        or review the intents yourself and watch which code passes.
+      </Callout>
 
       <H2>What Lastro does</H2>
       <Ol>

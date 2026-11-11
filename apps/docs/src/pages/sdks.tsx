@@ -229,16 +229,18 @@ export function SdkDotnet() {
       <P>
         Same commands and workspace as the other CLIs. <C>prove</C> loads a public static method from an assembly: it takes one argument (<C>Lastro.Env</C> or a
         dictionary of string to object, where integers arrive as <C>long</C>) and returns the same kinds, optionally as a <C>Task</C>. The assembly does not need
-        to reference Lastro.
+        to reference Lastro. <C>init --subject Shop.dll#Shop.Shipping.Fee</C>
+        records the subject so <C>prove</C> and <C>regress</C> need no arguments.
       </P>
       <Code
         lang="bash"
         code={`$ dotnet tool install --global --add-source ./nupkg Lastro.Cli
-$ lastro prove ./bin/Release/net8.0/Shop.dll --export Shop.Shipping.Fee`}
+$ lastro prove P-001 ./bin/Release/net8.0/Shop.dll --export Shop.Shipping.Fee`}
       />
       <P>
-        The building blocks are public too: <C>Artifacts</C>, <C>Plans</C>, <C>Engine</C>, <C>Lsl</C> and <C>L</C>, <C>D</C> and <C>Domains</C>, <C>Receipt</C>,{" "}
-        <C>LlmPrompts</C> and <C>RustProver</C>.
+        Proposals, intents, proofs and use cases are in <C>Proposals</C> (<C>FromExtraction</C>, <C>Review</C>, <C>Approve</C>, <C>DeriveAsync</C>,{" "}
+        <C>ProveAsync</C>, <C>Apply</C>, <C>RegressAsync</C>, <C>RenderReceipt</C>). The building blocks are public too: <C>Artifacts</C>, <C>Plans</C>,{" "}
+        <C>Engine</C>, <C>Lsl</C> and <C>L</C>, <C>D</C> and <C>Domains</C>, <C>Receipt</C>, <C>LlmPrompts</C> and <C>RustProver</C>.
       </P>
     </>
   );

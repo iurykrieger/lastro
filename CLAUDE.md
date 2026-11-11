@@ -31,6 +31,7 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
   and keep the cross-check test in `sdks/typescript/test/lastro.test.ts` green.
 - The .NET SDK must match the TS SDK (hashes, verdicts, receipts, prompts and schemas). When you change semantics,
   a prompt or the CLI workspace in one, change the other; `sdks/dotnet/tests/Lastro.Tests/InteropTests.cs` checks it.
+  Its proposal prompts are generated from the TS SDK: after changing one, run `node sdks/dotnet/tools/gen-prompts.mjs`.
 - The Go SDK ports the TS engine and must produce identical reports and hashes (`sdks/go/crosscheck_test.go`).
   Its prompts are generated from the TS SDK: after changing a prompt or schema, run `go generate ./...` in `sdks/go`.
 - Verification is deterministic: fixed seeds, canonical JSON, hashes over frozen artifacts.

@@ -15,6 +15,7 @@ import {
   proposalFeedback,
   proofsFromDerivation,
   proposalFromExtraction,
+  reservedUseCaseIds,
   proveProposal,
   regress,
   renderProposalReceipt,
@@ -92,6 +93,15 @@ test("propose: intents change use cases, the SDK assigns ids and copies before",
   assert.deepEqual(p.useCases, [{ useCase: "UC-001", slug: "charge-shipping", change: "add", name: "Charge shipping", after: EXTRACT_1.useCases[0]!.after, intents: ["P-001.I-01", "P-001.I-02", "P-001.I-03"] }]);
   assert.equal(p.baseline, baselineOf([]));
   assert.deepEqual(p.intents[0]!.source, { quote: "Orders of 100 or more ship free.", start: 0, end: 32 });
+});
+
+test("propose: adds number after the use-case ids other open proposals reserved", async () => {
+  const first = await extractProposal(answers(EXTRACT_1, DERIVE_1), { id: "P-001", prose: PROSE_1, submittedBy: "ana", useCases: [], policy });
+  assert.deepEqual(reservedUseCaseIds([first]), ["UC-001"]);
+  assert.deepEqual(reservedUseCaseIds([first], "P-001"), [], "a proposal does not reserve against itself");
+  assert.deepEqual(reservedUseCaseIds([{ ...first, status: "applied" }]), []);
+  const second = await extractProposal(answers(EXTRACT_1, DERIVE_1), { id: "P-002", prose: PROSE_1, submittedBy: "ana", useCases: [], policy, reserved: reservedUseCaseIds([first]) });
+  assert.deepEqual(second.useCases.map((c) => c.useCase), ["UC-002"]);
 });
 
 test("propose: bad references, kinds and replaced proofs reject the extraction", async () => {
@@ -359,6 +369,10 @@ test("cli: propose → review → derive → prove → apply → regress, LLM st
   assert.deepEqual(events[0], { event: "start", proposal: "P-001", proofs: ["P-001.PF-01", "P-001.PF-02", "P-001.PF-03", "P-001.PF-04"] });
   assert.deepEqual(events.filter((e) => e.event === "proof").map((e) => e.proof), ["P-001.PF-01", "P-001.PF-02", "P-001.PF-03", "P-001.PF-04"]);
   assert.deepEqual(r.body.unproved, []);
+  // Every prove run is kept, one JSON line each, outside the hashed proposal.
+  const runs = readFileSync(join(dir, ".lastro", "proposals", "P-001-shipping-fee.runs.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l) as { run: number; at: string; ok: boolean; outcomes: unknown[] });
+  assert.deepEqual(runs.map((x) => [x.run, x.ok, x.outcomes.length]), [[1, false, 4], [2, true, 4]]);
+  assert.ok(!Number.isNaN(Date.parse(runs[0]!.at)));
 
   r = await cli(["apply", "P-001", ...ws]);
   assert.equal(r.code, 0, JSON.stringify(r.body));

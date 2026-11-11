@@ -1,7 +1,7 @@
 import { A, C, Callout, Code, CodeTabs, DataTable, H1, H2, H3, Lead, Ol, P, Ul } from "@/components/doc";
 import { Badge } from "@/components/ui/badge";
 import { Pipeline } from "@/components/Pipeline";
-import { OUT } from "@/content/outputs";
+import { OUT, USECASE } from "@/content/outputs";
 import { ClauseAnatomy, SamplingPlayground } from "@/live/shipping";
 
 // ---------------------------------------------------------------------------
@@ -12,23 +12,32 @@ export function ConceptPipeline() {
   return (
     <>
       <H1>The pipeline</H1>
-      <Lead>Four stages behind one small interface. Two of them use an LLM, one is human, and the last is fully deterministic.</Lead>
+      <Lead>
+        Every change is a <A to="concepts/proposals">proposal</A> that moves through five stages. Two of them use an LLM, one is human, and the rest is fully
+        deterministic.
+      </Lead>
       <Pipeline />
 
       <DataTable
-        head={["Stage", "Takes", "Returns", "Library", "CLI"]}
+        head={["Stage", "Takes", "Returns", "CLI"]}
         rows={[
-          ["Plan", "prose (and the previous artifact)", "an intent artifact", <C>plan(prose, previous?)</C>, <C>lastro plan prose.md</C>],
-          ["Review", "the artifact, a reviewer name", "the artifact, with verdicts", <C>review(a, "ana")…done()</C>, <C>lastro review --as ana …</C>],
-          ["Spec", "a fully reviewed artifact", "the approved artifact, a proof plan, contradictions", <C>spec(a)</C>, <C>lastro spec</C>],
-          ["Prove", "the spec and the code under proof", "a report, failures, spec gaps and a receipt", <C>prove(spec, subject)</C>, <C>lastro prove ./code.js</C>],
+          ["Propose", "prose and the current use cases", "a proposal: intents that add, change or remove use cases, and decisions", <C>lastro propose prose.md</C>],
+          ["Review", "the proposal, a reviewer name", "the proposal, with verdicts; approved under a hash once nothing is pending", <C>lastro review P-001 --as ana …</C>],
+          ["Derive", "an approved proposal", "proofs for the approved intents, or decisions when they contradict", <C>lastro derive P-001</C>],
+          ["Prove", "the proofs, the use cases' proofs and the code", "a verdict per proof, regressions, a receipt and feedback", <C>lastro prove P-001 ./code.js</C>],
+          ["Apply", "a proved proposal", "the use cases with their new descriptions and proofs", <C>lastro apply P-001</C>],
         ]}
       />
+      <P>
+        Under the CLI sits the engine the library exposes: <C>createLastro</C> runs the same steps (<C>plan</C>, <C>review</C>, <C>spec</C>, <C>prove</C>) over one
+        intent artifact in memory, without use cases or a workspace. The rest of these concept pages describe that engine; the proposal layer reuses it for every
+        proof it runs.
+      </P>
 
       <H2>Every stage is plain data</H2>
       <P>
         Each stage takes and returns JSON-serializable objects. That is what lets the same pipeline run as a library call, as a CLI command that keeps state in{" "}
-        <C>.lastro/</C>, or across SDKs: an artifact approved by the TypeScript SDK is intact for the Go and .NET SDKs, and all three compute the same hashes.
+        <C>.lastro/</C>, or across SDKs: a proposal approved by the TypeScript CLI is intact for the Go and .NET CLIs, and all three compute the same hashes.
       </P>
 
       <H2>Only two AI steps</H2>
@@ -54,14 +63,134 @@ export function ConceptPipeline() {
         lang="text"
         title="the loop, outside Lastro"
         code={`while true; do
-  your-agent "implement the spec in .lastro/spec.json"   # Claude Code, Codex, a person…
-  lastro prove ./decide.js && break                      # exit 0: every proof passes
-  lastro feedback                                        # failures + counterexamples → back to the agent
-done`}
+  your-agent "implement the approved intents of P-001"   # Claude Code, Codex, a person…
+  lastro prove P-001 ./decide.js && break                # exit 0: every proof passes
+  lastro feedback P-001                                  # failures + counterexamples → back to the agent
+done
+lastro apply P-001                                       # the proofs join their use cases`}
       />
       <Callout kind="note" title="Harness-agnostic by design">
         Nothing in the SDKs depends on a specific agent product. New surfaces (an MCP server, an IDE panel, a CI step) wrap <C>createLastro</C> or call the CLI.
       </Callout>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Use cases and proposals
+// ---------------------------------------------------------------------------
+
+const PROPOSAL_INTENT = `{
+  "id": "P-002.I-01",
+  "change": "modify",
+  "useCase": "UC-001",
+  "name": "Free shipping from 80",
+  "description": "An order with a subtotal of 80 or more pays no shipping.",
+  "provability": "formal",
+  "source": { "quote": "Lower the free-shipping threshold to 80.", "start": 0, "end": 40 },
+  "replaces": [{ "proof": "P-001.PF-01", "reason": "The threshold moves from 100 to 80." }],
+  "status": "approved",
+  "approvals": ["ana"]
+}`;
+
+export function ConceptProposals() {
+  return (
+    <>
+      <H1>Use cases and proposals</H1>
+      <Lead>
+        Your application is a list of use cases, each guarded by proofs. Every change is a proposal whose intents add, change or remove use cases, and whose proofs
+        join them once they pass.
+      </Lead>
+
+      <H2>Four entities</H2>
+      <P>Every entity has an <C>id</C>, a stable kebab-case <C>slug</C>, a <C>name</C> and a <C>description</C>.</P>
+      <DataTable
+        head={["Entity", "Id", "Where it lives", "What it is"]}
+        rows={[
+          ["Use case", <C>UC-001</C>, <C>.lastro/usecases/UC-001-&lt;slug&gt;.json</C>, "One behavior of the application, described as the code implements it, with the proofs that guard it."],
+          ["Proposal", <C>P-001</C>, <C>.lastro/proposals/P-001-&lt;slug&gt;.json</C>, "One change: its prose, the intents extracted from it, decisions, review threads and proofs."],
+          ["Intent", <C>P-001.I-01</C>, "inside its proposal", "Adds, modifies or removes one use case, in natural language. People approve, amend or reject it."],
+          ["Proof", <C>P-001.PF-01</C>, "in its proposal, then in its use case", "A clause or a scenario derived from one approved intent. Once it passes and the proposal is applied, it is a regression test."],
+        ]}
+      />
+      <P>Ids are never reused. A proof keeps the id it was born with, so a use case's history reads straight from its proofs.</P>
+
+      <H2>A use case</H2>
+      <P>
+        After the quickstart's <C>lastro apply P-001</C>, the shipping rule is one use case with four proofs. Every later proposal runs them as regression tests.
+      </P>
+      <Code lang="json" title=".lastro/usecases/UC-001-charge-shipping.json" code={USECASE} />
+
+      <H2>Intents change use cases</H2>
+      <P>
+        <C>lastro propose</C> sends the prose together with every use case (its description and its proofs) to the extractor. Each intent it returns says what it does
+        to which use case:
+      </P>
+      <DataTable
+        head={["change", "Meaning", "replaces"]}
+        rows={[
+          [<C>add</C>, "A new use case. The proposal gives it a name, a slug and its description after the change.", "empty"],
+          [<C>modify</C>, "Changes what an existing use case does. The proposal shows its description before and after.", "the proofs that stop holding, each with a reason"],
+          [<C>remove</C>, "The use case goes away.", "every proof of the use case, filled in by Lastro"],
+        ]}
+      />
+      <Code lang="json" title="an intent that moves the threshold" code={PROPOSAL_INTENT} />
+      <P>
+        <C>replaces</C> is the only way a proof stops running. Reviewers see it next to the intent (<C>⚠ replaces P-001.PF-01</C>), so dropping a regression test is
+        something people approve, never something an LLM decides. Every other proof of the use case keeps running.
+      </P>
+
+      <H2>Review, like a pull request</H2>
+      <P>
+        The LLM is the author of the intents and people are the reviewers. Besides <A to="concepts/review">approve, amend and reject</A>, a reviewer can open a thread on
+        an intent or a decision (<C>comment</C>), others can <C>reply</C>, and the one who opened it or the submitter can <C>resolve</C> it. The policy in{" "}
+        <C>.lastro/config.json</C> sets how many approvals an intent needs and whether the person who submitted the proposal can approve it.
+      </P>
+      <Code
+        lang="bash"
+        code={`$ lastro review P-002 --as bruno comment I-01 "Does 80 include tax?"
+$ lastro review P-002 --as ana reply T1 "No, the subtotal is before tax."
+$ lastro review P-002 --as bruno resolve T1
+$ lastro review P-002 --as bruno approve I-01`}
+      />
+      <P>
+        Amending an intent can make the use case's new description stale: <C>review rewrite</C> writes it again, and <C>review recombine</C> asks the LLM to recombine
+        the approved intents into one description.
+      </P>
+
+      <H2>Approval is bound to a baseline</H2>
+      <P>
+        A proposal is read against the use cases as they were: their ids, slugs, names and descriptions hash to a <strong>baseline</strong>. Once nothing is pending,
+        the proposal is approved under a SHA-256 hash of its reviewed content, which includes that baseline. If another proposal is applied first and changes those
+        use cases, Lastro refuses to approve or apply it: run <C>lastro propose</C> on it again, and the review carries over to every intent the new reading
+        keeps.
+      </P>
+
+      <H2>Status</H2>
+      <DataTable
+        head={["status", "When"]}
+        rows={[
+          [<C>open</C>, "Intents or decisions still need review."],
+          [<C>changes-requested</C>, "A use case description is stale, or derivation raised a decision."],
+          [<C>approved</C>, "The review is done and the approval hash holds; no proofs yet."],
+          [<C>proving</C>, "Proofs are derived; they have not all passed yet."],
+          [<C>proved</C>, "The last run passed: every proof of the proposal and every regression proof."],
+          [<C>applied</C>, "The proofs joined their use cases."],
+          [<C>closed</C>, "Withdrawn without applying."],
+        ]}
+      />
+
+      <H2>Proving and applying</H2>
+      <P>
+        <C>lastro prove P-001 ./code.js</C> runs the proposal's proofs and every proof of every use case, except the ones an intent replaces. A replaced proof still
+        runs, only to report when it keeps passing (the change may not have happened). A failing proof of an existing use case is a <strong>regression</strong>, and it
+        blocks the proposal like any other failure.
+      </P>
+      <P>
+        <C>lastro apply P-001</C> refuses unless the proposal is proved and its baseline still holds. It then writes each use case's new description, adds the passing
+        proofs, drops the replaced ones, deletes removed use cases, and records the proposal in each use case's <C>history</C>. <C>lastro regress</C> runs every use
+        case's proofs on their own, for CI.
+      </P>
     </>
   );
 }
@@ -100,7 +229,11 @@ export function ConceptIntents() {
         <li>When the prose is ambiguous, the extractor must not guess. It adds a <A to="concepts/decisions">decision</A> instead.</li>
         <li>Things a reader might assume but the prose does not promise (timing, rate limits…) go to <C>notPromised</C>.</li>
       </Ul>
-      <Code lang="json" title="one intent in .lastro/intents.json" code={INTENT_JSON} />
+      <Code lang="json" title="one intent of the engine's artifact" code={INTENT_JSON} />
+      <Callout kind="note" title="Intents in a proposal">
+        The CLI keeps intents in a <A to="concepts/proposals">proposal</A>, where each one also names the use case it adds, changes or removes and the existing
+        proofs it replaces. The rules below hold for both.
+      </Callout>
 
       <H2>The intent map</H2>
       <P>
@@ -139,7 +272,7 @@ export function ConceptIntents() {
           { label: "TypeScript", lang: "ts", code: `const next = await lastro.plan(editedProse, previous); // carryReview(previous, fresh)` },
           { label: "Go", lang: "go", code: `next, err := l.Plan(ctx, editedProse, &previous) // CarryReview(previous, fresh)` },
           { label: ".NET", lang: "csharp", code: `var next = await lastro.PlanAsync(editedProse, previous); // Artifacts.CarryReview(previous, fresh)` },
-          { label: "CLI", lang: "bash", code: `$ lastro plan prose.md   # reads .lastro/intents.json as the previous artifact` },
+          { label: "CLI", lang: "bash", code: `$ lastro propose .lastro/proposals/P-001-shipping-fee.md   # re-extracts P-001 and carries its review` },
         ]}
       />
     </>
@@ -211,11 +344,11 @@ lastro.Pending(intents); // [] once the policy is met`,
             label: "CLI",
             lang: "bash",
             code: `$ lastro init --model model.json --approvals 2
-$ lastro plan prose.md
-$ lastro review --as ana approve-all
-$ lastro review --as ana amend I5 "If both are sent, the email wins."
-$ lastro review --as bruno approve-all
-$ lastro status          # exit 0 when nothing is pending`,
+$ lastro propose prose.md --as ana
+$ lastro review P-001 --as ana approve-all
+$ lastro review P-001 --as ana amend I-05 "If both are sent, the email wins."
+$ lastro review P-001 --as bruno approve-all
+$ lastro status P-001          # pending is empty once the policy is met`,
           },
         ]}
       />
@@ -315,15 +448,17 @@ if (!spec.Ok)
           {
             label: "CLI",
             lang: "bash",
-            code: `$ lastro spec                           # exit 1, status "contradictions"
-$ lastro review --as ana answer D3 0     # adds an intent that records the decision
-$ lastro review --as ana approve-all
-$ lastro spec`,
+            code: `$ lastro derive P-001                          # exit 1, status "back-to-review"
+$ lastro review P-001 --as ana answer D3 0     # records the choice on the intents involved
+$ lastro review P-001 --as ana approve-all
+$ lastro derive P-001`,
           },
         ]}
       />
       <P>
-        The CLI says the same in its output: <em>"The spec contradicts itself. Answer the new decisions with <C>lastro review --as &lt;name&gt; answer &lt;D&gt; &lt;option&gt;</C>, approve the intents they create, and run <C>lastro spec</C> again."</em>
+        The CLI says the same in its output: <em>"Derivation raised decisions. Answer them with <C>lastro review P-001 --as &lt;name&gt; answer &lt;D&gt; &lt;option&gt;</C>, review the intents they reopened, and run <C>lastro derive P-001</C> again."</em>{" "}
+        In a proposal, a derivation decision can also say that an approved intent breaks an existing proof of its use case: the proof is added to the intent's{" "}
+        <C>replaces</C> and the intent goes back to review, so nobody drops a regression test without approving it.
       </P>
     </>
   );
@@ -440,7 +575,7 @@ export function ConceptSpec() {
         points). An input with no such output is a contradiction, and it goes back to the team as a <A to="concepts/decisions">decision</A> whose options are
         "Relax C<em>n</em>" for each clause involved.
       </P>
-      <Code lang="json" title="lastro spec · stdout" code={OUT.spec} />
+      <Code lang="json" title="lastro derive P-001 · stdout" code={OUT.derived} />
     </>
   );
 }
@@ -562,9 +697,10 @@ export function ConceptReceipts() {
       <H2>Failures and spec gaps</H2>
       <P>
         <C>proof.failures</C> are code problems: each violated clause or failed scenario, with the intents it serves, its formal statement and the input that breaks
-        it. <C>proof.specGaps</C> are spec problems: vacuous or weak clauses, intents with no obligation, and contradictions.
+        it. <C>proof.specGaps</C> are spec problems: vacuous or weak clauses, intents with no obligation, and contradictions. The CLI reports each failing proof
+        with its use case, its intent, and whether it belongs to the proposal or is a regression of an existing use case:
       </P>
-      <Code lang="json" title="proof.failures[0]" code={JSON.stringify(JSON.parse(OUT.notProved).failures[0], null, 2)} />
+      <Code lang="json" title="lastro prove P-001 · failures[0]" code={JSON.stringify(JSON.parse(OUT.notProved).failures[0], null, 2)} />
 
       <H2>Feedback for the coding agent</H2>
       <P>
@@ -576,7 +712,7 @@ export function ConceptReceipts() {
           { label: "TypeScript", lang: "ts", code: `import { agentFeedback } from "lastro";\nagentFeedback(proof);` },
           { label: "Go", lang: "go", code: `lastro.AgentFeedback(proof.Failures, proof.SpecGaps)` },
           { label: ".NET", lang: "csharp", code: `Feedback.AgentFeedback(proof);` },
-          { label: "CLI", lang: "bash", code: `$ lastro feedback` },
+          { label: "CLI", lang: "bash", code: `$ lastro feedback P-001` },
         ]}
       />
     </>

@@ -52,35 +52,38 @@ export function PluginAgents() {
         <Step title="The agent proposes, before its first edit">
           <P>
             Whatever the mode (plan mode, auto mode, an informal plan in the chat, or none), the first attempt to edit source code is the trigger. The edit is
-            denied with the steps: write the change as prose in <C>.lastro/proposals/&lt;slug&gt;.md</C>, run <C>lastro plan</C>, start your review (the{" "}
+            denied with the steps: write the change as prose in <C>.lastro/proposals/&lt;slug&gt;.md</C>, run <C>lastro propose</C>, start your review (the{" "}
             <C>propose</C> skill). The agent answers the <A to="cli/llm">LLM handoff</A> with its own model. When Claude Code leaves plan mode, the plan is
-            saved there as a draft right away.
+            saved there as a draft right away. <C>lastro propose</C> turns the draft into a{" "}
+            <A to="concepts/proposals">proposal</A> named <C>P-001-&lt;slug&gt;</C>, with intents grouped by the use case they add, change or remove.
           </P>
         </Step>
         <Step title="You review, like a pull request">
           <P>
             The intents are the code review. The agent is the author and never approves. It asks you each open decision, then asks you to approve, request changes
-            to (amend) or reject each intent, and records only your answers with <C>lastro review --as you</C>. In Claude Code every review command also shows a
+            to (amend) or reject each intent, and records only your answers with <C>lastro review P-001 --as you</C>. An intent that replaces an existing proof is marked{" "}
+            <C>⚠ replaces</C>, so you see which regression tests the change drops. In Claude Code every review command also shows a
             permission prompt: that click is your approval. With <C>--approvals 2</C>, the proposal waits for a second reviewer.
           </P>
           <Code lang="text" title="the board, review pending" code={BOARDS.review} />
         </Step>
         <Step title="The proofs are derived into the repository">
           <P>
-            With every intent approved, <C>lastro spec</C> writes the proofs to <C>.lastro/spec.json</C>. The gate opens. The agent implements from the approved
+            With every intent approved, <C>lastro derive</C> writes the proofs into the proposal. The gate opens. The agent implements from the approved
             intents; there is no other brief.
           </P>
           <Code lang="text" title="the board, implementing" code={BOARDS.implementing} />
         </Step>
         <Step title="The harness checks the implementation">
           <P>
-            When the agent stops, the <C>Stop</C> hook builds and runs <C>lastro prove</C>. Failing proofs block the stop and go back to the agent with their
+            When the agent stops, the <C>Stop</C> hook builds and runs <C>lastro prove</C>: the proposal's proofs and every proof of the existing use cases. Failing proofs block the stop and go back to the agent with their
             counterexamples, up to <C>maxIterations</C>; then you take over. The board shows each proof: <C>✓</C> proved, <C>≈</C> evidenced, <C>✗</C> violated,{" "}
             <C>!</C> weak or vacuous, <C>○</C> pending.
           </P>
           <Code lang="text" title="the board, a proof failed" code={BOARDS.failed} />
           <P>
-            Once every proof passes, the change is done: the next source edit is a new change, and the flow starts again with its own intents.
+            Once every proof passes, <C>lastro apply</C> adds the proofs to their use cases and the change is done: the next source edit is a new proposal,
+            and the flow starts again with its own intents.
           </P>
         </Step>
       </Steps>
@@ -91,7 +94,7 @@ export function PluginAgents() {
         rows={[
           [<C>SessionStart</C>, "Adds the board and the rules (the agent is the author, the user reviews) to the agent's context."],
           [<C>UserPromptSubmit</C>, "The same, on every prompt, so each request that changes behavior goes through a proposal."],
-          [<C>PreToolUse</C>, "Denies the first source edit of a change, in any mode, with the steps to extract its intents; lets edits through only while the approved spec's proofs have not passed yet. Denies edits to files only the CLI writes. Asks you before each review command; refuses --as with an agent's name."],
+          [<C>PreToolUse</C>, "Denies the first source edit of a change, in any mode, with the steps to extract its intents; lets edits through only while the approved proposal's proofs have not passed yet. Denies edits to files only the CLI writes. Asks you before each review command; refuses --as with an agent's name."],
           [<C>PostToolUse</C>, "Shows the board after each lastro command; while the review is open, hands the agent the review as Markdown (one list item per decision and intent, grouped, with its quote) to show the user as-is. Marks the last proof stale after a code edit. Saves Claude Code's plan (ExitPlanMode) as a proposal draft; reminds Codex after update_plan."],
           [<C>Stop</C>, "Builds, runs lastro prove --stream into .lastro/plugin/progress.jsonl, and sends failing proofs back to the agent; shows the board either way."],
         ]}

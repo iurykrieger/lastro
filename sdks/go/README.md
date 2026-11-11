@@ -7,8 +7,8 @@ hashes and `.lastro/` workspace, so the two interoperate:
 - an artifact approved by one SDK is intact for the other, and both compute the same plan hash;
 - both engines produce the same verification report, field for field, on the reference login and every planted bug
   (`crosscheck_test.go` runs the TS SDK and compares);
-- `lastro-go` and the TS `lastro` CLI share a workspace: one can plan, the other review, derive and prove
-  (`cmd/lastro-go/main_test.go`);
+- `lastro-go` and the TS `lastro` CLI share a workspace of use cases and proposals: one can propose, the other
+  review, derive, prove and apply, and both print the same JSON and write the same receipts (`cmd/lastro-go/main_test.go`);
 - the Rust prover (`crates/lastro-core`) checks the same tables through its native `lastro-prove` binary.
 
 Lastro's only AI steps are extracting intents from prose and deriving the proofs. It never writes the
@@ -61,12 +61,18 @@ and `lastro.TableSubject` answers from a recorded input/output table.
 go install github.com/iurykrieger/lastro/sdks/go/cmd/lastro-go@latest
 
 lastro-go init --model model.json --approvals 1
-lastro-go plan prose.md                         # extract intents
-lastro-go review --as ana approve-all           # approve | amend | reject | answer
-lastro-go spec                                  # derive the formal spec; contradictions become decisions
-lastro-go prove --cmd "./decide-login"          # JSON lines in, JSON lines out; or --table rows.json
-lastro-go feedback                              # the failures as a brief for the coding agent
+lastro-go propose prose.md --as ana             # a proposal: intents that add, change or remove use cases
+lastro-go review P-001 --as ana approve-all     # approve | amend | reject | answer | comment | reply | resolve
+lastro-go derive P-001                          # derive the proofs; contradictions become decisions
+lastro-go prove P-001 --cmd "./decide"          # JSON lines in, JSON lines out; or --table rows.json
+lastro-go feedback P-001                        # the failures as a brief for the coding agent
+lastro-go apply P-001                           # the proofs join their use cases as regression tests
+lastro-go regress --cmd "./decide"              # every use case's proofs, for CI
 ```
+
+The library API (`proposal.go`) is the same as the TS SDK's: `ProposalFromExtraction`, `ReviewProposal`,
+`ApproveProposal`, `ProofsFromDerivation`, `ProveProposal`, `ApplyProposal`. `lastro.New` (below) is the engine
+underneath, over one intent artifact in memory.
 
 Every command prints one JSON object. Exit codes: 0 ok, 1 not ok, 2 error, 3 an LLM answer is needed. With
 `ANTHROPIC_API_KEY` set the AI steps run on the Anthropic API; otherwise (`--llm handoff`) the request is

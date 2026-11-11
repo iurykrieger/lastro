@@ -8,7 +8,7 @@
 // Both harnesses send the same hook fields (hook_event_name, cwd, tool_name, tool_input, stop_hook_active)
 // and read the same answers (hookSpecificOutput.permissionDecision, additionalContext, decision/reason,
 // systemMessage), so one script serves both.
-import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -44,8 +44,8 @@ export function gateReason(ws, s, paths) {
   const extract = [
     `Before editing ${paths.join(", ")}, Lastro needs the intents of this change, reviewed by the user:`,
     `1. Write the change you are about to make as prose in .lastro/proposals/<slug>.md: the behavior that must hold after it, from the user's request and your plan (formal or not). No code.`,
-    `2. Run \`${cli} plan .lastro/proposals/<slug>.md\` (exit 3: answer the handoff request with your own model and run it again).`,
-    `3. Start the review: ask the user each decision, then approve / request changes / reject per intent (lastro \`propose\` skill). Then \`${cli} spec\`.`,
+    `2. Run \`${cli} propose .lastro/proposals/<slug>.md\` (exit 3: answer the handoff request with your own model and run it again). It becomes proposal <id>-<slug>, its intents changing the use cases in .lastro/usecases/.`,
+    `3. Start the review: ask the user each decision, then approve / request changes / reject per intent, showing the proofs each one replaces (lastro \`propose\` skill). Then \`${cli} derive <id>\`.`,
   ];
   switch (s.phase) {
     case "no-workspace":
@@ -57,18 +57,21 @@ export function gateReason(ws, s, paths) {
     case "review-pending":
       return `Lastro: the review is not done. ${nextStep(s)}\nPending: ${s.pending.join("; ")}.\n\n${renderLine(s)}`;
     default:
-      return `Lastro: no code before the proofs are derived. ${nextStep(s)}\n\n${renderLine(s)}`;
+      return `Lastro: no code before the proposal's proofs are derived. ${nextStep(s)}\n\n${renderLine(s)}`;
   }
 }
 
-/** Saves a plan as a proposal draft under .lastro/proposals/, named after its first heading. */
+/**
+ * Saves a plan as the prose of the next proposal, `.lastro/proposals/<id>-<slug>.md`, the slug taken from its first
+ * heading. `lastro propose` on that file keeps its id and slug. An earlier proposal is never overwritten.
+ */
 export function saveProposal(ws, plan) {
   const title = (plan.match(/^#+\s*(.+)$/m)?.[1] ?? plan.trim().split("\n")[0]).trim();
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "plan";
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48).replace(/-$/, "") || "plan";
   const dir = join(ws.dir, "proposals");
   mkdirSync(dir, { recursive: true });
-  let file = join(dir, `${slug}.md`);
-  for (let i = 2; existsSync(file); i++) file = join(dir, `${slug}-${i}.md`);
+  const max = readdirSync(dir).reduce((m, f) => Math.max(m, Number(f.match(/^P-(\d+)-/)?.[1] ?? 0)), 0);
+  const file = join(dir, `P-${String(max + 1).padStart(3, "0")}-${slug}.md`);
   writeFileSync(file, plan.trim() + "\n");
   return relative(ws.root, file);
 }
@@ -78,7 +81,7 @@ export function saveProposal(ws, plan) {
  * Builds and proves; records the result in the plugin state. While it runs, `.lastro/plugin/progress.jsonl`
  * holds the live events (`build`, then the CLI's `prove --stream` lines), which the Claude Code mod draws.
  */
-export function prove(ws) {
+export function prove(ws, proposal = "") {
   if (!ws.config.prove) return { ok: false, error: 'No prove command: set "prove" in .lastro/plugin.json (the arguments after `lastro prove`).' };
   const progress = join(ws.dir, "plugin", "progress.jsonl");
   mkdirSync(dirname(progress), { recursive: true });
@@ -93,7 +96,7 @@ export function prove(ws) {
     }
   }
   // The CLI appends its stream straight to the file, so the events land as they happen.
-  const command = `${ws.config.cli} prove ${ws.config.prove} --stream --dir ${JSON.stringify(ws.dir)} >> ${JSON.stringify(progress)}`;
+  const command = `${ws.config.cli} prove ${proposal ? `${proposal} ` : ""}${ws.config.prove} --stream --dir ${JSON.stringify(ws.dir)} >> ${JSON.stringify(progress)}`;
   const r = spawnSync(command, { cwd: ws.root, shell: true, encoding: "utf8", timeout: 600_000 });
   const lines = readFileSync(progress, "utf8").trim().split("\n");
   let body;
@@ -124,7 +127,8 @@ export function handle(event, input, env = process.env) {
       const context = [
         "This repository uses Lastro: every change in behavior goes through reviewed intents before any code is written.",
         "Intents are the code review. You are the author: write the proposal, never approve it. The user reviews it like a pull request.",
-        "Before you edit any source file, in any mode (plan mode, auto mode, a quick fix), extract the intents of the change and start the user's review: lastro `propose` skill.",
+        "The application is its use cases (.lastro/usecases/); every change is a proposal whose intents add, change or remove them.",
+        "Before you edit any source file, in any mode (plan mode, auto mode, a quick fix), write the change as a proposal and start the user's review: lastro `propose` skill.",
         "",
         renderBoard(s),
       ].join("\n");
@@ -164,14 +168,14 @@ export function handle(event, input, env = process.env) {
         return {
           hookSpecificOutput: {
             hookEventName: "PostToolUse",
-            additionalContext: `Lastro saved this plan as ${file}. Before editing any source file, rewrite it there as behavior (what must be true after the change, no code), run \`${ws.config.cli} plan ${file}\`, and start the user's review (lastro \`propose\` skill).`,
+            additionalContext: `Lastro saved this plan as the prose of a new proposal, ${file}. Before editing any source file, rewrite it there as behavior (what must be true after the change, no code), run \`${ws.config.cli} propose ${file}\`, and start the user's review (lastro \`propose\` skill).`,
           },
-          systemMessage: `Lastro: plan saved as ${file}; intents come next, then your review.`,
+          systemMessage: `Lastro: plan saved as ${file}; its intents come next, then your review.`,
         };
       }
       if (tool === "update_plan") {
         // Codex's step list: a reminder that the plan goes through Lastro before the first edit.
-        return { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `Lastro: before the first source edit of this plan, write the change as prose in .lastro/proposals/<slug>.md, run \`${ws.config.cli} plan\` on it, and start the user's review (lastro \`propose\` skill).` } };
+        return { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: `Lastro: before the first source edit of this plan, write the change as prose in .lastro/proposals/<slug>.md, run \`${ws.config.cli} propose\` on it, and start the user's review (lastro \`propose\` skill).` } };
       }
       if (tool === "Bash" || tool === "exec_command" || tool === "shell") {
         if (!isLastroCommand(String(input.tool_input?.command ?? ""))) return {};
@@ -195,28 +199,29 @@ export function handle(event, input, env = process.env) {
       let s = snapshot(ws);
       if (!["implementing", "failed", "passed"].includes(s.phase)) return { systemMessage: renderBoard(s) };
       const state = readState(ws);
-      const specHash = s.spec.artifact.hash;
-      const attempts = state.specHash === specHash ? state.attempts : 0;
+      const proposalHash = s.proposal.hash;
+      const attempts = state.proposalHash === proposalHash ? state.attempts : 0;
       if (s.phase === "passed" && !state.dirty) {
-        writeState(ws, { ...state, specHash, attempts: 0 });
+        writeState(ws, { ...state, proposalHash, attempts: 0 });
         return { systemMessage: renderBoard(s) };
       }
-      const r = prove(ws);
+      const r = prove(ws, s.proposal.id);
       s = snapshot(ws);
       if (r.ok) {
-        writeState(ws, { ...readState(ws), specHash, attempts: 0 });
+        writeState(ws, { ...readState(ws), proposalHash, attempts: 0 });
         return { systemMessage: renderBoard(s) };
       }
       const max = Number(ws.config.maxIterations);
       if (attempts >= max) {
-        writeState(ws, { ...readState(ws), specHash, attempts });
+        writeState(ws, { ...readState(ws), proposalHash, attempts });
         return { systemMessage: `${renderBoard(s)}\n\nThe proofs still fail after ${max} attempts: over to you.` };
       }
-      writeState(ws, { ...readState(ws), specHash, attempts: attempts + 1 });
+      writeState(ws, { ...readState(ws), proposalHash, attempts: attempts + 1 });
       const feedback = r.error ?? r.body.feedback;
+      const file = relative(ws.root, ws.file(join("proposals", `${s.proposal.id}-${s.proposal.slug}.json`)));
       return {
         decision: "block",
-        reason: `Lastro proofs failed (attempt ${attempts + 1} of ${max}). Read the approved intents in ${ws.file("intents.json")} and fix the code; do not change the intents or the spec.\n\n${feedback}`,
+        reason: `Lastro proofs failed (attempt ${attempts + 1} of ${max}). Read the approved intents and the resulting use cases in ${file} and fix the code; do not change the proposal or the use cases. A failing use-case proof is a regression: behavior this change must keep.\n\n${feedback}`,
         systemMessage: renderBoard(s),
       };
     }
@@ -257,7 +262,7 @@ function main(argv) {
     return 0;
   }
   if (cmd === "prove") {
-    const r = prove(ws);
+    const r = prove(ws, snapshot(ws).proposal?.id);
     if (r.error) process.stderr.write(r.error + "\n");
     process.stdout.write(renderBoard(snapshot(ws)) + "\n");
     return r.ok ? 0 : 1;

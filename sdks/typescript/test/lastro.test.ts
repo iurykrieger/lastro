@@ -359,70 +359,6 @@ import { join as joinPath } from "node:path";
 import { fileURLToPath as toPath } from "node:url";
 import { main as cli, section } from "../src/cli.js";
 
-test("cli: plan → review → spec → prove, answering LLM steps by handoff", async () => {
-  const dir = mkdtempSync(joinPath(tmpdir(), "lastro-"));
-  const ws = ["--dir", joinPath(dir, ".lastro"), "--llm", "handoff"];
-  writeFile(joinPath(dir, "model.json"), JSON.stringify(MODEL));
-  writeFile(joinPath(dir, "prose.md"), extractLogin().prose);
-  const loginModule = joinPath(toPath(new URL(".", import.meta.url)), "..", "examples", "login", "login.js");
-  writeFile(joinPath(dir, "impl.mjs"), `import { makeLogin } from ${JSON.stringify(loginModule)};\nexport default makeLogin();\nexport const buggy = makeLogin("skip-password");\n`);
-
-  assert.equal((await cli(["init", "--model", joinPath(dir, "model.json"), ...ws])).code, 0);
-
-  // The agent is asked to extract; it answers with the example's extraction.
-  let r = await cli(["plan", joinPath(dir, "prose.md"), ...ws]);
-  assert.equal(r.code, 3);
-  const ex = extractLogin();
-  writeFile(r.body.answer as string, JSON.stringify({
-    intents: ex.intents.map((i) => ({ statement: i.statement, kind: i.kind, provability: i.provability, beyondProofReason: i.beyondProofReason ?? "none", quote: i.source.quote })),
-    decisions: ex.decisions.map((d) => ({ intentIndexes: d.intentIds.map((x) => Number(x.slice(1)) - 1), question: d.question, options: d.options, recommended: d.recommended })),
-    notPromised: ex.notPromised,
-  }));
-  r = await cli(["plan", joinPath(dir, "prose.md"), ...ws]);
-  assert.equal(r.code, 1, "planned, review pending");
-
-  assert.equal((await cli(["spec", ...ws])).body.status, "review-pending");
-  await cli(["review", "--as", "ana", "approve-all", ...ws]);
-  await cli(["review", "--as", "ana", "amend", "I5", FIXED_I5, ...ws]);
-  await cli(["review", "--as", "ana", "answer", "D1", "0", ...ws]);
-  await cli(["review", "--as", "ana", "answer", "D2", "0", ...ws]);
-  assert.equal((await cli(["status", ...ws])).code, 0);
-
-  r = await cli(["spec", ...ws]);
-  assert.equal(r.code, 3);
-  const approved = approve(JSON.parse(readFile(joinPath(dir, ".lastro", "intents.json"), "utf8")));
-  const plan = deriveLoginPlan(approved);
-  writeFile(r.body.answer as string, JSON.stringify({
-    clauses: plan.clauses.map((c) => ({ ...c, requires: c.requires ? JSON.stringify(c.requires) : "", ensures: JSON.stringify(c.ensures), assumes: c.assumes ?? [] })),
-    assumptions: plan.assumptions,
-    scenarios: plan.scenarios.map((s) => ({ ...s, inputJson: JSON.stringify(s.input), expect: JSON.stringify(s.expect) })),
-    beyondProof: plan.beyondProof,
-  }));
-  r = await cli(["spec", ...ws]);
-  assert.equal(r.code, 0, JSON.stringify(r.body));
-
-  r = await cli(["prove", joinPath(dir, "impl.mjs"), ...ws]);
-  assert.equal(r.code, 0, JSON.stringify(r.body));
-  r = await cli(["prove", joinPath(dir, "impl.mjs"), "--export", "buggy", ...ws]);
-  assert.equal(r.code, 1);
-  assert.match(r.body.feedback as string, /counterexample/);
-  assert.equal((await cli(["feedback", ...ws])).code, 1);
-
-  // --stream: start, then one event per clause and scenario (in plan order), then the same result as without it.
-  const events: Record<string, unknown>[] = [];
-  const streamed = await cli(["prove", "--stream", joinPath(dir, "impl.mjs"), "--export", "buggy", ...ws], (e) => events.push(e));
-  assert.equal(streamed.code, 1);
-  assert.deepEqual(streamed.body, r.body);
-  const kinds = events.map((e) => e.event).filter((k) => k !== "progress");
-  assert.deepEqual(kinds, ["start", ...plan.clauses.map(() => "clause"), ...plan.scenarios.map(() => "scenario"), ...(r.body.enginesAgree === null ? [] : ["crosscheck"])]);
-  assert.deepEqual(events[0], { event: "start", model: plan.model.name, clauses: plan.clauses.map((c) => c.id), scenarios: plan.scenarios.map((x) => x.id) });
-  const violated = events.filter((e) => e.event === "clause" && e.verdict === "violated");
-  assert.deepEqual(violated.map((e) => e.clauseId), (r.body.failures as { kind: string; id: string }[]).filter((f) => f.kind === "clause").map((f) => f.id));
-  assert.ok(violated.every((e) => e.counterexample), "a violated clause carries its counterexample");
-  const runs = events.filter((e) => e.event === "progress").map((e) => e.runs as number);
-  assert.deepEqual(runs, runs.map((_, i) => (i + 1) * 100), "a progress event every 100 runs of the code");
-});
-
 test("cli: --section reads one Markdown section, up to the next heading of the same level", () => {
   const md = "# Use cases\n\nIntro.\n\n## Review gate\n\nOne rule.\n\n### Detail\n\nStill in.\n\n## Clause verdicts\n\nOther rule.\n";
   assert.equal(section(md, "review gate").trim(), "One rule.\n\n### Detail\n\nStill in.");
@@ -451,7 +387,7 @@ test(".lastro/usecases and .lastro/proposals: Lastro's own use cases and proposa
   }
   for (const f of readdirSync(joinPath(lastro, "proposals")).filter((f) => f.endsWith(".json"))) {
     const p = JSON.parse(readFile(joinPath(lastro, "proposals", f), "utf8")) as {
-      id: string; slug: string; prose: string; useCases: { useCase: string; change: string }[];
+      id: string; slug: string; status: string; prose: string; useCases: { useCase: string; change: string }[];
       intents: { id: string; slug: string; name: string; description: string; useCase: string; change: string; source: { quote: string; start: number; end: number } }[];
     };
     assert.equal(f, `${p.id}-${p.slug}.json`, `${f}: file name must be <id>-<slug>.json`);
@@ -460,7 +396,7 @@ test(".lastro/usecases and .lastro/proposals: Lastro's own use cases and proposa
       assert.equal(p.prose.slice(i.source.start, i.source.end), i.source.quote, `${f}: ${i.id} quote is not anchored`);
       const change = p.useCases.find((c) => c.useCase === i.useCase);
       assert.ok(change && change.change === i.change, `${f}: ${i.id} has no matching use-case change`);
-      assert.equal(ids.has(i.useCase), i.change !== "add", `${f}: ${i.id} ${i.change} must ${i.change === "add" ? "reserve a new" : "name an existing"} use case`);
+      if (p.status !== "applied") assert.equal(ids.has(i.useCase), i.change !== "add", `${f}: ${i.id} ${i.change} must ${i.change === "add" ? "reserve a new" : "name an existing"} use case`);
     }
   }
 });

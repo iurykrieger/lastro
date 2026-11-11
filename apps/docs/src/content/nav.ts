@@ -18,7 +18,7 @@ export const NAV: NavSection[] = [
     pages: [
       { slug: "introduction", title: "Introduction", description: "What Lastro is, what it is not, and how the pieces fit.", keywords: "overview pdd proof driven development" },
       { slug: "installation", title: "Installation", description: "Build the SDKs, the CLIs and the Rust prover from the repository.", keywords: "install setup npm go dotnet cargo wasm" },
-      { slug: "quickstart", title: "Quickstart", description: "From a paragraph of prose to a proved function in eight commands.", keywords: "tutorial walkthrough shipping example cli" },
+      { slug: "quickstart", title: "Quickstart", description: "From a paragraph of prose to a proved, applied change in nine commands.", keywords: "tutorial walkthrough shipping example cli" },
     ],
   },
   {
@@ -35,7 +35,8 @@ export const NAV: NavSection[] = [
   {
     title: "Concepts",
     pages: [
-      { slug: "concepts/pipeline", title: "The pipeline", description: "Plan, review, spec, prove: what is AI, what is deterministic, and who writes the code.", keywords: "flow stages harness agnostic" },
+      { slug: "concepts/pipeline", title: "The pipeline", description: "Propose, review, derive, prove, apply: what is AI, what is deterministic, and who writes the code.", keywords: "flow stages harness agnostic" },
+      { slug: "concepts/proposals", title: "Use cases and proposals", description: "Use cases with their regression proofs, and proposals whose intents add, change or remove them.", keywords: "use case proposal intent proof replaces baseline apply regression threads" },
       { slug: "concepts/intents", title: "Prose and intents", description: "How prose becomes reviewable intents, each anchored to the words it came from.", keywords: "extract intent map quote kind provability" },
       { slug: "concepts/review", title: "Review and approval policy", description: "Approve, amend, reject; how many approvals an intent needs; approval by hash.", keywords: "approve amend reject policy requiredApprovals approve hash carry review" },
       { slug: "concepts/decisions", title: "Decisions", description: "Ambiguities and contradictions come back as decision cards; answers become intents.", keywords: "decision card contradiction consistency question" },
@@ -47,8 +48,8 @@ export const NAV: NavSection[] = [
   {
     title: "CLI",
     pages: [
-      { slug: "cli/overview", title: "Commands", description: "init, plan, status, review, spec, prove and feedback, with their JSON and exit codes.", keywords: "commands flags exit codes json" },
-      { slug: "cli/workspace", title: "The .lastro/ workspace", description: "Every file the CLI writes, and how the three CLIs share one workspace.", keywords: "workspace files config intents spec proof receipt" },
+      { slug: "cli/overview", title: "Commands", description: "init, propose, status, review, derive, prove, feedback, apply and regress, with their JSON and exit codes.", keywords: "commands flags exit codes json" },
+      { slug: "cli/workspace", title: "The .lastro/ workspace", description: "Every file the CLI writes, and how the three CLIs share one workspace.", keywords: "workspace files config usecases proposals proofs receipt" },
       { slug: "cli/llm", title: "LLM handoff", description: "Run the two AI steps on the Anthropic API, or hand them to the calling agent's own model.", keywords: "handoff anthropic api key agent harness claude code codex exit 3" },
     ],
   },

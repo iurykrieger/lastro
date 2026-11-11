@@ -144,7 +144,17 @@ test("the quickstart shows the real counterexample and receipt", async ({ page }
   await page.goto("#/quickstart");
   await expect(page.getByText('"status": "not-proved"')).toBeVisible();
   await expect(page.getByText('"subtotal": 100').first()).toBeAttached();
-  await expect(page.getByText("coverage 402/402 inputs")).toBeAttached();
+  await expect(page.getByText("Engines agree: yes.")).toBeAttached();
+  await expect(page.locator("figure[data-code]").filter({ has: page.locator("figcaption", { hasText: "UC-001-charge-shipping.json" }) })).toContainText('"history"');
+});
+
+test("the proposals page explains the four entities and links from the pipeline", async ({ page }) => {
+  await page.goto("#/concepts/pipeline");
+  await expect(page.getByRole("figure", { name: "The Lastro pipeline" })).toContainText("apply");
+  await page.locator("main").getByRole("link", { name: "proposal", exact: true }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Use cases and proposals" })).toBeVisible();
+  for (const id of ["UC-001", "P-001", "P-001.I-01", "P-001.PF-01"]) await expect(page.locator("main table").first()).toContainText(id);
+  await expect(page.getByText('"replaces": [{ "proof": "P-001.PF-01"')).toBeAttached();
 });
 
 test("the plugin page shows the progress board at each stage", async ({ page }) => {
@@ -152,10 +162,10 @@ test("the plugin page shows the progress board at each stage", async ({ page }) 
   await expect(page.getByRole("heading", { level: 1, name: "Claude Code and Codex" })).toBeVisible();
   const board = (title: string) => page.locator("figure[data-code]").filter({ has: page.locator("figcaption", { hasText: title }) });
   await expect(board("the board, review pending")).toContainText("? D1 Is the 100 threshold measured before or after discounts?");
-  await expect(board("the board, implementing")).toContainText("○ C1 pending");
+  await expect(board("the board, implementing")).toContainText("○ PF-01 pending");
   const failed = board("the board, a proof failed");
-  await expect(failed).toContainText("✗ C1 violated");
-  await expect(failed).toContainText("Verification 2/3 passed, 1 failed");
+  await expect(failed).toContainText("✗ PF-01 violated");
+  await expect(failed).toContainText("Verification 3/4 passed, 1 failed");
   await expect(page.getByRole("heading", { level: 3, name: "You review, like a pull request" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 3, name: "The agent proposes, before its first edit" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: "The live board in Claude Code" })).toBeVisible();
@@ -166,8 +176,8 @@ test("the CLI page shows a streamed proof run, one event per line", async ({ pag
   await page.goto("#/cli/overview~streaming-a-run");
   const block = page.locator("figure[data-code]").filter({ has: page.locator("figcaption", { hasText: "--stream" }) });
   await expect(block).toBeInViewport();
-  await expect(block).toContainText('{"event":"start","model":"shipping_fee"');
-  await expect(block).toContainText('{"event":"clause","clauseId":"C1","intentIds":["I1"],"verdict":"violated"');
+  await expect(block).toContainText('{"event":"start","proposal":"P-001"');
+  await expect(block).toContainText('{"event":"proof","proof":"P-001.PF-01","role":"proposal","verdict":"violated"');
   await expect(block).toContainText('{"event":"result","status":"not-proved"');
 });
 

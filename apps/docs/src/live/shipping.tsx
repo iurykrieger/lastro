@@ -105,7 +105,7 @@ export function ShippingPlayground() {
       <Engines run={run} busy={busy} />
       {run && <ClauseRows clauses={spec.plan.clauses} results={run.ts.clauses} rust={run.rust?.clauses} />}
       {run && <Code lang="text" title="lastro feedback" code={feedback} wrap className="my-0" />}
-      {run && <Code lang="markdown" title=".lastro/receipt.md" code={run.receipt} className="my-0" />}
+      {run && <Code lang="markdown" title="the receipt" code={run.receipt} className="my-0" />}
     </Playground>
   );
 }

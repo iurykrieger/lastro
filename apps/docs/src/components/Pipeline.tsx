@@ -1,12 +1,13 @@
 import { ArrowRight, Bot, Cog, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** The four stages, who runs each, and what it hands to the next. */
+/** The five stages of a proposal, who runs each, and what it hands to the next. */
 const STAGES = [
-  { name: "plan", who: "AI", out: "intents", note: "extract reviewable intents from prose" },
-  { name: "review", who: "People", out: "approved intents", note: "approve, amend, reject, answer decisions" },
-  { name: "spec", who: "AI", out: "formal spec", note: "derive LSL clauses, then validate and check consistency" },
-  { name: "prove", who: "Deterministic", out: "proof + receipt", note: "check the code in two engines" },
+  { name: "propose", who: "AI", out: "intents", note: "read prose against the use cases; add, change or remove them" },
+  { name: "review", who: "People", out: "approved proposal", note: "approve, amend, reject, answer decisions" },
+  { name: "derive", who: "AI", out: "proofs", note: "derive LSL proofs, then validate and check consistency" },
+  { name: "prove", who: "Deterministic", out: "verdicts + receipt", note: "check the code and every regression in two engines" },
+  { name: "apply", who: "Deterministic", out: "use cases", note: "proofs join their use cases as regression tests" },
 ] as const;
 
 const ICON = { AI: Bot, People: User, Deterministic: Cog };
@@ -15,7 +16,7 @@ const TONE = { AI: "text-evidence bg-evidence-soft", People: "text-trusted bg-tr
 export function Pipeline({ className }: { className?: string }) {
   return (
     <figure className={cn("my-8", className)} aria-label="The Lastro pipeline">
-      <ol className="grid gap-2 sm:grid-cols-4">
+      <ol className="grid gap-2 sm:grid-cols-5">
         {STAGES.map((s, i) => {
           const Icon = ICON[s.who];
           return (
@@ -37,7 +38,7 @@ export function Pipeline({ className }: { className?: string }) {
       </ol>
       <figcaption className="mt-3 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
         <span>
-          <span className="font-medium text-foreground">Contradictions</span> found by <span className="font-mono">spec</span> return to review as decisions.
+          <span className="font-medium text-foreground">Contradictions</span> found by <span className="font-mono">derive</span> return to review as decisions.
         </span>
         <span>
           <span className="font-medium text-foreground">Failures</span> found by <span className="font-mono">prove</span> go to whoever writes the code. Lastro never

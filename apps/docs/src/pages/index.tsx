@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import { Installation, Introduction, Quickstart } from "./start";
 import { ExampleBugs, ExampleLogin, ExampleReview, ExampleShipping, ExampleTrust, ExamplesOverview } from "./examples";
-import { ConceptDecisions, ConceptIntents, ConceptPipeline, ConceptReceipts, ConceptReview, ConceptSpec, ConceptVerdicts } from "./concepts";
+import { ConceptDecisions, ConceptIntents, ConceptPipeline, ConceptProposals, ConceptReceipts, ConceptReview, ConceptSpec, ConceptVerdicts } from "./concepts";
 import { CliLlm, CliOverview, CliWorkspace } from "./cli";
 import { PluginAgents } from "./plugins";
 import { SdkDotnet, SdkGo, SdkInterop, SdkTypeScript } from "./sdks";
@@ -25,6 +25,7 @@ export const PAGE_COMPONENTS: Record<string, ComponentType> = {
   "concepts/spec": ConceptSpec,
   "concepts/verdicts": ConceptVerdicts,
   "concepts/receipts": ConceptReceipts,
+  "concepts/proposals": ConceptProposals,
   "cli/overview": CliOverview,
   "cli/workspace": CliWorkspace,
   "cli/llm": CliLlm,

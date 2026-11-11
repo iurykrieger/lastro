@@ -42,7 +42,7 @@ import (
 
 const usage = `lastro-go <command> [options]
 
-  init --model <model.json> [--subject <module>[#export]] [--approvals N] [--submitter-cannot-approve]
+  init [--model <model.json>] [--subject <module>[#export]] [--approvals N] [--submitter-cannot-approve]
                                                 start a .lastro/ workspace (or add a model to it)
   propose <prose-file> [--section <heading>] [--as <submitter>] [--proposal <P>]
                                                 create a proposal and extract its intents against the use cases;
@@ -638,12 +638,16 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 
 	switch cmd {
 	case "init":
-		if a.flags["model"] == "" {
-			return 0, nil, fail(2, kv{"error", "init needs --model <model.json>"})
+		// Without --model the workspace starts empty: proposals can be written and reviewed, and a bootstrap brings models later.
+		hasModel := a.flags["model"] != "" && a.flags["model"] != "true"
+		if s := a.flags["subject"]; s != "" && s != "true" && !hasModel {
+			return 0, nil, fail(2, kv{"error", "--subject needs --model <model.json>"})
 		}
 		var model lastro.Model
-		if err := readJSON(a.flags["model"], &model); err != nil {
-			return 0, nil, err
+		if hasModel {
+			if err := readJSON(a.flags["model"], &model); err != nil {
+				return 0, nil, err
+			}
 		}
 		cfg := config{models: map[string]lastro.Model{}, subjects: json.RawMessage("{}"), review: lastro.DefaultPolicy}
 		if ws.exists() {
@@ -652,11 +656,13 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 				return 0, nil, err
 			}
 		}
-		if _, ok := cfg.models[model.Name]; !ok {
-			cfg.modelOrder = append(cfg.modelOrder, model.Name)
+		if hasModel {
+			if _, ok := cfg.models[model.Name]; !ok {
+				cfg.modelOrder = append(cfg.modelOrder, model.Name)
+			}
+			cfg.models[model.Name] = model
 		}
-		cfg.models[model.Name] = model
-		if s := a.flags["subject"]; s != "" && s != "true" {
+		if s := a.flags["subject"]; hasModel && s != "" && s != "true" {
 			module, exp, _ := strings.Cut(s, "#")
 			ref := obj{{"module", module}}
 			if exp != "" {

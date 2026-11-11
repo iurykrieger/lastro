@@ -119,7 +119,7 @@ export function prove(ws, proposal = "") {
 
 export function handle(event, input, env = process.env) {
   const ws = loadWorkspace(input.cwd ?? process.cwd(), env);
-  if (!ws) return {}; // the repository does not use the plugin
+  if (!ws || !ws.config.enabled) return {}; // the repository does not use the plugin, or turned it off
   const harness = harnessOf(input, env);
 
   switch (event) {
@@ -152,7 +152,7 @@ export function handle(event, input, env = process.env) {
       const generated = kinds.filter(([, k]) => k === "generated").map(([p]) => p);
       if (generated.length) return deny(`${generated.join(", ")} ${generated.length > 1 ? "are" : "is"} written only by the Lastro CLI. Run the CLI command instead of editing it.`);
       if (kinds.some(([, k]) => k === "config")) return harness === "claude" ? ask("This changes how Lastro gates and proves this repository (.lastro/plugin.json).") : deny("Only the user changes .lastro/plugin.json.");
-      if (ws.config.gate === "off" || !kinds.some(([, k]) => k === "code")) return {};
+      if (!kinds.some(([, k]) => k === "code")) return {};
       const s = snapshot(ws);
       // Code edits belong to an approved proposal whose proofs are not passing yet. Anything else is a new change.
       if (["implementing", "failed"].includes(s.phase)) return {};

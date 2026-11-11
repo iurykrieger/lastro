@@ -56,7 +56,7 @@ class Exit extends Error {
 
 const USAGE = `lastro <command> [options]
 
-  init --model <model.json> [--subject <module.js>[#export]] [--approvals N] [--submitter-cannot-approve]
+  init [--model <model.json>] [--subject <module.js>[#export]] [--approvals N] [--submitter-cannot-approve]
                                                 start a .lastro/ workspace (or add a model to it)
   propose <prose-file> [--section <heading>] [--as <submitter>] [--proposal <P>]
                                                 create a proposal and extract its intents against the use cases;
@@ -296,11 +296,12 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
 
     switch (cmd) {
       case "init": {
-        if (!args.flags.model) throw new Exit(2, { error: "init needs --model <model.json>" });
-        const model = readJson<Model>(resolve(args.flags.model));
+        // Without --model the workspace starts empty: proposals can be written and reviewed, and a bootstrap brings models later.
+        const model = args.flags.model ? readJson<Model>(resolve(args.flags.model)) : undefined;
+        if (args.flags.subject && !model) throw new Exit(2, { error: "--subject needs --model <model.json>" });
         const cfg: WorkspaceConfig = ws.exists() ? ws.config() : { models: {}, subjects: {}, review: { approvals: 1, submitterCanApprove: true } };
-        cfg.models[model.name] = model;
-        if (args.flags.subject) {
+        if (model) cfg.models[model.name] = model;
+        if (args.flags.subject && model) {
           const [module, exp] = args.flags.subject.split("#");
           cfg.subjects[args.flags["subject-name"] ?? model.name] = { module: module!, ...(exp ? { export: exp } : {}) };
         }

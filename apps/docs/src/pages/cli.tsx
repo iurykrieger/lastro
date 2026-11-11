@@ -25,7 +25,7 @@ export function CliOverview() {
         title="lastro (no arguments)"
         code={`lastro <command> [options]
 
-  init --model <model.json> [--subject <module.js>[#export]] [--approvals N] [--submitter-cannot-approve]
+  init [--model <model.json>] [--subject <module.js>[#export]] [--approvals N] [--submitter-cannot-approve]
                                                 start a .lastro/ workspace (or add a model to it)
   propose <prose-file> [--section <heading>] [--as <submitter>] [--proposal <P>]
                                                 create a proposal and extract its intents against the use cases;

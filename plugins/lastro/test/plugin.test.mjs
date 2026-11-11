@@ -67,6 +67,30 @@ test("without .lastro/plugin.json the hooks do nothing", () => {
   assert.deepEqual(handle("Stop", { cwd: dir }, claude), {});
 });
 
+test("enabled: false turns every hook off; an older gate: \"off\" still means the same", { skip }, () => {
+  for (const config of [{ enabled: false }, { gate: "off" }]) {
+    const dir = planned(config);
+    assert.equal(loadWorkspace(dir).config.enabled, false);
+    assert.equal("gate" in loadWorkspace(dir).config, false);
+    assert.deepEqual(edit(dir, "src/fee.js"), {});
+    assert.deepEqual(handle("Stop", { cwd: dir }, claude), {});
+    assert.deepEqual(handle("SessionStart", { cwd: dir }, claude), {});
+  }
+  const on = planned({ gate: "on" });
+  assert.equal(loadWorkspace(on).config.enabled, true);
+  assert.equal(decision(edit(on, "src/fee.js")), "deny");
+});
+
+test("init without --model starts an empty workspace that the gate accepts", { skip }, () => {
+  const dir = repoWith({ enabled: true });
+  const r = lastro(dir, "init");
+  assert.equal(r.code, 0);
+  assert.deepEqual(r.body.models, []);
+  assert.equal(lastro(dir, "init", "--subject", "./shipping.mjs").code, 2);
+  assert.equal(snapshot(loadWorkspace(dir)).phase, "no-proposal");
+  assert.equal(decision(edit(dir, "src/fee.js")), "deny");
+});
+
 test("paths: Claude Code edits and Codex patches", () => {
   assert.deepEqual(editedPaths({ file_path: "/r/src/a.ts" }), ["/r/src/a.ts"]);
   const patch = "*** Begin Patch\n*** Update File: src/fee.js\n@@\n-a\n+b\n*** Add File: src/new.js\n+x\n*** Update File: src/old.js\n*** Move to: src/moved.js\n*** End Patch";

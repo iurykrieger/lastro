@@ -97,7 +97,7 @@ approval policy.
   "cli": "npx lastro",
   "build": "npm run build",
   "prove": "dist/shipping.js --export shippingFee",
-  "gate": "on",
+  "enabled": true,
   "allow": ["docs/**", "**/*.md"],
   "maxIterations": 5
 }
@@ -109,7 +109,7 @@ approval policy.
 | `dir` | `.lastro` | The workspace. |
 | `build` | none | Runs before each proof. |
 | `prove` | none | The arguments after `lastro prove`. |
-| `gate` | `on` | `off` never blocks edits. |
+| `enabled` | `true` | `false` turns the plugin off in this repository: no gate, no proofs on Stop, no board. (An older `"gate": "off"` still means `false`.) |
 | `allow` | `[]` | Globs the gate never blocks. |
 | `maxIterations` | `5` | How many failing proofs the Stop hook sends back before handing over. |
 

@@ -14,8 +14,8 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
 - `sdks/go`: Go SDK and `lastro-go` CLI. Same data model, hashes and `.lastro/` workspace as the TS SDK.
 - `plugins/lastro`: one plugin for Claude Code and Codex (skills, hooks, progress board) that wraps the `lastro` CLI.
   Root marketplaces: `.claude-plugin/marketplace.json` (Claude Code) and `.agents/plugins/marketplace.json` (Codex).
-  This repository enables both plugins for itself in `.claude/settings.json`; `.lastro/plugin.json` keeps the gate off until
-  the workspace has a model (`lastro init`).
+  This repository enables both plugins for itself in `.claude/settings.json`; `.lastro/plugin.json` turns the plugin on
+  (`"enabled": true`): code edits wait for an approved proposal, as for any user of the plugin.
 - `plugins/lastro-board`: a Claude Code mod (pane, band, toasts) that draws the same board live from `.lastro/`.
 - `apps/sandbox`: Vite + React + shadcn/ui sandbox (prose, code, contrast) running the real SDK and the WASM prover.
 - `apps/docs`: Vite + React + shadcn/ui developer docs. Pages live in `src/pages`, the sidebar in `src/content/nav.ts`.

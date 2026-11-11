@@ -114,7 +114,7 @@ export function PluginAgents() {
   "cli": "npx lastro",
   "build": "npm run build",
   "prove": "dist/shipping.js --export shippingFee",
-  "gate": "on",
+  "enabled": true,
   "allow": ["docs/**", "**/*.md"],
   "maxIterations": 5
 }`}
@@ -126,7 +126,7 @@ export function PluginAgents() {
           [<C>dir</C>, <C>.lastro</C>, "The workspace."],
           [<C>build</C>, "none", "Runs before each proof."],
           [<C>prove</C>, "none", <>The arguments after <C>lastro prove</C>.</>],
-          [<C>gate</C>, <C>on</C>, <><C>off</C> never blocks edits.</>],
+          [<C>enabled</C>, <C>true</C>, <><C>false</C> turns the plugin off in this repository: no gate, no proofs on Stop, no board.</>],
           [<C>allow</C>, <C>[]</C>, "Paths (globs) the gate never blocks."],
           [<C>maxIterations</C>, <C>5</C>, "How many failing proofs the Stop hook sends back before handing over to you."],
         ]}

@@ -24,8 +24,8 @@ export const DEFAULTS = {
   build: null,
   /** The arguments after `lastro prove`, e.g. "dist/fee.js --export shippingFee" (required to prove). */
   prove: null,
-  /** "on": code edits wait for an approved proposal whose proofs are derived; "off": never block. */
-  gate: "on",
+  /** true: the hooks run (code edits wait for an approved proposal, proofs run on Stop, the board shows); false: the plugin does nothing. */
+  enabled: true,
   /** Paths (globs, relative to the root) the gate never blocks. `.lastro/` proposals and handoff answers are always allowed. */
   allow: [],
   /** How many times the Stop hook sends failing proofs back to the agent before handing over to the user. */
@@ -58,7 +58,12 @@ const readJson = (p) => {
 export function loadWorkspace(cwd, env = process.env) {
   const root = findRoot(cwd);
   if (!root) return null;
-  const config = { ...DEFAULTS, ...(readJson(join(root, PLUGIN_FILE)) ?? {}) };
+  const raw = readJson(join(root, PLUGIN_FILE)) ?? {};
+  const config = { ...DEFAULTS, ...raw };
+  // Before `enabled`, the switch was `gate: "on" | "off"`; an old file keeps meaning what it meant.
+  if (raw.enabled === undefined && raw.gate === "off") config.enabled = false;
+  config.enabled = config.enabled !== false;
+  delete config.gate;
   if (env.LASTRO_CLI) config.cli = env.LASTRO_CLI;
   const dir = resolve(root, config.dir);
   return { root, dir, config, file: (name) => join(dir, name), statePath: join(dir, "plugin", "state.json") };

@@ -20,7 +20,7 @@ public static class Cli
     public const string Usage = """
         lastro <command> [options]
 
-          init --model <model.json> [--subject <assembly.dll>#<Namespace.Type.Method>] [--approvals N] [--submitter-cannot-approve]
+          init [--model <model.json>] [--subject <assembly.dll>#<Namespace.Type.Method>] [--approvals N] [--submitter-cannot-approve]
                                                         start a .lastro/ workspace (or add a model to it)
           propose <prose-file> [--section <heading>] [--as <submitter>] [--proposal <P>]
                                                         create a proposal and extract its intents against the use cases;
@@ -391,11 +391,12 @@ public static class Cli
             {
                 case "init":
                 {
-                    if (!args.Flags.TryGetValue("model", out var modelPath)) throw new ExitException(2, Obj(("error", "init needs --model <model.json>")));
-                    var model = ReadJson<Model>(Path.GetFullPath(modelPath));
+                    // Without --model the workspace starts empty: proposals can be written and reviewed, and a bootstrap brings models later.
+                    var model = args.Flags.TryGetValue("model", out var modelPath) && modelPath != "true" ? ReadJson<Model>(Path.GetFullPath(modelPath)) : null;
+                    if (model is null && args.Flags.TryGetValue("subject", out var subj) && subj != "true") throw new ExitException(2, Obj(("error", "--subject needs --model <model.json>")));
                     var cfg = ws.Exists ? ws.Config() : new Config();
-                    cfg.Models[model.Name] = model;
-                    if (args.Flags.TryGetValue("subject", out var s) && s != "true")
+                    if (model is not null) cfg.Models[model.Name] = model;
+                    if (model is not null && args.Flags.TryGetValue("subject", out var s) && s != "true")
                     {
                         var hash = s.IndexOf('#');
                         var reference = Obj(("module", hash < 0 ? s : s[..hash]));

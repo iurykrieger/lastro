@@ -16,6 +16,10 @@
     "./claude": {
       "types": "./dist/src/llm/claude.d.ts",
       "default": "./dist/src/llm/claude.js"
+    },
+    "./workspace": {
+      "types": "./dist/src/workspace.d.ts",
+      "default": "./dist/src/workspace.js"
     }
   },
   "scripts": {

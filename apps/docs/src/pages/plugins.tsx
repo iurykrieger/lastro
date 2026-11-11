@@ -191,6 +191,10 @@ $ LASTRO_DIR=../shop/.lastro npm run review   # any other workspace`} />
             "One block per touched use case, like a changed file: its description before and after as a word diff, then its intents. Each intent shows the quote it came from and the proofs approving it replaces. Filter by all, not settled, or waiting for me.",
           ],
           ["Proofs", "The proofs derived for the proposal, the ones it supersedes, and the last run."],
+          [
+            "Time-lapse",
+            "Every lastro prove run of the proposal while the code is written, as a Gantt: one bar per intent (failing, then passing since run n) and one row per proof, plus the use cases' regression proofs. Play it, scrub it, or click a run or a cell to see what the proof checks, its verdict, the counterexample, and what changed since the run before.",
+          ],
           ["Use cases", "The application today: every use case, its regression proofs, its history, and the changes open proposals make to it."],
         ]}
       />
@@ -206,6 +210,14 @@ $ LASTRO_DIR=../shop/.lastro npm run review   # any other workspace`} />
         <C>assistant</C>, <C>ai</C>, <C>bot</C>) as reviewers, and the policy in <C>.lastro/config.json</C> decides how many approvals an intent needs and
         whether the submitter counts.
       </Callout>
+
+      <H2>Following the implementation</H2>
+      <P>
+        Once a proposal is approved and its proofs derived, each <C>lastro prove</C> appends its run to{" "}
+        <C>.lastro/proposals/&lt;id&gt;-&lt;slug&gt;.runs.jsonl</C>: when it ran, the commit and whether the tree had uncommitted changes, and every proof's
+        outcome. The time-lapse tab draws that history and updates as new runs land, so you can watch an agent's implementation converge, see which intent
+        started passing when, spot a regression the moment it appears, and open the counterexample of any run to troubleshoot.
+      </P>
 
       <H2>Reviewing together</H2>
       <P>

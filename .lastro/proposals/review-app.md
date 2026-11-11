@@ -24,6 +24,13 @@ request as the CLI. When nothing blocks, the app approves the proposal, as the C
 refused when the policy says the submitter cannot approve, and names an agent would use (claude, codex, agent,
 assistant, ai, bot) cannot review at all. An approved, applied or closed proposal is read-only.
 
+While the code is written, a time-lapse tab shows every `lastro prove` run of the proposal, read from its
+`.runs.jsonl` history, as a Gantt chart: one bar per intent, failing then passing from the run where all its proofs pass,
+one row per proof and per use case's regression proofs, one column per run with its time. It plays run by run, can be
+scrubbed, and updates when a new run is appended. Clicking a run shows its time, commit, uncommitted changes, outcomes,
+regressions and which proofs changed state since the run before; clicking a proof shows what it checks, its verdict,
+its counterexample in that run and its verdict in every run.
+
 The reviewer's name defaults to `LASTRO_REVIEWER` or `git config user.name` and can be changed per browser. People on
 the same server review the same files: actions are applied one at a time to the latest file, and every open page
 reloads when a file in the workspace changes. People on other machines share the proposal files through git.

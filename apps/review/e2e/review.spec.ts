@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { WORK_DIR, resetWorkspace } from "./fixture";
@@ -46,6 +46,8 @@ test("proposals list, proposal and use cases render without errors or horizontal
     ["#/proposals/P-002", "Raise the free shipping threshold"],
     ["#/proposals/P-002/changes", "Raise the free shipping threshold"],
     ["#/proposals/P-002/proofs", "Raise the free shipping threshold"],
+    ["#/proposals/P-002/timeline", "Raise the free shipping threshold"],
+    ["#/proposals/P-003/timeline", "Discount codes"],
     ["#/usecases", "Use cases"],
     ["#/usecases/UC-001", "Free shipping over a threshold"],
   ] as const) {
@@ -60,12 +62,14 @@ test("proposals list, proposal and use cases render without errors or horizontal
 test("the proposals list shows status and progress, and opens a proposal", async ({ page }) => {
   await page.goto("./");
   const rows = page.getByTestId("proposal-row");
-  await expect(rows).toHaveCount(2);
-  await expect(rows.first()).toContainText("P-002");
-  await expect(rows.first()).toContainText("In review");
-  await expect(rows.first()).toContainText("0/3 intents settled");
-  await expect(rows.nth(1)).toContainText("Applied");
-  await rows.first().getByRole("link").click();
+  await expect(rows).toHaveCount(3);
+  await expect(rows.first()).toContainText("P-003");
+  await expect(rows.first()).toContainText("Proving");
+  const p2 = rows.filter({ hasText: "P-002" });
+  await expect(p2).toContainText("In review");
+  await expect(p2).toContainText("0/3 intents settled");
+  await expect(rows.filter({ hasText: "P-001" })).toContainText("Applied");
+  await p2.getByRole("link").click();
   await expect(page).toHaveURL(/#\/proposals\/P-002$/);
   await expect(page.getByTestId("prose")).toContainText("Free shipping now starts at 150");
   await expect(page.getByTestId("decision")).toContainText("Does the shipping estimate round to whole units?");
@@ -219,4 +223,73 @@ test("recombining without an API key writes a handoff request for an agent to an
   const req = JSON.parse(readFileSync(join(WORK_DIR, "llm", requests[0]!), "utf8"));
   expect(req.user).toContain("Keep it to one sentence.");
   expect(existsSync(join(WORK_DIR, "llm", requests[0]!.replace(".request.json", ".answer.json")))).toBe(false);
+});
+
+test.describe("proof time-lapse", () => {
+  const cell = (page: Page, row: string, run: number) => page.getByRole("gridcell", { name: new RegExp(`^${row}, run ${run}:`) });
+
+  test("shows every prove run as a Gantt of the intents, from failing to passing", async ({ page }) => {
+    const errors = watchErrors(page);
+    await page.goto("#/proposals/P-003/timeline");
+    const t = page.getByTestId("timeline");
+    await expect(t).toContainText("5 runs over 48 min");
+    await expect(t).toContainText("All proofs passed first at run 4");
+    await expect(t).toContainText("2 of 2 intents passing now");
+    const i1 = page.locator('[data-group="P-003.I-01"]');
+    await expect(i1.getByTestId("passing-since")).toHaveText("passes since run 3");
+    await expect(page.locator('[data-group="P-003.I-02"]').getByTestId("passing-since")).toHaveText("passes since run 4");
+    await expect(cell(page, "Ten percent off the items", 1)).toHaveAttribute("data-state", "fail");
+    await expect(cell(page, "Ten percent off the items", 2)).toHaveAttribute("data-state", "pass");
+    // The use case's existing proof broke in run 3: a regression.
+    await expect(cell(page, "UC-001", 3)).toHaveAttribute("data-state", "fail");
+    await expect(page.getByTestId("run-detail")).toContainText("Run 5");
+    expect(errors).toEqual([]);
+  });
+
+  test("clicking a run and a proof shows what was tested, the counterexample and what changed", async ({ page }) => {
+    await page.goto("#/proposals/P-003/timeline");
+    await cell(page, "Expired codes change nothing", 2).click();
+    const run = page.getByTestId("run-detail");
+    await expect(run).toContainText("Run 2");
+    await expect(run).toContainText("1/3 proposal proofs pass");
+    await expect(run.getByTestId("flips")).toContainText("P-003.PF-01 now passes");
+    const proof = page.getByTestId("proof-detail");
+    await expect(proof).toContainText("Expired codes change nothing");
+    await expect(proof).toContainText('in.code = "expired"');
+    await expect(proof.getByTestId("counterexample")).toContainText('{"code":"expired","items":50}');
+
+    await page.getByRole("columnheader", { name: /^Run 3 at/ }).click();
+    await expect(run).toContainText("1 regression(s)");
+    await expect(run.getByTestId("flips")).toContainText("P-001.PF-01 now fails (violated)");
+    await proof.getByRole("button", { name: "Run 4: evidenced" }).click();
+    await expect(run).toContainText("Run 4");
+    await expect(run).toContainText("+ uncommitted changes");
+  });
+
+  test("plays the time-lapse from the first run to the last", async ({ page }) => {
+    await page.goto("#/proposals/P-003/timeline");
+    await page.getByRole("button", { name: "First run" }).click();
+    await expect(page.getByTestId("run-detail")).toContainText("Run 1");
+    await expect(cell(page, "Ten percent off the items", 5)).toHaveClass(/opacity-25/);
+    await page.getByRole("button", { name: "Play the time-lapse" }).click();
+    await expect(page.getByTestId("run-detail")).toContainText("Run 5", { timeout: 8000 });
+    await expect(page.getByRole("button", { name: "Play the time-lapse" })).toBeVisible();
+    await expect(cell(page, "Ten percent off the items", 5)).not.toHaveClass(/opacity-25/);
+  });
+
+  test("a new run appears live while the code is being written", async ({ page }) => {
+    await page.goto("#/proposals/P-003/timeline");
+    await expect(page.getByTestId("run-detail")).toContainText("Run 5");
+    const file = join(WORK_DIR, "proposals", "P-003-discount-codes.runs.jsonl");
+    const last = JSON.parse(readFileSync(file, "utf8").trim().split("\n").pop()!);
+    appendFileSync(file, JSON.stringify({ ...last, run: 6, at: "2026-11-11T15:00:00.000Z" }) + "\n");
+    await expect(page.getByTestId("run-detail")).toContainText("Run 6");
+    await expect(page.getByTestId("timeline")).toContainText("6 runs");
+  });
+
+  test("a proposal without runs explains where they come from", async ({ page }) => {
+    await page.goto("#/proposals/P-002/timeline");
+    await expect(page.getByText("No proof runs yet.")).toBeVisible();
+    await expect(page.getByText("P-002-raise-free-shipping-threshold.runs.jsonl")).toBeVisible();
+  });
 });

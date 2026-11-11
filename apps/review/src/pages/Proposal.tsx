@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileDiff, FlaskConical, MessagesSquare } from "lucide-react";
+import { Activity, FileDiff, FlaskConical, MessagesSquare } from "lucide-react";
 import type { Proposal } from "@lastro/sdk";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,13 +9,15 @@ import { DecisionView } from "@/components/Decision";
 import { Markdown } from "@/components/Markdown";
 import { ReviewBox } from "@/components/ReviewBox";
 import { ThreadView, Threads } from "@/components/Threads";
+import { Timeline } from "@/components/Timeline";
 import { UseCaseChangeView } from "@/components/UseCaseChange";
 import { proofIndex, settled, waitsFor } from "@/lib/review";
 import { href, type Route } from "@/lib/router";
 import { useWorkspace } from "@/lib/workspace";
 import { cn } from "@/lib/utils";
 
-type Tab = "conversation" | "changes" | "proofs";
+type Tab = "conversation" | "changes" | "proofs" | "timeline";
+const TABS: Tab[] = ["changes", "proofs", "timeline"];
 type Filter = "all" | "mine" | "open";
 
 function Conversation({ p }: { p: Proposal }) {
@@ -165,7 +167,9 @@ export function ProposalPage({ route }: { route: Route }) {
   const { data, reviewer } = useWorkspace();
   const id = route.path[1]!;
   const p = data?.proposals.find((x) => x.id === id || x.slug === id);
-  const tab: Tab = route.path[2] === "changes" || route.path[2] === "proofs" ? route.path[2] : "conversation";
+  const tab: Tab = TABS.find((t) => t === route.path[2]) ?? "conversation";
+  const runs = data?.runs?.[p?.id ?? ""] ?? [];
+  const proofs = useMemo(() => proofIndex(data?.useCases ?? [], data?.proposals), [data]);
   useEffect(() => {
     if (p) document.title = `${p.id} ${p.name} · Lastro Review`;
   }, [p]);
@@ -210,6 +214,9 @@ export function ProposalPage({ route }: { route: Route }) {
             <TabsTrigger value="proofs">
               <FlaskConical className="size-4" aria-hidden /> Proofs <span className="text-xs text-muted-foreground">{p.proofs.length}</span>
             </TabsTrigger>
+            <TabsTrigger value="timeline">
+              <Activity className="size-4" aria-hidden /> Time-lapse <span className="text-xs text-muted-foreground">{runs.length}</span>
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="conversation">
             <Conversation p={p} />
@@ -219,6 +226,9 @@ export function ProposalPage({ route }: { route: Route }) {
           </TabsContent>
           <TabsContent value="proofs">
             <Proofs p={p} />
+          </TabsContent>
+          <TabsContent value="timeline">
+            <Timeline key={p.id} p={p} runs={runs} proofs={proofs} />
           </TabsContent>
         </Tabs>
         <div className="xl:sticky xl:top-20 xl:self-start">

@@ -26,7 +26,7 @@ import {
 } from "../../../sdks/typescript/src/index.ts";
 import { sha256Hex } from "../../../sdks/typescript/src/sha256.ts";
 import { openWorkspace, writeJson } from "../../../sdks/typescript/src/workspace.ts";
-import type { ReviewAction, WorkspaceSnapshot } from "../src/lib/api-types.ts";
+import type { ProofRunRecord, ReviewAction, WorkspaceSnapshot } from "../src/lib/api-types.ts";
 
 /** Names an agent would use. Intents are reviewed by people; the agent is their author, never a reviewer. */
 export const AGENT_NAMES = /^(claude|codex|agent|assistant|ai|bot)$/i;
@@ -78,6 +78,25 @@ async function pickAsk(dir: string): Promise<AskJson> {
   return handoffAsk(dir);
 }
 
+/**
+ * A proposal's proof-run history: `<id>-<slug>.runs.jsonl`, one run per line, appended by `lastro prove`.
+ * A line that does not parse (a run being written) is skipped.
+ */
+export function readRuns(file: string): ProofRunRecord[] {
+  if (!existsSync(file)) return [];
+  const out: ProofRunRecord[] = [];
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      const r = JSON.parse(line) as ProofRunRecord;
+      if (Array.isArray(r.outcomes)) out.push(r);
+    } catch {
+      // skip
+    }
+  }
+  return out.map((r, i) => ({ ...r, run: r.run ?? i + 1 }));
+}
+
 export function createApi(dir: string) {
   const ws = openWorkspace(dir);
   let queue: Promise<unknown> = Promise.resolve();
@@ -90,12 +109,14 @@ export function createApi(dir: string) {
 
   function snapshot(): WorkspaceSnapshot {
     if (!existsSync(dir)) throw new ApiError(404, `no .lastro workspace at ${dir}`);
+    const proposals = ws.proposals();
     return {
       dir,
       reviewer: defaultReviewer(),
       llm: process.env.ANTHROPIC_API_KEY ? "anthropic" : "handoff",
       useCases: ws.useCases(),
-      proposals: ws.proposals(),
+      proposals,
+      runs: Object.fromEntries(proposals.map((p) => [p.id, readRuns(ws.proposalPath(p, ".runs.jsonl"))])),
     };
   }
 

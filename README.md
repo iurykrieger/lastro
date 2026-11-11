@@ -29,6 +29,7 @@ code / production traces ──────── verify ───┤──▶ T
 | [`sdks/dotnet`](sdks/dotnet) | .NET SDK and CLI. Same wire format, hashes, verdicts, receipts and prompts as the TypeScript SDK, so both CLIs work on one `.lastro/` workspace. |
 | [`sdks/go`](sdks/go) | Go SDK and the `lastro-go` CLI. Same data model, hashes and `.lastro/` workspace as the TypeScript SDK; its engine is cross-checked against the TS engine and the Rust prover. |
 | [`apps/sandbox`](apps/sandbox) | Interactive sandbox built with shadcn/ui: the prose and its intents, the generated code, and a contrast section that proves one against the other live, in both engines. |
+| [`apps/docs`](apps/docs) | Developer docs site built with shadcn/ui: getting started, concepts, the CLI and examples for every SDK. Its examples run in CI, so the docs stay true. Published at [iurykrieger.github.io/lastro](https://iurykrieger.github.io/lastro/). |
 
 ## Quick start
 
@@ -38,6 +39,7 @@ Requires Rust (with the `wasm32-unknown-unknown` target) and Node 20+.
 npm install
 npm test            # cargo tests, WASM build, SDK tests (including the Rust cross-check)
 npm run sandbox     # opens the sandbox on http://localhost:5173
+npm run docs        # opens the developer docs on http://localhost:5174
 ```
 
 The sandbox walks through a store login. Things to try:

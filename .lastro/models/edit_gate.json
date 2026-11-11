@@ -1,0 +1,37 @@
+{
+  "name": "edit_gate",
+  "inputs": {
+    "approved": {
+      "type": "bool"
+    },
+    "proofs": {
+      "type": "bool"
+    },
+    "run": {
+      "type": "enum",
+      "values": [
+        "none",
+        "ok",
+        "failed"
+      ]
+    },
+    "stale": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "phase": {
+      "type": "enum",
+      "values": [
+        "review-pending",
+        "needs-proofs",
+        "implementing",
+        "failed",
+        "passed"
+      ]
+    },
+    "allowEdit": {
+      "type": "bool"
+    }
+  }
+}

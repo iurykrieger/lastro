@@ -1,0 +1,30 @@
+{
+  "name": "next_use_case_id",
+  "inputs": {
+    "a": {
+      "type": "int",
+      "min": 0,
+      "max": 12
+    },
+    "b": {
+      "type": "int",
+      "min": 0,
+      "max": 12
+    },
+    "reserved": {
+      "type": "int",
+      "min": 0,
+      "max": 12
+    },
+    "hasReserved": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "next": {
+      "type": "int",
+      "min": 1,
+      "max": 13
+    }
+  }
+}

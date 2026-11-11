@@ -1,0 +1,197 @@
+[
+  {
+    "slug": "extract-intents",
+    "name": "Extract intents from prose",
+    "description": "An AI step reads a plan written in prose and proposes a list of reviewable intents, one checkable promise each, with its kind (behavior, invariant, preserve, non-functional) and how it can be checked (formal, empirical, beyond proof)."
+  },
+  {
+    "slug": "anchor-intents-to-prose",
+    "name": "Anchor every intent to the prose",
+    "description": "Each intent carries a verbatim quote and its offsets in the prose (the intent map). An extraction whose quote is not found in the prose is rejected, so the AI cannot invent a requirement."
+  },
+  {
+    "slug": "raise-ambiguity-as-decisions",
+    "name": "Turn ambiguity into decision cards",
+    "description": "When the prose is ambiguous, extraction returns a decision card instead of guessing: one question, two to four options with their consequences, and one recommended option."
+  },
+  {
+    "slug": "record-not-promised",
+    "name": "Record what is not promised",
+    "description": "Extraction lists what a reader might assume but the prose does not promise (timing, rate limits...), and the receipt shows it under Not promised."
+  },
+  {
+    "slug": "review-intents",
+    "name": "Review intents",
+    "description": "A named reviewer approves, amends or rejects each intent. Amending keeps the original statement and a note; rejecting records why."
+  },
+  {
+    "slug": "add-missed-intent",
+    "name": "Add an intent the extractor missed",
+    "description": "A reviewer can add an intent the AI did not extract, anchored to the prose when possible, so an unstated requirement becomes explicit."
+  },
+  {
+    "slug": "enforce-approval-policy",
+    "name": "Enforce the team's approval policy",
+    "description": "The team sets how many distinct reviewers must approve each intent when it creates the SDK (default one). Amending resets the other approvals, rejected intents never reach the spec, and anything pending blocks the spec."
+  },
+  {
+    "slug": "answer-decisions",
+    "name": "Answer decision cards",
+    "description": "A reviewer picks an option on each decision card. Every decision must be answered before the intents can be frozen."
+  },
+  {
+    "slug": "freeze-reviewed-intents",
+    "name": "Freeze the reviewed intents",
+    "description": "Once nothing is pending, the intents are frozen with a SHA-256 hash over canonical JSON. Every later step is bound to that hash, and any change after the freeze is detected."
+  },
+  {
+    "slug": "carry-review-on-re-extraction",
+    "name": "Keep the review when the prose changes",
+    "description": "When edited prose is extracted again, intents with the same statement keep their verdict and approvals, amendments are reapplied when the AI repeats its original reading, decisions with the same question keep their answer, and only what changed needs a new look."
+  },
+  {
+    "slug": "declare-proof-model",
+    "name": "Declare the proof vocabulary",
+    "description": "A model names the inputs, outputs and helper definitions the proofs talk about, each with a domain (bool, enum, bounded or unbounded int, string). External facts enter as inputs."
+  },
+  {
+    "slug": "write-specs-in-lsl",
+    "name": "Write specs in LSL",
+    "description": "Proof obligations are written in LSL, a JSON expression language that is interpreted, never eval'ed, validated against the model, printed in readable notation and exported to SMT-LIB2."
+  },
+  {
+    "slug": "derive-proof-plan",
+    "name": "Derive the proof plan",
+    "description": "An AI step turns the frozen, approved intents into a proof plan: formal clauses (requires/ensures), trusted assumptions, Given/When/Then scenarios and beyond-proof items."
+  },
+  {
+    "slug": "validate-proof-plan",
+    "name": "Validate the proof plan",
+    "description": "The derived plan is checked deterministically: it cites only approved intents, every approved intent has an obligation or a beyond-proof reason, and every expression uses only model variables."
+  },
+  {
+    "slug": "return-contradictions-as-decisions",
+    "name": "Return contradictions to the team",
+    "description": "A consistency check looks for inputs where the clauses cannot all hold. Each contradiction comes back as a decision card, and its answer becomes a new intent that goes through review."
+  },
+  {
+    "slug": "prove-exhaustively",
+    "name": "Prove a clause over a finite domain",
+    "description": "When the input space is finite and small enough, the code runs on every input and a clause that never breaks is proved, with formal evidence."
+  },
+  {
+    "slug": "evidence-by-sampling",
+    "name": "Give evidence over large domains",
+    "description": "When the input space is too large or unbounded, the code runs on deterministic samples (fixed seed). A clause that holds is evidenced, never proved, with a failure-rate bound at 95% confidence (rule of three)."
+  },
+  {
+    "slug": "find-counterexamples",
+    "name": "Report counterexamples",
+    "description": "A clause the code breaks is violated, and the result carries the input and output that break it."
+  },
+  {
+    "slug": "catch-vacuous-and-weak-clauses",
+    "name": "Catch clauses that prove nothing",
+    "description": "A clause whose if-part no input satisfies is vacuous, and a clause that rejects none of the planted output mutants is weak. Both are reported as spec gaps for the team."
+  },
+  {
+    "slug": "check-production-traces",
+    "name": "Check recorded production runs",
+    "description": "Recorded real executions are checked against the clauses. A trace that breaks a clause proved on the model makes it violated and shows that a trusted piece does not hold."
+  },
+  {
+    "slug": "run-scenarios",
+    "name": "Run Given/When/Then scenarios",
+    "description": "Each scenario runs the code on a concrete input and checks an LSL expectation on the output. Scenarios are empirical evidence and test the trusted assumptions."
+  },
+  {
+    "slug": "track-trusted-assumptions",
+    "name": "Track trusted pieces",
+    "description": "Each assumption names the external piece the proof relies on (a library, the database), what you accept, what breaks if it is wrong, and the scenarios that check it."
+  },
+  {
+    "slug": "mark-beyond-proof",
+    "name": "Mark where proof stops",
+    "description": "Intents about external code, world facts, timing, human judgment or unstated requirements are listed as beyond proof, with the reason, and need human sign-off."
+  },
+  {
+    "slug": "roll-up-intent-verdicts",
+    "name": "Roll up a verdict per intent",
+    "description": "Clause, scenario and assumption results roll up into one verdict per intent: proved, proved under assumptions, evidenced (with a confidence), violated, beyond proof or gap."
+  },
+  {
+    "slug": "cross-check-with-rust-prover",
+    "name": "Cross-check with an independent prover",
+    "description": "The Rust prover (lastro-core, native CLI or WASM) re-checks the same clauses from a table of input/output rows. It enumerates the input space itself, reports coverage and a table digest, and its verdicts must agree with the SDK's."
+  },
+  {
+    "slug": "render-receipt",
+    "name": "Render a receipt",
+    "description": "A Markdown receipt for the pull request states, per intent, the level of assurance and what it rests on, with the hashes, the Rust cross-check, the trusted pieces and what is beyond proof."
+  },
+  {
+    "slug": "feedback-for-implementer",
+    "name": "Hand failures to whoever writes the code",
+    "description": "Failing obligations come back as plain data and as a brief with counterexamples that any coding agent or person can act on. Lastro never writes the implementation."
+  },
+  {
+    "slug": "explain-single-run",
+    "name": "Explain one run",
+    "description": "For one input and output, show which clauses apply, hold or fail."
+  },
+  {
+    "slug": "review-gaps-with-llm",
+    "name": "Review gaps the proofs cannot see",
+    "description": "An optional AI review lists what the proofs miss (an intent only partly captured, behavior that relies on an unmodeled input). It is evidence for humans, never proof."
+  },
+  {
+    "slug": "run-pipeline-from-cli",
+    "name": "Run the pipeline from a CLI",
+    "description": "The CLI (init, plan, status, review, spec, prove, feedback) runs the same pipeline as the library, prints one JSON object per command, keeps state in .lastro/ and uses exit codes 0 ok, 1 not ok, 2 error, 3 needs an LLM answer."
+  },
+  {
+    "slug": "hand-off-ai-steps",
+    "name": "Hand the AI steps to the calling agent",
+    "description": "Without an API key, the CLI writes each AI request (instructions, data, JSON Schema) to .lastro/llm/ with a deterministic id and exits 3; the calling agent answers with its own model and runs the command again."
+  },
+  {
+    "slug": "extract-from-document-section",
+    "name": "Extract from one section of a document",
+    "description": "The TypeScript CLI's plan --section reads only one Markdown section, so one versioned document can feed several workspaces."
+  },
+  {
+    "slug": "call-claude",
+    "name": "Run the AI steps on Claude",
+    "description": "A Claude transport runs extraction, derivation and gap review over the Anthropic API when ANTHROPIC_API_KEY is set."
+  },
+  {
+    "slug": "plug-any-llm",
+    "name": "Plug in any LLM transport",
+    "description": "The AI steps are transport-free prompts and schemas behind one AskJson function, and the extractor or deriver can be replaced, so Lastro does not depend on a specific model or agent product."
+  },
+  {
+    "slug": "use-sdk-in-typescript-dotnet-go",
+    "name": "Use Lastro from TypeScript, .NET or Go",
+    "description": "Three SDKs expose the same pipeline with the same data model, canonical hashes, verdicts, receipts and prompts, checked against each other by cross-check tests."
+  },
+  {
+    "slug": "share-workspace-across-sdks",
+    "name": "Share one workspace across CLIs",
+    "description": "The TypeScript, .NET and Go CLIs read and continue the same .lastro/ workspace: one can plan, another review, derive and prove."
+  },
+  {
+    "slug": "prove-code-in-any-language",
+    "name": "Prove code written in any language",
+    "description": "The subject under proof can be a JavaScript module export, a .NET static method, a Go function, a process that reads and writes JSON lines, or a recorded input/output table."
+  },
+  {
+    "slug": "explore-in-sandbox",
+    "name": "Explore the pipeline in the sandbox",
+    "description": "A web sandbox shows the prose with its intent map, review as a team, edits to the prose and code, planted bugs, per-clause verdicts from both engines, counterexamples and the receipt, all from the real SDK and the WASM prover."
+  },
+  {
+    "slug": "dogfood-lastro",
+    "name": "Check Lastro with Lastro",
+    "description": "Lastro's own use cases are written in prose in USE-CASES.md, extracted and reviewed with its own CLI in .lastro/, so the framework's rules are proved against its own code."
+  }
+]

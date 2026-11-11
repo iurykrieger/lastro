@@ -6,9 +6,9 @@ own workspace here.
 
 | Workspace | Section of `USE-CASES.md` | Code it will judge |
 |---|---|---|
-| `review-gate/` | Review gate | `Review`, `pendingReview`, `approvedIntents`, `freeze` (`packages/sdk/src/artifact.ts`) |
-| `clause-verdicts/` | Clause verdicts | `verify` (`packages/sdk/src/verify/engine.ts`) |
-| `re-extraction/` | Re-extraction keeps the review | `carryReview` (`packages/sdk/src/artifact.ts`) |
+| `review-gate/` | Review gate | `Review`, `pendingReview`, `approvedIntents`, `freeze` (`sdks/typescript/src/artifact.ts`) |
+| `clause-verdicts/` | Clause verdicts | `verify` (`sdks/typescript/src/verify/engine.ts`) |
+| `re-extraction/` | Re-extraction keeps the review | `carryReview` (`sdks/typescript/src/artifact.ts`) |
 
 Each workspace has the usual CLI state: `config.json` (model and review policy), `intents.json` (the extracted
 intents and their review) and `llm/` (each AI request and the answer it got, so every step can be replayed
@@ -23,7 +23,7 @@ Intents are extracted and **waiting for review**. No proof has been derived yet.
 Build the CLI once (`npm install && npm run build -w lastro`), then, per workspace:
 
 ```sh
-lastro() { node packages/sdk/dist/src/cli.js "$@"; }
+lastro() { node sdks/typescript/dist/src/cli.js "$@"; }
 
 lastro status --dir .lastro/review-gate                                  # intents, decisions, what is pending
 lastro review --dir .lastro/review-gate --as <you> approve I1 I2          # or approve-all

@@ -415,3 +415,17 @@ test("cli: --section reads one Markdown section, up to the next heading of the s
   assert.equal(section(md, "Clause verdicts").trim(), "Other rule.");
   assert.throws(() => section(md, "Missing"));
 });
+
+test("use-cases.json: the catalog of Lastro's use cases is well formed", () => {
+  const file = joinPath(toPath(new URL(".", import.meta.url)), "..", "..", "..", "..", "use-cases.json");
+  const cases = JSON.parse(readFile(file, "utf8")) as Record<string, unknown>[];
+  assert.ok(Array.isArray(cases) && cases.length > 0);
+  const slugs = new Set<string>();
+  for (const c of cases) {
+    assert.deepEqual(Object.keys(c).sort(), ["description", "name", "slug"], JSON.stringify(c));
+    assert.match(String(c.slug), /^[a-z0-9]+(-[a-z0-9]+)*$/, `slug ${c.slug} is not kebab-case`);
+    assert.ok(!slugs.has(c.slug as string), `duplicate slug ${c.slug}`);
+    slugs.add(c.slug as string);
+    assert.ok(String(c.name).trim() && String(c.description).trim(), `${c.slug} needs a name and a description`);
+  }
+});

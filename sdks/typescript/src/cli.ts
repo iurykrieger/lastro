@@ -30,6 +30,7 @@ import {
   carryProposalReview,
   pendingProposal,
   proposalFeedback,
+  reservedUseCaseIds,
   proveProposal,
   regress,
   renderProposalReceipt,
@@ -286,7 +287,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         const previous = args.flags.proposal ? ws.proposal(args.flags.proposal) : existing;
         const id = previous?.id ?? named?.[1] ?? ws.nextProposalId();
         const submittedBy = args.flags.as ?? previous?.submittedBy ?? process.env.LASTRO_USER ?? "submitter";
-        let p = await extractProposal(await pickAsk(args, ws.dir), { id, prose, submittedBy, useCases, policy: cfg.review });
+        let p = await extractProposal(await pickAsk(args, ws.dir), { id, prose, submittedBy, useCases, policy: cfg.review, reserved: reservedUseCaseIds(ws.proposals(), id) });
         if (previous) p = carryProposalReview(previous, p);
         const slug = previous?.slug ?? named?.[2];
         if (slug) p.slug = slug; // slugs are stable
@@ -370,6 +371,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
           if (run.enginesAgree !== undefined) stream({ event: "crosscheck", enginesAgree: run.enginesAgree });
         }
         ws.writeProposal(proposal);
+        ws.appendRun(proposal, run);
         const receipt = writeReceipt(ws, proposal, useCases);
         return { code: run.ok ? 0 : 1, body: { status: run.ok ? "proved" : "not-proved", proposal: proposal.id, ...runBody(run), receipt, feedback: proposalFeedback(proposal, useCases) } };
       }

@@ -6,11 +6,13 @@
  *   .lastro/proposals/<id>-<slug>.md          a proposal's prose
  *   .lastro/proposals/<id>-<slug>.json        a proposal
  *   .lastro/proposals/<id>-<slug>.receipt.md  its last receipt
+ *   .lastro/proposals/<id>-<slug>.runs.jsonl  every prove run, one JSON line each (time, commit, outcomes)
  *   .lastro/llm/                              LLM handoff requests and answers
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileNameOf, nextId, readPolicy, type Proposal, type ProposalPolicy, type UseCase } from "./proposal.js";
+import { fileNameOf, nextId, readPolicy, type Proposal, type ProposalPolicy, type ProposalRun, type UseCase } from "./proposal.js";
 import type { Model } from "./types.js";
 
 export interface SubjectRef {
@@ -30,6 +32,26 @@ export interface WorkspaceConfig {
 export const LEGACY_FILES = ["intents.json", "spec.json", "proof.json"];
 
 export class WorkspaceError extends Error {}
+
+/** One line of `<id>-<slug>.runs.jsonl`: a prove run, when it happened and on which commit. */
+export interface RunRecord extends ProposalRun {
+  /** 1-based, in the order the runs happened. */
+  run: number;
+  /** ISO time. */
+  at: string;
+  /** git HEAD of the workspace's repository, when there is one. */
+  commit?: string;
+  /** True when the tree had uncommitted changes. */
+  dirty?: boolean;
+}
+
+function git(cwd: string, ...args: string[]): string | undefined {
+  try {
+    return execFileSync("git", ["-C", cwd, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch {
+    return undefined;
+  }
+}
 
 const readJson = <T>(p: string): T => JSON.parse(readFileSync(p, "utf8")) as T;
 export const writeJson = (p: string, v: unknown) => {
@@ -105,6 +127,37 @@ export function openWorkspace(dir: string) {
 
     writeProposal(p: Proposal) {
       writeJson(ws.proposalPath(p), p);
+    },
+
+    /** Every prove run of a proposal, oldest first. */
+    runs(p: { id: string; slug: string }): RunRecord[] {
+      const path = ws.proposalPath(p, ".runs.jsonl");
+      if (!existsSync(path)) return [];
+      return readFileSync(path, "utf8")
+        .split("\n")
+        .filter((l) => l.trim())
+        .map((l) => JSON.parse(l) as RunRecord);
+    },
+
+    /** Append a prove run, stamped with the time and the git commit. Timestamps live only here, never in hashed files. */
+    appendRun(p: { id: string; slug: string }, run: ProposalRun): RunRecord {
+      const commit = git(ws.root, "rev-parse", "HEAD");
+      const dirty = commit !== undefined && !!git(ws.root, "status", "--porcelain");
+      const record: RunRecord = {
+        run: ws.runs(p).length + 1,
+        at: new Date().toISOString(),
+        ...(commit ? { commit } : {}),
+        ...(dirty ? { dirty: true } : {}),
+        ok: run.ok,
+        outcomes: run.outcomes,
+        regressions: run.regressions,
+        replacedStillPass: run.replacedStillPass,
+        unproved: run.unproved,
+        ...(run.enginesAgree !== undefined ? { enginesAgree: run.enginesAgree } : {}),
+      };
+      mkdirSync(dirname(ws.proposalPath(p)), { recursive: true });
+      appendFileSync(ws.proposalPath(p, ".runs.jsonl"), JSON.stringify(record) + "\n");
+      return record;
     },
   };
   return ws;

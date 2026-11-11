@@ -207,7 +207,8 @@ export function CliWorkspace() {
 ├── proposals/
 │   ├── P-001-shipping-fee.md           the prose (propose)
 │   ├── P-001-shipping-fee.json         the proposal: intents, review, proofs, last run (propose … prove)
-│   └── P-001-shipping-fee.receipt.md   the receipt for the pull request (prove, apply)
+│   ├── P-001-shipping-fee.receipt.md   the receipt for the pull request (prove, apply)
+│   └── P-001-shipping-fee.runs.jsonl   every prove run, one JSON line each (prove)
 └── llm/
     ├── extract-<id>.request.json       what an AI step needs (handoff)
     ├── extract-<id>.answer.json        the answer the calling agent wrote
@@ -222,6 +223,7 @@ export function CliWorkspace() {
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.json</C>, <><C>propose</C>, <C>review</C>, <C>derive</C>, <C>prove</C>, <C>apply</C></>, <>a <A to="concepts/proposals">proposal</A>: prose, intents, use-case changes, decisions, threads, policy, proofs, last run</>],
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.md</C>, <><C>propose</C>, or you</>, "the prose; edit it and run propose on it again"],
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.receipt.md</C>, <><C>prove</C>, <C>apply</C></>, "the Markdown receipt"],
+          [<C>proposals/&lt;id&gt;-&lt;slug&gt;.runs.jsonl</C>, <C>prove</C>, <>one line per run: <C>{`{ run, at, commit?, dirty?, ok, outcomes, regressions, replacedStillPass, unproved, enginesAgree? }`}</C>. The only file with timestamps; nothing hashes it</>],
           [<C>llm/*.json</C>, <>handoff, and the calling agent</>, "AI requests and their answers"],
         ]}
       />

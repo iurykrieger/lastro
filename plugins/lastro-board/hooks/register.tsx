@@ -1,34 +1,34 @@
 // lastro-board: a Claude Code mod that shows where a Lastro change stands, beside the chat.
 //
-// It reads the workspace the `lastro` CLI and the Lastro plugin keep in .lastro/ once a second: the intents and their
-// approvals, the decisions, the proofs derived from them, and the live events of the proof run under way
-// (.lastro/plugin/progress.jsonl, written by the plugin's Stop hook with `lastro prove --stream`). It decides nothing.
+// It reads the workspace the `lastro` CLI and the Lastro plugin keep in .lastro/ once a second: the current proposal
+// (the latest in .lastro/proposals/ that is not applied or closed) with its intents, approvals, decisions and proofs,
+// and the live events of the proof run under way (.lastro/plugin/progress.jsonl, written by the plugin's Stop hook
+// with `lastro prove --stream`). It decides nothing.
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Board, ProofRow } from '../types'
-import { isPassing, readBoard, summary } from './board'
+import { isOpen, isPassing, parse, readBoard, summary } from './board'
 import type { Files } from './board'
 
 const PANE = 'lastro-board'
 // Change the tag when Board's fields change: it declines what an earlier version stored.
-const board = atom({ plugin: 'lastro-board', key: 'board' } as const, null, { shape: 'board-1' })
+const board = atom({ plugin: 'lastro-board', key: 'board' } as const, null, { shape: 'board-2' })
 const isHidden = atom({ plugin: 'lastro-board', key: 'isHidden' } as const, false)
 
 const MARK: Record<ProofRow['status'], string> = {
   pending: '○',
   running: '…',
   proved: '✓',
-  'proved-under-assumptions': '✓',
   evidenced: '≈',
   violated: '✗',
   weak: '!',
   vacuous: '!',
+  'not-run': '?',
 }
 
 const COLOR: Partial<Record<ProofRow['status'], 'success' | 'error' | 'warning' | 'subtle'>> = {
   proved: 'success',
-  'proved-under-assumptions': 'success',
   evidenced: 'warning',
   violated: 'error',
   weak: 'warning',
@@ -44,6 +44,23 @@ async function readFile($: EngineInterface, dir: string, name: string): Promise<
   } catch {
     return undefined
   }
+}
+
+/** The current proposal's file: the latest P-<n>-<slug>.json that is not applied or closed. */
+async function currentProposal($: EngineInterface, dir: string): Promise<string | undefined> {
+  let names: string[]
+  try {
+    const entries = (await $.fs.list(`${dir}/proposals`)) as unknown as (string | { name: string })[]
+    names = entries.map(e => (typeof e === 'string' ? e : e.name))
+  } catch {
+    return undefined
+  }
+  const files = names.filter(n => /^P-\d+-.+\.json$/.test(n)).sort()
+  for (const f of files.reverse()) {
+    const text = await readFile($, dir, `proposals/${f}`)
+    if (isOpen(parse(text))) return text
+  }
+  return undefined
 }
 
 /** What changed enough to say out loud. */
@@ -78,9 +95,7 @@ export const register: Register = on => {
     const poll = async () => {
       const files: Files = {
         config: await readFile($, dir, 'config.json'),
-        intents: await readFile($, dir, 'intents.json'),
-        spec: await readFile($, dir, 'spec.json'),
-        proof: await readFile($, dir, 'proof.json'),
+        proposal: await currentProposal($, dir),
         progress: await readFile($, dir, 'plugin/progress.jsonl'),
       }
       const fresh = readBoard(files)
@@ -115,7 +130,7 @@ export const register: Register = on => {
     return (
       <Box flexDirection="column">
         <Text bold>{summary(b)}</Text>
-        {b.model !== '' && <Text dimColor>{b.model}</Text>}
+        {b.title !== '' && <Text dimColor>{b.title}</Text>}
 
         <Text> </Text>
         <Text bold>
@@ -128,8 +143,9 @@ export const register: Register = on => {
         ))}
         {b.intents.map(i => (
           <Text color={i.status === 'approved' ? 'success' : i.status === 'rejected' ? 'error' : undefined}>
-            {i.status === 'approved' ? '✓' : i.status === 'rejected' ? '✗' : '○'} {i.id}
+            {i.status === 'approved' ? '✓' : i.status === 'rejected' ? '✗' : '○'} {i.id} {i.useCase}
             {i.required > 1 ? ` (${i.approvals}/${i.required})` : ''} {i.statement}
+            {i.replaces.length > 0 ? ` (replaces ${i.replaces.join(', ')})` : ''}
           </Text>
         ))}
 
@@ -150,6 +166,9 @@ export const register: Register = on => {
             ))}
             {b.beyondProof.map(x => (
               <Text dimColor>– {x} beyond proof: needs a human sign-off</Text>
+            ))}
+            {b.regressions.map(x => (
+              <Text color="error">✗ {x} regression: a use case's proof this change broke</Text>
             ))}
           </Box>
         )}

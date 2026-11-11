@@ -13,7 +13,7 @@ export const GENERATED = ["config.json", "intents.json", "spec.json", "proof.jso
 
 /** Folders whose JSON files only the CLI writes: the use cases, the proposals and their receipts. */
 const isGenerated = (inWs) =>
-  GENERATED.includes(inWs) || inWs.startsWith("plugin/") || inWs.startsWith("usecases/") || (inWs.startsWith("proposals/") && (inWs.endsWith(".json") || inWs.endsWith(".receipt.md")));
+  GENERATED.includes(inWs) || inWs.startsWith("plugin/") || inWs.startsWith("usecases/") || (inWs.startsWith("proposals/") && (inWs.endsWith(".json") || inWs.endsWith(".receipt.md") || inWs.endsWith(".runs.jsonl")));
 
 export const DEFAULTS = {
   /** The command that runs the Lastro CLI: `lastro`, `npx lastro`, `lastro-go`, `node path/to/cli.js`... */

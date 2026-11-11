@@ -461,6 +461,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
           if (run.enginesAgree !== undefined) stream({ event: "crosscheck", enginesAgree: run.enginesAgree });
         }
         ws.writeProposal(proposal);
+        ws.appendRun(proposal, run);
         const receipt = writeReceipt(ws, proposal, useCases);
         return { code: run.ok ? 0 : 1, body: { status: run.ok ? "proved" : "not-proved", proposal: proposal.id, ...runBody(run), receipt, feedback: feedbackOf(proposal, useCases) } };
       }

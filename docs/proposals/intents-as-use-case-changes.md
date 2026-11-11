@@ -195,8 +195,9 @@ regression test. Proofs are derived only from approved or amended intents.
    replace. Status `open`.
 2. **Review.** Reviewers approve, amend or reject each intent, seeing the proofs it replaces, comment in threads,
    and answer decisions.
-   Rejecting or amending an intent marks its use case's `after` stale; it is recombined from the remaining intents
-   (part of the extract step, through the same LLM or handoff) and needs review again.
+   Rejecting or amending an intent marks its use case's `after` stale. The reviewer either writes the new `after`
+   by hand or has the LLM recombine it from the remaining intents (part of the extract step, through the same LLM or
+   handoff, optionally with the reviewer's instructions); either way the use case's intents need review again.
 3. **Approve.** The proposal is approved when every intent is approved, amended or rejected, and every decision and
    thread is resolved, under the policy in `.lastro/config.json`. The approval hash binds the baseline: if the use
    cases changed since extraction, the approval is stale and the prose must be extracted again. Status `approved`.
@@ -308,6 +309,8 @@ Answered by Iury on 2026-11-11:
    live in `.lastro/usecases/<id>-<slug>.json` with their proofs, and every change starts as a proposal.
 9. **Replacing proven behavior** is visible at intent review: each intent lists the existing proofs it breaks on
    purpose, approving it accepts their replacement, and no other proof can be retired.
+10. **Rewriting `after`** after a reject or amend: the reviewer writes it by hand or asks the LLM to recombine it
+    (part of the extract step, so Lastro keeps two AI steps).
 
 ## Cost
 

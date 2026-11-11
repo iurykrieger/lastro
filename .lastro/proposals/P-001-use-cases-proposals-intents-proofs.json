@@ -4,10 +4,10 @@
   "slug": "use-cases-proposals-intents-proofs",
   "name": "Use cases, proposals, intents and proofs",
   "description": "Restructure Lastro around four entities: use cases (the application, with their regression proofs), proposals (every change, starting from prose), intents (reviewed natural-language changes to one use case each) and proofs (derived from approved intents, attached to their use case once they pass).",
-  "status": "open",
+  "status": "approved",
   "submittedBy": "iury",
   "prose": "# Proposal: use cases, proposals, intents and proofs\n\nStatus: **decided, not implemented yet**. The decisions are listed at the end; the sections below already\nreflect them.\n\n## The entities\n\nLastro works with four entities. Each one has an `id`, a `slug`, a `name` and a `description`, plus its own fields.\n\n| Entity | What it is | Where it lives |\n|---|---|---|\n| **Use case** | One thing the application does, described in full as the code implements it, with the proofs that keep it working. | `.lastro/usecases/<id>-<slug>.json` |\n| **Proposal** | A change to the repository: the prose someone wrote and everything derived from it. | `.lastro/proposals/<id>-<slug>.json` |\n| **Intent** | One non-deterministic reading of the prose, in natural language: the addition, removal or change of one use case. It is approved, rejected or amended. | inside its proposal |\n| **Proof** | A deterministic check that an intent holds in practice. Once it passes, it belongs to the use case as a regression test. | inside its proposal, then inside its use case |\n\nAn application is its list of use cases. Every change to the repository starts as a proposal.\n\n```\n                      ┌──────────── .lastro/usecases/ (the application, with its proofs) ───────────┐\n                      │                                                                            │\nprose ─▶ PROPOSAL ─ extract ─▶ INTENTS (add / modify / remove a use case) ─▶ review                │\n                                                                              │                    │\n                                                approved or amended intents   ▼                    │\n                                                                    derive ─▶ PROOFS (pending)      │\n                                                                              │                    │\n                                              code (any agent or person) ─▶ prove ◀── regression ──┘\n                                                                              │   (every use case's proofs)\n                                                       all proofs pass        ▼\n                                                                 apply ─▶ proofs join their USE CASES,\n                                                                          descriptions synced, proposal applied\n```\n\n## Ids, slugs and files\n\n- Use cases are numbered `UC-001`, `UC-002`, ... and proposals `P-001`, `P-002`, ...: the next free number in the\n  folder. A number is never reused, even after a use case is removed.\n- Intents and proofs are numbered inside their proposal, so their ids carry their origin: `P-007.I-03` is the\n  third intent of proposal 7 and `P-007.PF-05` the fifth proof derived for it. A proof keeps its id after it\n  moves to its use case, so every regression test points back to the proposal and the intent it came from.\n- Slugs are kebab-case and stable; the file name is `<id>-<slug>.json` (`UC-012-derive-proof-plan.json`). A\n  rename changes `name`, never the slug or the id.\n\n## Use case\n\n```ts\ninterface UseCase {\n  id: string;                  // \"UC-012\"\n  slug: string;                // \"derive-proof-plan\"\n  name: string;\n  description: string;         // the complete current behavior, as the code implements it\n  proofs: Proof[];             // the proofs that passed, kept as regression tests (status \"passed\")\n  history: string[];           // ids of the applied proposals that added or changed it\n}\n```\n\nThe use cases are the baseline. Their descriptions reflect the code, and their proofs show it: a proof only\njoins a use case after it passed against the code.\n\n## Proposal\n\n```ts\ninterface Proposal {\n  lastro: \"proposal/v1\";\n  id: string;                  // \"P-007\"\n  slug: string;\n  name: string;\n  description: string;         // a one-paragraph summary of the change\n  status: \"open\" | \"changes-requested\" | \"approved\" | \"proving\" | \"proved\" | \"applied\" | \"closed\";\n  submittedBy: string;         // who wrote the prose; the intents' author is the extractor (the LLM)\n  prose: string;\n  baseline: string;            // sha256 over the canonical use cases (without proofs) the prose was read against\n  intents: Intent[];\n  useCases: UseCaseChange[];   // the resulting state of each touched use case\n  decisions: DecisionCard[];\n  threads: Thread[];           // review comments\n  notPromised: string[];\n  policy: ReviewPolicy;        // the policy it was reviewed under\n  proofs: Proof[];             // derived from the approved intents; pending until they pass\n  supersedes: string[];        // existing proofs the approved intents replace (computed from their `replaces`)\n  hash?: string;               // set by approval\n}\n\ninterface UseCaseChange {\n  useCase: string;             // existing id for modify/remove; a newly reserved id for add\n  slug: string;\n  change: \"add\" | \"modify\" | \"remove\";\n  name: string;\n  before?: string;             // modify/remove: copied from the use case by the SDK, never by the LLM\n  after?: string;              // add/modify: the complete new description, all its intents combined\n  intents: string[];\n}\n```\n\n## Intent\n\n```ts\ninterface Intent {\n  id: string;                  // \"P-007.I-03\"\n  slug: string;\n  name: string;\n  description: string;         // the change, in natural language\n  change: \"add\" | \"modify\" | \"remove\";\n  useCase: string;             // the use case it changes (reserved id for an add)\n  provability: Provability;    // formal | empirical | beyond-proof\n  beyondProofReason?: BeyondProofReason;\n  source: SourceSpan;          // the quote in the prose that motivates it\n  replaces: ProofReplacement[]; // existing proofs of the use case this change breaks on purpose\n  status: \"proposed\" | \"approved\" | \"amended\" | \"rejected\";\n  approvals: string[];\n  reviewNote?: string;\n  originalDescription?: string; // kept on amend\n}\n\ninterface ProofReplacement {\n  proof: string;               // id of an existing proof of the intent's use case, \"P-003.PF-02\"\n  reason: string;              // why the new behavior breaks it, in plain words\n}\n```\n\nAn intent is what the LLM understood from the prose, so it is not deterministic: two extractions of the same prose\ncan differ. That is why intents are reviewed and proofs are not written from the prose directly. Each intent changes\nexactly one use case, and several intents may change the same one; the SDK combines them into that use case's\n`after`. Deterministic checks on every extraction:\n\n- Quotes are anchored in the prose, as today.\n- A `modify` or `remove` names an existing use case; an `add` reserves a new id and a new kebab-case slug.\n- Every touched use case has exactly one `UseCaseChange`, with `after` for add and modify, listing at least one intent.\n- Change kinds on one use case fit together (no `add` or `remove` mixed with a `modify`, no `remove` with anything),\n  and two intents that contradict each other on one use case come back as a decision.\n\n### Intents that change proven behavior\n\nWhen an intent modifies or removes a use case that already has proofs, approving it can break some of those proofs\non purpose: the behavior they guarantee is the behavior being changed. The reviewer has to see that before approving,\nnot after the code is written. So the conflict is part of the intent itself:\n\n- Extraction receives every touched use case with its proofs (name, description and the formal statement in\n  readable notation) and lists, on each intent, the proofs the new behavior contradicts and why (`replaces`).\n- For a `remove`, the SDK fills `replaces` with every proof of the use case; the LLM is not asked.\n- The SDK checks that every replaced proof exists and belongs to the intent's use case; anything else rejects the\n  extraction.\n- Review shows each intent with what it replaces: \"approving P-007.I-03 replaces P-003.PF-02 (orders over 100 were\n  free of shipping; now the threshold is 150)\", with the old proof's statement next to the new description.\n  Approving the intent accepts the replacement. A reviewer who disagrees with the list amends the intent, which\n  needs approval again like any amendment.\n- The proposal's `supersedes` is the union of `replaces` over the approved and amended intents. Nothing else\n  can retire a proof: derivation never adds to it (see below), and a rejected intent replaces nothing.\n\n`kind` goes away: `preserve` is what every untouched use case already is, and `behavior`, `invariant` and\n`non-functional` move into the use case's description.\n\n## Proof\n\n```ts\ninterface Proof {\n  id: string;                  // \"P-007.PF-05\"\n  slug: string;\n  name: string;\n  description: string;         // what it checks, in plain words\n  intent: string;              // \"P-007.I-03\"\n  replaces?: string[];         // the superseded proofs it takes the place of\n  useCase: string;             // \"UC-012\"\n  model: string;               // the model it is written against (declared in .lastro/config.json)\n  subject: string;             // how to run the code (declared in .lastro/config.json)\n  check:\n    | { kind: \"clause\"; requires: Expr; ensures: Expr; assumptions: string[] }\n    | { kind: \"scenario\"; input: Record<string, Value>; expect: Expr };\n  status: \"pending\" | \"passed\" | \"failed\";\n  verdict?: Verdict;           // proved, proved-under-assumptions, evidenced, violated, ...\n  evidence?: Evidence;\n}\n```\n\nA proof is a deterministic check of one intent: a clause in LSL, proved over the finite domain or evidenced by\nseeded sampling, or a concrete scenario. It names its model and its subject so it can run on its own, later, as a\nregression test. Proofs are derived only from approved or amended intents.\n\n- A `remove` intent always gets a proof that the old behavior no longer happens, written from the use case's\n  `before`. When the model cannot express it, derivation returns a decision for the reviewer, and the proposal\n  cannot be applied while it is open.\n- Each new proof that takes the place of a replaced proof says so (`replaces` on the proof), so the receipt can\n  show the old guarantee next to the new one.\n- If derivation finds that the approved behavior breaks an existing proof that no approved intent replaces, it does\n  not retire it: it returns a decision, and the intent goes back to review with the proof added to its `replaces`.\n- A superseded proof is skipped by the regression run of this proposal and removed at apply. Any other existing\n  proof that fails is a regression, on a touched use case or not.\n- A superseded proof that still passes against the new code is noted in the receipt: the behavior the intent meant\n  to change may not have changed.\n\n## The flow\n\n1. **Propose.** `propose(prose, { submittedBy })` creates `P-<n>` in `.lastro/proposals/` and extracts its intents\n   against the current use cases and their proofs (AI step \"extract\"), each intent listing the proofs it would\n   replace. Status `open`.\n2. **Review.** Reviewers approve, amend or reject each intent, seeing the proofs it replaces, comment in threads,\n   and answer decisions.\n   Rejecting or amending an intent marks its use case's `after` stale. The reviewer either writes the new `after`\n   by hand or has the LLM recombine it from the remaining intents (part of the extract step, through the same LLM or\n   handoff, optionally with the reviewer's instructions); either way the use case's intents need review again.\n3. **Approve.** The proposal is approved when every intent is approved, amended or rejected, and every decision and\n   thread is resolved, under the policy in `.lastro/config.json`. The approval hash binds the baseline: if the use\n   cases changed since extraction, the approval is stale and the prose must be extracted again. Status `approved`.\n4. **Derive.** `derive(proposal)` writes pending proofs for the approved and amended intents only (AI step\n   \"derive\"); `supersedes` is already fixed by the review. The approved intents and the resulting use cases are the brief for whoever\n   implements the change; there is no separate brief. Status `proving`.\n5. **Implement.** Any agent or person writes the code. Lastro never does.\n6. **Prove.** `prove(proposal)` runs the proposal's proofs and the proofs of every use case (except the superseded\n   ones) against the code. Failures go back to the implementer through `feedback`; a failing use-case proof is a\n   regression. When everything passes, status `proved`.\n7. **Apply.** `apply(proposal)` runs only when every proof passes. It writes each `UseCaseChange` (adds the file,\n   replaces the description and name, or deletes the file of a removed use case), moves each proof to its use case\n   as a regression test, removes the superseded proofs, appends the proposal id to `history`, and records the new\n   baseline hash in the receipt. Status `applied`.\n\nChanging an approved intent (amend, reject, a new extraction) withdraws the approval, so derive and apply refuse\nuntil it is approved again.\n\n## Reviewing intents like a pull request\n\nIntents replace code as what a developer reviews. Reviewing a proposal should feel like reviewing a pull request:\nthe prose is the description, each touched use case is a changed file, and each intent is a change in it that gets\nresolved like a review comment.\n\n| Pull request today | Proposal in Lastro |\n|---|---|\n| Author opens a PR with a description | Someone submits prose; extraction turns it into intents. The extractor (the LLM) is the author of the intents, and the person who wrote the prose is recorded as the submitter. |\n| Diff per file | Diff per use case: before and after, with the intents that produce it, the proofs each intent replaces, and later the proofs it gains. |\n| Line comment, starting a thread | A comment on one intent, one proof or the prose, starting a thread. Threads are resolved by the commenter or the submitter. |\n| Suggested change | An amended intent, which recombines the use case's `after`. |\n| Resolving every comment | Every intent ends approved, amended or rejected; only non-rejected intents go forward. |\n| Author pushes new commits | The prose is edited and extracted again. Intents that changed lose their approvals (stale review dismissed); untouched intents keep them. |\n| Required approvals, branch protection | The policy in `.lastro/config.json`: N distinct reviewers per intent, and whether the submitter counts as one. |\n| Unresolved conversations block the merge | Open threads, unresolved intents and unanswered decisions block approval. |\n| CI must pass, then merge | Every proof, new and regression, must pass; then apply. |\n\nThe intents are what the LLM understood from the prose, so the LLM is their author and every person is a reviewer,\nincluding whoever wrote the prose. By default the submitter can approve and amend the intents and go on to the\nimplementation, the way a pull request author can adjust everything and still merge when branch protection allows\nit. A repository that wants a second pair of eyes sets `submitterCanApprove: false`.\n\n## Configuration\n\n`.lastro/config.json` holds what the proofs run against and how proposals are reviewed:\n\n```json\n{\n  \"models\": { \"login\": { \"...\": \"...\" } },\n  \"subjects\": { \"login\": { \"module\": \"dist/login.js\", \"export\": \"login\" } },\n  \"review\": { \"approvals\": 2, \"submitterCanApprove\": true }\n}\n```\n\n`approvals` defaults to 1 and `submitterCanApprove` to true. `lastro init --approvals N` writes it (today it writes\n`requiredApprovals`, which becomes `review.approvals`; the old key is still read). A proposal records the policy it\nwas reviewed under, so a later change to the config never turns an approved proposal into an unapproved one or the\nreverse.\n\n## Where files live\n\nEverything the framework generates or keeps lives in `.lastro/` (or the folder given with `--dir`):\n\n```\n.lastro/\n  config.json                         models, subjects and the review policy\n  usecases/<id>-<slug>.json           the application: one file per use case, with its regression proofs\n  proposals/<id>-<slug>.md            the proposal's prose, written by a person or by an agent through the plugin\n  proposals/<id>-<slug>.json          one file per proposal: prose, intents, review, proofs\n  proposals/<id>-<slug>.receipt.md    the proposal's last receipt\n  llm/                                handoff requests and answers\n```\n\n`intents.json`, `spec.json` and `proof.json` go away: their content now lives in the proposal. The agent plugin\n(`plugins/lastro`) and the live board (`plugins/lastro-board`) follow: the gate, the review skill, the stop hook and\nboth boards read the current proposal and the use cases instead of those files, and an agent's plan is saved as the\nprose of a new proposal. `apply` rewrites\n`.lastro/usecases/`. No framework file is written outside the workspace folder.\n\n## CLI\n\n```\nlastro propose <prose-file> [--section <heading>] [--as <submitter>]   create a proposal and extract its intents\nlastro status [<proposal>]                                             proposals, or one proposal's pending items\nlastro review <proposal> --as <name> approve|amend|reject|answer|comment|resolve ...\nlastro derive <proposal>                                               write its pending proofs\nlastro prove <proposal> --subject ...                                  its proofs plus every use case's proofs\nlastro feedback <proposal>                                             failures for the implementer\nlastro apply <proposal>                                                attach the proofs and sync the use cases\nlastro regress                                                         run every use case's proofs alone\n```\n\nThe receipt gains the use-case diff (each use case added, modified with before and after, or removed, with its\nintents), the proofs each use case gains or loses, and a line for each regression.\n\n## Decisions\n\nAnswered by Iury on 2026-11-11:\n\n1. **Several intents on one use case:** allowed; the SDK combines them into the use case's `after` and returns\n   conflicts as decisions.\n2. **Proving a removal:** always a proof that the old behavior is gone; when the model cannot express it, a decision.\n3. **When to apply:** only after every proof passes.\n4. **Where proofs live:** with their use case, as regression tests; every change re-runs all of them.\n5. **Approval scope:** per intent; only non-rejected intents go forward.\n6. **Who is the author:** the LLM that extracted the intents; the person who wrote the prose is a reviewer, and\n   whether their approval counts is a per-repository policy (by default it does).\n7. **The review policy** (number of reviewers and the submitter rule) lives in `.lastro/config.json`.\n8. **The entities** are use case, proposal, intent and proof, each with id, slug, name and description; use cases\n   live in `.lastro/usecases/<id>-<slug>.json` with their proofs, and every change starts as a proposal.\n9. **Replacing proven behavior** is visible at intent review: each intent lists the existing proofs it breaks on\n   purpose, approving it accepts their replacement, and no other proof can be retired.\n10. **Rewriting `after`** after a reject or amend: the reviewer writes it by hand or asks the LLM to recombine it\n    (part of the extract step, so Lastro keeps two AI steps).\n\n## Cost\n\nA semantic change in all three SDKs (TypeScript, .NET, Go): the four entities and their files, the extraction\nprompt and schema (and `go generate`), the recombination step, the review with threads and the submitter policy,\ncarry-over, `replaces` on intents and proofs, the regression run, apply, the receipt and the CLI, with the\ncross-check tests and the sandbox example updated to the new format. The Rust prover does not change: it only sees\nmodels, clauses and tables.\n\nThe use cases already in `.lastro/usecases/` start with no proofs. Until a use case has proofs, verification reports\nit as unproved rather than failing; giving them proofs is a separate proposal.\n",
-  "baseline": "9276f910a57970731a3c340b4a752f92328f6c9e6c31e90bda587e95cce31894",
+  "baseline": "sha256:173e32d1762cf83956d3c255095e609b493f36f92832143d1b19c0cd66f64d9f",
   "intents": [
     {
       "id": "P-001.I-01",
@@ -23,8 +23,10 @@
         "end": 533
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-02",
@@ -40,8 +42,10 @@
         "end": 675
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-03",
@@ -57,8 +61,10 @@
         "end": 2579
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-04",
@@ -74,8 +80,10 @@
         "end": 3064
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-05",
@@ -91,8 +99,10 @@
         "end": 16403
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-06",
@@ -108,8 +118,10 @@
         "end": 10776
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-07",
@@ -125,8 +137,10 @@
         "end": 6368
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-08",
@@ -142,8 +156,10 @@
         "end": 5029
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-09",
@@ -159,8 +175,10 @@
         "end": 7555
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-10",
@@ -176,8 +194,10 @@
         "end": 7632
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-11",
@@ -193,8 +213,10 @@
         "end": 4207
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-12",
@@ -210,8 +232,10 @@
         "end": 6662
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-13",
@@ -227,8 +251,10 @@
         "end": 7742
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-14",
@@ -244,8 +270,10 @@
         "end": 6984
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-15",
@@ -261,8 +289,10 @@
         "end": 11231
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-16",
@@ -278,8 +308,10 @@
         "end": 8054
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-17",
@@ -295,8 +327,10 @@
         "end": 13810
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-18",
@@ -312,8 +346,10 @@
         "end": 14512
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-19",
@@ -329,8 +365,10 @@
         "end": 3973
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-20",
@@ -346,8 +384,10 @@
         "end": 15393
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-21",
@@ -363,8 +403,10 @@
         "end": 15027
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-22",
@@ -380,8 +422,10 @@
         "end": 15583
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-23",
@@ -397,8 +441,10 @@
         "end": 11558
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-24",
@@ -414,8 +460,10 @@
         "end": 11747
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-25",
@@ -431,8 +479,10 @@
         "end": 14236
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-26",
@@ -448,8 +498,10 @@
         "end": 11864
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-27",
@@ -465,8 +517,10 @@
         "end": 9778
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-28",
@@ -482,8 +536,10 @@
         "end": 8320
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-29",
@@ -499,8 +555,10 @@
         "end": 10022
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-30",
@@ -516,8 +574,10 @@
         "end": 12277
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-31",
@@ -533,8 +593,10 @@
         "end": 17666
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-32",
@@ -550,8 +612,10 @@
         "end": 19924
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-33",
@@ -567,8 +631,10 @@
         "end": 10607
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-34",
@@ -584,8 +650,10 @@
         "end": 12504
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-35",
@@ -601,8 +669,10 @@
         "end": 12759
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-36",
@@ -618,8 +688,10 @@
         "end": 12632
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-37",
@@ -635,8 +707,10 @@
         "end": 17707
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-38",
@@ -652,8 +726,10 @@
         "end": 16899
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-39",
@@ -669,8 +745,10 @@
         "end": 15774
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-40",
@@ -686,8 +764,10 @@
         "end": 16532
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-41",
@@ -703,8 +783,10 @@
         "end": 16719
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-42",
@@ -720,8 +802,10 @@
         "end": 16658
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-43",
@@ -737,8 +821,10 @@
         "end": 16658
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-44",
@@ -754,8 +840,10 @@
         "end": 16635
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-45",
@@ -771,8 +859,10 @@
         "end": 16719
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-46",
@@ -788,8 +878,10 @@
         "end": 19357
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-001.I-47",
@@ -806,8 +898,10 @@
         "end": 19696
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     }
   ],
   "useCases": [
@@ -1024,7 +1118,7 @@
         "P-001.I-41"
       ],
       "name": "Review an agent's proposal like a pull request",
-      "before": "The plugin's propose skill has the agent write the change as prose in .lastro/proposals/<slug>.md, run lastro plan (answering handoffs itself), then ask the user every open decision and, per intent, approve, request changes (amend) or reject, recording only the user's answers with lastro review --as <user>, until lastro status is ready; then lastro spec derives the proofs into the repository's .lastro/. The PreToolUse hook makes every lastro review command that approves, answers, amends or rejects show a Claude Code permission prompt, and denies it in both harnesses when --as names an agent (claude, codex, agent, assistant, ai, bot). With a policy above one approval the board shows each intent's approvals out of the required number and the proposal waits for the other reviewers.",
+      "before": "The plugin's propose skill has the agent write the change as prose in .lastro/proposals/<slug>.md, run lastro plan (answering handoffs itself), show the user the review the plugin renders as Markdown (after each lastro command while the review is open the PostToolUse hook adds it to the agent's context, and lastro-plugin.mjs review prints it): a summary line, then each open decision with its numbered options and the recommended one, then the intents grouped by kind (Behavior, Never, Keeps working, Non-functional), one list item per intent with its id, statement, status (to review, approved, rejected, or approvals out of the policy's count) and the quote it came from; then ask the user every open decision and, per intent, approve, request changes (amend) or reject, recording only the user's answers with lastro review --as <user>, until lastro status is ready; then lastro spec derives the proofs into the repository's .lastro/. The PreToolUse hook makes every lastro review command that approves, answers, amends or rejects show a Claude Code permission prompt, and denies it in both harnesses when --as names an agent (claude, codex, agent, assistant, ai, bot). With a policy above one approval the board shows each intent's approvals out of the required number and the proposal waits for the other reviewers.",
       "after": "The plugin's propose skill has the agent write the change as prose in .lastro/proposals/<id>-<slug>.md, run lastro propose (answering handoffs itself), then ask the user every open decision and, per intent, shown with the existing proofs it replaces, approve, request changes (amend) or reject, recording only the user's answers with lastro review --as <user>, until lastro status is ready; then lastro derive writes the proposal's proofs. The PreToolUse hook makes every lastro review command that approves, answers, amends or rejects show a Claude Code permission prompt, and denies it in both harnesses when --as names an agent (claude, codex, agent, assistant, ai, bot). With a policy above one approval the board shows each intent's approvals out of the required number and the proposal waits for the other reviewers."
     },
     {
@@ -1046,7 +1140,7 @@
         "P-001.I-43"
       ],
       "name": "Show the proposal's progress board",
-      "before": "The plugin renders, from the CLI's status output and the files in .lastro/, a board with the stages (intents extracted, decisions answered, intents approved per the policy, proofs derived, verification) and one line per proof: ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, ○ pending, plus the beyond-proof intents and the next step. It is shown to the user after every lastro command and on every stop, added to the agent's context on session start and on each prompt, and printed by lastro-plugin.mjs board (or one line with --line, for a status line); lastro-plugin.mjs prove builds, proves and prints it.",
+      "before": "The plugin renders, from the CLI's status output and the files in .lastro/, a board with the stages (intents extracted, decisions answered, intents approved per the policy, proofs derived, verification) the intents grouped by kind while the review is open, and one line per proof: ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, ○ pending, plus the beyond-proof intents and the next step; lines longer than 100 columns wrap under their text. It is shown to the user after every lastro command and on every stop, added to the agent's context on session start and on each prompt, and printed by lastro-plugin.mjs board (or one line with --line, for a status line); lastro-plugin.mjs prove builds, proves and prints it.",
       "after": "The plugin renders, from the CLI's status output and the files in .lastro/, a board for the current proposal with the stages (intents extracted, decisions answered, intents approved per the policy, proofs derived, verification), the existing proofs its intents replace, any regression in other use cases, and one line per proof: ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, ○ pending, plus the beyond-proof intents and the next step. It is shown to the user after every lastro command and on every stop, added to the agent's context on session start and on each prompt, and printed by lastro-plugin.mjs board (or one line with --line, for a status line); lastro-plugin.mjs prove builds, proves and prints it."
     },
     {
@@ -1155,5 +1249,6 @@
     "submitterCanApprove": true
   },
   "proofs": [],
-  "supersedes": []
+  "supersedes": [],
+  "hash": "sha256:0bab6ff0b65b1e09257e2cebf75ce02ace2a6cb0ca811cdedee16a7d499c2b67"
 }

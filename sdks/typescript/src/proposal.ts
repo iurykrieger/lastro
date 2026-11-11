@@ -614,7 +614,8 @@ export class ProposalReview {
 
   /** Start a thread on an intent, a proof, a use case or the prose. */
   comment(on: string, text: string): this {
-    const target = on === "prose" ? on : (this.p.intents.find((i) => i.id === on || i.slug === on)?.id ?? this.p.proofs.find((x) => x.id === on || x.slug === on)?.id ?? this.p.useCases.find((c) => c.useCase === on || c.slug === on)?.useCase);
+    const full = `${this.p.id}.${on}`;
+    const target = on === "prose" ? on : (this.p.intents.find((i) => i.id === on || i.id === full || i.slug === on)?.id ?? this.p.proofs.find((x) => x.id === on || x.id === full || x.slug === on)?.id ?? this.p.useCases.find((c) => c.useCase === on || c.slug === on)?.useCase);
     if (!target) throw new Error(`Nothing called ${on} in ${this.p.id}`);
     this.p.threads.push({ id: `T${this.p.threads.length + 1}`, on: target, by: this.reviewer, comments: [{ by: this.reviewer, text }], resolved: false });
     return this;

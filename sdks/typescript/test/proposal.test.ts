@@ -300,3 +300,90 @@ test("re-extraction carries the review of unchanged intents", async () => {
   assert.deepEqual(again.intents.map((i) => [i.status, i.approvals]), [["approved", ["ana"]], ["amended", ["ana"]], ["proposed", []]]);
   assert.equal(again.intents[1]!.description, "Every member ships free.");
 });
+
+// ---------------------------------------------------------------------------
+// CLI: the same flow from any harness, with the agent's own model (handoff)
+// ---------------------------------------------------------------------------
+
+import { mkdtempSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { main as cli } from "../src/cli.js";
+
+test("cli: propose → review → derive → prove → apply → regress, LLM steps by handoff", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "lastro-"));
+  const ws = ["--dir", join(dir, ".lastro"), "--llm", "handoff"];
+  writeFileSync(join(dir, "model.json"), JSON.stringify(MODEL));
+  writeFileSync(join(dir, "prose.md"), `# Shipping\n\n${PROSE_1}\n`);
+  writeFileSync(join(dir, "shipping.mjs"), "export default ({ subtotal, member }) => ({ fee: member || subtotal >= 100 ? 0 : 15 });\n");
+  writeFileSync(join(dir, "buggy.mjs"), "export default ({ subtotal, member }) => ({ fee: member || subtotal > 100 ? 0 : 15 });\n");
+
+  let r = await cli(["init", "--model", join(dir, "model.json"), "--subject", "shipping.mjs", "--subject-name", "shipping", ...ws]);
+  assert.equal(r.code, 0);
+  assert.deepEqual(r.body.review, { approvals: 1, submitterCanApprove: true });
+
+  r = await cli(["propose", join(dir, "prose.md"), "--section", "Shipping", "--as", "ana", ...ws]);
+  assert.equal(r.code, 3);
+  assert.equal(r.body.step, "extract");
+  writeFileSync(r.body.answer as string, JSON.stringify(EXTRACT_1));
+  r = await cli(["propose", join(dir, "prose.md"), "--section", "Shipping", "--as", "ana", ...ws]);
+  assert.equal(r.code, 1, "proposed, review pending");
+  assert.equal((r.body.proposal as { id: string }).id, "P-001");
+  assert.ok(readdirSync(join(dir, ".lastro", "proposals")).includes("P-001-shipping-fee.md"));
+
+  assert.equal((await cli(["derive", "P-001", ...ws])).body.status, "review-pending");
+  r = await cli(["review", "P-001", "--as", "ana", "comment", "I-02", "Gold members only?", ...ws]);
+  assert.deepEqual(r.body.pending, ["P-001.I-01 not reviewed", "P-001.I-02 not reviewed", "P-001.I-03 not reviewed", "T1 open thread on P-001.I-02"]);
+  await cli(["review", "1", "--as", "ana", "resolve", "T1", ...ws]);
+  r = await cli(["review", "shipping-fee", "--as", "ana", "approve-all", ...ws]);
+  assert.equal(r.code, 0);
+  assert.equal((r.body.proposal as { status: string }).status, "approved");
+
+  r = await cli(["derive", "P-001", ...ws]);
+  assert.equal(r.code, 3);
+  assert.equal(r.body.step, "derive");
+  writeFileSync(r.body.answer as string, JSON.stringify(DERIVE_1));
+  r = await cli(["derive", "P-001", ...ws]);
+  assert.equal(r.code, 0, JSON.stringify(r.body));
+  assert.equal((r.body.proofs as unknown[]).length, 4);
+
+  r = await cli(["prove", "P-001", join(dir, "buggy.mjs"), ...ws]);
+  assert.equal(r.code, 1);
+  assert.deepEqual((r.body.failures as { proof: string }[]).map((f) => f.proof), ["P-001.PF-01"]);
+  assert.match(r.body.feedback as string, /counterexample: \{"member":false,"subtotal":100\} returned \{"fee":15\}/);
+  assert.equal((await cli(["apply", "P-001", ...ws])).code, 1, "apply refuses a failing run");
+
+  const events: Record<string, unknown>[] = [];
+  r = await cli(["prove", "P-001", "--stream", ...ws], (e) => events.push(e));
+  assert.equal(r.code, 0, JSON.stringify(r.body));
+  assert.deepEqual(events[0], { event: "start", proposal: "P-001", proofs: ["P-001.PF-01", "P-001.PF-02", "P-001.PF-03", "P-001.PF-04"] });
+  assert.deepEqual(events.filter((e) => e.event === "proof").map((e) => e.proof), ["P-001.PF-01", "P-001.PF-02", "P-001.PF-03", "P-001.PF-04"]);
+  assert.deepEqual(r.body.unproved, []);
+
+  r = await cli(["apply", "P-001", ...ws]);
+  assert.equal(r.code, 0, JSON.stringify(r.body));
+  assert.deepEqual(r.body.written, ["UC-001"]);
+  const uc = JSON.parse(readFileSync(join(dir, ".lastro", "usecases", "UC-001-charge-shipping.json"), "utf8")) as UseCase;
+  assert.deepEqual(uc.proofs.map((x) => x.id), ["P-001.PF-01", "P-001.PF-02", "P-001.PF-03", "P-001.PF-04"]);
+  assert.match(readFileSync(join(dir, ".lastro", "proposals", "P-001-shipping-fee.receipt.md"), "utf8"), /Status: \*\*applied\*\*/);
+
+  assert.equal((await cli(["regress", ...ws])).code, 0);
+  r = await cli(["regress", join(dir, "buggy.mjs"), ...ws]);
+  assert.equal(r.code, 1);
+  assert.deepEqual(r.body.regressions, ["P-001.PF-01"]);
+  r = await cli(["status", ...ws]);
+  assert.deepEqual(r.body.proposals, [{ id: "P-001", slug: "shipping-fee", name: "Shipping fee", status: "applied", pending: 0 }]);
+});
+
+test("cli: old workspaces and commands are refused", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "lastro-"));
+  const ws = ["--dir", join(dir, ".lastro")];
+  writeFileSync(join(dir, "model.json"), JSON.stringify(MODEL));
+  await cli(["init", "--model", join(dir, "model.json"), ...ws]);
+  assert.match(String((await cli(["plan", "prose.md", ...ws])).body.error), /was replaced: use `lastro propose`/);
+  mkdirSync(join(dir, ".lastro"), { recursive: true });
+  writeFileSync(join(dir, ".lastro", "intents.json"), "{}");
+  const r = await cli(["status", ...ws]);
+  assert.equal(r.code, 2);
+  assert.match(String(r.body.error), /old workspace format.*run `lastro propose <prose-file>` again/);
+});

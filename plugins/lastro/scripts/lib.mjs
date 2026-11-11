@@ -203,6 +203,71 @@ export function renderLine(s) {
 }
 
 /** The full board: stages, intents, decisions and one line per proof. */
+/** Board width: long statements wrap under their text instead of running past the terminal's edge. */
+const BOARD_WIDTH = 100;
+
+/** Word-wraps one board line: `first` prefixes its first line, `rest` the lines that continue it. */
+export function wrap(text, first, rest, width = BOARD_WIDTH) {
+  const lines = [];
+  let line = first;
+  let empty = true;
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    if (!empty && line.length + 1 + word.length > width) {
+      lines.push(line);
+      line = rest + word;
+    } else line += (empty || line.endsWith(" ") ? "" : " ") + word;
+    empty = false;
+  }
+  lines.push(line);
+  return lines;
+}
+
+const KIND_LABEL = { behavior: "Behavior", invariant: "Never", preserve: "Keeps working", "non-functional": "Non-functional" };
+
+/** Intents grouped under readable headings, in the order their kinds first appear. */
+export function groupByKind(intents) {
+  const groups = new Map();
+  for (const i of intents) {
+    const label = KIND_LABEL[i.kind] ?? (i.kind ? String(i.kind) : "Intents");
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(i);
+  }
+  return groups;
+}
+
+/**
+ * The review as Markdown, for the agent to show the user as-is: one list item per decision and per intent, grouped,
+ * each with the quote it came from. Every item starts with a list marker, so chat apps that join single newlines
+ * still show one per line.
+ */
+export function renderReview(s) {
+  if (!s.intents) return `Lastro: no proposal to review. ${nextStep(s)}`;
+  const cfg = readJson(s.ws.file("config.json")) ?? {};
+  const required = Number(cfg.requiredApprovals ?? 1);
+  const intents = s.intents.intents ?? [];
+  const decisions = s.intents.decisions ?? [];
+  const open = decisions.filter((d) => d.chosen === undefined || d.chosen === null);
+  const approved = intents.filter((i) => isApproved(i, required)).length;
+  const out = [`**Proposal for review:** ${intents.length} intents, ${approved} approved · ${open.length} of ${decisions.length} decisions open`];
+  if (open.length) {
+    out.push("", "**Decisions**", "");
+    for (const d of open) {
+      out.push(`- **${d.id}** ${d.question}`);
+      d.options.forEach((o, n) => out.push(`  ${n}. ${o.label ?? o}${o.consequence ? `: ${o.consequence}` : ""}${n === d.recommended ? " _(recommended)_" : ""}`));
+    }
+  }
+  const status = (i) =>
+    isApproved(i, required) ? "approved" : i.status === "rejected" ? "rejected" : required > 1 ? `${(i.approvals ?? []).length}/${required} approvals` : "to review";
+  for (const [kind, group] of groupByKind(intents)) {
+    out.push("", `**${kind}**`, "");
+    for (const i of group) {
+      out.push(`- **${i.id}** ${i.statement} _(${status(i)})_`);
+      if (i.source?.quote) out.push(`  > ${i.source.quote.replace(/\s+/g, " ").trim()}`);
+    }
+  }
+  return out.join("\n");
+}
+
 export function renderBoard(s) {
   if (s.phase === "no-workspace") return `Lastro · ${PHASE_LABEL[s.phase]}\n${nextStep(s)}`;
   const t = tally(s);
@@ -225,11 +290,13 @@ export function renderBoard(s) {
       out.push("", "  Decisions to make");
       for (const d of open) out.push(`    ? ${d.id} ${d.question}`, ...d.options.map((o, i) => `        ${i}. ${o.label ?? o}${i === d.recommended ? " (recommended)" : ""}`));
     }
-    out.push("", "  Intents");
-    for (const i of s.intents.intents) {
-      const mark = isApproved(i, required) ? "✓" : i.status === "rejected" ? "✗" : "○";
-      const votes = required > 1 && i.status !== "rejected" ? ` (${(i.approvals ?? []).length}/${required} approvals)` : "";
-      out.push(`    ${mark} ${i.id}${votes} ${i.statement}`);
+    for (const [kind, intents] of groupByKind(s.intents.intents)) {
+      out.push("", `  ${kind}`);
+      for (const i of intents) {
+        const mark = isApproved(i, required) ? "✓" : i.status === "rejected" ? "✗" : "○";
+        const votes = required > 1 && i.status !== "rejected" ? ` (${(i.approvals ?? []).length}/${required} approvals)` : "";
+        out.push(...wrap(`${mark} ${i.id}${votes} ${i.statement}`, "    ", `    ${" ".repeat(mark.length + i.id.length + 2)}`));
+      }
     }
   }
 
@@ -240,7 +307,7 @@ export function renderBoard(s) {
       const r = results.get(c.id);
       const mark = r ? (CLAUSE_MARK[r.verdict] ?? "?") : "○";
       const verdict = r ? r.verdict : "pending";
-      out.push(`    ${mark} ${c.id} ${verdict.padEnd(9)} ${c.description} [${c.intentIds.join(", ")}]`);
+      out.push(...wrap(`${c.description} [${c.intentIds.join(", ")}]`, `    ${mark} ${c.id} ${verdict.padEnd(9)} `, `    ${" ".repeat(mark.length + c.id.length + 12)}`));
       if (r?.counterexample) out.push(`        counterexample ${JSON.stringify(r.counterexample.input)} → ${JSON.stringify(r.counterexample.output)}`);
     }
     for (const b of s.spec.plan.beyondProof ?? []) out.push(`    – ${b.intentId} beyond proof (${b.reason}): needs a human sign-off`);

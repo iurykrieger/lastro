@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handle } from "../scripts/lastro-plugin.mjs";
-import { classify, editedPaths, globToRegExp, isReviewCommand, loadWorkspace, renderBoard, renderLine, snapshot, tally } from "../scripts/lib.mjs";
+import { classify, editedPaths, globToRegExp, isReviewCommand, loadWorkspace, renderBoard, renderLine, renderReview, snapshot, tally, wrap } from "../scripts/lib.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..", "..", "..");
@@ -233,6 +233,37 @@ test("both manifests and the hooks file point at files that exist", () => {
   const hooks = JSON.parse(readFileSync(join(root, "hooks", "hooks.json"), "utf8")).hooks;
   assert.deepEqual(Object.keys(hooks), ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"]);
   for (const groups of Object.values(hooks)) for (const g of groups) for (const h of g.hooks) assert.match(h.command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/lastro-plugin\.mjs" hook \w+$/);
+});
+
+test("the review reads one item per line, grouped, with the quote each intent came from", { skip }, () => {
+  const dir = planned();
+  const review = renderReview(snapshot(loadWorkspace(dir)));
+  const lines = review.split("\n");
+  assert.equal(lines[0], "**Proposal for review:** 4 intents, 0 approved · 1 of 1 decisions open");
+  // Every decision, option and intent is its own list item, so a chat that joins single newlines keeps them apart.
+  assert.ok(lines.includes("- **D1** Is the 100 threshold measured before or after discounts?"));
+  assert.ok(lines.some((l) => /^  1\. After discounts.*_\(recommended\)_$/.test(l)));
+  assert.deepEqual(lines.filter((l) => /^\*\*[A-Z]/.test(l) && !l.startsWith("**Proposal")), ["**Decisions**", "**Behavior**", "**Non-functional**"]);
+  const i1 = lines.indexOf("- **I1** An order with a subtotal of 100 or more pays no shipping. _(to review)_");
+  assert.ok(i1 > 0);
+  assert.match(lines[i1 + 1], /^  > \S/);
+  assert.equal(lines.filter((l) => /^- \*\*I\d/.test(l)).length, 4);
+
+  // After a lastro command, while the review is open, the agent gets it to show as-is.
+  const out = handle("PostToolUse", { cwd: dir, tool_name: "Bash", tool_input: { command: "lastro status" } }, claude);
+  assert.ok(out.hookSpecificOutput.additionalContext.endsWith(review));
+
+  lastro(dir, "review", "--as", "ana", "answer", "D1", "1");
+  lastro(dir, "review", "--as", "ana", "approve", "I1");
+  assert.match(renderReview(snapshot(loadWorkspace(dir))), /^- \*\*I1\*\* .* _\(approved\)_$/m);
+});
+
+test("long board lines wrap under their text", () => {
+  const text = "A non-member order under 100 pays a shipping fee of exactly 15, shown at checkout before the customer confirms the order and pays.";
+  const lines = wrap(`○ I3 ${text}`, "    ", "         ", 60);
+  assert.ok(lines.length > 1 && lines.every((l) => l.length <= 60));
+  assert.ok(lines.slice(1).every((l) => l.startsWith("         ") && l[9] !== " "));
+  assert.equal(lines.join(" ").replace(/\s+/g, " ").trim(), `○ I3 ${text}`);
 });
 
 test("the boards the docs show are the real ones", { skip }, () => {

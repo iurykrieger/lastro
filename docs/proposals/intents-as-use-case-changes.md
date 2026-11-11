@@ -77,7 +77,7 @@ interface Proposal {
   notPromised: string[];
   policy: ReviewPolicy;        // the policy it was reviewed under
   proofs: Proof[];             // derived from the approved intents; pending until they pass
-  supersedes: string[];        // ids of existing proofs that the change retires (reviewed with the proofs)
+  supersedes: string[];        // existing proofs the approved intents replace (computed from their `replaces`)
   hash?: string;               // set by approval
 }
 
@@ -105,10 +105,16 @@ interface Intent {
   provability: Provability;    // formal | empirical | beyond-proof
   beyondProofReason?: BeyondProofReason;
   source: SourceSpan;          // the quote in the prose that motivates it
+  replaces: ProofReplacement[]; // existing proofs of the use case this change breaks on purpose
   status: "proposed" | "approved" | "amended" | "rejected";
   approvals: string[];
   reviewNote?: string;
   originalDescription?: string; // kept on amend
+}
+
+interface ProofReplacement {
+  proof: string;               // id of an existing proof of the intent's use case, "P-003.PF-02"
+  reason: string;              // why the new behavior breaks it, in plain words
 }
 ```
 
@@ -123,6 +129,24 @@ exactly one use case, and several intents may change the same one; the SDK combi
 - Change kinds on one use case fit together (no `add` or `remove` mixed with a `modify`, no `remove` with anything),
   and two intents that contradict each other on one use case come back as a decision.
 
+### Intents that change proven behavior
+
+When an intent modifies or removes a use case that already has proofs, approving it can break some of those proofs
+on purpose: the behavior they guarantee is the behavior being changed. The reviewer has to see that before approving,
+not after the code is written. So the conflict is part of the intent itself:
+
+- Extraction receives every touched use case with its proofs (name, description and the formal statement in
+  readable notation) and lists, on each intent, the proofs the new behavior contradicts and why (`replaces`).
+- For a `remove`, the SDK fills `replaces` with every proof of the use case; the LLM is not asked.
+- The SDK checks that every replaced proof exists and belongs to the intent's use case; anything else rejects the
+  extraction.
+- Review shows each intent with what it replaces: "approving P-007.I-03 replaces P-003.PF-02 (orders over 100 were
+  free of shipping; now the threshold is 150)", with the old proof's statement next to the new description.
+  Approving the intent accepts the replacement. A reviewer who disagrees with the list amends the intent, which
+  needs approval again like any amendment.
+- The proposal's `supersedes` is the union of `replaces` over the approved and amended intents. Nothing else
+  can retire a proof: derivation never adds to it (see below), and a rejected intent replaces nothing.
+
 `kind` goes away: `preserve` is what every untouched use case already is, and `behavior`, `invariant` and
 `non-functional` move into the use case's description.
 
@@ -135,6 +159,7 @@ interface Proof {
   name: string;
   description: string;         // what it checks, in plain words
   intent: string;              // "P-007.I-03"
+  replaces?: string[];         // the superseded proofs it takes the place of
   useCase: string;             // "UC-012"
   model: string;               // the model it is written against (declared in .lastro/config.json)
   subject: string;             // how to run the code (declared in .lastro/config.json)
@@ -154,22 +179,29 @@ regression test. Proofs are derived only from approved or amended intents.
 - A `remove` intent always gets a proof that the old behavior no longer happens, written from the use case's
   `before`. When the model cannot express it, derivation returns a decision for the reviewer, and the proposal
   cannot be applied while it is open.
-- A `modify` may make some of the use case's existing proofs wrong on purpose. Derivation lists them in
-  `supersedes`, and reviewers see them next to the new proofs. A superseded proof is skipped by the regression run
-  of this proposal and removed at apply. Any other existing proof that fails is a regression.
+- Each new proof that takes the place of a replaced proof says so (`replaces` on the proof), so the receipt can
+  show the old guarantee next to the new one.
+- If derivation finds that the approved behavior breaks an existing proof that no approved intent replaces, it does
+  not retire it: it returns a decision, and the intent goes back to review with the proof added to its `replaces`.
+- A superseded proof is skipped by the regression run of this proposal and removed at apply. Any other existing
+  proof that fails is a regression, on a touched use case or not.
+- A superseded proof that still passes against the new code is noted in the receipt: the behavior the intent meant
+  to change may not have changed.
 
 ## The flow
 
 1. **Propose.** `propose(prose, { submittedBy })` creates `P-<n>` in `.lastro/proposals/` and extracts its intents
-   against the current use cases (AI step "extract"). Status `open`.
-2. **Review.** Reviewers approve, amend or reject each intent, comment in threads, and answer decisions.
+   against the current use cases and their proofs (AI step "extract"), each intent listing the proofs it would
+   replace. Status `open`.
+2. **Review.** Reviewers approve, amend or reject each intent, seeing the proofs it replaces, comment in threads,
+   and answer decisions.
    Rejecting or amending an intent marks its use case's `after` stale; it is recombined from the remaining intents
    (part of the extract step, through the same LLM or handoff) and needs review again.
 3. **Approve.** The proposal is approved when every intent is approved, amended or rejected, and every decision and
    thread is resolved, under the policy in `.lastro/config.json`. The approval hash binds the baseline: if the use
    cases changed since extraction, the approval is stale and the prose must be extracted again. Status `approved`.
 4. **Derive.** `derive(proposal)` writes pending proofs for the approved and amended intents only (AI step
-   "derive"), plus `supersedes`. The approved intents and the resulting use cases are the brief for whoever
+   "derive"); `supersedes` is already fixed by the review. The approved intents and the resulting use cases are the brief for whoever
    implements the change; there is no separate brief. Status `proving`.
 5. **Implement.** Any agent or person writes the code. Lastro never does.
 6. **Prove.** `prove(proposal)` runs the proposal's proofs and the proofs of every use case (except the superseded
@@ -192,7 +224,7 @@ resolved like a review comment.
 | Pull request today | Proposal in Lastro |
 |---|---|
 | Author opens a PR with a description | Someone submits prose; extraction turns it into intents. The extractor (the LLM) is the author of the intents, and the person who wrote the prose is recorded as the submitter. |
-| Diff per file | Diff per use case: before and after, with the intents that produce it, and later the proofs it gains or loses. |
+| Diff per file | Diff per use case: before and after, with the intents that produce it, the proofs each intent replaces, and later the proofs it gains. |
 | Line comment, starting a thread | A comment on one intent, one proof or the prose, starting a thread. Threads are resolved by the commenter or the submitter. |
 | Suggested change | An amended intent, which recombines the use case's `after`. |
 | Resolving every comment | Every intent ends approved, amended or rejected; only non-rejected intents go forward. |
@@ -270,12 +302,14 @@ Answered by Iury on 2026-11-11:
 7. **The review policy** (number of reviewers and the submitter rule) lives in `.lastro/config.json`.
 8. **The entities** are use case, proposal, intent and proof, each with id, slug, name and description; use cases
    live in `.lastro/usecases/<id>-<slug>.json` with their proofs, and every change starts as a proposal.
+9. **Replacing proven behavior** is visible at intent review: each intent lists the existing proofs it breaks on
+   purpose, approving it accepts their replacement, and no other proof can be retired.
 
 ## Cost
 
 A semantic change in all three SDKs (TypeScript, .NET, Go): the four entities and their files, the extraction
 prompt and schema (and `go generate`), the recombination step, the review with threads and the submitter policy,
-carry-over, derivation into proofs with `supersedes`, the regression run, apply, the receipt and the CLI, with the
+carry-over, `replaces` on intents and proofs, the regression run, apply, the receipt and the CLI, with the
 cross-check tests and the sandbox example updated to the new format. The Rust prover does not change: it only sees
 models, clauses and tables.
 

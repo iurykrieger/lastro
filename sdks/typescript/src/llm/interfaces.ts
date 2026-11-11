@@ -5,7 +5,7 @@ export interface IntentExtractor {
   extract(prose: string, context?: string): Promise<IntentArtifact>;
 }
 
-/** frozen intents + model vocabulary -> proof plan (non-deterministic; checked by validatePlan). */
+/** approved intents + model vocabulary -> proof plan (non-deterministic; checked by validatePlan). */
 export interface ProofDeriver {
   derive(artifact: IntentArtifact, model: Model): Promise<ProofPlan>;
 }

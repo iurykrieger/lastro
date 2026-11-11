@@ -5,13 +5,9 @@ target/
 sdks/typescript/wasm/
 *.tsbuildinfo
 .DS_Store
-
-# Test screenshots belong in PR comments, never in the repo
-*.png
-!apps/sandbox/public/**/*.png
-apps/sandbox/test-results/
-apps/sandbox/playwright-report/
 bin/
 obj/
 *.nupkg
-packages/sdk/wasm/
+test-results/
+playwright-report/
+*.png

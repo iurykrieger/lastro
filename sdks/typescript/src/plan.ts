@@ -2,7 +2,7 @@
  * Deterministic checks on a derived ProofPlan. The deriver may be an LLM; this
  * is what keeps its output honest before anything is verified.
  */
-import { approvedIntents, isIntact } from "./artifact.js";
+import { approvedIntents, isApproved } from "./artifact.js";
 import { validateExpr } from "./spec/expr.js";
 import { inDomain } from "./spec/domain.js";
 import type { IntentArtifact, ProofPlan } from "./types.js";
@@ -22,7 +22,7 @@ export class PlanError extends Error {
 
 export function checkPlan(artifact: IntentArtifact, plan: ProofPlan): PlanCheck {
   const errors: string[] = [];
-  if (!artifact.hash || !isIntact(artifact)) errors.push("artifact is not frozen or was modified after freeze()");
+  if (!artifact.hash || !isApproved(artifact)) errors.push("artifact is not approved or was modified after approve()");
   if (plan.artifactHash !== artifact.hash)
     errors.push(`plan was derived from ${plan.artifactHash}, artifact is ${artifact.hash}`);
 

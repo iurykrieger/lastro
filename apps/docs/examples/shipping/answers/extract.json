@@ -1,0 +1,20 @@
+{
+  "intents": [
+    { "statement": "An order with a subtotal of 100 or more pays no shipping.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "Orders of 100 or more ship free." },
+    { "statement": "A member never pays shipping, whatever the subtotal.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "Members always ship free." },
+    { "statement": "A non-member order under 100 pays a shipping fee of exactly 15.", "kind": "behavior", "provability": "formal", "beyondProofReason": "none", "quote": "Every other order pays a flat shipping fee of 15." },
+    { "statement": "The fee is shown instantly at checkout.", "kind": "non-functional", "provability": "beyond-proof", "beyondProofReason": "termination-timing", "quote": "The fee must show up instantly at checkout." }
+  ],
+  "decisions": [
+    {
+      "intentIndexes": [0],
+      "question": "Is the 100 threshold measured before or after discounts?",
+      "options": [
+        { "label": "Before discounts", "consequence": "A 110 order with a 20 discount still ships free." },
+        { "label": "After discounts", "consequence": "The same order pays 15; the model input must be the discounted subtotal." }
+      ],
+      "recommended": 1
+    }
+  ],
+  "notPromised": ["How the fee is shown or worded at checkout.", "Shipping rules for other countries."]
+}

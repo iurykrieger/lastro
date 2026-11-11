@@ -8,7 +8,7 @@ import {
   review,
   type DecisionCard,
   type Gap,
-  freeze,
+  approve,
   loadRustProver,
   pendingReview,
   tabulate,
@@ -117,12 +117,12 @@ export function useLastro() {
   }, []);
 
   const pending = useMemo(() => pendingReview(artifact), [artifact]);
-  const frozen = useMemo(() => (pending.length ? null : freeze(artifact)), [artifact, pending]);
+  const approved = useMemo(() => (pending.length ? null : approve(artifact)), [artifact, pending]);
   /** The example's own prose uses the hand-written derivation; edited prose is derived by Claude. */
   const planOrigin: "reference" | "claude" = artifact.prose === PROSE ? "reference" : "claude";
   const plan: ProofPlan | null = useMemo(
-    () => (frozen ? (frozen.prose === PROSE ? deriveLoginPlan(frozen) : (aiPlans[frozen.hash!] ?? null)) : null),
-    [frozen, aiPlans],
+    () => (approved ? (approved.prose === PROSE ? deriveLoginPlan(approved) : (aiPlans[approved.hash!] ?? null)) : null),
+    [approved, aiPlans],
   );
 
   const runAi = async <T,>(step: AiStep, work: (a: Ai) => Promise<T>): Promise<T | null> => {
@@ -147,14 +147,14 @@ export function useLastro() {
     if (p) setAiPlans((m) => ({ ...m, [f.hash!]: p }));
   };
 
-  // Reviewed intents for edited prose: derive the proof obligations once per frozen hash.
+  // Reviewed intents for edited prose: derive the proof obligations once per approved hash.
   useEffect(() => {
-    if (!frozen || frozen.prose === PROSE || aiPlans[frozen.hash!] || ai.available !== true || ai.busy) return;
-    if (tried.current.has(frozen.hash!)) return;
-    tried.current.add(frozen.hash!);
-    void deriveFor(frozen);
+    if (!approved || approved.prose === PROSE || aiPlans[approved.hash!] || ai.available !== true || ai.busy) return;
+    if (tried.current.has(approved.hash!)) return;
+    tried.current.add(approved.hash!);
+    void deriveFor(approved);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frozen, aiPlans, ai.available, ai.busy]);
+  }, [approved, aiPlans, ai.available, ai.busy]);
 
   const compiled = useMemo((): { fn: LoginFn | null; error: string | null } => {
     try {
@@ -169,15 +169,15 @@ export function useLastro() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!frozen || !plan || !compiled.fn) {
+      if (!approved || !plan || !compiled.fn) {
         setResults({ ts: null, rust: null, error: compiled.error, ms: 0 });
         return;
       }
       const t0 = performance.now();
       try {
-        validatePlan(frozen, plan);
+        validatePlan(approved, plan);
         const subject = (input: Env) => compiled.fn!(input);
-        const ts = await verify(frozen, plan, { subject, traces: withTrace ? [PRODUCTION_TRACE] : [] });
+        const ts = await verify(approved, plan, { subject, traces: withTrace ? [PRODUCTION_TRACE] : [] });
         let rust: RustProofReport | null = null;
         if (rustStatus === "ready") rust = (await rustProver()).prove(plan, await tabulate(plan.model, subject));
         if (!cancelled) setResults({ ts, rust, error: null, ms: performance.now() - t0 });
@@ -188,10 +188,10 @@ export function useLastro() {
     return () => {
       cancelled = true;
     };
-  }, [frozen, plan, compiled, withTrace, rustStatus]);
+  }, [approved, plan, compiled, withTrace, rustStatus]);
 
   const pipeline = (a: Ai) => createLastro({ model: MODEL, ask: a.ask, requiredApprovals });
-  const currentSpec = () => (frozen && plan ? { artifact: frozen, plan, contradictions: results.ts?.decisions ?? [], ok: !results.ts?.decisions.length } : null);
+  const currentSpec = () => (approved && plan ? { artifact: approved, plan, contradictions: results.ts?.decisions ?? [], ok: !results.ts?.decisions.length } : null);
 
   return {
     artifact,
@@ -210,7 +210,7 @@ export function useLastro() {
       return true;
     },
     retryDerive: () => {
-      if (frozen) void deriveFor(frozen);
+      if (approved) void deriveFor(approved);
     },
     reviewer,
     setReviewer,
@@ -230,7 +230,7 @@ export function useLastro() {
       }),
     /** Contradictions in the spec go back to the team as decisions. */
     returnDecisions: (cards: DecisionCard[]) => setArtifact((prev) => raiseDecisions(prev, cards)),
-    gaps: gaps && frozen && gaps.hash === frozen.hash && gaps.source === source ? gaps.gaps : null,
+    gaps: gaps && approved && gaps.hash === approved.hash && gaps.source === source ? gaps.gaps : null,
     /** LLM gap review: what the proofs cannot see. */
     runGapReview: async () => {
       const spec = currentSpec();
@@ -245,7 +245,7 @@ export function useLastro() {
         return next;
       }),
     pending,
-    frozen,
+    approved,
     plan,
     source,
     setSource: (s: string) => {

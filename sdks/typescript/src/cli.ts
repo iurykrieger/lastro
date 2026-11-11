@@ -36,7 +36,8 @@ class Exit extends Error {
 const USAGE = `lastro <command> [options]
 
   init --model <model.json> [--approvals N]     start a .lastro/ workspace
-  plan <prose-file>                             extract intents (keeps earlier review)
+  plan <prose-file> [--section <heading>]       extract intents (keeps earlier review); --section reads
+                                                only the Markdown section with that heading
   status                                        intents, approvals, pending items
   review --as <name> <action> ...               approve <I1 I2..> | approve-all | amend <I> <text>
                                                 reject <I> <note> | answer <D> <option-index>
@@ -128,6 +129,24 @@ async function rustProver(): Promise<RustProver | undefined> {
   return loadRustProver(readFileSync(wasm));
 }
 
+/** The body of the Markdown section whose heading is `title`, up to the next heading of the same or a higher level. */
+export function section(markdown: string, title: string): string {
+  const lines = markdown.split("\n");
+  const norm = (s: string) => s.trim().toLowerCase();
+  const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && norm(l.replace(/^#+/, "")) === norm(title));
+  if (start < 0) throw new Exit(2, { error: `no section "${title}"` });
+  const level = lines[start]!.match(/^#+/)![0].length;
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    const m = lines[i]!.match(/^(#{1,6})\s/);
+    if (m && m[1]!.length <= level) {
+      end = i;
+      break;
+    }
+  }
+  return lines.slice(start + 1, end).join("\n");
+}
+
 function summary(a: IntentArtifact, pending: string[]) {
   return {
     intents: a.intents.map((i) => ({ id: i.id, status: i.status, approvals: i.approvals ?? [], statement: i.statement, ...(i.decisionId ? { decisionId: i.decisionId } : {}) })),
@@ -155,7 +174,8 @@ export async function main(argv: string[]): Promise<{ code: number; body: Record
       case "plan": {
         const cfg = ws.config();
         if (!rest[0]) throw new Exit(2, { error: "plan needs a prose file" });
-        const prose = readFileSync(resolve(rest[0]), "utf8").trim();
+        const text = readFileSync(resolve(rest[0]), "utf8");
+        const prose = (args.flags.section ? section(text, args.flags.section) : text).trim();
         const lastro = createLastro({ model: cfg.model, requiredApprovals: cfg.requiredApprovals, ask: await pickAsk(args, ws.dir) });
         const previous = existsSync(intentsPath) ? readJson<IntentArtifact>(intentsPath) : undefined;
         const a = await lastro.plan(prose, previous);

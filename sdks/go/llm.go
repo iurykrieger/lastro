@@ -33,7 +33,7 @@ type IntentExtractor interface {
 	Extract(ctx context.Context, prose string) (IntentArtifact, error)
 }
 
-// ProofDeriver turns frozen intents and the model vocabulary into a proof plan (checked by ValidatePlan).
+// ProofDeriver turns approved intents and the model vocabulary into a proof plan (checked by ValidatePlan).
 type ProofDeriver interface {
 	Derive(ctx context.Context, artifact IntentArtifact, model Model) (ProofPlan, error)
 }
@@ -155,7 +155,7 @@ type DeriveOut struct {
 // answered decisions, as JSON.stringify(..., null, 2) would print them.
 func DeriveUserPrompt(artifact IntentArtifact, model Model) (string, error) {
 	if artifact.Hash == "" {
-		return "", fmt.Errorf("freeze() the artifact before deriving proofs")
+		return "", fmt.Errorf("approve() the artifact before deriving proofs")
 	}
 	type intent struct {
 		ID                string `json:"id"`

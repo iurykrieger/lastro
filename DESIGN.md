@@ -26,7 +26,7 @@ Direct inspiration: [PDD Kit (GitHub Next and Microsoft Research)](https://githu
 1. **Extract** (non-deterministic). An `IntentExtractor` (a Claude adapter is included) reads the prose and returns
    intents with quotes, kind, proposed provability and open questions.
 2. **Review** (human). Approve, reject, amend, answer decision cards. This is where "the AI misunderstood" is caught
-   early. `freeze()` then computes a **canonical hash** of the artifact; everything after is tied to it.
+   early. `approve()` then computes a **canonical hash** of the artifact; everything after is tied to it.
 3. **Derive** (non-deterministic, but gated). A `ProofDeriver` turns approved intents into a `ProofPlan` written in
    **LSL** (Lastro Spec Language, a JSON AST that is never `eval`ed). `validatePlan()` checks deterministically that
    only approved intents are cited, every approved intent has an obligation or a beyond-proof reason, and every

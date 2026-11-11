@@ -36,17 +36,17 @@ public class CoreTests
     }
 
     [Fact]
-    public void FreezeRequiresEveryIntentReviewedAndEveryDecisionAnswered()
+    public void ApproveRequiresEveryIntentReviewedAndEveryDecisionAnswered()
     {
-        Assert.Throws<ArtifactException>(() => Artifacts.Freeze(LoginExample.Extract()));
-        var e = Assert.Throws<ArtifactException>(() => Artifacts.Freeze(Artifacts.Review(LoginExample.Extract()).ApproveAll().Done()));
+        Assert.Throws<ArtifactException>(() => Artifacts.Approve(LoginExample.Extract()));
+        var e = Assert.Throws<ArtifactException>(() => Artifacts.Approve(Artifacts.Review(LoginExample.Extract()).ApproveAll().Done()));
         Assert.Contains(e.Problems, p => p.StartsWith("D1 unanswered", StringComparison.Ordinal));
         var f = Reviewed();
         Assert.StartsWith("sha256:", f.Hash);
-        Assert.True(Artifacts.IsIntact(f));
+        Assert.True(Artifacts.IsApproved(f));
         var tampered = LastroJson.Clone(f);
         tampered.Intents[0].Statement = "something else";
-        Assert.False(Artifacts.IsIntact(tampered));
+        Assert.False(Artifacts.IsApproved(tampered));
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class CoreTests
     [Fact]
     public void RejectedIntentsCannotBeBuiltAndThePlanIsBoundToTheArtifactHash()
     {
-        var a = Artifacts.Freeze(Artifacts.Review(LoginExample.Extract()).ApproveAll().Reject("I5", "out of scope").Answer("D1", 0).Answer("D2", 0).Done());
+        var a = Artifacts.Approve(Artifacts.Review(LoginExample.Extract()).ApproveAll().Reject("I5", "out of scope").Answer("D1", 0).Answer("D2", 0).Done());
         var plan = LoginExample.Derive(Reviewed());
         Assert.Throws<PlanException>(() => Plans.Validate(a, plan));
         Assert.Empty(Plans.Validate(a, LoginExample.Derive(a)));
@@ -110,7 +110,7 @@ public class CoreTests
 
     private static (IntentArtifact A, ProofPlan Plan) TinyPlan(List<Clause> clauses, Dictionary<string, Domain>? inputs = null)
     {
-        var a = Artifacts.Freeze(Artifacts.Review(Artifacts.Create("x doubles", [new("y = 2x", IntentKind.Behavior, Provability.Formal, "x doubles")])).ApproveAll().Done());
+        var a = Artifacts.Approve(Artifacts.Review(Artifacts.Create("x doubles", [new("y = 2x", IntentKind.Behavior, Provability.Formal, "x doubles")])).ApproveAll().Done());
         return (a, new ProofPlan
         {
             ArtifactHash = a.Hash!,
@@ -270,31 +270,31 @@ public class CoreTests
         ["notPromised"] = LastroJson.ToNode(ex.NotPromised),
     };
 
-    internal static JsonObject DeriveAnswerFor(IntentArtifact frozen) => DeriveAnswer(LoginExample.Derive(frozen));
+    internal static JsonObject DeriveAnswerFor(IntentArtifact approved) => DeriveAnswer(LoginExample.Derive(approved));
 
     [Fact]
     public async Task LlmStepsTurnJsonAnswersIntoCheckedLastroObjects()
     {
-        var frozen = Artifacts.Freeze(ReviewedLogin());
+        var approved = Artifacts.Approve(ReviewedLogin());
         var answers = new Dictionary<string, JsonNode?>
         {
             ["extract"] = JsonNode.Parse("""{"intents":[{"statement":"Only the right password gets a token.","kind":"invariant","provability":"formal","beyondProofReason":"none","quote":"only the right password gets a token"}],"decisions":[],"notPromised":[]}"""),
-            ["derive"] = DeriveAnswerFor(frozen),
+            ["derive"] = DeriveAnswerFor(approved),
         };
         AskJson ask = (req, _) => Task.FromResult(answers[req.Step]?.DeepClone());
 
-        var extracted = await new LlmIntentExtractor(ask).ExtractAsync(frozen.Prose);
+        var extracted = await new LlmIntentExtractor(ask).ExtractAsync(approved.Prose);
         Assert.Equal("only the right password gets a token", extracted.Intents[0].Source.Quote);
 
-        var plan = await new LlmProofDeriver(ask).DeriveAsync(frozen, LoginExample.Model);
-        Plans.Validate(frozen, plan);
-        Assert.Equal(Canonical.HashOf(LoginExample.Derive(frozen)), Canonical.HashOf(plan));
-        var report = await Engine.VerifyAsync(frozen, plan, new VerifyOptions { Subject = LoginExample.Subject() });
+        var plan = await new LlmProofDeriver(ask).DeriveAsync(approved, LoginExample.Model);
+        Plans.Validate(approved, plan);
+        Assert.Equal(Canonical.HashOf(LoginExample.Derive(approved)), Canonical.HashOf(plan));
+        var report = await Engine.VerifyAsync(approved, plan, new VerifyOptions { Subject = LoginExample.Subject() });
         Assert.True(report.Ok);
 
         // A derivation that references a variable outside the model is refused.
         answers["derive"]!["clauses"]![0]!["ensures"] = "{\"var\":\"out.cookie\"}";
-        var e = await Assert.ThrowsAsync<PlanException>(() => new LlmProofDeriver(ask).DeriveAsync(frozen, LoginExample.Model));
+        var e = await Assert.ThrowsAsync<PlanException>(() => new LlmProofDeriver(ask).DeriveAsync(approved, LoginExample.Model));
         Assert.Contains("cookie", e.Message);
     }
 
@@ -339,7 +339,7 @@ public class CoreTests
     [Fact]
     public void ContradictionsGoBackToTheTeamAsUnansweredDecisions()
     {
-        var a = Artifacts.Freeze(ReviewedLogin());
+        var a = Artifacts.Approve(ReviewedLogin());
         var raised = Artifacts.RaiseDecisions(a, [new DecisionCard
         {
             Id = "X1", IntentIds = ["I5", "I7"], Question = "C5 and C7 cannot both hold. Which gives way?",
@@ -347,14 +347,14 @@ public class CoreTests
         }]);
         Assert.Null(raised.Hash);
         Assert.Equal("D3", raised.Decisions[^1].Id);
-        var e = Assert.Throws<ArtifactException>(() => Artifacts.Freeze(raised));
+        var e = Assert.Throws<ArtifactException>(() => Artifacts.Approve(raised));
         Assert.Contains(e.Problems, p => p.StartsWith("D3 unanswered", StringComparison.Ordinal));
     }
 
     [Fact]
     public void AnsweringAContradictionAddsAnIntentTheTeamMustApprove()
     {
-        var raised = Artifacts.RaiseDecisions(Artifacts.Freeze(ReviewedLogin()), [new DecisionCard
+        var raised = Artifacts.RaiseDecisions(Artifacts.Approve(ReviewedLogin()), [new DecisionCard
         {
             Id = "X1", IntentIds = ["I5", "I7"], Question = "C5 and C7 cannot both hold for both+db-fails. Which gives way?",
             Options = [new() { Label = "Relax C5", Consequence = "the database error wins" }, new() { Label = "Relax C7", Consequence = "the 400 wins" }],
@@ -365,9 +365,9 @@ public class CoreTests
         Assert.Equal("D3", it.DecisionId);
         Assert.Equal(IntentStatus.Proposed, it.Status);
         Assert.Contains("Relax C5 (the database error wins)", it.Statement);
-        var e = Assert.Throws<ArtifactException>(() => Artifacts.Freeze(answered));
+        var e = Assert.Throws<ArtifactException>(() => Artifacts.Approve(answered));
         Assert.Contains(e.Problems, p => p.StartsWith("I10 not reviewed", StringComparison.Ordinal));
-        Assert.NotNull(Artifacts.Freeze(Artifacts.Review(answered, "bruno").Approve(it.Id).Done()).Hash);
+        Assert.NotNull(Artifacts.Approve(Artifacts.Review(answered, "bruno").Approve(it.Id).Done()).Hash);
     }
 
     [Fact]
@@ -395,7 +395,7 @@ public class CoreTests
         var back = LastroJson.Deserialize<Proof>(json);
         Assert.Equal(json, LastroJson.Serialize(back));
         var specBack = LastroJson.Deserialize<Spec>(LastroJson.Serialize(spec));
-        Assert.True(Artifacts.IsIntact(specBack.Artifact));
+        Assert.True(Artifacts.IsApproved(specBack.Artifact));
         Assert.Equal(Canonical.HashOf(spec.Plan), Canonical.HashOf(specBack.Plan));
     }
 }

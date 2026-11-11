@@ -13,6 +13,9 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
   hashes, verdicts, receipts and prompts; the CLIs share one `.lastro/` workspace.
 - `sdks/go`: Go SDK and `lastro-go` CLI. Same data model, hashes and `.lastro/` workspace as the TS SDK.
 - `apps/sandbox`: Vite + React + shadcn/ui sandbox (prose, code, contrast) running the real SDK and the WASM prover.
+- `apps/docs`: Vite + React + shadcn/ui developer docs. Pages live in `src/pages`, the sidebar in `src/content/nav.ts`.
+  Code samples come from `examples/shipping`, which `test/` runs through the real SDKs; the interactive examples in `src/live`
+  run the real TS SDK and the WASM prover in the browser (build it with `npm run wasm` first); Playwright UI tests are in `e2e/`.
 
 ## Rules
 
@@ -28,9 +31,15 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
 - Verification is deterministic: fixed seeds, canonical JSON, hashes over frozen artifacts.
 - Lastro's only AI steps are intent extraction and proof derivation. Never add code generation to the SDK:
   implementations come from any agent or person, and Lastro judges them.
-- Sandbox UI changes come with Playwright tests in `apps/sandbox/e2e` that assert the new behavior. Never commit
-  screenshots; the tests are the review.
+- Everything the framework generates or keeps (the use-case catalog, intents, specs, proofs, receipts, LLM handoff
+  files) lives in the `.lastro/` folder. Never write framework files elsewhere.
+- `.lastro/use-cases.json` is the catalog of Lastro's current use cases (`slug`, `name`, `description`), each description
+  stating the complete behavior as the source implements it. When a change adds, alters or removes behavior,
+  update the catalog in the same change; slugs are stable kebab-case ids.
 - Stay harness-agnostic: no dependency on a specific agent product. New surfaces wrap `createLastro`.
+- When you change the CLI, an SDK's public API or a verdict, update `apps/docs` in the same change
+  (`npm run test:examples -w @lastro/docs` catches drift in the quickstart and the library examples).
+- UI changes (sandbox, docs) come with Playwright tests. Never commit screenshots.
 
 ## Commands
 
@@ -39,6 +48,9 @@ cargo test -p lastro-core && cargo clippy -p lastro-core -- -D warnings
 npm install && npm run wasm          # builds sdks/typescript/wasm/lastro_core.wasm
 npm test -w lastro                   # SDK tests, including the Rust cross-check
 npm run sandbox                      # dev server for the sandbox
+npm run docs                         # dev server for the docs (apps/docs)
+npm run build -w lastro && npm run test:examples -w @lastro/docs   # docs examples through the real SDK
+npm run test:e2e -w @lastro/docs     # docs UI tests (Playwright)
 dotnet test sdks/dotnet          # .NET SDK tests (cross-checks need the TS build and lastro-prove)
 cargo build --release -p lastro-core && (cd sdks/go && go test ./...)   # Go SDK, cross-checked with TS and Rust
 npm run build:sandbox && npm run test:e2e -w @lastro/sandbox   # sandbox UI tests (Playwright)

@@ -9,7 +9,7 @@ Development): review moves up from code to intent, and every result says plainly
 **proved under trusted assumptions**, **evidenced** to a stated confidence, or **beyond proof**.
 
 ```
-prose ──extract──▶ intents ──review──▶ frozen intents (hash)
+prose ──extract──▶ intents ──review──▶ approved intents (hash)
                                             │
                                      derive ▼
                          proof plan (LSL clauses, trusted pieces, scenarios, beyond-proof)
@@ -29,6 +29,7 @@ code / production traces ──────── verify ───┤──▶ T
 | [`sdks/dotnet`](sdks/dotnet) | .NET SDK and CLI. Same wire format, hashes, verdicts, receipts and prompts as the TypeScript SDK, so both CLIs work on one `.lastro/` workspace. |
 | [`sdks/go`](sdks/go) | Go SDK and the `lastro-go` CLI. Same data model, hashes and `.lastro/` workspace as the TypeScript SDK; its engine is cross-checked against the TS engine and the Rust prover. |
 | [`apps/sandbox`](apps/sandbox) | Interactive sandbox built with shadcn/ui: the prose and its intents, the generated code, and a contrast section that proves one against the other live, in both engines. |
+| [`apps/docs`](apps/docs) | Developer docs site built with shadcn/ui: getting started, concepts, the CLI, examples for every SDK, and interactive examples that run the real SDK and the WASM prover in the browser. Its examples run in CI, so the docs stay true. Published at [iurykrieger.github.io/lastro](https://iurykrieger.github.io/lastro/). |
 
 ## Quick start
 
@@ -38,6 +39,7 @@ Requires Rust (with the `wasm32-unknown-unknown` target) and Node 20+.
 npm install
 npm test            # cargo tests, WASM build, SDK tests (including the Rust cross-check)
 npm run sandbox     # opens the sandbox on http://localhost:5173
+npm run docs        # opens the developer docs on http://localhost:5174
 ```
 
 The sandbox walks through a store login. Things to try:
@@ -95,7 +97,7 @@ Every command prints one JSON object and keeps state in `.lastro/`. Exit codes: 
 
 ```sh
 lastro init --model model.json --approvals 1
-lastro plan prose.md                      # extract intents
+lastro plan prose.md                      # extract intents (--section <heading> for one part of a document)
 lastro review --as ana approve-all        # approve | amend | reject | answer
 lastro spec                               # derive the formal spec; contradictions become decisions
 lastro prove ./decide-login.js            # proof.json + receipt.md; exit 1 with failures
@@ -105,6 +107,8 @@ lastro feedback                           # the failures as a brief for the codi
 The AI steps run on the Anthropic API when `ANTHROPIC_API_KEY` is set. Otherwise (`--llm handoff`) the CLI
 writes the request (instructions, data and JSON Schema) to `.lastro/llm/`, exits 3, and the calling agent
 answers with its own model and runs the command again. No API key or harness-specific plugin is needed.
+
+Every use case of the framework, with its complete current behavior, is listed in [`.lastro/use-cases.json`](.lastro/use-cases.json). Everything the framework generates lives in `.lastro/`.
 
 See [`DESIGN.md`](DESIGN.md) for the semantics of each verdict and where proof stops.
 

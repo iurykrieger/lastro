@@ -6,7 +6,7 @@ two agree byte for byte where it matters:
 
 - the same wire format (camelCase JSON, kebab-case enums), so a `.lastro/` workspace written by one CLI is
   read and continued by the other;
-- the same canonical JSON and SHA-256 hashes, so an artifact frozen by one SDK is intact for the other and a
+- the same canonical JSON and SHA-256 hashes, so an artifact approved by one SDK is intact for the other and a
   plan has the same hash in both;
 - the same verdicts, receipts and seeded sampling (mulberry32), checked by the test suite against the
   TypeScript engine and the Rust prover;
@@ -51,7 +51,7 @@ proof.Receipt;                                         // Markdown for the pull 
 Feedback.AgentFeedback(proof);                         // failures with counterexamples, for the coding agent
 ```
 
-The building blocks are public too: `Artifacts` (create, review, freeze, carry a review over), `Plans`
+The building blocks are public too: `Artifacts` (create, review, approve, carry a review over), `Plans`
 (validation), `Engine` (verify, explain a run, consistency), `Lsl` and `L` (the spec language), `D` and
 `Domains`, `Receipt`, `LlmPrompts` and `RustProver`.
 

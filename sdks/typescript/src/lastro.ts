@@ -11,7 +11,7 @@
  * objects, so the same calls work in a script, a CI job, an app or an agent
  * harness.
  */
-import { carryReview, freeze, pendingReview, raiseDecisions, Review, thaw } from "./artifact.js";
+import { carryReview, approve, pendingReview, raiseDecisions, Review, reopen } from "./artifact.js";
 import { validatePlan } from "./plan.js";
 import { renderReceipt } from "./receipt.js";
 import { show } from "./spec/expr.js";
@@ -36,7 +36,7 @@ export interface LastroOptions {
   verify?: Omit<VerifyOptions, "subject" | "traces">;
 }
 
-/** Stage 2: the formal spec derived from a frozen, fully reviewed artifact. */
+/** Stage 2: the formal spec derived from an approved, fully reviewed artifact. */
 export interface Spec {
   artifact: IntentArtifact;
   plan: ProofPlan;
@@ -131,7 +131,7 @@ export function createLastro(o: LastroOptions) {
 
     /** Review as one person. Chain approve/amend/reject/answer, then done(). */
     review(artifact: IntentArtifact, reviewer: string): Review {
-      const a = artifact.hash ? thaw(artifact) : artifact;
+      const a = artifact.hash ? reopen(artifact) : artifact;
       return new Review(a.policy ? a : { ...a, policy: { ...policy } }, reviewer);
     },
 
@@ -140,13 +140,13 @@ export function createLastro(o: LastroOptions) {
       return pendingReview(artifact.policy ? artifact : { ...artifact, policy: { ...policy } });
     },
 
-    /** 2. Formal spec: freeze the reviewed intents, derive clauses, validate, look for contradictions. */
+    /** 2. Formal spec: approve the reviewed intents, derive clauses, validate, look for contradictions. */
     async spec(artifact: IntentArtifact): Promise<Spec> {
-      const frozen = freeze(artifact.policy ? artifact : { ...artifact, policy: { ...policy } });
-      const plan = await need(deriver, "Deriver").derive(frozen, o.model);
-      validatePlan(frozen, plan);
+      const approved = approve(artifact.policy ? artifact : { ...artifact, policy: { ...policy } });
+      const plan = await need(deriver, "Deriver").derive(approved, o.model);
+      validatePlan(approved, plan);
       const contradictions = checkConsistency(plan, o.verify);
-      return { artifact: frozen, plan, contradictions, ok: contradictions.length === 0 };
+      return { artifact: approved, plan, contradictions, ok: contradictions.length === 0 };
     },
 
     /** Contradictions go back to the team as decision cards; the artifact must be reviewed again. */

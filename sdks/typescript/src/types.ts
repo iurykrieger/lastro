@@ -1,7 +1,7 @@
 /**
  * Core data model for Lastro.
  *
- * prose -> IntentArtifact (reviewed, frozen) -> ProofPlan (LSL) -> VerificationReport -> Receipt
+ * prose -> IntentArtifact (reviewed, approved) -> ProofPlan (LSL) -> VerificationReport -> Receipt
  */
 import type { Expr } from "./spec/expr.js";
 import type { Domain } from "./spec/domain.js";
@@ -87,7 +87,7 @@ export interface IntentArtifact {
   notPromised: string[];
   /** Review rules. Without one, a single approval is enough. */
   policy?: ReviewPolicy;
-  /** Set by freeze(). */
+  /** Set by approve(). */
   hash?: string;
 }
 

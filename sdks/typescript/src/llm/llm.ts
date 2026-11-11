@@ -210,7 +210,7 @@ export function artifactFromExtraction(prose: string, out: ExtractOut): IntentAr
 }
 
 export function deriveUserPrompt(artifact: IntentArtifact, model: Model): string {
-  if (!artifact.hash) throw new Error("freeze() the artifact before deriving proofs");
+  if (!artifact.hash) throw new Error("approve() the artifact before deriving proofs");
   const intents = approvedIntents(artifact).map((i) => ({ id: i.id, statement: i.statement, kind: i.kind, provability: i.provability, beyondProofReason: i.beyondProofReason }));
   const decisions = artifact.decisions.map((d) => ({ question: d.question, answer: d.options[d.chosen ?? d.recommended]?.label }));
   return JSON.stringify({ model, approvedIntents: intents, decisions, notPromised: artifact.notPromised }, null, 2);

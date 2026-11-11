@@ -30,8 +30,8 @@ export function Pipeline({ l }: { l: Lastro }) {
     {
       icon: FileCode2,
       title: "Formal spec",
-      detail: !l.frozen ? "waits for the review" : l.ai.busy === "derive" ? "Claude is deriving…" : !l.plan ? "not derived" : contradictions ? `${contradictions} contradiction(s)` : `${l.plan.clauses.length} clauses`,
-      state: !l.frozen ? "waiting" : !l.plan ? "active" : contradictions ? "blocked" : "done",
+      detail: !l.approved ? "waits for the review" : l.ai.busy === "derive" ? "Claude is deriving…" : !l.plan ? "not derived" : contradictions ? `${contradictions} contradiction(s)` : `${l.plan.clauses.length} clauses`,
+      state: !l.approved ? "waiting" : !l.plan ? "active" : contradictions ? "blocked" : "done",
     },
     {
       icon: ShieldCheck,

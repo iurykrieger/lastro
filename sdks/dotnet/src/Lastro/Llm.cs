@@ -32,7 +32,7 @@ public interface IIntentExtractor
     Task<IntentArtifact> ExtractAsync(string prose, string? context = null, CancellationToken cancellationToken = default);
 }
 
-/// <summary>frozen intents + model → proof plan (non-deterministic; checked by <see cref="Plans.Validate"/>).</summary>
+/// <summary>approved intents + model → proof plan (non-deterministic; checked by <see cref="Plans.Validate"/>).</summary>
 public interface IProofDeriver
 {
     Task<ProofPlan> DeriveAsync(IntentArtifact artifact, Model model, CancellationToken cancellationToken = default);
@@ -103,7 +103,7 @@ public static partial class LlmPrompts
 
     public static string DeriveUserPrompt(IntentArtifact artifact, Model model)
     {
-        if (artifact.Hash is null) throw new InvalidOperationException("freeze() the artifact before deriving proofs");
+        if (artifact.Hash is null) throw new InvalidOperationException("approve() the artifact before deriving proofs");
         var intents = new JsonArray();
         foreach (var i in Artifacts.ApprovedIntents(artifact))
         {

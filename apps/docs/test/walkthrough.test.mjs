@@ -21,7 +21,7 @@ function lastro(cwd, ...args) {
   return { code: r.status, body: JSON.parse(r.stdout) };
 }
 
-test("the quickstart runs as the docs show it", { skip: !existsSync(cli) && "build the TS SDK first: npm run build -w lastro" }, () => {
+test("the quickstart runs as the docs show it", { skip: !existsSync(cli) && "build the TS SDK first: npm run build -w lastro" }, async () => {
   const dir = mkdtempSync(join(tmpdir(), "lastro-docs-"));
   for (const f of ["model.json", "prose.md", "shipping.mjs", "shipping-buggy.mjs"]) copyFileSync(join(example, f), join(dir, f));
 
@@ -76,6 +76,15 @@ test("the quickstart runs as the docs show it", { skip: !existsSync(cli) && "bui
   assert.deepEqual(r.body.failures[0].input, { member: false, subtotal: 100 });
   assert.deepEqual(r.body.failures[0].output, { fee: 15 });
   if (existsSync(wasm)) assert.equal(r.body.enginesAgree, true);
+
+  // --stream: the same run, one event per line, as the CLI page shows it.
+  const streamed = spawnSync(process.execPath, [cli, "prove", "./shipping-buggy.mjs", "--stream"], { cwd: dir, encoding: "utf8", env: { ...process.env, ANTHROPIC_API_KEY: "" } });
+  assert.equal(streamed.status, 1);
+  const { STREAM } = await import("../src/content/outputs.ts");
+  const shown = STREAM.split("\n").map((l) => JSON.parse(l));
+  const real = streamed.stdout.trim().split(dir).join("/home/you/shop").split("\n").map((l) => JSON.parse(l));
+  if (existsSync(wasm)) assert.deepEqual(real, shown);
+  else assert.deepEqual(real.filter((e) => e.event !== "crosscheck").map((e) => e.event), shown.filter((e) => e.event !== "crosscheck").map((e) => e.event));
 
   r = lastro(dir, "feedback");
   assert.equal(r.code, 1);

@@ -283,3 +283,22 @@ test("plan mode: the approved plan is saved as a proposal draft; Codex's update_
   const codexPlan = handle("PostToolUse", { cwd: dir, tool_name: "update_plan", tool_input: { plan: [{ step: "edit fee", status: "pending" }] } }, codex);
   assert.match(codexPlan.hookSpecificOutput.additionalContext, /before the first source edit of this plan/);
 });
+
+test("proving streams its events to .lastro/plugin/progress.jsonl, for the mod to draw", { skip }, () => {
+  const dir = specified({ build: "true" });
+  handle("Stop", { cwd: dir }, claude);
+  const events = readFileSync(join(dir, ".lastro", "plugin", "progress.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+  assert.deepEqual(events.map((e) => e.event).filter((e) => e !== "progress"), ["build", "start", "clause", "clause", "clause", "scenario", "crosscheck", "result"].filter((e) => e !== "crosscheck" || events.some((x) => x.event === "crosscheck")));
+  assert.ok(events.some((e) => e.event === "progress"), "the shipping space has 402 inputs: progress events");
+  assert.deepEqual(events.filter((e) => e.event === "clause").map((e) => [e.clauseId, e.verdict]), [["C1", "violated"], ["C2", "proved"], ["C3", "proved"]]);
+  assert.equal(events.at(-1).ok, false);
+});
+
+test("a failed build is reported in the stream and sent back to the agent", { skip }, () => {
+  const dir = specified({ build: "echo 'tsc: error TS2322' >&2; exit 1" });
+  const out = handle("Stop", { cwd: dir }, claude);
+  assert.equal(out.decision, "block");
+  assert.match(out.reason, /The build failed[\s\S]*TS2322/);
+  const last = readFileSync(join(dir, ".lastro", "plugin", "progress.jsonl"), "utf8").trim().split("\n").at(-1);
+  assert.match(JSON.parse(last).error, /TS2322/);
+});

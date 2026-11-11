@@ -36,10 +36,12 @@ export function PluginAgents() {
             <C>lastro init</C>, and writes <C>.lastro/plugin.json</C>.
           </P>
         </Step>
-        <Step title="The agent proposes">
+        <Step title="The agent proposes, before its first edit">
           <P>
-            For any change in behavior, the agent writes its proposal as prose in <C>.lastro/proposals/&lt;slug&gt;.md</C> and runs <C>lastro plan</C> (the{" "}
-            <C>propose</C> skill). It answers the <A to="cli/llm">LLM handoff</A> with its own model. Code edits are denied until the review is done.
+            Whatever the mode (plan mode, auto mode, an informal plan in the chat, or none), the first attempt to edit source code is the trigger. The edit is
+            denied with the steps: write the change as prose in <C>.lastro/proposals/&lt;slug&gt;.md</C>, run <C>lastro plan</C>, start your review (the{" "}
+            <C>propose</C> skill). The agent answers the <A to="cli/llm">LLM handoff</A> with its own model. When Claude Code leaves plan mode, the plan is
+            saved there as a draft right away.
           </P>
         </Step>
         <Step title="You review, like a pull request">
@@ -64,6 +66,9 @@ export function PluginAgents() {
             <C>!</C> weak or vacuous, <C>○</C> pending.
           </P>
           <Code lang="text" title="the board, a proof failed" code={BOARDS.failed} />
+          <P>
+            Once every proof passes, the change is done: the next source edit is a new change, and the flow starts again with its own intents.
+          </P>
         </Step>
       </Steps>
 
@@ -73,9 +78,9 @@ export function PluginAgents() {
         rows={[
           [<C>SessionStart</C>, "Adds the board and the rules (the agent is the author, the user reviews) to the agent's context."],
           [<C>UserPromptSubmit</C>, "The same, on every prompt, so each request that changes behavior goes through a proposal."],
-          [<C>PreToolUse</C>, "Denies code edits until the intents are approved and the spec matches the review. Denies edits to files only the CLI writes. Asks you before each review command; refuses --as with an agent's name."],
-          [<C>PostToolUse</C>, "Shows the board after each lastro command. Marks the last proof stale after a code edit."],
-          [<C>Stop</C>, "Builds, proves, and sends failing proofs back to the agent; shows the board either way."],
+          [<C>PreToolUse</C>, "Denies the first source edit of a change, in any mode, with the steps to extract its intents; lets edits through only while the approved spec's proofs have not passed yet. Denies edits to files only the CLI writes. Asks you before each review command; refuses --as with an agent's name."],
+          [<C>PostToolUse</C>, "Shows the board after each lastro command. Marks the last proof stale after a code edit. Saves Claude Code's plan (ExitPlanMode) as a proposal draft; reminds Codex after update_plan."],
+          [<C>Stop</C>, "Builds, runs lastro prove --stream into .lastro/plugin/progress.jsonl, and sends failing proofs back to the agent; shows the board either way."],
         ]}
       />
       <P>
@@ -112,6 +117,15 @@ export function PluginAgents() {
         Commit <C>.lastro/</C> with the change: the approved intents and the proofs travel with the code. Ignore <C>.lastro/plugin/</C>, which holds local hook
         state.
       </Callout>
+
+      <H2>The live board in Claude Code</H2>
+      <P>
+        The <C>lastro-board</C> mod draws the same board in a pane beside the chat: each decision, each intent with its approvals out of the policy's count, and
+        each proof, updated as <C>lastro prove --stream</C> reports it (<C>…</C> while it runs). A one-line summary sits above the prompt, and a toast says when
+        every intent is approved and when a run ends. It reads <C>.lastro/</C> and decides nothing. Mods are a Claude Code feature; Codex shows the text
+        board.
+      </P>
+      <Code lang="text" title="Claude Code" code={`/plugin install lastro-board --marketplace iurykrieger/lastro`} />
 
       <H2>A status line</H2>
       <P>In Claude Code, the board fits a status line:</P>

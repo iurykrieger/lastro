@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import {
   artifactFromExtraction,
-  freeze,
+  approve,
   loadRustProver,
   planFromDerivation,
   renderReceipt,
@@ -110,7 +110,7 @@ export function loginArtifact(r: LoginReview = DEFAULT_REVIEW): IntentArtifact {
   for (const id of r.rejected) rv = rv.reject(id, "out of scope");
   rv = rv.approveAll().answer("D1", r.d1).answer("D2", r.d2);
   if (r.i5 === "fixed" && !r.rejected.includes("I5")) rv = rv.amend("I5", FIXED_I5, {}, "the AI read 'invalid'; the prose says the email wins");
-  return freeze(rv.done());
+  return approve(rv.done());
 }
 
 export function loginSpec(r: LoginReview = DEFAULT_REVIEW): { artifact: IntentArtifact; plan: ProofPlan } {
@@ -128,7 +128,7 @@ export const SHIPPING_PROSE = shippingProse.trim();
 
 export function shippingSpec(model: Model = shippingModel as Model): { artifact: IntentArtifact; plan: ProofPlan } {
   const extracted = artifactFromExtraction(SHIPPING_PROSE, extractAnswer as ExtractOut);
-  const artifact = freeze(review(extracted, "ana").answer("D1", 1).approveAll().done());
+  const artifact = approve(review(extracted, "ana").answer("D1", 1).approveAll().done());
   return { artifact, plan: planFromDerivation(artifact, model, deriveAnswer as DeriveOut) };
 }
 

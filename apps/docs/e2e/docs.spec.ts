@@ -157,6 +157,18 @@ test("the plugin page shows the progress board at each stage", async ({ page }) 
   await expect(failed).toContainText("✗ C1 violated");
   await expect(failed).toContainText("Verification 2/3 passed, 1 failed");
   await expect(page.getByRole("heading", { level: 3, name: "You review, like a pull request" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 3, name: "The agent proposes, before its first edit" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "The live board in Claude Code" })).toBeVisible();
+  await expect(page.locator("figure[data-code]").filter({ hasText: "/plugin install lastro-board" })).toBeVisible();
+});
+
+test("the CLI page shows a streamed proof run, one event per line", async ({ page }) => {
+  await page.goto("#/cli/overview~streaming-a-run");
+  const block = page.locator("figure[data-code]").filter({ has: page.locator("figcaption", { hasText: "--stream" }) });
+  await expect(block).toBeInViewport();
+  await expect(block).toContainText('{"event":"start","model":"shipping_fee"');
+  await expect(block).toContainText('{"event":"clause","clauseId":"C1","intentIds":["I1"],"verdict":"violated"');
+  await expect(block).toContainText('{"event":"result","status":"not-proved"');
 });
 
 test("search finds the plugin page", async ({ page }) => {

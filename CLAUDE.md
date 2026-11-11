@@ -14,6 +14,7 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
 - `sdks/go`: Go SDK and `lastro-go` CLI. Same data model, hashes and `.lastro/` workspace as the TS SDK.
 - `plugins/lastro`: one plugin for Claude Code and Codex (skills, hooks, progress board) that wraps the `lastro` CLI.
   Root marketplaces: `.claude-plugin/marketplace.json` (Claude Code) and `.agents/plugins/marketplace.json` (Codex).
+- `plugins/lastro-board`: a Claude Code mod (pane, band, toasts) that draws the same board live from `.lastro/`.
 - `apps/sandbox`: Vite + React + shadcn/ui sandbox (prose, code, contrast) running the real SDK and the WASM prover.
 - `apps/docs`: Vite + React + shadcn/ui developer docs. Pages live in `src/pages`, the sidebar in `src/content/nav.ts`.
   Code samples come from `examples/shipping`, which `test/` runs through the real SDKs; the interactive examples in `src/live`
@@ -54,6 +55,7 @@ npm run docs                         # dev server for the docs (apps/docs)
 npm run build -w lastro && npm run test:examples -w @lastro/docs   # docs examples through the real SDK
 npm run test:e2e -w @lastro/docs     # docs UI tests (Playwright)
 npm test -w @lastro/plugin           # Claude Code / Codex plugin hooks, through the real CLI
+claude plugin test plugins/lastro-board   # the Claude Code mod's tests
 dotnet test sdks/dotnet          # .NET SDK tests (cross-checks need the TS build and lastro-prove)
 cargo build --release -p lastro-core && (cd sdks/go && go test ./...)   # Go SDK, cross-checked with TS and Rust
 ```

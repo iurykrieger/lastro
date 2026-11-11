@@ -8,8 +8,8 @@
 // Both harnesses send the same hook fields (hook_event_name, cwd, tool_name, tool_input, stop_hook_active)
 // and read the same answers (hookSpecificOutput.permissionDecision, additionalContext, decision/reason,
 // systemMessage), so one script serves both.
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import {
@@ -22,7 +22,6 @@ import {
   readState,
   renderBoard,
   renderLine,
-  runCli,
   snapshot,
   writeState,
 } from "./lib.mjs";
@@ -74,17 +73,42 @@ export function saveProposal(ws, plan) {
 }
 
 /** Builds and proves; records the result in the plugin state. */
+/**
+ * Builds and proves; records the result in the plugin state. While it runs, `.lastro/plugin/progress.jsonl`
+ * holds the live events (`build`, then the CLI's `prove --stream` lines), which the Claude Code mod draws.
+ */
 export function prove(ws) {
   if (!ws.config.prove) return { ok: false, error: 'No prove command: set "prove" in .lastro/plugin.json (the arguments after `lastro prove`).' };
+  const progress = join(ws.dir, "plugin", "progress.jsonl");
+  mkdirSync(dirname(progress), { recursive: true });
+  const line = (e) => JSON.stringify({ ...e, at: new Date().toISOString() }) + "\n";
+  writeFileSync(progress, line({ event: "build", command: ws.config.build ?? null }));
   if (ws.config.build) {
     const b = spawnSync(ws.config.build, { cwd: ws.root, shell: true, encoding: "utf8", timeout: 600_000 });
-    if (b.status !== 0) return { ok: false, error: `The build failed (\`${ws.config.build}\`):\n${(b.stderr || b.stdout).trim().slice(-4000)}` };
+    if (b.status !== 0) {
+      const error = `The build failed (\`${ws.config.build}\`):\n${(b.stderr || b.stdout).trim().slice(-4000)}`;
+      appendFileSync(progress, line({ event: "result", ok: false, error }));
+      return { ok: false, error };
+    }
   }
-  const r = runCli(ws, `prove ${ws.config.prove}`, { timeout: 600_000 });
-  if (r.code === 2) return { ok: false, error: `\`${r.command}\` failed: ${r.body.error ?? JSON.stringify(r.body)}` };
+  // The CLI appends its stream straight to the file, so the events land as they happen.
+  const command = `${ws.config.cli} prove ${ws.config.prove} --stream --dir ${JSON.stringify(ws.dir)} >> ${JSON.stringify(progress)}`;
+  const r = spawnSync(command, { cwd: ws.root, shell: true, encoding: "utf8", timeout: 600_000 });
+  const lines = readFileSync(progress, "utf8").trim().split("\n");
+  let body;
+  try {
+    body = JSON.parse(lines.at(-1));
+  } catch {
+    body = {};
+  }
+  if (body.event !== "result" || body.error || r.status === 2) {
+    const error = `\`${ws.config.cli} prove ${ws.config.prove}\` failed: ${body.error ?? (r.stderr || "no result").trim().slice(-4000)}`;
+    if (body.event !== "result") appendFileSync(progress, line({ event: "result", ok: false, error }));
+    return { ok: false, error };
+  }
   const state = readState(ws);
   writeState(ws, { ...state, dirty: false });
-  return { ok: r.body.ok === true, body: r.body };
+  return { ok: body.ok === true, body };
 }
 
 export function handle(event, input, env = process.env) {

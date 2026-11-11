@@ -192,7 +192,7 @@
   {
     "slug": "gate-agent-edits-on-review",
     "name": "Gate an agent's code edits on reviewed intents",
-    "description": "The Lastro plugin for Claude Code and Codex (plugins/lastro) is active in a repository that has .lastro/plugin.json. Its PreToolUse hook denies edit tools (Edit, Write, MultiEdit, NotebookEdit, apply_patch) on code outside .lastro/ and outside the configured allow globs until the CLI reports no pending review and spec.json was derived from exactly the current intents and decisions; with gate \"off\" it never blocks. Proposals and handoff answers inside .lastro/ are always allowed; intents.json, spec.json, proof.json, receipt.md, config.json and the plugin's state are denied because only the CLI writes them; edits to .lastro/plugin.json ask the user in Claude Code and are denied in Codex. SessionStart and UserPromptSubmit add the progress board and the rule that the agent is the author of the proposal and never approves it."
+    "description": "The Lastro plugin for Claude Code and Codex (plugins/lastro) is active in a repository that has .lastro/plugin.json. Its PreToolUse hook treats the first attempt to edit source code, in any mode (plan mode, auto mode, an informal plan or none), as the moment to extract intents: edit tools (Edit, Write, MultiEdit, NotebookEdit, apply_patch) on code outside .lastro/ and outside the configured allow globs are denied, with steps to write the change as prose in .lastro/proposals/<slug>.md, run lastro plan and start the user's review, unless the CLI reports no pending review, spec.json was derived from exactly the current intents and decisions, and the last proof of that spec has not passed yet. Once every proof passes, the next source edit is a new change and is denied the same way. With gate \"off\" it never blocks. Proposals and handoff answers inside .lastro/ are always allowed; intents.json, spec.json, proof.json, receipt.md, config.json and the plugin's state are denied because only the CLI writes them; edits to .lastro/plugin.json ask the user in Claude Code and are denied in Codex. SessionStart and UserPromptSubmit add the progress board and the rule that the agent is the author of the proposal and never approves it."
   },
   {
     "slug": "review-intents-like-a-pull-request",
@@ -202,11 +202,26 @@
   {
     "slug": "prove-when-the-agent-stops",
     "name": "Prove the agent's implementation when it stops",
-    "description": "With a current spec, the plugin's Stop hook runs the configured build command and lastro prove with the configured arguments. Failing proofs (or a failed build) block the stop and return the failures and counterexamples to the agent as its next instruction, numbered against maxIterations (default 5) per spec; after that the stop goes through and the user takes over. Passing proofs, or an unchanged code base whose last proof passed, end the turn. A code edit after a proof marks it stale in .lastro/plugin/state.json, so the next stop proves again."
+    "description": "With a current spec, the plugin's Stop hook runs the configured build command and lastro prove --stream with the configured arguments, appending the events to .lastro/plugin/progress.jsonl after a build event. Failing proofs (or a failed build, recorded as a result event with its error) block the stop and return the failures and counterexamples to the agent as its next instruction, numbered against maxIterations (default 5) per spec; after that the stop goes through and the user takes over. Passing proofs, or an unchanged code base whose last proof passed, end the turn. A code edit after a proof marks it stale in .lastro/plugin/state.json, so the next stop proves again."
   },
   {
     "slug": "show-proof-progress-board",
     "name": "Show the proposal's progress board",
     "description": "The plugin renders, from the CLI's status output and the files in .lastro/, a board with the stages (intents extracted, decisions answered, intents approved per the policy, proofs derived, verification) and one line per proof: ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, ○ pending, plus the beyond-proof intents and the next step. It is shown to the user after every lastro command and on every stop, added to the agent's context on session start and on each prompt, and printed by lastro-plugin.mjs board (or one line with --line, for a status line); lastro-plugin.mjs prove builds, proves and prints it."
+  },
+  {
+    "slug": "stream-proof-progress",
+    "name": "Stream a proof run as it happens",
+    "description": "lastro prove --stream (TypeScript, Go and .NET CLIs) prints one compact JSON object per line instead of the single result: start (model, clause ids, scenario ids), progress every 100 runs of the code under proof, one clause event per clause in plan order (clauseId, intentIds, verdict, evidence, and the counterexample when there is one), one scenario event per scenario (scenarioId, status), crosscheck (enginesAgree) when the Rust prover ran, and result with the body prove prints without --stream. Exit codes and the files written are the same as without it. The Go and .NET tests compare their stream with the TypeScript CLI's on one workspace."
+  },
+  {
+    "slug": "capture-plan-as-proposal",
+    "name": "Turn an agent's plan into a proposal",
+    "description": "When Claude Code leaves plan mode (ExitPlanMode), the plugin's PostToolUse hook saves the approved plan as .lastro/proposals/<slug>.md, the slug taken from its first heading and never overwriting an earlier proposal, and tells the agent to rewrite it as behavior, run lastro plan on it and start the user's review before editing source. After Codex's update_plan it adds the same reminder. Plans made any other way are caught by the gate on the first source edit."
+  },
+  {
+    "slug": "show-live-board-in-claude-code",
+    "name": "Show approvals and proofs live beside the chat",
+    "description": "The lastro-board mod for Claude Code (plugins/lastro-board) reads .lastro/ once a second when the session starts in a repository with a Lastro workspace: config, intents, spec, proof and the plugin's progress.jsonl. It opens a pane with the review (each decision answered or not, each intent with its approvals out of the policy's count) and the proofs (○ pending, … running, ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, and the beyond-proof intents), updating each proof as the run under way reports it. It shows a one-line summary above the prompt and in the status line, and a toast when every intent is approved and when a proof run ends. /lastro-board opens the pane. It decides nothing and works only in Claude Code."
   }
 ]

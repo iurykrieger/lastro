@@ -1,6 +1,6 @@
 ---
 name: propose
-description: Turn a requested change into Lastro intents the user reviews like a pull request - write the proposal as prose, extract intents, ask the user to answer every decision and approve, amend or reject every intent, then derive the proofs. Use before writing code for any change in behavior in a repository that has .lastro/plugin.json.
+description: Turn a requested change into Lastro intents the user reviews like a pull request - write the proposal as prose, extract intents, ask the user to answer every decision and approve, amend or reject every intent, then derive the proofs. Use before the first source edit of any change, in any mode (plan mode, auto mode, a quick fix), in a repository that has .lastro/plugin.json, and whenever a Lastro hook denies an edit.
 ---
 
 # Propose a change through Lastro
@@ -10,6 +10,10 @@ reviewer. They review intents the way they would review a pull request, before a
 answer or amend on their behalf. Code edits stay blocked until the review is done and the proofs are derived.
 
 `<cli>` is the `cli` in `.lastro/plugin.json` (default `lastro`). Every command prints one JSON object.
+
+This applies to every change, however it was planned: plan mode, auto mode, an informal plan in the chat, or none.
+The first source edit is the trigger; the plugin denies it until this is done. When you left Claude Code's plan
+mode, the plan is already saved under `.lastro/proposals/`: rewrite it there as behavior.
 
 ## 1. Write the proposal
 

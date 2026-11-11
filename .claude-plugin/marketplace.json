@@ -1,12 +1,21 @@
 {
   "name": "lastro",
-  "owner": { "name": "Iury Krieger" },
-  "metadata": { "description": "Lastro plugins: proof-driven changes for coding agents." },
+  "owner": {
+    "name": "Iury Krieger"
+  },
+  "metadata": {
+    "description": "Lastro plugins: proof-driven changes for coding agents."
+  },
   "plugins": [
     {
       "name": "lastro",
       "source": "./plugins/lastro",
       "description": "Every implementation proposal becomes intents the user reviews like a pull request; approved intents become proofs, and the code is checked against them before the agent stops."
+    },
+    {
+      "name": "lastro-board",
+      "source": "./plugins/lastro-board",
+      "description": "Claude Code mod for Lastro: a pane beside the chat with each intent's approvals and each proof passing live, a band above the prompt, and toasts."
     }
   ]
 }

@@ -15,8 +15,8 @@
  *                    runs the same command again.
  * The default is anthropic when ANTHROPIC_API_KEY is set, handoff otherwise.
  */
-import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadRustProver, type RustProver } from "./rust.js";
 import { sha256Hex } from "./sha256.js";
@@ -278,16 +278,24 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         const text = readFileSync(resolve(rest[0]), "utf8");
         const prose = (args.flags.section ? section(text, args.flags.section) : text).trim();
         const useCases = ws.useCases();
-        const previous = args.flags.proposal ? ws.proposal(args.flags.proposal) : undefined;
-        const id = previous?.id ?? ws.nextProposalId();
+        // A prose file already in .lastro/proposals/ named <id>-<slug>.md names its proposal: re-extract it if it exists.
+        const proseFile = resolve(rest[0]);
+        const inProposals = dirname(proseFile) === ws.file("proposals");
+        const named = inProposals ? basename(proseFile).match(/^(P-\d+)-([a-z0-9]+(?:-[a-z0-9]+)*)\.md$/) : null;
+        const existing = named ? ws.proposals().find((p) => p.id === named[1]) : undefined;
+        const previous = args.flags.proposal ? ws.proposal(args.flags.proposal) : existing;
+        const id = previous?.id ?? named?.[1] ?? ws.nextProposalId();
         const submittedBy = args.flags.as ?? previous?.submittedBy ?? process.env.LASTRO_USER ?? "submitter";
         let p = await extractProposal(await pickAsk(args, ws.dir), { id, prose, submittedBy, useCases, policy: cfg.review });
-        if (previous) {
-          p = carryProposalReview(previous, p);
-          if (previous.slug !== p.slug) p.slug = previous.slug; // slugs are stable
-        }
+        if (previous) p = carryProposalReview(previous, p);
+        const slug = previous?.slug ?? named?.[2];
+        if (slug) p.slug = slug; // slugs are stable
         ws.writeProposal(p);
-        writeFileSync(ws.proposalPath(p, ".md"), prose + "\n");
+        const md = ws.proposalPath(p, ".md");
+        if (md !== proseFile) {
+          writeFileSync(md, prose + "\n");
+          if (inProposals && !named) unlinkSync(proseFile); // a draft in .lastro/proposals/ becomes <id>-<slug>.md
+        }
         const s = summary(p, useCases);
         return { code: s.ready ? 0 : 1, body: { status: "proposed", file: ws.proposalPath(p), ...s } };
       }

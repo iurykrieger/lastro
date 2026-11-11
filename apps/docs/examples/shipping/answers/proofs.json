@@ -1,0 +1,65 @@
+{
+  "proofs": [
+    {
+      "intent": "P-001.I-01",
+      "slug": "free-from-100",
+      "name": "Free from 100",
+      "description": "A subtotal of 100 or more ships free.",
+      "model": "shipping_fee",
+      "subject": "shipping_fee",
+      "kind": "clause",
+      "requires": "{\"op\":\"ge\",\"args\":[{\"var\":\"in.subtotal\"},{\"const\":100}]}",
+      "ensures": "{\"op\":\"eq\",\"args\":[{\"var\":\"out.fee\"},{\"const\":0}]}",
+      "assumptions": [],
+      "inputJson": "",
+      "expect": "",
+      "replaces": []
+    },
+    {
+      "intent": "P-001.I-02",
+      "slug": "members-free",
+      "name": "Members free",
+      "description": "Members always ship free.",
+      "model": "shipping_fee",
+      "subject": "shipping_fee",
+      "kind": "clause",
+      "requires": "{\"var\":\"in.member\"}",
+      "ensures": "{\"op\":\"eq\",\"args\":[{\"var\":\"out.fee\"},{\"const\":0}]}",
+      "assumptions": [],
+      "inputJson": "",
+      "expect": "",
+      "replaces": []
+    },
+    {
+      "intent": "P-001.I-03",
+      "slug": "non-member-pays-15",
+      "name": "Non-member pays 15",
+      "description": "A non-member under 100 pays exactly 15.",
+      "model": "shipping_fee",
+      "subject": "shipping_fee",
+      "kind": "clause",
+      "requires": "{\"op\":\"and\",\"args\":[{\"op\":\"not\",\"args\":[{\"var\":\"in.member\"}]},{\"op\":\"lt\",\"args\":[{\"var\":\"in.subtotal\"},{\"const\":100}]}]}",
+      "ensures": "{\"op\":\"eq\",\"args\":[{\"var\":\"out.fee\"},{\"const\":15}]}",
+      "assumptions": [],
+      "inputJson": "",
+      "expect": "",
+      "replaces": []
+    },
+    {
+      "intent": "P-001.I-03",
+      "slug": "guest-with-40",
+      "name": "A guest with a 40 cart",
+      "description": "Given a guest with a 40 cart, when they reach checkout, then shipping costs 15.",
+      "model": "shipping_fee",
+      "subject": "shipping_fee",
+      "kind": "scenario",
+      "requires": "",
+      "ensures": "",
+      "assumptions": [],
+      "inputJson": "{\"subtotal\":40,\"member\":false}",
+      "expect": "{\"op\":\"eq\",\"args\":[{\"var\":\"out.fee\"},{\"const\":15}]}",
+      "replaces": []
+    }
+  ],
+  "decisions": []
+}

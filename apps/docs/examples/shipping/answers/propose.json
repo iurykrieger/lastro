@@ -1,0 +1,84 @@
+{
+  "name": "Shipping fee at checkout",
+  "slug": "shipping-fee",
+  "description": "Charge a flat shipping fee at checkout, free from 100 and for members.",
+  "intents": [
+    {
+      "slug": "free-from-100",
+      "name": "Free shipping from 100",
+      "description": "An order with a subtotal of 100 or more pays no shipping.",
+      "change": "add",
+      "useCase": "charge-shipping",
+      "provability": "formal",
+      "beyondProofReason": "none",
+      "quote": "Orders of 100 or more ship free.",
+      "replaces": []
+    },
+    {
+      "slug": "members-free",
+      "name": "Members ship free",
+      "description": "A member never pays shipping, whatever the subtotal.",
+      "change": "add",
+      "useCase": "charge-shipping",
+      "provability": "formal",
+      "beyondProofReason": "none",
+      "quote": "Members always ship free.",
+      "replaces": []
+    },
+    {
+      "slug": "flat-fee-15",
+      "name": "Flat fee of 15",
+      "description": "A non-member order under 100 pays a shipping fee of exactly 15.",
+      "change": "add",
+      "useCase": "charge-shipping",
+      "provability": "formal",
+      "beyondProofReason": "none",
+      "quote": "Every other order pays a flat shipping fee of 15.",
+      "replaces": []
+    },
+    {
+      "slug": "fee-shown-instantly",
+      "name": "Fee shown instantly",
+      "description": "The fee is shown instantly at checkout.",
+      "change": "add",
+      "useCase": "charge-shipping",
+      "provability": "beyond-proof",
+      "beyondProofReason": "termination-timing",
+      "quote": "The fee must show up instantly at checkout.",
+      "replaces": []
+    }
+  ],
+  "useCases": [
+    {
+      "slug": "charge-shipping",
+      "change": "add",
+      "name": "Charge shipping at checkout",
+      "after": "An order with a subtotal of 100 or more pays no shipping, and a member never pays shipping, whatever the subtotal. Every other order pays a flat shipping fee of exactly 15, shown instantly at checkout."
+    }
+  ],
+  "decisions": [
+    {
+      "slug": "threshold-and-discounts",
+      "name": "Threshold and discounts",
+      "question": "Is the 100 threshold measured before or after discounts?",
+      "options": [
+        {
+          "label": "Before discounts",
+          "consequence": "A 110 order with a 20 discount still ships free."
+        },
+        {
+          "label": "After discounts",
+          "consequence": "The same order pays 15; the model input must be the discounted subtotal."
+        }
+      ],
+      "recommended": 1,
+      "intents": [
+        "free-from-100"
+      ]
+    }
+  ],
+  "notPromised": [
+    "How the fee is shown or worded at checkout.",
+    "Shipping rules for other countries."
+  ]
+}

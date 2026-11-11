@@ -112,10 +112,36 @@ test("review pending: the board lists decisions and intents, edits are denied, t
   assert.equal(decision(edit(dir, ".lastro/plugin.json")), "ask");
   assert.equal(decision(edit(dir, ".lastro/plugin.json", codex)), "deny");
 
-  // The UserPromptSubmit context tells the agent it is the author and shows the board.
-  const ctx = handle("UserPromptSubmit", { cwd: dir, prompt: "go" }, claude).hookSpecificOutput.additionalContext;
+  // The SessionStart context tells the agent it is the author and shows the board.
+  const ctx = handle("SessionStart", { cwd: dir, session_id: "s1" }, claude).hookSpecificOutput.additionalContext;
   assert.match(ctx, /You are the author/);
   assert.match(ctx, /Decisions    0\/1 answered/);
+});
+
+test("context costs tokens: prompts get one short line, and only when the board moved", { skip }, () => {
+  const dir = planned();
+  const prompt = (session_id) => handle("UserPromptSubmit", { cwd: dir, session_id, prompt: "go" }, claude).hookSpecificOutput?.additionalContext;
+  handle("SessionStart", { cwd: dir, session_id: "s1" }, claude);
+  assert.equal(prompt("s1"), undefined); // the agent already has this board
+  lastro(dir, "review", "--as", "ana", "answer", "D1", "1");
+  const line = prompt("s1");
+  assert.match(line, /^Lastro · review 0\/4 intents approved · 1\/1 decisions answered\. Reminder: you author/);
+  assert.ok(line.length < 300);
+  assert.equal(prompt("s1"), undefined);
+  assert.match(prompt("s2"), /^Lastro · review/); // another session has not seen it
+});
+
+test("the full review reaches the agent once per proposal; later answers add one line", { skip }, () => {
+  const dir = planned();
+  const bash = (command) => handle("PostToolUse", { cwd: dir, session_id: "s1", tool_name: "Bash", tool_input: { command } }, claude);
+  const first = bash("lastro status");
+  assert.match(first.hookSpecificOutput.additionalContext, /^Show the user this review exactly as written/);
+  assert.match(first.systemMessage, /^Lastro · shipping_fee/);
+  lastro(dir, "review", "--as", "ana", "approve", "I1");
+  assert.equal(bash("lastro review --as ana approve I1").hookSpecificOutput.additionalContext, "Lastro · review 1/4 intents approved · 0/1 decisions answered.");
+  // Re-extracting with a changed statement is a new proposal to review: shown in full again.
+  lastro(dir, "review", "--as", "ana", "amend", "I2", "A member never pays shipping.");
+  assert.match(bash("lastro review --as ana amend I2 x").hookSpecificOutput.additionalContext, /^Show the user this review/);
 });
 
 test("with two required approvals, the board shows each intent's approvals, like a pull request", { skip }, () => {

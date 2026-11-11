@@ -26,8 +26,8 @@ func (e *PlanError) Error() string {
 // variables, ids are unique and scenario inputs are in their domains.
 func CheckPlan(artifact IntentArtifact, plan ProofPlan) PlanCheck {
 	errs := []string{}
-	if artifact.Hash == "" || !IsIntact(artifact) {
-		errs = append(errs, "artifact is not frozen or was modified after freeze()")
+	if artifact.Hash == "" || !IsApproved(artifact) {
+		errs = append(errs, "artifact is not approved or was modified after approve()")
 	}
 	if plan.ArtifactHash != artifact.Hash {
 		errs = append(errs, fmt.Sprintf("plan was derived from %s, artifact is %s", plan.ArtifactHash, artifact.Hash))

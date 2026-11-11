@@ -4,7 +4,7 @@ The Go SDK of Lastro: prose → reviewable intents → derived proofs → a dete
 actually does. It is the same pipeline as the TypeScript SDK (`sdks/typescript`), with the same data model,
 hashes and `.lastro/` workspace, so the two interoperate:
 
-- an artifact frozen by one SDK is intact for the other, and both compute the same plan hash;
+- an artifact approved by one SDK is intact for the other, and both compute the same plan hash;
 - both engines produce the same verification report, field for field, on the reference login and every planted bug
   (`crosscheck_test.go` runs the TS SDK and compares);
 - `lastro-go` and the TS `lastro` CLI share a workspace: one can plan, the other review, derive and prove

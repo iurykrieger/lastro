@@ -83,7 +83,7 @@ $ lastro review --as ana answer D1 1          # option index, from 0`}
 
       <H2>spec</H2>
       <P>
-        Freezes the reviewed intents, derives the formal spec (AI step), validates it, and checks it for contradictions. Writes <C>.lastro/spec.json</C>. With
+        Approves the reviewed intents, derives the formal spec (AI step), validates it, and checks it for contradictions. Writes <C>.lastro/spec.json</C>. With
         contradictions, it adds decisions to <C>intents.json</C> instead and exits 1 with status <C>contradictions</C>. Refuses to run while the review is pending
         (status <C>review-pending</C>).
       </P>
@@ -155,7 +155,7 @@ export function CliWorkspace() {
         code={`.lastro/
 ├── config.json          the model and the approval policy (init)
 ├── intents.json         the intent artifact: intents, approvals, decisions (plan, review, spec)
-├── spec.json            the frozen artifact + the proof plan + contradictions (spec)
+├── spec.json            the approved artifact + the proof plan + contradictions (spec)
 ├── proof.json           the verification report, Rust report, failures, spec gaps (prove)
 ├── receipt.md           the receipt for the pull request (prove)
 └── llm/
@@ -168,8 +168,8 @@ export function CliWorkspace() {
         head={["File", "Written by", "Contents"]}
         rows={[
           [<C>config.json</C>, <C>init</C>, <><C>{`{ model, requiredApprovals }`}</C></>],
-          [<C>intents.json</C>, <><C>plan</C>, <C>review</C>, <C>spec</C></>, <>an <A to="reference/data-model">IntentArtifact</A> (not frozen)</>],
-          [<C>spec.json</C>, <C>spec</C>, <><C>{`{ artifact, plan, contradictions, ok }`}</C>, with the artifact frozen under its hash</>],
+          [<C>intents.json</C>, <><C>plan</C>, <C>review</C>, <C>spec</C></>, <>an <A to="reference/data-model">IntentArtifact</A> (not approved)</>],
+          [<C>spec.json</C>, <C>spec</C>, <><C>{`{ artifact, plan, contradictions, ok }`}</C>, with the artifact approved under its hash</>],
           [<C>proof.json</C>, <C>prove</C>, <><C>{`{ ok, report, rust?, enginesAgree?, failures, specGaps, receipt }`}</C></>],
           [<C>receipt.md</C>, <C>prove</C>, "the Markdown receipt"],
           [<C>llm/*.json</C>, <>handoff, and you</>, "requests and answers for the AI steps"],

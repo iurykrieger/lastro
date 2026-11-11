@@ -55,7 +55,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
           <FileText className="h-4 w-4 text-brass" />
           <CardTitle className="text-base">Prose</CardTitle>
           <Badge variant="outline" className="ml-auto font-mono text-[11px]">
-            {l.frozen ? `intents frozen · ${l.frozen.hash!.slice(7, 19)}` : `${l.pending.length} pending`}
+            {l.approved ? `intents approved · ${l.approved.hash!.slice(7, 19)}` : `${l.pending.length} pending`}
           </Badge>
         </div>
         <CardDescription>The business rule as written, the intents the AI extracted, and your review.</CardDescription>
@@ -150,7 +150,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
               <Alert variant="warning">
                 <AlertTitle>Review not finished</AlertTitle>
                 <AlertDescription className="grid gap-2">
-                  <span>Proofs are derived only from approved, frozen intents. Pending: {l.pending.join("; ")}.</span>
+                  <span>Proofs are derived only from approved intents. Pending: {l.pending.join("; ")}.</span>
                   <span>
                     <Button
                       size="sm"

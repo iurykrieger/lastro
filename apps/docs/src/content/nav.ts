@@ -37,7 +37,7 @@ export const NAV: NavSection[] = [
     pages: [
       { slug: "concepts/pipeline", title: "The pipeline", description: "Plan, review, spec, prove: what is AI, what is deterministic, and who writes the code.", keywords: "flow stages harness agnostic" },
       { slug: "concepts/intents", title: "Prose and intents", description: "How prose becomes reviewable intents, each anchored to the words it came from.", keywords: "extract intent map quote kind provability" },
-      { slug: "concepts/review", title: "Review and approval policy", description: "Approve, amend, reject; how many approvals an intent needs; freezing by hash.", keywords: "approve amend reject policy requiredApprovals freeze hash carry review" },
+      { slug: "concepts/review", title: "Review and approval policy", description: "Approve, amend, reject; how many approvals an intent needs; approval by hash.", keywords: "approve amend reject policy requiredApprovals approve hash carry review" },
       { slug: "concepts/decisions", title: "Decisions", description: "Ambiguities and contradictions come back as decision cards; answers become intents.", keywords: "decision card contradiction consistency question" },
       { slug: "concepts/spec", title: "Model and formal spec", description: "The model, LSL clauses, trusted pieces, scenarios and what is beyond proof.", keywords: "model domain lsl clause assumption scenario trusted beyond proof plan" },
       { slug: "concepts/verdicts", title: "Proved, trusted, evidenced", description: "What each verdict promises, and where proof stops.", keywords: "proved evidenced trusted assumptions violated vacuous weak mutants gap rule of three" },

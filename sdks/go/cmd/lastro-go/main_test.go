@@ -48,8 +48,8 @@ func strconvAtoi(s string) (int, error) {
 }
 
 // deriveAnswer is what an agent would write as the answer to the derive handoff.
-func deriveAnswer(frozen lastro.IntentArtifact) any {
-	plan := login.DerivePlan(frozen)
+func deriveAnswer(approved lastro.IntentArtifact) any {
+	plan := login.DerivePlan(approved)
 	var clauses, scenarios []map[string]any
 	for _, c := range plan.Clauses {
 		req := ""
@@ -128,13 +128,13 @@ func TestGoCLIAlone(t *testing.T) {
 	}
 	var art lastro.IntentArtifact
 	must(0, readJSON(filepath.Join(dir, ".lastro", "intents.json"), &art))
-	write(t, body["answer"].(string), deriveAnswer(must(lastro.Freeze(art))))
+	write(t, body["answer"].(string), deriveAnswer(must(lastro.Approve(art))))
 	if code, body := goCLI(t, ws, "spec"); code != 0 {
 		t.Fatal(body)
 	}
 
 	// The code under proof as a recorded table.
-	plan := login.DerivePlan(must(lastro.Freeze(art)))
+	plan := login.DerivePlan(must(lastro.Approve(art)))
 	write(t, filepath.Join(dir, "good.json"), must(lastro.Tabulate(plan.Model, login.Decide(""), 0)))
 	write(t, filepath.Join(dir, "bad.json"), must(lastro.Tabulate(plan.Model, login.Decide("admin-everywhere"), 0)))
 	if code, body := goCLI(t, ws, "prove", "--table", filepath.Join(dir, "good.json")); code != 0 {
@@ -234,7 +234,7 @@ for await (const line of createInterface({ input: process.stdin })) process.stdo
 	}
 	var art lastro.IntentArtifact
 	must(0, readJSON(filepath.Join(dir, ".lastro", "intents.json"), &art))
-	write(t, goBody["answer"].(string), deriveAnswer(must(lastro.Freeze(art))))
+	write(t, goBody["answer"].(string), deriveAnswer(must(lastro.Approve(art))))
 	if code, body := goCLI(t, ws, "spec"); code != 0 {
 		t.Fatal(body)
 	}

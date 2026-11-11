@@ -163,7 +163,7 @@ export function RefDataModel() {
   decisions: DecisionCard[];
   notPromised: string[];
   policy?: { requiredApprovals: number };
-  hash?: string;                       // set by freeze()
+  hash?: string;                       // set by approve()
 }
 
 interface Intent {
@@ -196,7 +196,7 @@ interface DecisionCard {
         lang="ts"
         code={`interface ProofPlan {
   lastro: "proof-plan/v0";
-  artifactHash: string;                // the frozen intents it was derived from
+  artifactHash: string;                // the approved intents it was derived from
   model: Model;
   clauses: { id: string; intentIds: string[]; description: string; requires?: Expr; ensures: Expr; assumes?: string[] }[];
   assumptions: { id: string; intentIds: string[]; piece: string; contract: string; youAccept: string; ifWrong: string; checkedBy: string[] }[];

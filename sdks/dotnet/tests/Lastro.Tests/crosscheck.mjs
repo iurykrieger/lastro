@@ -7,7 +7,7 @@ import { join } from "node:path";
 const root = process.argv[2];
 const sdk = await import(pathToFileURL(join(root, "sdks/typescript/dist/src/index.js")).href);
 const login = await import(pathToFileURL(join(root, "sdks/typescript/dist/examples/login/login.js")).href);
-const { review, freeze, verify, renderReceipt, sha256Hex, EXTRACT_SYSTEM, EXTRACT_SCHEMA, DERIVE_SYSTEM, DERIVE_SCHEMA, extractUserPrompt, deriveUserPrompt, checkConsistency } = {
+const { review, approve, verify, renderReceipt, sha256Hex, EXTRACT_SYSTEM, EXTRACT_SCHEMA, DERIVE_SYSTEM, DERIVE_SCHEMA, extractUserPrompt, deriveUserPrompt, checkConsistency } = {
   ...sdk,
   sha256Hex: (await import(pathToFileURL(join(root, "sdks/typescript/dist/src/sha256.js")).href)).sha256Hex,
 };
@@ -17,7 +17,7 @@ const handoffId = (req) => `${req.step}-${sha256Hex(JSON.stringify(req)).slice(0
 function reviewed({ d1 = 0, fixI5 = true } = {}) {
   let r = review(login.extractLogin()).approveAll().answer("D1", d1).answer("D2", 0);
   if (fixI5) r = r.amend("I5", login.FIXED_I5);
-  return freeze(r.done());
+  return approve(r.done());
 }
 
 const out = { cases: {} };
@@ -38,12 +38,12 @@ for (const [name, opts] of Object.entries({ reference: {}, oneWay: { d1: 1 }, mi
   out.cases[name] = { artifact, artifactHash: artifact.hash, planHash: sdk.hashOf(plan), bugs };
 }
 
-const frozen = reviewed();
+const approved = reviewed();
 out.extractId = handoffId({ step: "extract", system: EXTRACT_SYSTEM, user: extractUserPrompt(login.PROSE), schema: EXTRACT_SCHEMA });
-out.deriveId = handoffId({ step: "derive", system: DERIVE_SYSTEM, user: deriveUserPrompt(frozen, login.MODEL), schema: DERIVE_SCHEMA });
+out.deriveId = handoffId({ step: "derive", system: DERIVE_SYSTEM, user: deriveUserPrompt(approved, login.MODEL), schema: DERIVE_SCHEMA });
 
 // Sampling must be bit-identical too: same seed, same samples, same counts.
-const big = freeze(review(sdk.createArtifact("x doubles", [{ statement: "y = 2x", kind: "behavior", provability: "formal", quote: "x doubles" }])).approveAll().done());
+const big = approve(review(sdk.createArtifact("x doubles", [{ statement: "y = 2x", kind: "behavior", provability: "formal", quote: "x doubles" }])).approveAll().done());
 const bigPlan = {
   lastro: "proof-plan/v0",
   artifactHash: big.hash,

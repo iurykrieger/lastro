@@ -18,7 +18,7 @@ public sealed class LastroOptions
     public VerifyOptions? Verify { get; init; }
 }
 
-/// <summary>Stage 2: the formal spec derived from a frozen, fully reviewed artifact.</summary>
+/// <summary>Stage 2: the formal spec derived from an approved, fully reviewed artifact.</summary>
 public sealed class Spec
 {
     public IntentArtifact Artifact { get; set; } = new();
@@ -175,21 +175,21 @@ public sealed class LastroClient
     /// <summary>Review as one person. Chain approve/amend/reject/answer, then Done().</summary>
     public Review Review(IntentArtifact artifact, string reviewer)
     {
-        var a = artifact.Hash is not null ? Artifacts.Thaw(artifact) : artifact;
+        var a = artifact.Hash is not null ? Artifacts.Reopen(artifact) : artifact;
         return new Review(WithPolicy(a), reviewer);
     }
 
     /// <summary>What still blocks the spec: missing approvals and unanswered decisions.</summary>
     public List<string> Pending(IntentArtifact artifact) => Artifacts.PendingReview(WithPolicy(artifact));
 
-    /// <summary>2. Formal spec: freeze the reviewed intents, derive clauses, validate, look for contradictions.</summary>
+    /// <summary>2. Formal spec: approve the reviewed intents, derive clauses, validate, look for contradictions.</summary>
     public async Task<Spec> SpecAsync(IntentArtifact artifact, CancellationToken cancellationToken = default)
     {
-        var frozen = Artifacts.Freeze(WithPolicy(artifact));
-        var plan = await Need(_deriver, "Deriver").DeriveAsync(frozen, _o.Model, cancellationToken).ConfigureAwait(false);
-        Plans.Validate(frozen, plan);
+        var approved = Artifacts.Approve(WithPolicy(artifact));
+        var plan = await Need(_deriver, "Deriver").DeriveAsync(approved, _o.Model, cancellationToken).ConfigureAwait(false);
+        Plans.Validate(approved, plan);
         var contradictions = Engine.CheckConsistency(plan, _o.Verify);
-        return new Spec { Artifact = frozen, Plan = plan, Contradictions = contradictions, Ok = contradictions.Count == 0 };
+        return new Spec { Artifact = approved, Plan = plan, Contradictions = contradictions, Ok = contradictions.Count == 0 };
     }
 
     /// <summary>Contradictions go back to the team as decision cards; the artifact must be reviewed again.</summary>

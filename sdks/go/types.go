@@ -9,7 +9,7 @@ import (
 // The data model, field for field the TS SDK's (sdks/typescript/src/types.ts), so
 // both SDKs read and write the same JSON and compute the same hashes.
 //
-//	prose -> IntentArtifact (reviewed, frozen) -> ProofPlan (LSL) -> VerificationReport -> receipt
+//	prose -> IntentArtifact (reviewed, approved) -> ProofPlan (LSL) -> VerificationReport -> receipt
 
 // ---------------------------------------------------------------------------
 // Intents
@@ -82,7 +82,7 @@ type ReviewPolicy struct {
 	RequiredApprovals int `json:"requiredApprovals"`
 }
 
-// IntentArtifact is the reviewable list of intents, its decisions, and (once frozen) its hash.
+// IntentArtifact is the reviewable list of intents, its decisions, and (once approved) its hash.
 type IntentArtifact struct {
 	Lastro      string         `json:"lastro"` // "intent-artifact/v0"
 	Prose       string         `json:"prose"`

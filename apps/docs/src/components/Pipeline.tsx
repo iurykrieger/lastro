@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /** The four stages, who runs each, and what it hands to the next. */
 const STAGES = [
   { name: "plan", who: "AI", out: "intents", note: "extract reviewable intents from prose" },
-  { name: "review", who: "People", out: "frozen intents", note: "approve, amend, reject, answer decisions" },
+  { name: "review", who: "People", out: "approved intents", note: "approve, amend, reject, answer decisions" },
   { name: "spec", who: "AI", out: "formal spec", note: "derive LSL clauses, then validate and check consistency" },
   { name: "prove", who: "Deterministic", out: "proof + receipt", note: "check the code in two engines" },
 ] as const;

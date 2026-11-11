@@ -36,7 +36,7 @@ type Options struct {
 	Verify VerifyOptions
 }
 
-// Spec is stage 2: the formal spec derived from a frozen, fully reviewed artifact.
+// Spec is stage 2: the formal spec derived from an approved, fully reviewed artifact.
 type Spec struct {
 	Artifact IntentArtifact `json:"artifact"`
 	Plan     ProofPlan      `json:"plan"`
@@ -198,7 +198,7 @@ func (l *Lastro) Plan(ctx context.Context, prose string, previous *IntentArtifac
 // Review starts one person's review. Chain Approve/Amend/Reject/Answer, then Done.
 func (l *Lastro) Review(a IntentArtifact, reviewer string) *Review {
 	if a.Hash != "" {
-		a = Thaw(a)
+		a = Reopen(a)
 	}
 	return NewReview(l.withPolicy(a), reviewer)
 }
@@ -206,27 +206,27 @@ func (l *Lastro) Review(a IntentArtifact, reviewer string) *Review {
 // Pending lists what still blocks the spec: missing approvals and unanswered decisions.
 func (l *Lastro) Pending(a IntentArtifact) []string { return PendingReview(l.withPolicy(a)) }
 
-// Spec is stage 2: freeze the reviewed intents, derive clauses, validate, look for contradictions.
+// Spec is stage 2: approve the reviewed intents, derive clauses, validate, look for contradictions.
 func (l *Lastro) Spec(ctx context.Context, a IntentArtifact) (Spec, error) {
-	frozen, err := Freeze(l.withPolicy(a))
+	approved, err := Approve(l.withPolicy(a))
 	if err != nil {
 		return Spec{}, err
 	}
 	if l.deriver == nil {
 		return Spec{}, fmt.Errorf("Deriver needs an LLM: pass Ask or a custom Deriver to lastro.New()")
 	}
-	plan, err := l.deriver.Derive(ctx, frozen, l.o.Model)
+	plan, err := l.deriver.Derive(ctx, approved, l.o.Model)
 	if err != nil {
 		return Spec{}, err
 	}
-	if _, err := ValidatePlan(frozen, plan); err != nil {
+	if _, err := ValidatePlan(approved, plan); err != nil {
 		return Spec{}, err
 	}
 	contradictions, err := CheckConsistency(plan, l.o.Verify)
 	if err != nil {
 		return Spec{}, err
 	}
-	return Spec{Artifact: frozen, Plan: plan, Contradictions: contradictions, OK: len(contradictions) == 0}, nil
+	return Spec{Artifact: approved, Plan: plan, Contradictions: contradictions, OK: len(contradictions) == 0}, nil
 }
 
 // ReturnDecisions sends contradictions back to the team as decision cards; the artifact must be reviewed again.

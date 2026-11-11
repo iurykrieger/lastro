@@ -30,7 +30,7 @@ func reviewed(t *testing.T, d1 int, fixI5 bool) lastro.IntentArtifact {
 	if fixI5 {
 		r = r.Amend("I5", login.FixedI5)
 	}
-	return must(lastro.Freeze(must(r.Done())))
+	return must(lastro.Approve(must(r.Done())))
 }
 
 func TestSha256AndCanonicalJSON(t *testing.T) {
@@ -62,20 +62,20 @@ func TestQuotesAnchorToProse(t *testing.T) {
 	}
 }
 
-func TestFreezeNeedsFullReview(t *testing.T) {
-	if _, err := lastro.Freeze(extract(t)); err == nil {
+func TestApproveNeedsFullReview(t *testing.T) {
+	if _, err := lastro.Approve(extract(t)); err == nil {
 		t.Fatal("unreviewed artifact froze")
 	}
-	_, err := lastro.Freeze(must(lastro.NewReview(extract(t), "").ApproveAll().Done()))
+	_, err := lastro.Approve(must(lastro.NewReview(extract(t), "").ApproveAll().Done()))
 	if err == nil || !strings.Contains(err.Error(), "D1 unanswered") {
 		t.Fatalf("want D1 unanswered, got %v", err)
 	}
 	f := reviewed(t, 0, true)
-	if !lastro.IsIntact(f) {
+	if !lastro.IsApproved(f) {
 		t.Fatal("not intact")
 	}
 	f.Intents[0].Statement = "something else"
-	if lastro.IsIntact(f) {
+	if lastro.IsApproved(f) {
 		t.Fatal("tampering not detected")
 	}
 }
@@ -140,7 +140,7 @@ func TestOneWaySpecIsVacuousOnRefuseEveryone(t *testing.T) {
 }
 
 func TestWeakVacuousAndSampling(t *testing.T) {
-	a := must(lastro.Freeze(must(lastro.NewReview(must(lastro.CreateArtifact("x doubles", []lastro.IntentDraft{{Statement: "y = 2x", Kind: "behavior", Provability: "formal", Quote: "x doubles"}}, nil, nil)), "").ApproveAll().Done())))
+	a := must(lastro.Approve(must(lastro.NewReview(must(lastro.CreateArtifact("x doubles", []lastro.IntentDraft{{Statement: "y = 2x", Kind: "behavior", Provability: "formal", Quote: "x doubles"}}, nil, nil)), "").ApproveAll().Done())))
 	ptr := func(e lastro.Expr) *lastro.Expr { return &e }
 	plan := lastro.ProofPlan{Lastro: "proof-plan/v0", ArtifactHash: a.Hash,
 		Model: lastro.Model{Name: "double", Inputs: lastro.Fields{{Name: "x", Domain: lastro.Int(0, 9)}}, Outputs: lastro.Fields{{Name: "y", Domain: lastro.Int(-1000, 10_000_000)}}},
@@ -169,7 +169,7 @@ func TestContradictionsBecomeDecisionsThenIntents(t *testing.T) {
 	if raised.Hash != "" || raised.Decisions[2].ID != "D3" {
 		t.Fatal("raise")
 	}
-	if _, err := lastro.Freeze(raised); err == nil || !strings.Contains(err.Error(), "D3 unanswered") {
+	if _, err := lastro.Approve(raised); err == nil || !strings.Contains(err.Error(), "D3 unanswered") {
 		t.Fatal(err)
 	}
 	answered := must(lastro.NewReview(raised, "ana").Answer("D3", 0).Done())
@@ -177,10 +177,10 @@ func TestContradictionsBecomeDecisionsThenIntents(t *testing.T) {
 	if it.DecisionID != "D3" || it.Status != "proposed" || !strings.Contains(it.Statement, "Relax C5 (the database error wins)") {
 		t.Fatalf("%+v", it)
 	}
-	if _, err := lastro.Freeze(answered); err == nil || !strings.Contains(err.Error(), "I10 not reviewed") {
+	if _, err := lastro.Approve(answered); err == nil || !strings.Contains(err.Error(), "I10 not reviewed") {
 		t.Fatal(err)
 	}
-	must(lastro.Freeze(must(lastro.NewReview(answered, "bruno").Approve(it.ID).Done())))
+	must(lastro.Approve(must(lastro.NewReview(answered, "bruno").Approve(it.ID).Done())))
 }
 
 func pipeline(approvals int) *lastro.Lastro {
@@ -233,8 +233,8 @@ func TestPipelineWithTwoApprovals(t *testing.T) {
 
 func TestLLMStepsAreChecked(t *testing.T) {
 	ctx := context.Background()
-	frozen := reviewed(t, 0, true)
-	ref := login.DerivePlan(frozen)
+	approved := reviewed(t, 0, true)
+	ref := login.DerivePlan(approved)
 	type clause struct {
 		ID          string   `json:"id"`
 		IntentIDs   []string `json:"intentIds"`
@@ -263,18 +263,18 @@ func TestLLMStepsAreChecked(t *testing.T) {
 	ask := func(_ context.Context, req lastro.AskRequest) (json.RawMessage, error) {
 		return json.Marshal(answers[req.Step])
 	}
-	ex := must(lastro.LLMExtractor{Ask: ask}.Extract(ctx, frozen.Prose))
+	ex := must(lastro.LLMExtractor{Ask: ask}.Extract(ctx, approved.Prose))
 	if ex.Intents[0].Source.Quote != "only the right password gets a token" {
 		t.Fatal("extract")
 	}
-	plan := must(lastro.LLMDeriver{Ask: ask}.Derive(ctx, frozen, login.Model))
-	r := must(lastro.Verify(frozen, plan, lastro.VerifyOptions{Subject: login.Decide("")}))
+	plan := must(lastro.LLMDeriver{Ask: ask}.Derive(ctx, approved, login.Model))
+	r := must(lastro.Verify(approved, plan, lastro.VerifyOptions{Subject: login.Decide("")}))
 	if !r.OK {
 		t.Fatal("derived plan should prove the reference login")
 	}
 	clauses[0].Ensures = `{"var":"out.cookie"}`
 	answers["derive"].(map[string]any)["clauses"] = clauses
-	if _, err := (lastro.LLMDeriver{Ask: ask}).Derive(ctx, frozen, login.Model); err == nil || !strings.Contains(err.Error(), "cookie") {
+	if _, err := (lastro.LLMDeriver{Ask: ask}).Derive(ctx, approved, login.Model); err == nil || !strings.Contains(err.Error(), "cookie") {
 		t.Fatalf("want a cookie error, got %v", err)
 	}
 }

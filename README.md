@@ -9,7 +9,7 @@ Development): review moves up from code to intent, and every result says plainly
 **proved under trusted assumptions**, **evidenced** to a stated confidence, or **beyond proof**.
 
 ```
-prose ──extract──▶ intents ──review──▶ frozen intents (hash)
+prose ──extract──▶ intents ──review──▶ approved intents (hash)
                                             │
                                      derive ▼
                          proof plan (LSL clauses, trusted pieces, scenarios, beyond-proof)
@@ -97,7 +97,7 @@ Every command prints one JSON object and keeps state in `.lastro/`. Exit codes: 
 
 ```sh
 lastro init --model model.json --approvals 1
-lastro plan prose.md                      # extract intents
+lastro plan prose.md                      # extract intents (--section <heading> for one part of a document)
 lastro review --as ana approve-all        # approve | amend | reject | answer
 lastro spec                               # derive the formal spec; contradictions become decisions
 lastro prove ./decide-login.js            # proof.json + receipt.md; exit 1 with failures
@@ -107,6 +107,8 @@ lastro feedback                           # the failures as a brief for the codi
 The AI steps run on the Anthropic API when `ANTHROPIC_API_KEY` is set. Otherwise (`--llm handoff`) the CLI
 writes the request (instructions, data and JSON Schema) to `.lastro/llm/`, exits 3, and the calling agent
 answers with its own model and runs the command again. No API key or harness-specific plugin is needed.
+
+Every use case of the framework, with its complete current behavior, is listed in [`.lastro/use-cases.json`](.lastro/use-cases.json). Everything the framework generates lives in `.lastro/`.
 
 See [`DESIGN.md`](DESIGN.md) for the semantics of each verdict and where proof stops.
 

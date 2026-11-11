@@ -23,9 +23,9 @@ const ask: AskJson = async ({ step, system, user, schema }) => {
   return JSON.parse(reply.text);
 };`;
 
-const OFFLINE = `import { createArtifact, review, freeze, validatePlan, verify, renderReceipt, loadRustProver, tabulate } from "lastro";
+const OFFLINE = `import { createArtifact, review, approve, validatePlan, verify, renderReceipt, loadRustProver, tabulate } from "lastro";
 
-const artifact = freeze(
+const artifact = approve(
   review(createArtifact(prose, drafts, decisions, notPromised), "ana").approveAll().answer("D1", 0).done(),
 );
 const plan = myPlan(artifact);                    // a ProofPlan you wrote, or StaticDeriver
@@ -100,8 +100,8 @@ const tuned = claudeAsk({ model: "claude-opus-5-5", effort: "high", client: new 
 
       <H2>Building blocks</H2>
       <P>
-        Everything <C>createLastro</C> does is exported, for tools that need a single step: artifacts (<C>createArtifact</C>, <C>review</C>, <C>freeze</C>,{" "}
-        <C>thaw</C>, <C>isIntact</C>, <C>carryReview</C>, <C>raiseDecisions</C>, <C>hashOf</C>), plans (<C>validatePlan</C>, <C>checkPlan</C>), the engine (
+        Everything <C>createLastro</C> does is exported, for tools that need a single step: artifacts (<C>createArtifact</C>, <C>review</C>, <C>approve</C>,{" "}
+        <C>reopen</C>, <C>isApproved</C>, <C>carryReview</C>, <C>raiseDecisions</C>, <C>hashOf</C>), plans (<C>validatePlan</C>, <C>checkPlan</C>), the engine (
         <C>verify</C>, <C>explainRun</C>, <C>checkConsistency</C>), LSL (<C>L</C>, <C>evaluate</C>, <C>show</C>, <C>toSmtLib</C>), domains (<C>D</C>,{" "}
         <C>enumerateSpace</C>), the prompts (<C>EXTRACT_SYSTEM</C>, <C>DERIVE_SCHEMA</C>, …), <C>renderReceipt</C> and the Rust bridge (<C>loadRustProver</C>,{" "}
         <C>tabulate</C>).
@@ -212,7 +212,7 @@ export function SdkDotnet() {
           [<C>PlanAsync(prose, previous?)</C>, "Extract intents; carries a previous review over."],
           [<><C>Review(a, reviewer)</C> … <C>Done()</C></>, <><C>Approve</C>, <C>ApproveAll</C>, <C>Amend</C>, <C>Reject</C>, <C>Answer</C>, <C>Add</C>, <C>NotPromised</C></>],
           [<C>Pending(a)</C>, "What still blocks the spec."],
-          [<C>SpecAsync(a)</C>, "Freeze, derive, validate, check consistency."],
+          [<C>SpecAsync(a)</C>, "Approve, derive, validate, check consistency."],
           [<C>ReturnDecisions(spec)</C>, "Contradictions back to the team."],
           [<C>ProveAsync(spec, subject, traces?)</C>, <>A <C>Subject</C> or a <C>{"Func<Env, Env>"}</C>.</>],
           [<C>GapReviewAsync(spec, source)</C>, "What the proofs cannot see. Evidence, never proof."],
@@ -257,7 +257,7 @@ export function SdkInterop() {
         head={["What is shared", "How it is kept equal"]}
         rows={[
           ["Wire format: camelCase JSON, kebab-case enums", "Each SDK reads the others' .lastro/ files in its tests."],
-          ["Canonical JSON and SHA-256 hashes", "An artifact frozen by one SDK is intact for the others; plans hash the same."],
+          ["Canonical JSON and SHA-256 hashes", "An artifact approved by one SDK is intact for the others; plans hash the same."],
           ["Verdicts, receipts, seeded sampling", "Cross-check tests run the TypeScript engine and compare reports field by field."],
           ["Prompts and JSON Schemas", "Generated from the TypeScript SDK, so handoff request ids match across CLIs."],
           ["The Rust prover", "Each SDK runs lastro-core (WASM in TypeScript, the native binary in Go and .NET) and requires agreement."],

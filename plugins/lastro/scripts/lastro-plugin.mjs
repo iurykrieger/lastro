@@ -22,6 +22,7 @@ import {
   readState,
   renderBoard,
   renderLine,
+  renderReview,
   snapshot,
   writeState,
 } from "./lib.mjs";
@@ -174,7 +175,16 @@ export function handle(event, input, env = process.env) {
       }
       if (tool === "Bash" || tool === "exec_command" || tool === "shell") {
         if (!isLastroCommand(String(input.tool_input?.command ?? ""))) return {};
-        return { systemMessage: renderBoard(snapshot(ws)) };
+        const s = snapshot(ws);
+        if (s.phase !== "review-pending") return { systemMessage: renderBoard(s) };
+        // The review goes to the user as the plugin renders it: one line per decision and intent, grouped.
+        return {
+          systemMessage: renderBoard(s),
+          hookSpecificOutput: {
+            hookEventName: "PostToolUse",
+            additionalContext: `Show the user this review exactly as written (Markdown), then ask for the open decisions and each intent:\n\n${renderReview(s)}`,
+          },
+        };
       }
       const paths = editedPaths(input.tool_input);
       if (paths.some((p) => classify(ws, input.cwd ?? ws.root, p) === "code")) writeState(ws, { ...readState(ws), dirty: true });
@@ -242,13 +252,17 @@ function main(argv) {
     process.stdout.write((argv.includes("--line") ? renderLine(s) : renderBoard(s)) + "\n");
     return s.phase === "passed" ? 0 : 1;
   }
+  if (cmd === "review") {
+    process.stdout.write(renderReview(snapshot(ws)) + "\n");
+    return 0;
+  }
   if (cmd === "prove") {
     const r = prove(ws);
     if (r.error) process.stderr.write(r.error + "\n");
     process.stdout.write(renderBoard(snapshot(ws)) + "\n");
     return r.ok ? 0 : 1;
   }
-  process.stderr.write("usage: lastro-plugin.mjs hook <Event> | board [--line] | prove\n");
+  process.stderr.write("usage: lastro-plugin.mjs hook <Event> | board [--line] | review | prove\n");
   return 2;
 }
 

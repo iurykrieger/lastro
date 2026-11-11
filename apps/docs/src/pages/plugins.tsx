@@ -92,7 +92,7 @@ export function PluginAgents() {
           [<C>SessionStart</C>, "Adds the board and the rules (the agent is the author, the user reviews) to the agent's context."],
           [<C>UserPromptSubmit</C>, "The same, on every prompt, so each request that changes behavior goes through a proposal."],
           [<C>PreToolUse</C>, "Denies the first source edit of a change, in any mode, with the steps to extract its intents; lets edits through only while the approved spec's proofs have not passed yet. Denies edits to files only the CLI writes. Asks you before each review command; refuses --as with an agent's name."],
-          [<C>PostToolUse</C>, "Shows the board after each lastro command. Marks the last proof stale after a code edit. Saves Claude Code's plan (ExitPlanMode) as a proposal draft; reminds Codex after update_plan."],
+          [<C>PostToolUse</C>, "Shows the board after each lastro command; while the review is open, hands the agent the review as Markdown (one list item per decision and intent, grouped, with its quote) to show the user as-is. Marks the last proof stale after a code edit. Saves Claude Code's plan (ExitPlanMode) as a proposal draft; reminds Codex after update_plan."],
           [<C>Stop</C>, "Builds, runs lastro prove --stream into .lastro/plugin/progress.jsonl, and sends failing proofs back to the agent; shows the board either way."],
         ]}
       />

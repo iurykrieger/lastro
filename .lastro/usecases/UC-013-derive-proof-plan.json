@@ -1,0 +1,8 @@
+{
+  "id": "UC-013",
+  "slug": "derive-proof-plan",
+  "name": "Derive the proof plan",
+  "description": "spec(artifact) approves the artifact and asks the LLM (step \"derive\") with the model, the approved intents only, each decision's question and answer (the chosen or else the recommended option) and notPromised. The answer has clauses (id, intents, description, requires and ensures as LSL JSON strings, assumptions used), assumptions, scenarios (concrete input as a JSON string and an LSL expect) and beyondProof items. Every expression is parsed and validated; the result is a proof plan (proof-plan/v0) bound to the artifact hash. Without an LLM transport or a custom deriver, spec() throws.",
+  "proofs": [],
+  "history": []
+}

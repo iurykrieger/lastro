@@ -1,188 +1,227 @@
-# Proposal: intents are changes to use cases
+# Proposal: use cases, proposals, intents and proofs
 
-Status: **decided, not implemented yet**. The open questions were answered on 2026-11-11 (see Decisions);
-the sections below already reflect the answers.
+Status: **decided, not implemented yet**. The decisions are listed at the end; the sections below already
+reflect them.
 
-## The idea
+## The entities
 
-Today an intent is a standalone promise read from the prose. The model this proposal moves to:
+Lastro works with four entities. Each one has an `id`, a `slug`, a `name` and a `description`, plus its own fields.
 
-- **Use cases** describe what the application does now. The catalog (`.lastro/use-cases.json`: `slug`, `name`,
-  `description`) is the baseline, with each description stating the complete current behavior. The catalog
-  reflects the code.
-- **Prose** is a change request against that baseline.
-- **Intents** are the changes the prose implies. Each one **adds**, **modifies** or **removes** a use case, and
-  several intents may touch the same use case. Reviewing intents means reviewing proposed changes to the catalog.
-- **Proofs** belong to use cases. Each use case keeps its clauses, and every change re-proves the whole catalog.
-- Once the code passes every proof, the change is **applied**: the catalog is synced to the state the approved
-  intents describe, and becomes the new baseline. The catalog stays versioned with the code.
+| Entity | What it is | Where it lives |
+|---|---|---|
+| **Use case** | One thing the application does, described in full as the code implements it, with the proofs that keep it working. | `.lastro/usecases/<id>-<slug>.json` |
+| **Proposal** | A change to the repository: the prose someone wrote and everything derived from it. | `.lastro/proposals/<id>-<slug>.json` |
+| **Intent** | One non-deterministic reading of the prose, in natural language: the addition, removal or change of one use case. It is approved, rejected or amended. | inside its proposal |
+| **Proof** | A deterministic check that an intent holds in practice. Once it passes, it belongs to the use case as a regression test. | inside its proposal, then inside its use case |
+
+An application is its list of use cases. Every change to the repository starts as a proposal.
 
 ```
-use-cases.json (baseline) ─┐
-                           ├─ extract ─▶ intents: add / modify / remove ─▶ review ─▶ approved
-prose (change request) ────┘                                                    │
-                                                                         derive ▼
-                                   clauses for the touched use cases (+ the kept clauses of the rest)
-                                                                                │
-                                                       code ──── prove ─────────┤ every clause of the catalog
-                                                                                ▼
-                                       apply ─▶ use-cases.json + specs (new baseline) + receipt
+                      ┌──────────── .lastro/usecases/ (the application, with its proofs) ───────────┐
+                      │                                                                            │
+prose ─▶ PROPOSAL ─ extract ─▶ INTENTS (add / modify / remove a use case) ─▶ review                │
+                                                                              │                    │
+                                                approved or amended intents   ▼                    │
+                                                                    derive ─▶ PROOFS (pending)      │
+                                                                              │                    │
+                                              code (any agent or person) ─▶ prove ◀── regression ──┘
+                                                                              │   (every use case's proofs)
+                                                       all proofs pass        ▼
+                                                                 apply ─▶ proofs join their USE CASES,
+                                                                          descriptions synced, proposal applied
 ```
 
-## Data model
+## Ids, slugs and files
+
+- Use cases are numbered `UC-001`, `UC-002`, ... and proposals `P-001`, `P-002`, ...: the next free number in the
+  folder. A number is never reused, even after a use case is removed.
+- Intents and proofs are numbered inside their proposal, so their ids carry their origin: `P-007.I-03` is the
+  third intent of proposal 7 and `P-007.PF-05` the fifth proof derived for it. A proof keeps its id after it
+  moves to its use case, so every regression test points back to the proposal and the intent it came from.
+- Slugs are kebab-case and stable; the file name is `<id>-<slug>.json` (`UC-012-derive-proof-plan.json`). A
+  rename changes `name`, never the slug or the id.
+
+## Use case
 
 ```ts
-interface UseCase { slug: string; name: string; description: string }
-
-interface Intent {
-  id: string;                         // "I1"
-  change: "add" | "modify" | "remove";
-  useCase: string;                    // slug: existing for modify/remove, new for add
-  statement: string;                  // the one change this intent promises, in a sentence
-  provability: Provability;           // unchanged: formal | empirical | beyond-proof
-  beyondProofReason?: BeyondProofReason;
-  source: SourceSpan;                 // unchanged: the quote that motivates the change
-  status, approvals, reviewNote, ... // unchanged
-}
-
-/** The resulting state of one touched use case: what `apply` will write. */
-interface UseCaseChange {
-  useCase: string;
-  change: "add" | "modify" | "remove";
-  name?: string;                      // add, or a rename on modify
-  before?: string;                    // modify/remove: copied from the catalog by the SDK, never by the LLM
-  after?: string;                     // add/modify: the complete new description, all its intents combined
-  intents: string[];                  // ids of the intents that produce this change
-}
-
-interface IntentArtifact {
-  lastro: "intent-artifact/v1";
-  baseline: string;                   // hash of the canonical catalog the prose was read against
-  submittedBy: string;                // who wrote the prose (the intents' author is the extractor)
-  prose: string;
-  intents: Intent[];
-  useCases: UseCaseChange[];          // one entry per touched use case
-  decisions: DecisionCard[];
-  notPromised: string[];
-  policy?: ReviewPolicy;
-  hash?: string;
-}
-
-interface ReviewPolicy {
-  approvals: number;                  // reviewers each intent needs (default 1)
-  submitterCanApprove: boolean;       // default true; false for teams that want a second person
+interface UseCase {
+  id: string;                  // "UC-012"
+  slug: string;                // "derive-proof-plan"
+  name: string;
+  description: string;         // the complete current behavior, as the code implements it
+  proofs: Proof[];             // the proofs that passed, kept as regression tests (status "passed")
+  history: string[];           // ids of the applied proposals that added or changed it
 }
 ```
+
+The use cases are the baseline. Their descriptions reflect the code, and their proofs show it: a proof only
+joins a use case after it passed against the code.
+
+## Proposal
+
+```ts
+interface Proposal {
+  lastro: "proposal/v1";
+  id: string;                  // "P-007"
+  slug: string;
+  name: string;
+  description: string;         // a one-paragraph summary of the change
+  status: "open" | "changes-requested" | "approved" | "proving" | "proved" | "applied" | "closed";
+  submittedBy: string;         // who wrote the prose; the intents' author is the extractor (the LLM)
+  prose: string;
+  baseline: string;            // sha256 over the canonical use cases (without proofs) the prose was read against
+  intents: Intent[];
+  useCases: UseCaseChange[];   // the resulting state of each touched use case
+  decisions: DecisionCard[];
+  threads: Thread[];           // review comments
+  notPromised: string[];
+  policy: ReviewPolicy;        // the policy it was reviewed under
+  proofs: Proof[];             // derived from the approved intents; pending until they pass
+  supersedes: string[];        // ids of existing proofs that the change retires (reviewed with the proofs)
+  hash?: string;               // set by approval
+}
+
+interface UseCaseChange {
+  useCase: string;             // existing id for modify/remove; a newly reserved id for add
+  slug: string;
+  change: "add" | "modify" | "remove";
+  name: string;
+  before?: string;             // modify/remove: copied from the use case by the SDK, never by the LLM
+  after?: string;              // add/modify: the complete new description, all its intents combined
+  intents: string[];
+}
+```
+
+## Intent
+
+```ts
+interface Intent {
+  id: string;                  // "P-007.I-03"
+  slug: string;
+  name: string;
+  description: string;         // the change, in natural language
+  change: "add" | "modify" | "remove";
+  useCase: string;             // the use case it changes (reserved id for an add)
+  provability: Provability;    // formal | empirical | beyond-proof
+  beyondProofReason?: BeyondProofReason;
+  source: SourceSpan;          // the quote in the prose that motivates it
+  status: "proposed" | "approved" | "amended" | "rejected";
+  approvals: string[];
+  reviewNote?: string;
+  originalDescription?: string; // kept on amend
+}
+```
+
+An intent is what the LLM understood from the prose, so it is not deterministic: two extractions of the same prose
+can differ. That is why intents are reviewed and proofs are not written from the prose directly. Each intent changes
+exactly one use case, and several intents may change the same one; the SDK combines them into that use case's
+`after`. Deterministic checks on every extraction:
+
+- Quotes are anchored in the prose, as today.
+- A `modify` or `remove` names an existing use case; an `add` reserves a new id and a new kebab-case slug.
+- Every touched use case has exactly one `UseCaseChange`, with `after` for add and modify, listing at least one intent.
+- Change kinds on one use case fit together (no `add` or `remove` mixed with a `modify`, no `remove` with anything),
+  and two intents that contradict each other on one use case come back as a decision.
 
 `kind` goes away: `preserve` is what every untouched use case already is, and `behavior`, `invariant` and
 `non-functional` move into the use case's description.
 
-### Several intents on one use case
+## Proof
 
-Each promise in the prose is its own intent, so one use case can receive several `modify` intents (or one `add`
-plus refinements). Extraction returns the intents and, for each touched use case, the combined `after`.
-Deterministic checks on the result:
+```ts
+interface Proof {
+  id: string;                  // "P-007.PF-05"
+  slug: string;
+  name: string;
+  description: string;         // what it checks, in plain words
+  intent: string;              // "P-007.I-03"
+  useCase: string;             // "UC-012"
+  model: string;               // the model it is written against (declared in .lastro/config.json)
+  subject: string;             // how to run the code (declared in .lastro/config.json)
+  check:
+    | { kind: "clause"; requires: Expr; ensures: Expr; assumptions: string[] }
+    | { kind: "scenario"; input: Record<string, Value>; expect: Expr };
+  status: "pending" | "passed" | "failed";
+  verdict?: Verdict;           // proved, proved-under-assumptions, evidenced, violated, ...
+  evidence?: Evidence;
+}
+```
 
-- Every intent's `useCase` has exactly one `UseCaseChange`, and every `UseCaseChange` lists at least one intent.
-- All intents on one use case agree on the kind of change: an `add` or a `remove` cannot be mixed with a `modify`
-  on the same slug, and `remove` cannot be combined with anything. A mix is returned as a decision.
-- Two intents that contradict each other on the same use case are returned as a decision, as contradictions are today.
-- When an intent on a use case is rejected or amended, that use case's `after` is stale: it is recombined from the
-  remaining intents (an extraction step, through the same LLM or handoff) and the change request needs review again
-  for that use case before it is approved.
+A proof is a deterministic check of one intent: a clause in LSL, proved over the finite domain or evidenced by
+seeded sampling, or a concrete scenario. It names its model and its subject so it can run on its own, later, as a
+regression test. Proofs are derived only from approved or amended intents.
 
-## Approved intents
+- A `remove` intent always gets a proof that the old behavior no longer happens, written from the use case's
+  `before`. When the model cannot express it, derivation returns a decision for the reviewer, and the proposal
+  cannot be applied while it is open.
+- A `modify` may make some of the use case's existing proofs wrong on purpose. Derivation lists them in
+  `supersedes`, and reviewers see them next to the new proofs. A superseded proof is skipped by the regression run
+  of this proposal and removed at apply. Any other existing proof that fails is a regression.
 
-"Frozen" is gone as a user-facing term: the reviewed state is called **approved**. Approval is per intent, the
-way comments are resolved on a pull request:
+## The flow
 
-- Each intent ends **approved** (by the policy's number of reviewers), **amended** (the reviewer's new wording
-  counts as their approval; everyone else approves it again) or **rejected**.
-- The change request is approved when every intent is approved, amended or rejected, and every decision is answered.
-- Only the intents that were not rejected go forward: they are sent to proof derivation and they are what the
-  implementer builds. A rejected intent drops out of its use case's `after`.
-- The approved intents are the brief for whoever implements the change (an agent or a person): there is no
-  separate brief artifact. The implementer reads the approved intents and the resulting use cases (before and
-  after) from the approved artifact; failing proofs keep coming back through `feedback`.
-- Changing an approved intent (amend, reject, a new extraction) withdraws the approval of the change request,
-  so derivation and `apply` refuse until it is approved again.
+1. **Propose.** `propose(prose, { submittedBy })` creates `P-<n>` in `.lastro/proposals/` and extracts its intents
+   against the current use cases (AI step "extract"). Status `open`.
+2. **Review.** Reviewers approve, amend or reject each intent, comment in threads, and answer decisions.
+   Rejecting or amending an intent marks its use case's `after` stale; it is recombined from the remaining intents
+   (part of the extract step, through the same LLM or handoff) and needs review again.
+3. **Approve.** The proposal is approved when every intent is approved, amended or rejected, and every decision and
+   thread is resolved, under the policy in `.lastro/config.json`. The approval hash binds the baseline: if the use
+   cases changed since extraction, the approval is stale and the prose must be extracted again. Status `approved`.
+4. **Derive.** `derive(proposal)` writes pending proofs for the approved and amended intents only (AI step
+   "derive"), plus `supersedes`. The approved intents and the resulting use cases are the brief for whoever
+   implements the change; there is no separate brief. Status `proving`.
+5. **Implement.** Any agent or person writes the code. Lastro never does.
+6. **Prove.** `prove(proposal)` runs the proposal's proofs and the proofs of every use case (except the superseded
+   ones) against the code. Failures go back to the implementer through `feedback`; a failing use-case proof is a
+   regression. When everything passes, status `proved`.
+7. **Apply.** `apply(proposal)` runs only when every proof passes. It writes each `UseCaseChange` (adds the file,
+   replaces the description and name, or deletes the file of a removed use case), moves each proof to its use case
+   as a regression test, removes the superseded proofs, appends the proposal id to `history`, and records the new
+   baseline hash in the receipt. Status `applied`.
+
+Changing an approved intent (amend, reject, a new extraction) withdraws the approval, so derive and apply refuse
+until it is approved again.
 
 ## Reviewing intents like a pull request
 
-Intents replace code as what a developer reviews. Reviewing a change request should feel like reviewing a pull
-request today: the prose is the description, each touched use case is a changed file, and each intent is a
-change in it that gets resolved like a review comment.
+Intents replace code as what a developer reviews. Reviewing a proposal should feel like reviewing a pull request:
+the prose is the description, each touched use case is a changed file, and each intent is a change in it that gets
+resolved like a review comment.
 
-| Pull request today | Change request in Lastro |
+| Pull request today | Proposal in Lastro |
 |---|---|
-| Author opens a PR with a description | Someone submits prose; extraction turns it into the change request's intents. The extractor (the LLM) is the author of the intents, and the person who wrote the prose is recorded as the submitter. |
-| Diff per file | Diff per use case: before and after, with the intents that produce it. |
-| Line comment, starting a thread | A comment on one intent (or on the prose), starting a thread. Threads are resolved by the commenter or the submitter. |
-| Suggested change | An amended statement (the current `amend`), which recombines the use case's `after`. |
+| Author opens a PR with a description | Someone submits prose; extraction turns it into intents. The extractor (the LLM) is the author of the intents, and the person who wrote the prose is recorded as the submitter. |
+| Diff per file | Diff per use case: before and after, with the intents that produce it, and later the proofs it gains or loses. |
+| Line comment, starting a thread | A comment on one intent, one proof or the prose, starting a thread. Threads are resolved by the commenter or the submitter. |
+| Suggested change | An amended intent, which recombines the use case's `after`. |
 | Resolving every comment | Every intent ends approved, amended or rejected; only non-rejected intents go forward. |
 | Author pushes new commits | The prose is edited and extracted again. Intents that changed lose their approvals (stale review dismissed); untouched intents keep them. |
-| Required approvals, branch protection | The repository's policy in `.lastro/config.json`: N distinct reviewers per intent, and whether the submitter counts as one. |
+| Required approvals, branch protection | The policy in `.lastro/config.json`: N distinct reviewers per intent, and whether the submitter counts as one. |
 | Unresolved conversations block the merge | Open threads, unresolved intents and unanswered decisions block approval. |
-| Approved, then merged | Approved (proofs can be derived and the implementer works from the approved intents), then applied to the catalog once every proof passes. |
-| PR status | `open`, `changes-requested`, `approved`, `applied`, `closed`. |
+| CI must pass, then merge | Every proof, new and regression, must pass; then apply. |
 
-The intents are what the LLM understood from the prose, so the LLM is their author and every person is a
-reviewer, including whoever wrote the prose. By default the submitter can approve and amend the intents and go
-on to the implementation, the way a pull request author can adjust everything and still merge when branch
-protection allows it. A repository that wants a second pair of eyes sets `submitterCanApprove: false` in the
-review policy in `.lastro/config.json`; the submitter's approvals then do not count toward `approvals`.
+The intents are what the LLM understood from the prose, so the LLM is their author and every person is a reviewer,
+including whoever wrote the prose. By default the submitter can approve and amend the intents and go on to the
+implementation, the way a pull request author can adjust everything and still merge when branch protection allows
+it. A repository that wants a second pair of eyes sets `submitterCanApprove: false`.
 
-### The review policy lives in `.lastro/config.json`
+## Configuration
 
-How many reviewers each intent needs and whether the submitter counts are repository settings, kept with the
-rest of the workspace and versioned with the code:
+`.lastro/config.json` holds what the proofs run against and how proposals are reviewed:
 
 ```json
 {
-  "model": { "...": "..." },
-  "review": {
-    "approvals": 2,
-    "submitterCanApprove": true
-  }
+  "models": { "login": { "...": "..." } },
+  "subjects": { "login": { "module": "dist/login.js", "export": "login" } },
+  "review": { "approvals": 2, "submitterCanApprove": true }
 }
 ```
 
 `approvals` defaults to 1 and `submitterCanApprove` to true. `lastro init --approvals N` writes it (today it writes
-`requiredApprovals`, which becomes `review.approvals`; the old key is still read). The library takes the same
-policy when the SDK is instantiated, and an artifact records the policy it was reviewed under, so a later change
-to the config never turns an approved change request into an unapproved one or the reverse.
-
-Everything stays in the artifact in `.lastro/`, so the review works the same from the library, any of the CLIs
-(`lastro review --as ana comment I3 "..."`, `approve I3`, `amend I3 "..."`, `reject I3`, `resolve`), an agent or
-a UI such as the sandbox. Lastro does not depend on a code host; a GitHub integration could mirror threads later.
-
-## Proofs per use case
-
-Proofs are persistent and belong to use cases, not to change requests:
-
-- Each use case keeps its clauses in `.lastro/specs/<slug>.json` (model, clauses, and the hash of the description
-  they were derived from).
-- A change request derives clauses only for the use cases it touches, from their `after` state. The clauses of
-  every other use case are reused as they are.
-- Verification runs the clauses of the whole catalog, so a change that breaks an untouched use case fails as a
-  regression.
-- A use case whose description changed without new clauses (its hash no longer matches) is reported as stale and
-  blocks `apply`.
-
-### Proving a removal
-
-A `remove` always needs a clause showing the old behavior no longer happens. The deriver writes it from the
-`before` description. When the model cannot express it, derivation returns a decision for the reviewer, as with
-contradictions today; the change request cannot be applied while it is open. The removal clause belongs to the
-change request: at `apply` the use case and its spec file are deleted.
-
-## When to apply
-
-`apply` runs only after every proof passes: the clauses of the touched use cases and those of the rest of the
-catalog. The catalog reflects the code, and the proofs show the code does what the approved intents say, so only
-then is it safe to sync the catalog to the new state. `apply` writes each `UseCaseChange` into
-`.lastro/use-cases.json`, moves the derived clauses into `.lastro/specs/`, and records the new baseline hash in
-the receipt.
+`requiredApprovals`, which becomes `review.approvals`; the old key is still read). A proposal records the policy it
+was reviewed under, so a later change to the config never turns an approved proposal into an unapproved one or the
+reverse.
 
 ## Where files live
 
@@ -190,56 +229,55 @@ Everything the framework generates or keeps lives in `.lastro/` (or the folder g
 
 ```
 .lastro/
-  use-cases.json     the catalog: the baseline, versioned with the code
-  specs/<slug>.json  the clauses of each use case, versioned with the code
-  config.json        model and review policy (approvals, submitterCanApprove)
-  intents.json       the current change request's intents and their review
-  spec.json          the clauses derived for the current change request
-  proof.json         the last verification
-  receipt.md         the last receipt
-  llm/               handoff requests and answers
+  config.json                         models, subjects and the review policy
+  usecases/<id>-<slug>.json           the application: one file per use case, with its regression proofs
+  proposals/<id>-<slug>.json          one file per proposal: prose, intents, review, proofs
+  proposals/<id>-<slug>.receipt.md    the proposal's last receipt
+  llm/                                handoff requests and answers
 ```
 
-`apply` rewrites `.lastro/use-cases.json` and `.lastro/specs/`. No framework file is written outside the
-workspace folder.
+`intents.json`, `spec.json` and `proof.json` go away: their content now lives in the proposal. `apply` rewrites
+`.lastro/usecases/`. No framework file is written outside the workspace folder.
 
-## Pipeline changes
+## CLI
 
-| Step | Today | Proposed |
-|---|---|---|
-| Extract | `plan(prose)` | `plan(prose, catalog, submittedBy)`. The prompt gets the catalog and must return intents and one `UseCaseChange` per touched use case. Deterministic checks: `modify`/`remove` name an existing slug; `add` uses a new kebab-case slug; `after` is present for add/modify; change kinds on one slug are compatible; quotes are anchored as today. `before` is filled from the catalog. |
-| Review | approve / amend / reject statements | Same actions per intent; the policy decides whether the submitter's approval counts. Rejecting or amending recombines the use case's `after`. |
-| Approve | `approve()` (formerly `freeze()`) hashes the reviewed artifact | Every intent resolved and every decision answered. The hash also binds `baseline`: if the catalog changed since extraction, the approval is stale and the prose must be extracted again. |
-| Derive | clauses from the approved intents | Clauses for the `after` state of each touched use case; a removal clause (or a decision) for each `remove`. |
-| Prove | the change's clauses | The change's clauses plus the kept clauses of every untouched use case. |
-| Apply | — | New `apply` (library and CLI): only when every proof passes; writes the catalog and the specs and records the new baseline hash in the receipt. |
-| Re-extract | carry review by statement | Carry review by `(change, useCase, statement)`, ignoring case and spacing. |
+```
+lastro propose <prose-file> [--section <heading>] [--as <submitter>]   create a proposal and extract its intents
+lastro status [<proposal>]                                             proposals, or one proposal's pending items
+lastro review <proposal> --as <name> approve|amend|reject|answer|comment|resolve ...
+lastro derive <proposal>                                               write its pending proofs
+lastro prove <proposal> --subject ...                                  its proofs plus every use case's proofs
+lastro feedback <proposal>                                             failures for the implementer
+lastro apply <proposal>                                                attach the proofs and sync the use cases
+lastro regress                                                         run every use case's proofs alone
+```
 
-The receipt gains a section with the catalog diff: each use case added, modified (before and after) or removed,
-with the intents behind it, and a line for regressions in untouched use cases.
+The receipt gains the use-case diff (each use case added, modified with before and after, or removed, with its
+intents), the proofs each use case gains or loses, and a line for each regression.
 
 ## Decisions
 
 Answered by Iury on 2026-11-11:
 
-1. **Several intents on one use case:** allowed. Each promise is its own intent; the SDK combines them into the
-   use case's `after` and returns conflicts as decisions.
-2. **Proving a removal:** always a clause showing the old behavior is gone; when the model cannot express it, a
-   decision for the reviewer.
+1. **Several intents on one use case:** allowed; the SDK combines them into the use case's `after` and returns
+   conflicts as decisions.
+2. **Proving a removal:** always a proof that the old behavior is gone; when the model cannot express it, a decision.
 3. **When to apply:** only after every proof passes.
-4. **Where proofs live:** per use case, persistent; every change re-proves the whole catalog.
-5. **Approval scope:** per intent. The change request is approved when every intent is approved, amended or
-   rejected and every decision is answered; only non-rejected intents go forward.
-6. **Who is the author:** the LLM that extracted the intents; the person who wrote the prose is a reviewer. Whether
-   the submitter's approval counts is a per-repository policy in `.lastro/config.json`, and by default it does.
+4. **Where proofs live:** with their use case, as regression tests; every change re-runs all of them.
+5. **Approval scope:** per intent; only non-rejected intents go forward.
+6. **Who is the author:** the LLM that extracted the intents; the person who wrote the prose is a reviewer, and
+   whether their approval counts is a per-repository policy (by default it does).
+7. **The review policy** (number of reviewers and the submitter rule) lives in `.lastro/config.json`.
+8. **The entities** are use case, proposal, intent and proof, each with id, slug, name and description; use cases
+   live in `.lastro/usecases/<id>-<slug>.json` with their proofs, and every change starts as a proposal.
 
 ## Cost
 
-A semantic change in all three SDKs (TypeScript, .NET, Go): data model, extraction prompt and schema (and
-`go generate`), the recombination step, artifact checks, review with the submitter policy, carry-over, persistent specs,
-receipt, the review policy in `.lastro/config.json`, and CLI (`plan --catalog`, `review`, `apply`), with the cross-check tests and the sandbox example updated
-to the new format. The Rust prover does not change: it only sees models, clauses and tables.
+A semantic change in all three SDKs (TypeScript, .NET, Go): the four entities and their files, the extraction
+prompt and schema (and `go generate`), the recombination step, the review with threads and the submitter policy,
+carry-over, derivation into proofs with `supersedes`, the regression run, apply, the receipt and the CLI, with the
+cross-check tests and the sandbox example updated to the new format. The Rust prover does not change: it only sees
+models, clauses and tables.
 
-Persistent specs need a one-time bootstrap: deriving and reviewing clauses for the 38 use cases already in the
-catalog before the first change can be re-proved against them. Until a use case has a spec, verification reports
-it as unproved rather than failing.
+The use cases already in `.lastro/usecases/` start with no proofs. Until a use case has proofs, verification reports
+it as unproved rather than failing; giving them proofs is a separate proposal.

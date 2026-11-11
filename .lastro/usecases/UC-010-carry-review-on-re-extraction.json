@@ -1,0 +1,8 @@
+{
+  "id": "UC-010",
+  "slug": "carry-review-on-re-extraction",
+  "name": "Keep the review when the prose changes",
+  "description": "plan(prose, previous) extracts again and carries the previous review over. A new intent whose statement equals, ignoring case and whitespace, the statement of a previously reviewed (non-proposed) intent takes its status, approvals, review note and original statement. If instead the AI repeats the original reading of an amended intent for the same quote, the amendment is reapplied with its approvals. Everything else stays proposed. Decisions with the same question keep their answer when the option still exists, and the previous policy is kept. Decisions raised by the consistency check, and their intents, are not carried.",
+  "proofs": [],
+  "history": []
+}

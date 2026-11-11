@@ -1,0 +1,8 @@
+{
+  "id": "UC-002",
+  "slug": "anchor-intents-to-prose",
+  "name": "Anchor every intent to the prose",
+  "description": "Each intent stores its quote with start and end offsets into the prose (the intent map). The quote is searched verbatim first, then ignoring case and runs of whitespace from a word boundary. If any quote is not found, or a beyond-proof intent has no reason, or a reason is unknown, or a decision has fewer than two options, a recommended index out of range or an unknown intent, the whole extraction is rejected with an ArtifactError listing every problem.",
+  "proofs": [],
+  "history": []
+}

@@ -1,0 +1,8 @@
+{
+  "id": "UC-008",
+  "slug": "answer-decisions",
+  "name": "Answer decision cards",
+  "description": "answer(decisionId, option) records the chosen option; an unknown decision or an option out of range throws. For an extraction decision that is all. For a decision raised later (a contradiction), the answer also creates, or rewrites, an intent linked to the decision whose statement is the question plus the chosen option and its consequence; that intent starts proposed with no approvals and must be reviewed like any other.",
+  "proofs": [],
+  "history": []
+}

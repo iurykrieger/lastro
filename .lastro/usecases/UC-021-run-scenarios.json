@@ -1,0 +1,8 @@
+{
+  "id": "UC-021",
+  "slug": "run-scenarios",
+  "name": "Run Given/When/Then scenarios",
+  "description": "Each scenario runs the code on its concrete input and checks its LSL expectation over input and output. It passes or fails, with the output or the error; with no subject every scenario fails. Scenarios are empirical evidence, and assumptions list the scenarios that check them.",
+  "proofs": [],
+  "history": []
+}

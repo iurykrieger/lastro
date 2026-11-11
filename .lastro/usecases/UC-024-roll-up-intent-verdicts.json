@@ -1,0 +1,8 @@
+{
+  "id": "UC-024",
+  "slug": "roll-up-intent-verdicts",
+  "name": "Roll up a verdict per intent",
+  "description": "Each approved intent gets one verdict, in this order: gap if nothing covers it; violated if any of its clauses is violated or scenarios failed; beyond-proof if it has beyond-proof items and no proved or evidenced clause; evidenced with confidence 0 if it has only scenarios or only assumptions; gap if nothing useful remains; proved, or proved-under-assumptions when it relies on assumptions, if every clause is proved (confidence 1); otherwise evidenced with confidence 1 minus the largest failure-rate bound. The report is ok only with no violated intent, no gap and no contradiction.",
+  "proofs": [],
+  "history": []
+}

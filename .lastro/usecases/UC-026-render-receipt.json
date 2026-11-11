@@ -1,0 +1,8 @@
+{
+  "id": "UC-026",
+  "slug": "render-receipt",
+  "name": "Render a receipt",
+  "description": "The receipt is Markdown for a pull request: the overall result and counts per verdict; the intents and plan hashes; the Rust check with coverage, table digest and whether verdicts agree; a table of intents with verdict, evidence, confidence and what backs each; notes; each clause with verdict, evidence, method (exhaustive, samples with failure bound, traces), mutants killed, formal statement, counterexample, violating trace and notes; scenarios; trusted pieces; where proof stops; not promised; and pending contradictions.",
+  "proofs": [],
+  "history": []
+}

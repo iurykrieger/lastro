@@ -1,0 +1,8 @@
+{
+  "id": "UC-032",
+  "slug": "extract-from-document-section",
+  "name": "Extract from one section of a document",
+  "description": "In the TypeScript CLI, plan <file> --section <heading> uses only the body of the Markdown section whose heading matches (ignoring case), up to the next heading of the same or a higher level; an unknown heading is an error (exit 2). One versioned document can then feed several workspaces.",
+  "proofs": [],
+  "history": []
+}

@@ -1,0 +1,8 @@
+{
+  "id": "UC-020",
+  "slug": "check-production-traces",
+  "name": "Check recorded production runs",
+  "description": "prove(spec, subject, { traces }) also checks recorded real input/output pairs. A trace that breaks a clause makes it violated with empirical evidence and the violating trace (and its reference) in the result; if the clause was proved on the model, the note says a trusted piece does not hold. With traces but no subject, a clause that holds on every applicable trace is evidenced, with the rule-of-three bound.",
+  "proofs": [],
+  "history": []
+}

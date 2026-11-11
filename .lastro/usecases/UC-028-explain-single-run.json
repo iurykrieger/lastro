@@ -1,0 +1,8 @@
+{
+  "id": "UC-028",
+  "slug": "explain-single-run",
+  "name": "Explain one run",
+  "description": "explainRun(plan, input, output) reports, for each clause, whether its if-part is false, it holds, it fails, or evaluating it raised an error.",
+  "proofs": [],
+  "history": []
+}

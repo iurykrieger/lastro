@@ -1,0 +1,8 @@
+{
+  "id": "UC-036",
+  "slug": "share-workspace-across-sdks",
+  "name": "Share one workspace across CLIs",
+  "description": "The TypeScript, .NET and Go CLIs read and write the same .lastro/ files, so one can plan, another review, and a third derive and prove. An artifact approved by one SDK has a valid approval hash for the others and a plan has the same hash in all three.",
+  "proofs": [],
+  "history": []
+}

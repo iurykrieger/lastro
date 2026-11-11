@@ -1,0 +1,8 @@
+{
+  "id": "UC-012",
+  "slug": "write-specs-in-lsl",
+  "name": "Write specs in LSL",
+  "description": "LSL expressions are JSON: const, var (in.<input> or out.<output>, or a def parameter), call of a def, or op with args among and, or, not, implies, iff, eq, neq, lt, le, gt, ge, add, sub, mul, ite and in, each with a fixed arity. They are interpreted, never eval'ed, with strict typing (a non-boolean where a boolean is expected, or a non-number in arithmetic, is an error), unbound variables rejected, and recursion capped at depth 64. validateExpr checks shape, arity and variables against the model; show prints readable notation; toSmtLib compiles requires => ensures to an SMT-LIB2 script that asserts its negation.",
+  "proofs": [],
+  "history": []
+}

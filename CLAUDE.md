@@ -31,11 +31,13 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
 - Verification is deterministic: fixed seeds, canonical JSON, hashes over frozen artifacts.
 - Lastro's only AI steps are intent extraction and proof derivation. Never add code generation to the SDK:
   implementations come from any agent or person, and Lastro judges them.
-- Everything the framework generates or keeps (the use-case catalog, intents, specs, proofs, receipts, LLM handoff
+- Everything the framework generates or keeps (use cases, proposals, intents, proofs, receipts, LLM handoff
   files) lives in the `.lastro/` folder. Never write framework files elsewhere.
-- `.lastro/use-cases.json` is the catalog of Lastro's current use cases (`slug`, `name`, `description`), each description
-  stating the complete behavior as the source implements it. When a change adds, alters or removes behavior,
-  update the catalog in the same change; slugs are stable kebab-case ids.
+- Lastro's own use cases live in `.lastro/usecases/<id>-<slug>.json` (`id`, `slug`, `name`, `description`, `proofs`,
+  `history`), each description stating the complete behavior as the source implements it. When a change adds, alters
+  or removes behavior, update those files in the same change. Ids (`UC-001`...) are never reused; slugs are stable
+  kebab-case. Changes are written as proposals in `.lastro/proposals/<id>-<slug>.json` (see
+  `docs/proposals/intents-as-use-case-changes.md` for the four entities).
 - Stay harness-agnostic: no dependency on a specific agent product. New surfaces wrap `createLastro`.
 - When you change the CLI, an SDK's public API or a verdict, update `apps/docs` in the same change
   (`npm run test:examples -w @lastro/docs` catches drift in the quickstart and the library examples).

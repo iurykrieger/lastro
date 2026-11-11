@@ -1,0 +1,8 @@
+{
+  "id": "UC-007",
+  "slug": "enforce-approval-policy",
+  "name": "Enforce the team's approval policy",
+  "description": "createLastro({ requiredApprovals }) sets how many distinct reviewers must approve each intent (default 1, and never less than 1). An approved or amended intent counts its distinct approvers, or one when it has no approver list; proposed and rejected intents count zero. pending() lists every proposed intent with no approval as not reviewed, every non-rejected intent below the policy with how many approvals it still needs, and every unanswered decision. Only intents that reach the policy are approved intents, the only ones sent to derivation; rejected intents never block.",
+  "proofs": [],
+  "history": []
+}

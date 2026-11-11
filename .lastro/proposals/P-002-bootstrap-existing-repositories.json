@@ -1,0 +1,289 @@
+{
+  "lastro": "proposal/v1",
+  "id": "P-002",
+  "slug": "bootstrap-existing-repositories",
+  "name": "Bootstrap existing repositories",
+  "description": "Read an existing repository's code, tests and commit history into a reviewable bootstrap proposal of the use cases it implements today, proved against the code as it is.",
+  "status": "open",
+  "submittedBy": "iury",
+  "prose": "# Bootstrap use cases and proofs from an existing repository\n\nLastro is not always started on an empty repository. Often it starts on a repository with thousands of commits and a lot of code, and before anyone proposes a change, Lastro must know which use cases the application implements today and how it behaves. That baseline must be reviewed by people, like any proposal, so the proofs that guard it are formal and trusted.\n\n`lastro scan` reads the repository without any LLM and prints its size: the tracked files with their role (source, test, doc, config) and exported names, the tests found by name, the manifests, the newest commits with the files they touched, and the areas a large repository can be split into. The same checkout and options always give the same digest and the same hash. `--scope` limits it to some folders, `--max-commits` and `--since` limit the history.\n\n`lastro bootstrap` scans the repository and sends the digest, with source excerpts, to the survey step: the extraction step reading code and commit history instead of prose. The survey proposes the use cases the code implements today, each with its complete current behavior and one behavior per checkable promise. Every behavior must be grounded in files, tests or commits that are in the digest, and the CLI refuses an answer that cites anything else, lists every problem at once, and never lets a bootstrap touch a use case that already has proofs. A use case that is recorded without proofs can have its description corrected.\n\nThe answer becomes a bootstrap proposal. Its prose is a generated report with one section per use case and one line per behavior with its grounds, each behavior is an intent with its grounds and a confidence, and the proposal records the commit and the digest it was read from. It may bring the models and subjects its proofs need, which are reviewed with the intents and only join the configuration when the proposal is applied.\n\nA bootstrap proposal is reviewed, derived, proved and applied like any other proposal. The code is the reference: when a bootstrap proof fails, the feedback says not to change the code, because either the reading is wrong and the intent must be amended, or the code has a bug the team must decide about.\n\nIn the agent plugin, a bootstrap skill walks the agent through scan, bootstrap, the user's review, derive, prove and apply. When no use case is recorded yet, the gate tells the agent to bootstrap an existing repository first. The review shows each bootstrap intent's grounds and confidence, and the Stop hook never sends a failing bootstrap proof back to the agent as code to fix.",
+  "baseline": "sha256:173e32d1762cf83956d3c255095e609b493f36f92832143d1b19c0cd66f64d9f",
+  "intents": [
+    {
+      "id": "P-002.I-01",
+      "slug": "digest-of-the-repository",
+      "name": "Digest the repository",
+      "description": "lastro scan reads the repository without an LLM: every tracked file (git ls-files, or a folder walk outside git that skips build and dependency folders) with its role, language, line count and exported names; every test it finds by name, as <file>::<name>; the manifests (package.json, go.mod, Cargo.toml, *.csproj, pyproject.toml); the newest commits with their subject, the first lines of their body without trailers, and the files they touched; and the areas (manifest folders, otherwise top-level folders) with their size, printed with the suggested scopes.",
+      "change": "add",
+      "useCase": "UC-046",
+      "provability": "empirical",
+      "source": {
+        "quote": "`lastro scan` reads the repository without any LLM and prints its size",
+        "start": 429,
+        "end": 499
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-02",
+      "slug": "deterministic-digest",
+      "name": "Deterministic digest",
+      "description": "The digest is the same for the same checkout and options: files and tests are sorted, commits follow git log order, and its hash is sha256 over its canonical JSON.",
+      "change": "add",
+      "useCase": "UC-046",
+      "provability": "formal",
+      "source": {
+        "quote": "The same checkout and options always give the same digest and the same hash.",
+        "start": 723,
+        "end": 799
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-03",
+      "slug": "bounded-scan",
+      "name": "Bounded scan",
+      "description": "--scope takes comma-separated folders or files and limits files and commits to them (a scope that matches no file is an error); --max-commits (default 400, 0 skips history) and --since bound the history; the digest records the totals and whether files or commits were cut.",
+      "change": "add",
+      "useCase": "UC-046",
+      "provability": "empirical",
+      "source": {
+        "quote": "`--scope` limits it to some folders, `--max-commits` and `--since` limit the history.",
+        "start": 800,
+        "end": 885
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-04",
+      "slug": "survey-step",
+      "name": "Survey step",
+      "description": "lastro bootstrap scans the repository and asks the survey step (by handoff or the Anthropic API, step name survey) with the recorded use cases, the digest and source excerpts within a character budget (manifests and READMEs, then tests, then source files); it creates the workspace config when there is none.",
+      "change": "add",
+      "useCase": "UC-047",
+      "provability": "empirical",
+      "source": {
+        "quote": "`lastro bootstrap` scans the repository and sends the digest, with source excerpts, to the survey step",
+        "start": 887,
+        "end": 989
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-05",
+      "slug": "grounded-behaviors",
+      "name": "Grounded behaviors",
+      "description": "Each behavior the survey returns must cite files and tests that are in the digest and commits by full hash or a unique prefix of at least 7 characters, with at least one file or test; otherwise the whole answer is refused with every problem listed.",
+      "change": "add",
+      "useCase": "UC-047",
+      "provability": "formal",
+      "source": {
+        "quote": "Every behavior must be grounded in files, tests or commits that are in the digest",
+        "start": 1202,
+        "end": 1283
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-06",
+      "slug": "leave-proven-use-cases",
+      "name": "Leave proven use cases alone",
+      "description": "A bootstrap only adds use cases or modifies recorded use cases that have no proofs; an add that reuses a recorded slug, a modify of an unknown slug or of a use case with proofs, or any remove is refused.",
+      "change": "add",
+      "useCase": "UC-047",
+      "provability": "formal",
+      "source": {
+        "quote": "never lets a bootstrap touch a use case that already has proofs",
+        "start": 1374,
+        "end": 1437
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-07",
+      "slug": "bootstrap-proposal",
+      "name": "Bootstrap proposal",
+      "description": "The survey's answer becomes a proposal whose prose is a generated report (one section per use case with its change and confidence, one line per behavior with its grounds, and what is not covered); each behavior becomes an intent on its use case carrying grounds (files, tests, full commit hashes, confidence), and the proposal's origin records kind bootstrap, the commit, the digest hash and the scope. Running it again with --proposal keeps the review of unchanged intents.",
+      "change": "add",
+      "useCase": "UC-047",
+      "provability": "empirical",
+      "source": {
+        "quote": "The answer becomes a bootstrap proposal.",
+        "start": 1519,
+        "end": 1559
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-08",
+      "slug": "reviewed-setup",
+      "name": "Reviewed setup",
+      "description": "Models and subjects the survey proposes must be well formed and new to the configuration; they are bound by the approval like the intents, are used by derive and prove, and are added to .lastro/config.json only by apply.",
+      "change": "add",
+      "useCase": "UC-047",
+      "provability": "empirical",
+      "source": {
+        "quote": "It may bring the models and subjects its proofs need",
+        "start": 1797,
+        "end": 1849
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-09",
+      "slug": "code-is-the-reference",
+      "name": "The code is the reference",
+      "description": "When a bootstrap proposal's proofs fail, prove and feedback start the brief with a note that the code must not change: the reading is wrong (amend the intent) or the code has a bug the team decides about.",
+      "change": "add",
+      "useCase": "UC-047",
+      "provability": "empirical",
+      "source": {
+        "quote": "The code is the reference",
+        "start": 2037,
+        "end": 2062
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-10",
+      "slug": "bootstrap-skill",
+      "name": "Bootstrap skill",
+      "description": "The plugin's bootstrap skill walks the agent through lastro scan, lastro bootstrap (answering the survey handoff), the user's review with grounds and confidence, derive, prove against the code as it is, and apply, one area at a time for a large repository.",
+      "change": "add",
+      "useCase": "UC-048",
+      "provability": "empirical",
+      "source": {
+        "quote": "a bootstrap skill walks the agent through scan, bootstrap, the user's review, derive, prove and apply",
+        "start": 2276,
+        "end": 2377
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-11",
+      "slug": "gate-suggests-bootstrap",
+      "name": "Gate suggests a bootstrap",
+      "description": "When there is no proposal and no use case is recorded, the gate's reason and the next step tell the agent to run lastro scan and lastro bootstrap first if the repository already has code.",
+      "change": "add",
+      "useCase": "UC-048",
+      "provability": "empirical",
+      "source": {
+        "quote": "When no use case is recorded yet, the gate tells the agent to bootstrap an existing repository first.",
+        "start": 2379,
+        "end": 2480
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-12",
+      "slug": "review-shows-grounds",
+      "name": "Review shows grounds",
+      "description": "For a bootstrap proposal, the review Markdown says it was read from the code at a commit and shows each intent's confidence, files, tests and short commit hashes instead of the quote.",
+      "change": "add",
+      "useCase": "UC-048",
+      "provability": "empirical",
+      "source": {
+        "quote": "The review shows each bootstrap intent's grounds and confidence",
+        "start": 2481,
+        "end": 2544
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-002.I-13",
+      "slug": "stop-never-fixes-code",
+      "name": "Stop hook does not fix bootstrap code",
+      "description": "When a bootstrap proposal's proofs fail, the Stop hook does not block the stop or count attempts; it shows the board and tells the agent to take each failing proof to the user to amend or reject.",
+      "change": "add",
+      "useCase": "UC-048",
+      "provability": "empirical",
+      "source": {
+        "quote": "the Stop hook never sends a failing bootstrap proof back to the agent as code to fix",
+        "start": 2550,
+        "end": 2634
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    }
+  ],
+  "useCases": [
+    {
+      "useCase": "UC-046",
+      "slug": "scan-repository",
+      "change": "add",
+      "name": "Scan an existing repository",
+      "after": "lastro scan reads the repository without an LLM: every tracked file (git ls-files, or a folder walk outside git that skips build and dependency folders) with its role, language, line count and exported names; every test it finds by name, as <file>::<name>; the manifests (package.json, go.mod, Cargo.toml, *.csproj, pyproject.toml); the newest commits with their subject, the first lines of their body without trailers, and the files they touched; and the areas (manifest folders, otherwise top-level folders) with their size, printed with the suggested scopes. The digest is the same for the same checkout and options: files and tests are sorted, commits follow git log order, and its hash is sha256 over its canonical JSON. --scope takes comma-separated folders or files and limits files and commits to them (a scope that matches no file is an error); --max-commits (default 400, 0 skips history) and --since bound the history; the digest records the totals and whether files or commits were cut.",
+      "intents": [
+        "P-002.I-01",
+        "P-002.I-02",
+        "P-002.I-03"
+      ]
+    },
+    {
+      "useCase": "UC-047",
+      "slug": "bootstrap-existing-repository",
+      "change": "add",
+      "name": "Bootstrap use cases from an existing repository",
+      "after": "lastro bootstrap scans the repository and asks the survey step (by handoff or the Anthropic API, step name survey) with the recorded use cases, the digest and source excerpts within a character budget (manifests and READMEs, then tests, then source files); it creates the workspace config when there is none. Each behavior the survey returns must cite files and tests that are in the digest and commits by full hash or a unique prefix of at least 7 characters, with at least one file or test; otherwise the whole answer is refused with every problem listed. A bootstrap only adds use cases or modifies recorded use cases that have no proofs; an add that reuses a recorded slug, a modify of an unknown slug or of a use case with proofs, or any remove is refused. The survey's answer becomes a proposal whose prose is a generated report (one section per use case with its change and confidence, one line per behavior with its grounds, and what is not covered); each behavior becomes an intent on its use case carrying grounds (files, tests, full commit hashes, confidence), and the proposal's origin records kind bootstrap, the commit, the digest hash and the scope. Running it again with --proposal keeps the review of unchanged intents. Models and subjects the survey proposes must be well formed and new to the configuration; they are bound by the approval like the intents, are used by derive and prove, and are added to .lastro/config.json only by apply. When a bootstrap proposal's proofs fail, prove and feedback start the brief with a note that the code must not change: the reading is wrong (amend the intent) or the code has a bug the team decides about.",
+      "intents": [
+        "P-002.I-04",
+        "P-002.I-05",
+        "P-002.I-06",
+        "P-002.I-07",
+        "P-002.I-08",
+        "P-002.I-09"
+      ]
+    },
+    {
+      "useCase": "UC-048",
+      "slug": "bootstrap-with-the-agent-plugin",
+      "change": "add",
+      "name": "Bootstrap with the agent plugin",
+      "after": "The plugin's bootstrap skill walks the agent through lastro scan, lastro bootstrap (answering the survey handoff), the user's review with grounds and confidence, derive, prove against the code as it is, and apply, one area at a time for a large repository. When there is no proposal and no use case is recorded, the gate's reason and the next step tell the agent to run lastro scan and lastro bootstrap first if the repository already has code. For a bootstrap proposal, the review Markdown says it was read from the code at a commit and shows each intent's confidence, files, tests and short commit hashes instead of the quote. When a bootstrap proposal's proofs fail, the Stop hook does not block the stop or count attempts; it shows the board and tells the agent to take each failing proof to the user to amend or reject.",
+      "intents": [
+        "P-002.I-10",
+        "P-002.I-11",
+        "P-002.I-12",
+        "P-002.I-13"
+      ]
+    }
+  ],
+  "decisions": [],
+  "threads": [],
+  "notPromised": [
+    "The Go and .NET CLIs do not bootstrap yet; they follow once they implement proposals.",
+    "Running the repository's own test suites: tests are read by name, not run.",
+    "Any language-specific parsing beyond simple patterns for exported names and test names."
+  ],
+  "policy": {
+    "approvals": 1,
+    "submitterCanApprove": true
+  },
+  "proofs": [],
+  "supersedes": []
+}

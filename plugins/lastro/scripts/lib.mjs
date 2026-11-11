@@ -138,7 +138,9 @@ export function nextStep(s) {
     case "no-workspace":
       return `Set up the workspace first: draft the model of the decision core with the user, then run \`${cli} init --model <model.json>\`.`;
     case "no-proposal":
-      return `Write the proposed change as prose in .lastro/proposals/<slug>.md and run \`${cli} propose .lastro/proposals/<slug>.md\`.`;
+      return s.useCases?.length
+        ? `Write the proposed change as prose in .lastro/proposals/<slug>.md and run \`${cli} propose .lastro/proposals/<slug>.md\`.`
+        : `No use case is recorded yet. If the repository already has code, start with \`${cli} scan\` and \`${cli} bootstrap\` (lastro \`bootstrap\` skill); otherwise write the first change as prose in .lastro/proposals/<slug>.md and run \`${cli} propose\` on it.`;
     case "review-pending":
       return `The user reviews the proposal like a pull request: answer each open decision, then approve, amend or reject each intent (\`${cli} review ${id} --as <user> ...\`, recording only the user's own answers).`;
     case "needs-proofs":
@@ -146,7 +148,9 @@ export function nextStep(s) {
     case "implementing":
       return "Implement the approved intents, then end your turn: the proofs run when you stop.";
     case "failed":
-      return "Fix the code until every proof passes, without breaking the use cases' proofs.";
+      return s.proposal?.origin?.kind === "bootstrap"
+        ? "This bootstrap's proofs describe the code as it is: do not change the code. Show the user each failing proof; on their word amend the intent (the reading was wrong) or reject it (the code has a bug to fix in a later proposal), then derive and prove again."
+        : "Fix the code until every proof passes, without breaking the use cases' proofs.";
     case "passed":
       return `Every proof passes. The user applies it with \`${cli} apply ${id}\`.`;
   }
@@ -261,6 +265,15 @@ function replacedLines(s, i) {
  * use case they change, each with the quote it came from and the proofs it replaces. Every item starts with a list
  * marker, so chat apps that join single newlines still show one per line.
  */
+/** Where a bootstrap intent was read: its confidence, files, tests and commits. */
+function groundsLine(g) {
+  const parts = [`${g.confidence} confidence`];
+  if (g.files?.length) parts.push(`files ${g.files.map((f) => `\`${f}\``).join(", ")}`);
+  if (g.tests?.length) parts.push(`tests ${g.tests.map((t) => `\`${t}\``).join(", ")}`);
+  if (g.commits?.length) parts.push(`commits ${g.commits.map((c) => `\`${c.slice(0, 7)}\``).join(", ")}`);
+  return `↳ ${parts.join("; ")}`;
+}
+
 export function renderReview(s) {
   const p = s.proposal;
   if (!p) return `Lastro: no proposal to review. ${nextStep(s)}`;
@@ -268,6 +281,8 @@ export function renderReview(s) {
   const open = p.decisions.filter((d) => d.chosen === undefined || d.chosen === null);
   const t = tally(s);
   const out = [`**${p.id} ${p.name}, for review:** ${plural(t.intents, "intent")} on ${plural(p.useCases.length, "use case")}, ${t.approved} approved · ${open.length} of ${t.decisions} decisions open`];
+  if (p.origin?.kind === "bootstrap")
+    out.push("", `_Bootstrap: read from ${p.origin.head ? `commit ${p.origin.head.slice(0, 12)}` : "the working tree"}${p.origin.scope?.length ? `, scope ${p.origin.scope.join(", ")}` : ""}. Each intent is what the code does today; check its grounds._`);
   if (open.length) {
     out.push("", "**Decisions**", "");
     for (const d of open) {
@@ -281,7 +296,8 @@ export function renderReview(s) {
     out.push("", `**${change.useCase} ${change.name}** (${CHANGE_LABEL[change.change]}${change.stale ? ", description stale" : ""})`, "");
     for (const i of intents) {
       out.push(`- **${short(s, i.id)}** ${i.description} _(${status(i)})_`);
-      if (i.source?.quote) out.push(`  > ${i.source.quote.replace(/\s+/g, " ").trim()}`);
+      if (i.grounds) out.push(`  ${groundsLine(i.grounds)}`);
+      else if (i.source?.quote) out.push(`  > ${i.source.quote.replace(/\s+/g, " ").trim()}`);
       for (const r of replacedLines(s, i)) out.push(`  - ⚠ ${r}`);
     }
   }

@@ -115,3 +115,8 @@ export {
   recombineAfter,
   deriveProofs,
 } from "./llm/proposal.js";
+// Bootstrap (pure). Reading the repository from disk is Node-only: import it from "lastro/scan".
+export { proposalFromSurvey, renderSurveyReport, modelProblems, digestHash, isBootstrap, setupOf, suggestScopes, BOOTSTRAP_FEEDBACK_NOTE } from "./bootstrap.js";
+export type { RepoDigest, RepoFile, RepoTest, RepoCommit, RepoManifest, RepoArea, ProposalOrigin, Grounds, ProposalSetup, SubjectDecl, SurveyOut, SurveyInput } from "./bootstrap.js";
+export { SURVEY_SYSTEM, SURVEY_SCHEMA, surveyUserPrompt, surveyProposal } from "./llm/bootstrap.js";
+export type { Excerpt } from "./llm/bootstrap.js";

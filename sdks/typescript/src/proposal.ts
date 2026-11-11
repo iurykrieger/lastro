@@ -16,6 +16,7 @@ import { sha256Hex } from "./sha256.js";
 import type { RustProver } from "./rust.js";
 import { tabulate } from "./rust.js";
 import { checkConsistency, verify, type VerifyOptions } from "./verify/engine.js";
+import type { Grounds, ProposalOrigin, ProposalSetup } from "./bootstrap.js";
 import {
   BEYOND_PROOF_REASONS,
   type BeyondProofReason,
@@ -104,6 +105,8 @@ export interface ProposalIntent {
   approvals: string[];
   reviewNote?: string;
   originalDescription?: string;
+  /** Bootstrap: the files, tests and commits the behavior was read from. */
+  grounds?: Grounds;
 }
 
 export interface UseCaseChange {
@@ -195,6 +198,10 @@ export interface Proposal {
   supersedes: string[];
   lastRun?: ProposalRun;
   hash?: string;
+  /** Where the proposal came from; a bootstrap proposal was read from the repository (see bootstrap.ts). */
+  origin?: ProposalOrigin;
+  /** Models and subjects the proposal adds to `.lastro/config.json` at apply, reviewed with its intents. */
+  setup?: ProposalSetup;
 }
 
 export class ProposalError extends Error {
@@ -489,7 +496,7 @@ export function pendingProposal(p: Proposal): string[] {
 /** The part of a proposal that approval binds. */
 function reviewCore(p: Proposal) {
   const { id, slug, name, description, submittedBy, prose, baseline, intents, useCases, decisions, threads, notPromised, policy, supersedes } = p;
-  return { lastro: p.lastro, id, slug, name, description, submittedBy, prose, baseline, intents, useCases, decisions, threads, notPromised, policy, supersedes };
+  return { lastro: p.lastro, id, slug, name, description, submittedBy, prose, baseline, intents, useCases, decisions, threads, notPromised, policy, supersedes, ...(p.origin ? { origin: p.origin } : {}), ...(p.setup ? { setup: p.setup } : {}) };
 }
 
 export function supersedesOf(p: Proposal): string[] {
@@ -996,6 +1003,8 @@ export interface Applied {
   written: string[];
   removed: string[];
   baseline: string;
+  /** Models and subjects to add to `.lastro/config.json` (a bootstrap's reviewed setup). */
+  setup?: ProposalSetup;
 }
 
 /**
@@ -1040,7 +1049,7 @@ export function applyProposal(p: Proposal, useCases: UseCase[]): Applied {
   out.sort((a, b) => a.id.localeCompare(b.id));
   const next = structuredClone(p);
   next.status = "applied";
-  return { proposal: next, useCases: out, written, removed, baseline: baselineOf(out) };
+  return { proposal: next, useCases: out, written, removed, baseline: baselineOf(out), ...(p.setup ? { setup: structuredClone(p.setup) } : {}) };
 }
 
 // ---------------------------------------------------------------------------

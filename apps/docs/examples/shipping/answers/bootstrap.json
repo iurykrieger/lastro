@@ -1,0 +1,50 @@
+{
+  "name": "Bootstrap the checkout",
+  "slug": "bootstrap-checkout",
+  "description": "The use cases the checkout implements today, read from its code.",
+  "useCases": [
+    {
+      "slug": "charge-shipping",
+      "change": "add",
+      "name": "Charge shipping at checkout",
+      "description": "An order with a subtotal of 100 or more pays no shipping, and a member never pays shipping, whatever the subtotal. Every other order pays a flat shipping fee of exactly 15.",
+      "confidence": "medium",
+      "behaviors": [
+        {
+          "slug": "free-from-100",
+          "name": "Free shipping from 100",
+          "description": "An order with a subtotal of 100 or more pays no shipping.",
+          "provability": "formal",
+          "beyondProofReason": "none",
+          "files": ["shipping.mjs"],
+          "tests": [],
+          "commits": []
+        },
+        {
+          "slug": "members-free",
+          "name": "Members ship free",
+          "description": "A member never pays shipping, whatever the subtotal.",
+          "provability": "formal",
+          "beyondProofReason": "none",
+          "files": ["shipping.mjs"],
+          "tests": [],
+          "commits": []
+        },
+        {
+          "slug": "flat-fee-15",
+          "name": "Flat fee of 15",
+          "description": "A non-member order under 100 pays a shipping fee of exactly 15.",
+          "provability": "formal",
+          "beyondProofReason": "none",
+          "files": ["shipping.mjs"],
+          "tests": [],
+          "commits": []
+        }
+      ]
+    }
+  ],
+  "decisions": [],
+  "notCovered": [{ "path": "shipping-buggy.mjs", "reason": "a second copy of the fee with an off-by-one; ask which one ships" }],
+  "models": [],
+  "subjects": []
+}

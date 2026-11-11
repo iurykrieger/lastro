@@ -39,4 +39,6 @@ Side effects stay outside it.
 6. Commit `.lastro/` with the change (except `.lastro/plugin/`, which holds local hook state: add it to
    `.gitignore`). Use cases, proposals and proofs travel with the code, the same way a pull request's review does.
 
-Then use the `propose` skill for the first change.
+If the repository already has code, record what it does today before the first change: use the `bootstrap` skill
+(it can run before step 3, and its proposal brings the models and subjects it finds). Then use the `propose` skill
+for the first change.

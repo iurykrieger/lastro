@@ -22,6 +22,9 @@ import { loadRustProver, type RustProver } from "./rust.js";
 import { sha256Hex } from "./sha256.js";
 import type { AskJson } from "./llm/llm.js";
 import { deriveProofs, extractProposal, recombineAfter } from "./llm/proposal.js";
+import { surveyProposal } from "./llm/bootstrap.js";
+import { BOOTSTRAP_FEEDBACK_NOTE, isBootstrap, setupOf, suggestScopes } from "./bootstrap.js";
+import { DEFAULT_MAX_COMMITS, excerptsOf, scanRepo, type ScanOptions } from "./bootstrap/scan.js";
 import {
   ProposalError,
   applyProposal,
@@ -57,6 +60,13 @@ const USAGE = `lastro <command> [options]
   propose <prose-file> [--section <heading>] [--as <submitter>] [--proposal <P>]
                                                 create a proposal and extract its intents against the use cases;
                                                 --proposal re-extracts an existing one and keeps its review
+  scan [--scope <paths>] [--max-commits N] [--since <date>]
+                                                read the repository (files, tests, commits) without an LLM:
+                                                its size, areas and the scopes a bootstrap can be split into
+  bootstrap [--scope <paths>] [--max-commits N] [--since <date>] [--budget <chars>] [--as <name>] [--proposal <P>]
+                                                for an existing repository: survey the code and its history into
+                                                a bootstrap proposal of the use cases it implements today, to
+                                                review, derive, prove against the code as it is, and apply
   status [<P>]                                  proposals, or one proposal's intents and pending items
   review <P> --as <name> <action> ...           approve <I..> | approve-all | amend <I> <text> | reject <I> <note>
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
@@ -172,6 +182,7 @@ export function summary(p: Proposal, useCases: UseCase[]) {
       description: i.description,
       provability: i.provability,
       replaces: i.replaces.map((r) => ({ ...r, description: proofs.find((x) => x.id === r.proof)?.description ?? null })),
+      ...(i.grounds ? { grounds: i.grounds } : {}),
     })),
     decisions: p.decisions.map((d) => ({ id: d.id, origin: d.origin, question: d.question, options: d.options.map((o) => o.label), chosen: d.chosen ?? null, recommended: d.recommended })),
     threads: p.threads.filter((t) => !t.resolved).map((t) => ({ id: t.id, on: t.on, by: t.by, comments: t.comments })),
@@ -205,6 +216,25 @@ export const STREAM_PROGRESS_EVERY = 100;
 
 export type Emit = (event: Record<string, unknown>) => void;
 
+/** Scan options from the command line. --scope takes comma-separated paths. */
+function scanOptions(args: Args): ScanOptions {
+  return {
+    ...(args.flags.scope ? { scope: args.flags.scope.split(",").map((x) => x.trim()).filter(Boolean) } : {}),
+    maxCommits: args.flags["max-commits"] !== undefined ? Math.max(0, Number(args.flags["max-commits"])) : DEFAULT_MAX_COMMITS,
+    ...(args.flags.since ? { since: args.flags.since } : {}),
+  };
+}
+
+/** The config, or an empty one for a repository that has none yet (bootstrap starts there). */
+function configOrEmpty(ws: Workspace): WorkspaceConfig {
+  return ws.exists() ? ws.config() : { models: {}, subjects: {}, review: { approvals: 1, submitterCanApprove: true } };
+}
+
+/** The config with the models and subjects a proposal brings (a bootstrap's reviewed setup). */
+function withSetup(cfg: WorkspaceConfig, p: Proposal): WorkspaceConfig {
+  return { ...cfg, ...setupOf(p, cfg) };
+}
+
 /** The code under proof, by subject name: the config's subjects, or one module given on the command line. */
 async function loadSubjects(ws: Workspace, cfg: WorkspaceConfig, args: Args, module: string | undefined): Promise<Record<string, Subject>> {
   const load = async (path: string, name: string, label: string): Promise<Subject> => {
@@ -236,6 +266,12 @@ function counting(subjects: Record<string, Subject>, stream: Emit | undefined): 
       },
     ]),
   );
+}
+
+/** The implementer's brief; for a bootstrap, a reminder that the code is the reference. */
+function feedbackOf(p: Proposal, useCases: UseCase[]): string {
+  const text = proposalFeedback(p, useCases);
+  return isBootstrap(p) && p.lastRun && !p.lastRun.ok ? `${BOOTSTRAP_FEEDBACK_NOTE}\n\n${text}` : text;
 }
 
 function writeReceipt(ws: Workspace, p: Proposal, useCases: UseCase[]): string {
@@ -299,6 +335,58 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         const s = summary(p, useCases);
         return { code: s.ready ? 0 : 1, body: { status: "proposed", file: ws.proposalPath(p), ...s } };
       }
+      case "scan": {
+        const digest = scanRepo(ws.root, scanOptions(args));
+        return {
+          code: 0,
+          body: {
+            status: "scanned",
+            root: ws.root,
+            head: digest.head,
+            scope: digest.scope,
+            totals: digest.totals,
+            read: { files: digest.files.length, tests: digest.tests.length, commits: digest.commits.length },
+            truncated: digest.truncated,
+            manifests: digest.manifests.map((m) => ({ path: m.path, kind: m.kind, name: m.name ?? null })),
+            areas: digest.areas,
+            suggestedScopes: suggestScopes(digest),
+            digest: digest.hash,
+          },
+        };
+      }
+      case "bootstrap": {
+        const cfg = configOrEmpty(ws);
+        if (!ws.exists()) ws.writeConfig(cfg);
+        const useCases = ws.useCases();
+        const digest = scanRepo(ws.root, scanOptions(args));
+        const previous = args.flags.proposal ? ws.proposal(args.flags.proposal) : undefined;
+        if (previous && !isBootstrap(previous)) throw new Exit(2, { error: `${previous.id} was written from prose; re-extract it with \`lastro propose\`` });
+        const id = previous?.id ?? ws.nextProposalId();
+        const submittedBy = args.flags.as ?? previous?.submittedBy ?? process.env.LASTRO_USER ?? "submitter";
+        const excerpts = excerptsOf(ws.root, digest, args.flags.budget ? Number(args.flags.budget) : undefined);
+        let p = await surveyProposal(await pickAsk(args, ws.dir), { id, digest, submittedBy, useCases, policy: cfg.review, config: cfg }, excerpts);
+        if (previous) {
+          p = carryProposalReview(previous, p);
+          p.slug = previous.slug; // slugs are stable
+        }
+        ws.writeProposal(p);
+        writeFileSync(ws.proposalPath(p, ".md"), p.prose);
+        const s = summary(p, useCases);
+        const big = digest.truncated.files || digest.truncated.commits;
+        return {
+          code: s.ready ? 0 : 1,
+          body: {
+            status: "proposed",
+            file: ws.proposalPath(p, ".json"),
+            report: ws.proposalPath(p, ".md"),
+            origin: p.origin,
+            setup: p.setup ?? null,
+            ...(big ? { note: "The repository was cut to fit (see truncated). Bootstrap it one area at a time with --scope.", suggestedScopes: suggestScopes(digest) } : {}),
+            truncated: digest.truncated,
+            ...s,
+          },
+        };
+      }
       case "status": {
         const useCases = ws.useCases();
         if (!rest[0] && !args.flags.proposal) {
@@ -348,19 +436,21 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         const useCases = ws.useCases();
         const p = ws.proposal(rest[0]);
         if (!p.hash) throw new Exit(1, { status: "review-pending", pending: pendingProposal(p) });
-        const next = await deriveProofs(await pickAsk(args, ws.dir), p, useCases, { models: cfg.models, subjects: Object.keys(cfg.subjects).length ? Object.keys(cfg.subjects) : Object.keys(cfg.models) });
+        const all = withSetup(cfg, p);
+        const next = await deriveProofs(await pickAsk(args, ws.dir), p, useCases, { models: all.models, subjects: Object.keys(all.subjects).length ? Object.keys(all.subjects) : Object.keys(all.models) });
         ws.writeProposal(next);
         if (!next.hash)
           return { code: 1, body: { status: "back-to-review", note: `Derivation raised decisions. Answer them with \`lastro review ${next.id} --as <name> answer <D> <option>\`, review the intents they reopened, and run \`lastro derive ${next.id}\` again.`, ...summary(next, useCases) } };
         return { code: 0, body: { status: "derived", ...summary(next, useCases) } };
       }
       case "prove": {
-        const cfg = ws.config();
+        const base = ws.config();
         const useCases = ws.useCases();
         const looksLikeModule = (x: string | undefined) => !!x && /\.(m?js|cjs|ts)$/.test(x);
         const ref = looksLikeModule(rest[0]) ? undefined : rest[0];
         const module = looksLikeModule(rest[0]) ? rest[0] : rest[1];
         const p = ws.proposal(ref);
+        const cfg = withSetup(base, p);
         const stream = args.flags.stream === "true" && emit ? emit : undefined;
         const subjects = counting(await loadSubjects(ws, cfg, args, module), stream);
         stream?.({ event: "start", proposal: p.id, proofs: p.proofs.map((x) => x.id) });
@@ -371,11 +461,11 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         }
         ws.writeProposal(proposal);
         const receipt = writeReceipt(ws, proposal, useCases);
-        return { code: run.ok ? 0 : 1, body: { status: run.ok ? "proved" : "not-proved", proposal: proposal.id, ...runBody(run), receipt, feedback: proposalFeedback(proposal, useCases) } };
+        return { code: run.ok ? 0 : 1, body: { status: run.ok ? "proved" : "not-proved", proposal: proposal.id, ...runBody(run), receipt, feedback: feedbackOf(proposal, useCases) } };
       }
       case "feedback": {
         const p = ws.proposal(rest[0]);
-        return { code: p.lastRun?.ok ? 0 : 1, body: { status: "feedback", proposal: p.id, feedback: proposalFeedback(p, ws.useCases()) } };
+        return { code: p.lastRun?.ok ? 0 : 1, body: { status: "feedback", proposal: p.id, feedback: feedbackOf(p, ws.useCases()) } };
       }
       case "apply": {
         const useCases = ws.useCases();
@@ -386,9 +476,13 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
           if (u) ws.removeUseCase(u);
         }
         for (const id of applied.written) ws.writeUseCase(applied.useCases.find((u) => u.id === id)!);
+        if (applied.setup) {
+          const cfg = configOrEmpty(ws);
+          ws.writeConfig({ ...cfg, models: { ...cfg.models, ...applied.setup.models }, subjects: { ...cfg.subjects, ...applied.setup.subjects } });
+        }
         ws.writeProposal(applied.proposal);
         const receipt = writeReceipt(ws, applied.proposal, useCases);
-        return { code: 0, body: { status: "applied", proposal: p.id, written: applied.written, removed: applied.removed, baseline: applied.baseline, unproved: p.lastRun?.unproved ?? [], receipt } };
+        return { code: 0, body: { status: "applied", proposal: p.id, written: applied.written, removed: applied.removed, baseline: applied.baseline, unproved: p.lastRun?.unproved ?? [], ...(applied.setup ? { config: { models: Object.keys(applied.setup.models), subjects: Object.keys(applied.setup.subjects) } } : {}), receipt } };
       }
       case "regress": {
         const cfg = ws.config();

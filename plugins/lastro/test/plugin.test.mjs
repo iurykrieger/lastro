@@ -234,7 +234,7 @@ test("both manifests and the hooks file point at files that exist", () => {
   assert.equal(codexManifest.name, claudeManifest.name);
   assert.equal(codexManifest.version, claudeManifest.version);
   assert.ok(existsSync(join(root, codexManifest.hooks)));
-  for (const s of ["setup", "propose", "verify"]) assert.match(readFileSync(join(root, "skills", s, "SKILL.md"), "utf8"), new RegExp(`^---\\nname: ${s}\\n`));
+  for (const s of ["setup", "bootstrap", "propose", "verify"]) assert.match(readFileSync(join(root, "skills", s, "SKILL.md"), "utf8"), new RegExp(`^---\\nname: ${s}\\n`));
   const hooks = JSON.parse(readFileSync(join(root, "hooks", "hooks.json"), "utf8")).hooks;
   assert.deepEqual(Object.keys(hooks), ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"]);
   for (const groups of Object.values(hooks)) for (const g of groups) for (const h of g.hooks) assert.match(h.command, /\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/lastro-plugin\.mjs" hook \w+$/);
@@ -338,4 +338,29 @@ test("a failed build is reported in the stream and sent back to the agent", { sk
   assert.match(out.reason, /The build failed[\s\S]*TS2322/);
   const last = readFileSync(join(dir, ".lastro", "plugin", "progress.jsonl"), "utf8").trim().split("\n").at(-1);
   assert.match(JSON.parse(last).error, /TS2322/);
+});
+
+test("a bootstrap's failing proofs go to the user's review, never back to the code", { skip }, () => {
+  const dir = repoWith();
+  assert.equal(lastro(dir, "init", "--model", "model.json").code, 0);
+  assert.match(edit(dir, join(dir, "shipping.mjs")).hookSpecificOutput.permissionDecisionReason, /No use case is recorded yet.*cli\.js bootstrap` \(lastro `bootstrap` skill\)/);
+  let r = lastro(dir, "bootstrap", "--as", "ana");
+  assert.equal(r.code, 3);
+  assert.equal(r.body.step, "survey");
+  copyFileSync(join(example, "answers", "bootstrap.json"), r.body.answer);
+  r = lastro(dir, "bootstrap", "--as", "ana");
+  assert.equal(r.code, 1, JSON.stringify(r.body));
+  lastro(dir, "review", "P-001", "--as", "ana", "approve-all");
+  r = lastro(dir, "derive", "P-001");
+  copyFileSync(join(example, "answers", "proofs.json"), r.body.answer);
+  const review = renderReview(snapshot(loadWorkspace(dir)));
+  assert.match(review, /_Bootstrap: read from the working tree\. Each intent is what the code does today; check its grounds\._/);
+  assert.match(review, /- \*\*I-01\*\* An order with a subtotal of 100 or more pays no shipping\. _\(approved\)_\n  ↳ medium confidence; files `shipping\.mjs`/);
+  assert.equal(lastro(dir, "derive", "P-001").code, 0);
+
+  handle("PostToolUse", { cwd: dir, tool_name: "Write", tool_input: { file_path: join(dir, "notes.txt") } }, claude);
+  const out = handle("Stop", { cwd: dir, stop_hook_active: false }, claude);
+  assert.equal(out.decision, undefined, "no fix-the-code loop");
+  assert.match(out.systemMessage, /proofs FAILED/);
+  assert.match(out.systemMessage, /do not change the code/);
 });

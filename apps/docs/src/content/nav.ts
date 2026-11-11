@@ -19,6 +19,7 @@ export const NAV: NavSection[] = [
       { slug: "introduction", title: "Introduction", description: "What Lastro is, what it is not, and how the pieces fit.", keywords: "overview pdd proof driven development" },
       { slug: "installation", title: "Installation", description: "Build the SDKs, the CLIs and the Rust prover from the repository.", keywords: "install setup npm go dotnet cargo wasm" },
       { slug: "quickstart", title: "Quickstart", description: "From a paragraph of prose to a proved, applied change in nine commands.", keywords: "tutorial walkthrough shipping example cli" },
+      { slug: "bootstrap", title: "Existing repositories", description: "Read an existing codebase and its history into use cases and proofs you review.", keywords: "bootstrap scan survey existing repository legacy codebase commit history baseline brownfield" },
     ],
   },
   {

@@ -30,6 +30,13 @@ export function CliOverview() {
   propose <prose-file> [--section <heading>] [--as <submitter>] [--proposal <P>]
                                                 create a proposal and extract its intents against the use cases;
                                                 --proposal re-extracts an existing one and keeps its review
+  scan [--scope <paths>] [--max-commits N] [--since <date>]
+                                                read the repository (files, tests, commits) without an LLM:
+                                                its size, areas and the scopes a bootstrap can be split into
+  bootstrap [--scope <paths>] [--max-commits N] [--since <date>] [--budget <chars>] [--as <name>] [--proposal <P>]
+                                                for an existing repository: survey the code and its history into
+                                                a bootstrap proposal of the use cases it implements today, to
+                                                review, derive, prove against the code as it is, and apply
   status [<P>]                                  proposals, or one proposal's intents and pending items
   review <P> --as <name> <action> ...           approve <I..> | approve-all | amend <I> <text> | reject <I> <note>
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
@@ -171,6 +178,12 @@ $ lastro-go prove P-001 --cmd "python3 decide.py" --prover ./target/release/last
         and records the proposal in each use case's <C>history</C>. Use cases still without proofs are reported as <C>unproved</C>; they do not block it.
       </P>
       <Code lang="json" title="lastro apply P-001 · stdout" code={OUT.applied} />
+
+      <H2>scan and bootstrap</H2>
+      <P>
+        For a repository that already has code: <C>scan</C> reads its files, tests and commits without an LLM, and <C>bootstrap</C> turns them into a bootstrap
+        proposal through the <C>survey</C> step, reviewed, derived, proved and applied like any other. See <A to="bootstrap">Existing repositories</A>.
+      </P>
 
       <H2>regress</H2>
       <P>Runs every use case's proofs alone, against the declared subjects or one module. Exit 1 on any regression.</P>

@@ -51,7 +51,9 @@ export function gateReason(ws, s, paths) {
     case "no-workspace":
       return `Lastro: this repository is not set up yet. ${nextStep(s)}`;
     case "no-proposal":
-      return extract.join("\n");
+      return s.useCases?.length
+        ? extract.join("\n")
+        : [...extract, `No use case is recorded yet: if this repository already has code, first record what it does today with \`${cli} scan\` and \`${cli} bootstrap\` (lastro \`bootstrap\` skill), so the change's intents are read against it.`].join("\n");
     case "passed":
       return [`Lastro: the approved change is done and every proof passes, so this edit is a new change.`, ...extract.slice(1)].join("\n") + `\n\n${renderLine(s)}`;
     case "review-pending":
@@ -210,6 +212,11 @@ export function handle(event, input, env = process.env) {
       if (r.ok) {
         writeState(ws, { ...readState(ws), proposalHash, attempts: 0 });
         return { systemMessage: renderBoard(s) };
+      }
+      // A bootstrap's proofs describe the code as it is: a failure goes to the user's review, never back to the code.
+      if (s.proposal.origin?.kind === "bootstrap") {
+        writeState(ws, { ...readState(ws), proposalHash, attempts: 0 });
+        return { systemMessage: `${renderBoard(s)}\n\n${nextStep(s)}` };
       }
       const max = Number(ws.config.maxIterations);
       if (attempts >= max) {

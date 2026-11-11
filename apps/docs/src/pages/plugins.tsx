@@ -46,7 +46,9 @@ export function PluginAgents() {
         <Step title="Set up the repository">
           <P>
             Ask the agent to set up Lastro (the <C>setup</C> skill). It drafts the <A to="concepts/spec">model</A> of the decision core with you, runs{" "}
-            <C>lastro init</C>, and writes <C>.lastro/plugin.json</C>.
+            <C>lastro init</C>, and writes <C>.lastro/plugin.json</C>. If the repository already has code, ask it to bootstrap the repository (the{" "}
+            <C>bootstrap</C> skill): it reads the code and its history into the use cases you review first, see{" "}
+            <A to="bootstrap">Existing repositories</A>.
           </P>
         </Step>
         <Step title="The agent proposes, before its first edit">

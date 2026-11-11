@@ -244,5 +244,30 @@ public class InteropTests
         var feedback = Node(dir, "feedback");
         Assert.Equal(1, feedback.Code);
         Assert.Equal(r.Body["feedback"]!.GetValue<string>(), feedback.Body["feedback"]!.GetValue<string>());
+
+        // prove --stream: both CLIs print the same events for the same bug (progress counts and the Rust check aside).
+        var events = new List<JsonObject>();
+        var streamed = await Cli.Cli.RunAsync(["prove", "--stream", typeof(LoginExample).Assembly.Location, "--export", "Lastro.Tests.LoginExample.SkipPassword",
+            "--dir", Path.Combine(dir, ".lastro")], events.Add);
+        Assert.Equal(1, streamed.Code);
+        var dotnetResult = new JsonObject { ["event"] = "result" };
+        foreach (var (k, v) in streamed.Body) dotnetResult[k] = v?.DeepClone();
+        events.Add(dotnetResult);
+        var login = Path.Combine(RepoRoot, "sdks/typescript/dist/examples/login/login.js");
+        File.WriteAllText(Path.Combine(dir, "impl.mjs"), $"import {{ makeLogin }} from {JsonValue.Create(login).ToJsonString()};\nexport const buggy = makeLogin(\"skip-password\");\n");
+        var (code, stdout, stderr) = Run("node", [Path.Combine(RepoRoot, "sdks/typescript/dist/src/cli.js"), "prove", Path.Combine(dir, "impl.mjs"), "--export", "buggy", "--stream", "--dir", Path.Combine(dir, ".lastro")]);
+        Assert.True(code == 1, stderr);
+        static List<string> Comparable(IEnumerable<JsonObject> evs) => evs
+            .Where(e => e["event"]!.GetValue<string>() is not ("progress" or "crosscheck"))
+            .Select(e =>
+            {
+                var c = (JsonObject)e.DeepClone();
+                if (c["event"]!.GetValue<string>() == "result") c.Remove("enginesAgree");
+                return JsJson.Stringify(c);
+            })
+            .ToList();
+        var ts = Comparable(stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(l => (JsonObject)JsonNode.Parse(l)!));
+        Assert.StartsWith("{\"event\":\"start\",\"model\":\"login_flow\"", ts[0]);
+        Assert.Equal(ts, Comparable(events));
     }
 }

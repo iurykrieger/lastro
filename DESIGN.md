@@ -53,6 +53,11 @@ own model (`--llm handoff`), so it works from any harness without an API key. Th
 `lastro-go`) is a port of the same pipeline with the same hashes and `.lastro/` files; its tests run the TS SDK
 and require identical reports, so either SDK can pick up a workspace the other started.
 
+**Agent plugins.** `plugins/lastro` is one plugin for Claude Code and Codex over the CLI. In a repository with
+`.lastro/plugin.json`, the agent's proposal becomes intents the user reviews like a pull request (the agent is the
+author and never approves); code edits wait until the intents are approved and the spec matches the review; and when
+the agent stops, a hook proves the code and returns failing proofs to it. The plugin holds no semantics of its own.
+
 ## 3. Proved vs confidence: verdict semantics
 
 | Verdict | When | Label |

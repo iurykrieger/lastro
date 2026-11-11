@@ -1,0 +1,11 @@
+{
+  "name": "lastro",
+  "version": "0.1.0",
+  "description": "Proof-driven changes: every implementation proposal becomes intents the user reviews like a pull request; approved intents become proofs in the repository, and the code is checked against them before the agent stops.",
+  "author": { "name": "Iury Krieger" },
+  "homepage": "https://github.com/iurykrieger/lastro",
+  "repository": "https://github.com/iurykrieger/lastro",
+  "keywords": ["lastro", "proofs", "intents", "review", "verification"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

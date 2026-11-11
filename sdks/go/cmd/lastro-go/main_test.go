@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -260,5 +261,46 @@ for await (const line of createInterface({ input: process.stdin })) process.stdo
 	// The TS CLI reads the proof the Go CLI wrote.
 	if code, body := ts("feedback"); code != 1 || !strings.Contains(body["feedback"].(string), "counterexample") {
 		t.Fatal(body)
+	}
+
+	// prove --stream: both CLIs print the same events (progress counts aside: they count runs of different subjects).
+	tsCmd := exec.Command("node", append([]string{cli, "prove", filepath.Join(dir, "impl.mjs"), "--export", "buggy", "--stream"}, ws...)...)
+	tsOut, _ := tsCmd.Output()
+	var goLines []string
+	goCode, goResult := runWith(context.Background(), append([]string{"prove", "--stream", "--cmd", "node " + filepath.Join(dir, "subject.mjs") + " skip-password"}, ws...),
+		func(e obj) { goLines = append(goLines, lastro.Stringify(e)) })
+	goLines = append(goLines, lastro.Stringify(append(obj{{"event", "result"}}, goResult...)))
+	if goCode != 1 {
+		t.Fatalf("go prove --stream: %d", goCode)
+	}
+	events := func(lines []string) []string {
+		var out []string
+		for _, l := range lines {
+			if l == "" || strings.HasPrefix(l, `{"event":"progress"`) || strings.HasPrefix(l, `{"event":"crosscheck"`) {
+				continue
+			}
+			out = append(out, strings.Replace(l, `"enginesAgree":true`, `"enginesAgree":null`, 1)) // the Rust prover may run in one CLI only
+		}
+		return out
+	}
+	tsEvents, goEvents := events(strings.Split(string(tsOut), "\n")), events(goLines)
+	if len(tsEvents) < 3 || !strings.HasPrefix(tsEvents[0], `{"event":"start","model":"login_flow"`) {
+		t.Fatalf("TS stream: %v", tsEvents)
+	}
+	// Same events with the same values (Go prints a program's output keys sorted, as it does without --stream).
+	if len(tsEvents) != len(goEvents) {
+		t.Fatalf("streams differ:\nTS %s\nGo %s", strings.Join(tsEvents, "\n"), strings.Join(goEvents, "\n"))
+	}
+	for i := range tsEvents {
+		var a, b any
+		must(0, json.Unmarshal([]byte(tsEvents[i]), &a))
+		must(0, json.Unmarshal([]byte(goEvents[i]), &b))
+		if ma, ok := a.(map[string]any); ok && ma["event"] == "result" {
+			delete(ma, "feedback") // the feedback quotes outputs in each CLI's key order
+			delete(b.(map[string]any), "feedback")
+		}
+		if !reflect.DeepEqual(a, b) {
+			t.Fatalf("event %d differs:\nTS %s\nGo %s", i, tsEvents[i], goEvents[i])
+		}
 	}
 }

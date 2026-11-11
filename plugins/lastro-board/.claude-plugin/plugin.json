@@ -1,0 +1,6 @@
+{
+  "name": "lastro-board",
+  "version": "0.1.0",
+  "description": "Claude Code mod for Lastro: a pane with each intent's approvals and each proof passing live, a band above the prompt, and toasts.",
+  "types": "./types/index.d.ts"
+}

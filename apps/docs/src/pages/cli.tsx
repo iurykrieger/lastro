@@ -1,5 +1,5 @@
 import { A, C, Callout, Code, CodeTabs, DataTable, H1, H2, H3, Lead, P, Ul } from "@/components/doc";
-import { OUT } from "@/content/outputs";
+import { OUT, STREAM } from "@/content/outputs";
 
 // ---------------------------------------------------------------------------
 // Commands
@@ -31,8 +31,9 @@ export function CliOverview() {
   review --as <name> <action> ...               approve <I1 I2..> | approve-all | amend <I> <text>
                                                 reject <I> <note> | answer <D> <option-index>
   spec                                          derive the formal spec; contradictions come back as decisions
-  prove <module.js> [--export name] [--traces file.json]
-                                                check the code against the spec; writes proof.json, receipt.md
+  prove <module.js> [--export name] [--traces file.json] [--stream]
+                                                check the code against the spec; writes proof.json, receipt.md;
+                                                --stream prints one JSON line per event (see "stream")
   feedback                                      the last proof's failures, as a brief for whoever writes the code
 
   --dir <path>          workspace (default .lastro)
@@ -123,6 +124,15 @@ $ lastro-go prove --cmd "python3 decide.py" --prover ./target/release/lastro-pro
         The TypeScript CLI runs the Rust prover from <C>wasm/lastro_core.wasm</C> when it was built; the Go and .NET CLIs use the <C>lastro-prove</C> binary. Either
         way, <C>enginesAgree</C> in the output says whether both engines gave every clause the same verdict.
       </P>
+
+      <H3>Streaming a run</H3>
+      <P>
+        With <C>--stream</C>, every CLI prints one JSON object per line as the run goes, instead of the single result: <C>start</C>, a <C>progress</C> event
+        every 100 runs of the code under proof, one <C>clause</C> event per clause (with its counterexample when it fails), one <C>scenario</C> event per
+        scenario, <C>crosscheck</C> when the Rust prover ran, and <C>result</C>, which carries the same body as without the flag. Exit codes and files are
+        unchanged. The <A to="plugins/agents">agent plugins</A> use it to show each proof as it is checked.
+      </P>
+      <Code lang="json" title="lastro prove ./shipping-buggy.mjs --stream" code={STREAM} />
 
       <H2>feedback</H2>
       <P>Prints the failures of the last proof as a brief for whoever writes the code. Exit 1 while there are failures.</P>
@@ -275,7 +285,10 @@ run spec
 run prove ./decide.js || lastro feedback`}
       />
       <H3>Telling your agent</H3>
-      <P>For an agent like Claude Code or Codex, a short instruction in its project notes is enough:</P>
+      <P>
+        For Claude Code or Codex, the <A to="plugins/agents">Lastro plugin</A> does this and more: it gates code edits on your review and proves the code when
+        the agent stops. Without the plugin, a short instruction in the agent's project notes is enough:
+      </P>
       <Code
         lang="markdown"
         title="AGENTS.md / CLAUDE.md"

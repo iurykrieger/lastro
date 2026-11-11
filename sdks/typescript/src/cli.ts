@@ -42,8 +42,9 @@ const USAGE = `lastro <command> [options]
   review --as <name> <action> ...               approve <I1 I2..> | approve-all | amend <I> <text>
                                                 reject <I> <note> | answer <D> <option-index>
   spec                                          derive the formal spec; contradictions come back as decisions
-  prove <module.js> [--export name] [--traces file.json]
-                                                check the code against the spec; writes proof.json, receipt.md
+  prove <module.js> [--export name] [--traces file.json] [--stream]
+                                                check the code against the spec; writes proof.json, receipt.md;
+                                                --stream prints one JSON line per event (see "stream")
   feedback                                      the last proof's failures, as a brief for whoever writes the code
 
   --dir <path>          workspace (default .lastro)
@@ -54,6 +55,9 @@ interface Args {
   flags: Record<string, string>;
 }
 
+/** Flags that never take a value. */
+const BOOLEAN_FLAGS = new Set(["stream"]);
+
 function parse(argv: string[]): Args {
   const out: Args = { _: [], flags: {} };
   for (let i = 0; i < argv.length; i++) {
@@ -61,7 +65,7 @@ function parse(argv: string[]): Args {
     if (a.startsWith("--")) {
       const k = a.slice(2);
       const v = argv[i + 1];
-      if (v === undefined || v.startsWith("--")) out.flags[k] = "true";
+      if (v === undefined || v.startsWith("--") || BOOLEAN_FLAGS.has(k)) out.flags[k] = "true";
       else {
         out.flags[k] = v;
         i++;
@@ -156,7 +160,20 @@ function summary(a: IntentArtifact, pending: string[]) {
   };
 }
 
-export async function main(argv: string[]): Promise<{ code: number; body: Record<string, unknown> }> {
+/**
+ * `prove --stream`: one compact JSON object per line, in this order, the same in every Lastro CLI:
+ *   {"event":"start","model":..,"clauses":[ids],"scenarios":[ids]}
+ *   {"event":"progress","runs":n}                       every 100 runs of the code under proof
+ *   {"event":"clause","clauseId":..,"intentIds":[..],"verdict":..,"evidence":..[,"counterexample":{input,output}]}
+ *   {"event":"scenario","scenarioId":..,"status":..}
+ *   {"event":"crosscheck","enginesAgree":bool}          when the Rust prover ran
+ *   {"event":"result", ...the body prove prints without --stream}
+ */
+export const STREAM_PROGRESS_EVERY = 100;
+
+export type Emit = (event: Record<string, unknown>) => void;
+
+export async function main(argv: string[], emit?: Emit): Promise<{ code: number; body: Record<string, unknown> }> {
   const args = parse(argv);
   const [cmd, ...rest] = args._;
   const ws = workspace(args);
@@ -230,11 +247,28 @@ export async function main(argv: string[]): Promise<{ code: number; body: Record
         const spec = readJson<Spec>(ws.file("spec.json"));
         const mod = (await import(pathToFileURL(resolve(rest[0])).href)) as Record<string, unknown>;
         const name = args.flags.export ?? "default";
-        const subject = mod[name] as Subject | undefined;
-        if (typeof subject !== "function") throw new Exit(2, { error: `${rest[0]} has no function export "${name}"` });
+        const fn = mod[name] as Subject | undefined;
+        if (typeof fn !== "function") throw new Exit(2, { error: `${rest[0]} has no function export "${name}"` });
         const traces = args.flags.traces ? readJson<Trace[]>(resolve(args.flags.traces)) : [];
+        const stream = args.flags.stream === "true" && emit ? emit : undefined;
+        let runs = 0;
+        const subject: Subject = stream
+          ? (input) => {
+              if (++runs % STREAM_PROGRESS_EVERY === 0) stream({ event: "progress", runs });
+              return fn(input);
+            }
+          : fn;
+        stream?.({ event: "start", model: spec.plan.model.name, clauses: spec.plan.clauses.map((c) => c.id), scenarios: spec.plan.scenarios.map((x) => x.id) });
         const lastro = createLastro({ model: cfg.model, requiredApprovals: cfg.requiredApprovals, rust: await rustProver() });
         const proof = await lastro.prove(spec, subject, { traces });
+        if (stream) {
+          for (const r of proof.report.clauses) {
+            const c = spec.plan.clauses.find((x) => x.id === r.clauseId)!;
+            stream({ event: "clause", clauseId: r.clauseId, intentIds: c.intentIds, verdict: r.verdict, evidence: r.evidence, ...(r.counterexample ? { counterexample: r.counterexample } : {}) });
+          }
+          for (const r of proof.report.scenarios) stream({ event: "scenario", scenarioId: r.scenarioId, status: r.status });
+          if (proof.enginesAgree !== undefined) stream({ event: "crosscheck", enginesAgree: proof.enginesAgree });
+        }
         writeJson(ws.file("proof.json"), proof);
         writeFileSync(ws.file("receipt.md"), proof.receipt + "\n");
         return {
@@ -263,8 +297,10 @@ const invoked = (() => {
   }
 })();
 if (invoked) {
-  main(process.argv.slice(2)).then(({ code, body }) => {
-    process.stdout.write(JSON.stringify(body, null, 2) + "\n");
+  const argv = process.argv.slice(2);
+  const streaming = argv.includes("--stream");
+  main(argv, (event) => process.stdout.write(JSON.stringify(event) + "\n")).then(({ code, body }) => {
+    process.stdout.write((streaming ? JSON.stringify({ event: "result", ...body }) : JSON.stringify(body, null, 2)) + "\n");
     process.exitCode = code;
   });
 }

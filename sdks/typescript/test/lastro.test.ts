@@ -407,6 +407,20 @@ test("cli: plan → review → spec → prove, answering LLM steps by handoff", 
   assert.equal(r.code, 1);
   assert.match(r.body.feedback as string, /counterexample/);
   assert.equal((await cli(["feedback", ...ws])).code, 1);
+
+  // --stream: start, then one event per clause and scenario (in plan order), then the same result as without it.
+  const events: Record<string, unknown>[] = [];
+  const streamed = await cli(["prove", "--stream", joinPath(dir, "impl.mjs"), "--export", "buggy", ...ws], (e) => events.push(e));
+  assert.equal(streamed.code, 1);
+  assert.deepEqual(streamed.body, r.body);
+  const kinds = events.map((e) => e.event).filter((k) => k !== "progress");
+  assert.deepEqual(kinds, ["start", ...plan.clauses.map(() => "clause"), ...plan.scenarios.map(() => "scenario"), ...(r.body.enginesAgree === null ? [] : ["crosscheck"])]);
+  assert.deepEqual(events[0], { event: "start", model: plan.model.name, clauses: plan.clauses.map((c) => c.id), scenarios: plan.scenarios.map((x) => x.id) });
+  const violated = events.filter((e) => e.event === "clause" && e.verdict === "violated");
+  assert.deepEqual(violated.map((e) => e.clauseId), (r.body.failures as { kind: string; id: string }[]).filter((f) => f.kind === "clause").map((f) => f.id));
+  assert.ok(violated.every((e) => e.counterexample), "a violated clause carries its counterexample");
+  const runs = events.filter((e) => e.event === "progress").map((e) => e.runs as number);
+  assert.deepEqual(runs, runs.map((_, i) => (i + 1) * 100), "a progress event every 100 runs of the code");
 });
 
 test("cli: --section reads one Markdown section, up to the next heading of the same level", () => {

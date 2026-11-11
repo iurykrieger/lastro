@@ -1,0 +1,11 @@
+{
+  "name": "lastro",
+  "plugins": [
+    {
+      "name": "lastro",
+      "source": { "source": "local", "path": "./plugins/lastro" },
+      "policy": { "installation": "AVAILABLE" },
+      "category": "Engineering"
+    }
+  ]
+}

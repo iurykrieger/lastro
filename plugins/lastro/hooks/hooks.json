@@ -1,0 +1,26 @@
+{
+  "description": "Lastro: code waits for reviewed intents, and the proofs run when the agent stops.",
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/lastro-plugin.mjs\" hook SessionStart", "timeout": 30 }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/lastro-plugin.mjs\" hook UserPromptSubmit", "timeout": 30 }] }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|apply_patch|Bash",
+        "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/lastro-plugin.mjs\" hook PreToolUse", "timeout": 30 }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|apply_patch|Bash|ExitPlanMode|update_plan",
+        "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/lastro-plugin.mjs\" hook PostToolUse", "timeout": 30 }]
+      }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/lastro-plugin.mjs\" hook Stop", "timeout": 900 }] }
+    ]
+  }
+}

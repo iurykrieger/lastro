@@ -304,7 +304,7 @@ function checkClause(c: Clause, runs: Run[], exhaustive: boolean, mutants: Mutan
   } catch (e) {
     if (!(e instanceof LslError)) throw e;
     result.verdict = "violated";
-    result.note = `erro ao avaliar: ${e.message}`;
+    result.note = `evaluation error: ${e.message}`;
   }
   return result;
 }

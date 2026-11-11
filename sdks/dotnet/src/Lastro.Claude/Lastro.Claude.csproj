@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Lastro.Claude</PackageId>
+    <Description>Claude transport for Lastro's two AI steps (intent extraction and proof derivation), over the official Anthropic C# SDK.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lastro\Lastro.csproj" />
+    <PackageReference Include="Anthropic" Version="13.8.0" />
+  </ItemGroup>
+</Project>

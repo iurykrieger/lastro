@@ -25,9 +25,40 @@ jobs:
         run: npm run wasm
       - name: SDK tests
         run: npm test -w lastro
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: sdks/go/go.mod
+          cache-dependency-path: sdks/go/go.sum
+      - name: Rust prover binary (for the Go cross-check)
+        run: cargo build --release -p lastro-core --bin lastro-prove
+      - name: Go SDK tests (cross-checked with the TS SDK and the Rust prover)
+        working-directory: sdks/go
+        run: |
+          test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+          go vet ./...
+          go test ./...
       - name: Sandbox build
         run: npm run build -w @lastro/sandbox
       - name: Install Playwright browser
         run: npx -w @lastro/sandbox playwright install --with-deps chromium
       - name: Sandbox UI tests
         run: npm run test:e2e -w @lastro/sandbox
+  dotnet:
+    runs-on: ubuntu-latest
+    env:
+      LASTRO_REQUIRE_CROSSCHECK: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build the Rust prover CLI
+        run: cargo build --release -p lastro-core --bin lastro-prove
+      - name: Build the TypeScript SDK (for the cross-check)
+        run: npm install && npx tsc -p sdks/typescript
+      - name: .NET SDK tests
+        run: dotnet test sdks/dotnet

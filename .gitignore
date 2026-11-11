@@ -2,7 +2,7 @@ node_modules/
 dist/
 dist-single/
 target/
-packages/sdk/wasm/
+sdks/typescript/wasm/
 *.tsbuildinfo
 .DS_Store
 
@@ -11,3 +11,6 @@ packages/sdk/wasm/
 !apps/sandbox/public/**/*.png
 apps/sandbox/test-results/
 apps/sandbox/playwright-report/
+bin/
+obj/
+*.nupkg

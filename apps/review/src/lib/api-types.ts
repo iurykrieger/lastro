@@ -1,4 +1,5 @@
-import type { Proposal, ProposalRun, UseCase } from "@lastro/sdk";
+import type { Proposal, UseCase } from "@lastro/sdk";
+import type { RunRecord } from "../../../../sdks/typescript/src/workspace.ts";
 
 /** What the app loads from the workspace. */
 export interface WorkspaceSnapshot {
@@ -14,16 +15,8 @@ export interface WorkspaceSnapshot {
   runs: Record<string, ProofRunRecord[]>;
 }
 
-/** One `lastro prove` run, as appended to the proposal's `.runs.jsonl`. */
-export interface ProofRunRecord extends ProposalRun {
-  /** 1-based, in the order the runs happened. */
-  run: number;
-  /** When it ran (ISO 8601). */
-  at: string;
-  /** The commit the code was at, and whether the working tree had uncommitted changes. */
-  commit?: string;
-  dirty?: boolean;
-}
+/** One `lastro prove` run, as `<id>-<slug>.runs.jsonl` keeps it (lastro/workspace's RunRecord). */
+export type ProofRunRecord = RunRecord;
 
 /** One review action, applied by the SDK's ProposalReview on the server. */
 export type ReviewAction =

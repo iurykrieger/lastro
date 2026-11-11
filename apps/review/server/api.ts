@@ -25,8 +25,8 @@ import {
   type Proposal,
 } from "../../../sdks/typescript/src/index.ts";
 import { sha256Hex } from "../../../sdks/typescript/src/sha256.ts";
-import { openWorkspace, writeJson } from "../../../sdks/typescript/src/workspace.ts";
-import type { ProofRunRecord, ReviewAction, WorkspaceSnapshot } from "../src/lib/api-types.ts";
+import { openWorkspace, writeJson, type RunRecord } from "../../../sdks/typescript/src/workspace.ts";
+import type { ReviewAction, WorkspaceSnapshot } from "../src/lib/api-types.ts";
 
 /** Names an agent would use. Intents are reviewed by people; the agent is their author, never a reviewer. */
 export const AGENT_NAMES = /^(claude|codex|agent|assistant|ai|bot)$/i;
@@ -78,23 +78,18 @@ async function pickAsk(dir: string): Promise<AskJson> {
   return handoffAsk(dir);
 }
 
-/**
- * A proposal's proof-run history: `<id>-<slug>.runs.jsonl`, one run per line, appended by `lastro prove`.
- * A line that does not parse (a run being written) is skipped.
- */
-export function readRuns(file: string): ProofRunRecord[] {
+/** Lines of a `.runs.jsonl` that parse; a line being appended at this instant is skipped. */
+function readRunsTolerant(file: string): RunRecord[] {
   if (!existsSync(file)) return [];
-  const out: ProofRunRecord[] = [];
-  for (const line of readFileSync(file, "utf8").split("\n")) {
-    if (!line.trim()) continue;
-    try {
-      const r = JSON.parse(line) as ProofRunRecord;
-      if (Array.isArray(r.outcomes)) out.push(r);
-    } catch {
-      // skip
-    }
-  }
-  return out.map((r, i) => ({ ...r, run: r.run ?? i + 1 }));
+  return readFileSync(file, "utf8")
+    .split("\n")
+    .flatMap((l) => {
+      try {
+        return l.trim() ? [JSON.parse(l) as RunRecord] : [];
+      } catch {
+        return [];
+      }
+    });
 }
 
 export function createApi(dir: string) {
@@ -116,7 +111,16 @@ export function createApi(dir: string) {
       llm: process.env.ANTHROPIC_API_KEY ? "anthropic" : "handoff",
       useCases: ws.useCases(),
       proposals,
-      runs: Object.fromEntries(proposals.map((p) => [p.id, readRuns(ws.proposalPath(p, ".runs.jsonl"))])),
+      // A proposal's proof-run history, appended by `lastro prove` (ws.runs); tolerant while a run is being written.
+      runs: Object.fromEntries(
+        proposals.map((p) => {
+          try {
+            return [p.id, ws.runs(p)];
+          } catch {
+            return [p.id, readRunsTolerant(ws.proposalPath(p, ".runs.jsonl"))];
+          }
+        }),
+      ),
     };
   }
 

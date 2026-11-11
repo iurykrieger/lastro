@@ -14,7 +14,8 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
 - `sdks/go`: Go SDK and `lastro-go` CLI. Same data model, hashes and `.lastro/` workspace as the TS SDK.
 - `apps/sandbox`: Vite + React + shadcn/ui sandbox (prose, code, contrast) running the real SDK and the WASM prover.
 - `apps/docs`: Vite + React + shadcn/ui developer docs. Pages live in `src/pages`, the sidebar in `src/content/nav.ts`.
-  Code samples come from `examples/shipping`, which `test/` runs through the real SDKs; Playwright UI tests are in `e2e/`.
+  Code samples come from `examples/shipping`, which `test/` runs through the real SDKs; the interactive examples in `src/live`
+  run the real TS SDK and the WASM prover in the browser (build it with `npm run wasm` first); Playwright UI tests are in `e2e/`.
 
 ## Rules
 

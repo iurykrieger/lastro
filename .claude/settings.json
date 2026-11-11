@@ -1,0 +1,14 @@
+{
+  "enabledPlugins": {
+    "lastro@lastro": true,
+    "lastro-board@lastro": true
+  },
+  "extraKnownMarketplaces": {
+    "lastro": {
+      "source": {
+        "source": "github",
+        "repo": "iurykrieger/lastro"
+      }
+    }
+  }
+}

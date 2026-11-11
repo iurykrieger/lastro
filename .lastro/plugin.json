@@ -1,0 +1,7 @@
+{
+  "cli": "node sdks/typescript/dist/src/cli.js",
+  "build": "npm run build -w lastro",
+  "gate": "off",
+  "allow": [],
+  "maxIterations": 5
+}

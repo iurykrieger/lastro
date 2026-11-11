@@ -42,6 +42,12 @@ export const NAV: NavSection[] = [
     ],
   },
   {
+    title: "Plugins",
+    pages: [
+      { slug: "plugins/agents", title: "Claude Code and Codex", description: "Review the agent's proposal as intents, then check its code against the proofs before it stops.", keywords: "plugin claude code codex hooks skills gate stop progress board pull request review agent" },
+    ],
+  },
+  {
     title: "SDKs",
     pages: [
       { slug: "sdks/typescript", title: "TypeScript", description: "createLastro, review, spec, prove, and the building blocks underneath.", keywords: "node npm createLastro claudeAsk ts" },

@@ -275,7 +275,10 @@ run spec
 run prove ./decide.js || lastro feedback`}
       />
       <H3>Telling your agent</H3>
-      <P>For an agent like Claude Code or Codex, a short instruction in its project notes is enough:</P>
+      <P>
+        For Claude Code or Codex, the <A to="plugins/agents">Lastro plugin</A> does this and more: it gates code edits on your review and proves the code when
+        the agent stops. Without the plugin, a short instruction in the agent's project notes is enough:
+      </P>
       <Code
         lang="markdown"
         title="AGENTS.md / CLAUDE.md"

@@ -25,6 +25,8 @@ jobs:
         run: npm run wasm
       - name: SDK tests
         run: npm test -w lastro
+      - name: Plugin tests (Claude Code and Codex hooks, through the real CLI)
+        run: npm test -w @lastro/plugin
       - uses: actions/setup-go@v5
         with:
           go-version-file: sdks/go/go.mod

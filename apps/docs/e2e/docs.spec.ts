@@ -146,3 +146,24 @@ test("the quickstart shows the real counterexample and receipt", async ({ page }
   await expect(page.getByText('"subtotal": 100').first()).toBeAttached();
   await expect(page.getByText("coverage 402/402 inputs")).toBeAttached();
 });
+
+test("the plugin page shows the progress board at each stage", async ({ page }) => {
+  await page.goto("#/plugins/agents");
+  await expect(page.getByRole("heading", { level: 1, name: "Claude Code and Codex" })).toBeVisible();
+  const board = (title: string) => page.locator("figure[data-code]").filter({ has: page.locator("figcaption", { hasText: title }) });
+  await expect(board("the board, review pending")).toContainText("? D1 Is the 100 threshold measured before or after discounts?");
+  await expect(board("the board, implementing")).toContainText("○ C1 pending");
+  const failed = board("the board, a proof failed");
+  await expect(failed).toContainText("✗ C1 violated");
+  await expect(failed).toContainText("Verification 2/3 passed, 1 failed");
+  await expect(page.getByRole("heading", { level: 3, name: "You review, like a pull request" })).toBeVisible();
+});
+
+test("search finds the plugin page", async ({ page }) => {
+  await page.goto("#/introduction");
+  await expect(page.locator("main h1")).toBeVisible();
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Search the docs" });
+  await dialog.getByRole("textbox", { name: "Search pages" }).fill("codex hooks");
+  await expect(dialog.getByRole("option").first()).toContainText("Claude Code and Codex");
+});

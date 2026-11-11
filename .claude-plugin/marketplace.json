@@ -1,0 +1,12 @@
+{
+  "name": "lastro",
+  "owner": { "name": "Iury Krieger" },
+  "metadata": { "description": "Lastro plugins: proof-driven changes for coding agents." },
+  "plugins": [
+    {
+      "name": "lastro",
+      "source": "./plugins/lastro",
+      "description": "Every implementation proposal becomes intents the user reviews like a pull request; approved intents become proofs, and the code is checked against them before the agent stops."
+    }
+  ]
+}

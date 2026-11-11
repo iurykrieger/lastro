@@ -194,7 +194,7 @@ func render(v any, sortKeys bool, indent string) (string, error) {
 // CanonicalJSON is the TS SDK's canonicalJson: compact JSON with object keys sorted.
 func CanonicalJSON(v any) (string, error) { return render(v, true, "") }
 
-// HashOf is "sha256:" + SHA-256 of CanonicalJSON(v), the hash both SDKs use for frozen artifacts and plans.
+// HashOf is "sha256:" + SHA-256 of CanonicalJSON(v), the hash both SDKs use for approved artifacts and plans.
 func HashOf(v any) (string, error) {
 	s, err := CanonicalJSON(v)
 	if err != nil {

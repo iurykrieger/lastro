@@ -19,7 +19,7 @@ export function ConceptPipeline() {
         rows={[
           ["Plan", "prose (and the previous artifact)", "an intent artifact", <C>plan(prose, previous?)</C>, <C>lastro plan prose.md</C>],
           ["Review", "the artifact, a reviewer name", "the artifact, with verdicts", <C>review(a, "ana")…done()</C>, <C>lastro review --as ana …</C>],
-          ["Spec", "a fully reviewed artifact", "the frozen artifact, a proof plan, contradictions", <C>spec(a)</C>, <C>lastro spec</C>],
+          ["Spec", "a fully reviewed artifact", "the approved artifact, a proof plan, contradictions", <C>spec(a)</C>, <C>lastro spec</C>],
           ["Prove", "the spec and the code under proof", "a report, failures, spec gaps and a receipt", <C>prove(spec, subject)</C>, <C>lastro prove ./code.js</C>],
         ]}
       />
@@ -27,7 +27,7 @@ export function ConceptPipeline() {
       <H2>Every stage is plain data</H2>
       <P>
         Each stage takes and returns JSON-serializable objects. That is what lets the same pipeline run as a library call, as a CLI command that keeps state in{" "}
-        <C>.lastro/</C>, or across SDKs: an artifact frozen by the TypeScript SDK is intact for the Go and .NET SDKs, and all three compute the same hashes.
+        <C>.lastro/</C>, or across SDKs: an artifact approved by the TypeScript SDK is intact for the Go and .NET SDKs, and all three compute the same hashes.
       </P>
 
       <H2>Only two AI steps</H2>
@@ -41,7 +41,7 @@ export function ConceptPipeline() {
         <li>the plan is checked to cite only approved intents and to cover every approved intent with an obligation or a reason it is beyond proof.</li>
       </Ul>
       <P>
-        Proving is deterministic: fixed seeds, canonical JSON, and hashes over frozen artifacts. Run it twice and you get the same receipt.
+        Proving is deterministic: fixed seeds, canonical JSON, and hashes over approved artifacts. Run it twice and you get the same receipt.
       </P>
 
       <H2>Who writes the code</H2>
@@ -223,11 +223,11 @@ $ lastro status          # exit 0 when nothing is pending`,
         <C>D1 unanswered: …</C>.
       </P>
 
-      <H2>Freezing</H2>
+      <H2>Approval</H2>
       <P>
-        <C>spec</C> freezes the artifact first: it refuses while anything is pending, then computes a SHA-256 hash over the artifact's canonical JSON (sorted keys,
-        no whitespace). Everything after (the plan, the report, the receipt) is tied to that hash, and <C>isIntact</C> recomputes it to show nothing changed after
-        review. To review a frozen artifact again, work on a <C>thaw</C>ed copy; the library does this for you.
+        <C>spec</C> approves the artifact first: it refuses while anything is pending, then computes a SHA-256 hash over the artifact's canonical JSON (sorted keys,
+        no whitespace). Everything after (the plan, the report, the receipt) is tied to that hash, and <C>isApproved</C> recomputes it to show nothing changed after
+        review. To review an approved artifact again, work on a copy from <C>reopen</C>; the library does this for you.
       </P>
       <Callout kind="warning" title="Approve what you mean">
         A green proof means the code does what the approved intents say. If the AI misread the prose and you approved it, the proof will faithfully prove the
@@ -274,8 +274,8 @@ export function ConceptDecisions() {
 
       <H2>Contradictions go back to the team</H2>
       <P>
-        After derivation, a consistency check looks for inputs where the clauses cannot all hold. Each contradiction becomes a decision card on a thawed copy of
-        the artifact, so it cannot be frozen again until someone answers. The answer adds an intent like{" "}
+        After derivation, a consistency check looks for inputs where the clauses cannot all hold. Each contradiction becomes a decision card on a reopened copy of
+        the artifact, so it cannot be approved again until someone answers. The answer adds an intent like{" "}
         <em>"&lt;question&gt; Decided: &lt;option&gt; (&lt;consequence&gt;)."</em>, which goes through review before the spec is derived again.
       </P>
       <CodeTabs
@@ -537,7 +537,7 @@ export function ConceptReceipts() {
       <P>Markdown, ready to paste into a pull request. In order, it shows:</P>
       <Ol>
         <li>the result and a count per verdict;</li>
-        <li>the hashes of the frozen intents and of the plan, and the Rust prover's coverage and table hash;</li>
+        <li>the hashes of the approved intents and of the plan, and the Rust prover's coverage and table hash;</li>
         <li>every intent with its verdict, evidence, confidence and what backs it;</li>
         <li>every clause with its verdict, method, mutants killed, and its formal statement;</li>
         <li>scenarios, trusted pieces (with their trust cards), where proof stops, and what is not promised.</li>

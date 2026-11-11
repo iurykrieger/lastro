@@ -91,8 +91,8 @@ export function ContrastPanel({ l, hover, setHover }: { l: Lastro; hover: string
             <CardTitle className="text-base">Contrast: prose × code</CardTitle>
           </div>
           <CardDescription>
-            {!l.frozen
-              ? "Finish reviewing the intents: proofs are derived only from approved, frozen intents."
+            {!l.approved
+              ? "Finish reviewing the intents: proofs are derived only from approved intents."
               : deriving
                 ? "Claude is deriving proof obligations (LSL clauses) from the reviewed intents. This can take a minute."
                 : l.ai.available === false
@@ -336,7 +336,7 @@ export function ContrastPanel({ l, hover, setHover }: { l: Lastro; hover: string
                     <p>{b.note}</p>
                   </div>
                 ))}
-                {l.frozen?.notPromised.map((n) => (
+                {l.approved?.notPromised.map((n) => (
                   <p key={n} className="rounded-lg bg-muted p-3 text-xs">
                     <span className="font-semibold">Not promised: </span>
                     {n}

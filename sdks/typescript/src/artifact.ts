@@ -1,8 +1,8 @@
 /**
- * Intent artifact: creation, human review, and freezing.
+ * Intent artifact: creation, human review, and approval.
  *
  * Extraction is non-deterministic. Review is where a human catches
- * "the AI misunderstood". freeze() pins the reviewed artifact with a content
+ * "the AI misunderstood". approve() pins the reviewed artifact with a content
  * hash; everything downstream is deterministic and bound to that hash.
  */
 import { sha256Hex } from "./sha256.js";
@@ -96,7 +96,7 @@ export class Review {
     artifact: IntentArtifact,
     private readonly reviewer?: string,
   ) {
-    if (artifact.hash) throw new Error("Artifact is frozen; review a copy created with thaw()");
+    if (artifact.hash) throw new Error("Artifact is approved; review a copy created with reopen()");
     this.a = structuredClone(artifact);
   }
 
@@ -218,7 +218,7 @@ export function approvalCount(it: Intent): number {
   return it.approvals?.length ?? 1;
 }
 
-/** Problems that block freezing: every intent reviewed by enough people and every decision answered. */
+/** Problems that block approval: every intent reviewed by enough people and every decision answered. */
 export function pendingReview(a: IntentArtifact): string[] {
   const p: string[] = [];
   const need = requiredApprovals(a);
@@ -230,7 +230,7 @@ export function pendingReview(a: IntentArtifact): string[] {
   return p;
 }
 
-export function freeze(a: IntentArtifact): IntentArtifact {
+export function approve(a: IntentArtifact): IntentArtifact {
   const pending = pendingReview(a);
   if (pending.length) throw new ArtifactError(pending);
   const copy = structuredClone(a);
@@ -238,14 +238,14 @@ export function freeze(a: IntentArtifact): IntentArtifact {
   return { ...copy, hash: hashOf(copy) };
 }
 
-export function thaw(a: IntentArtifact): IntentArtifact {
+export function reopen(a: IntentArtifact): IntentArtifact {
   const copy = structuredClone(a);
   delete copy.hash;
   return copy;
 }
 
-/** Re-computes the hash; true when the artifact was not modified after freeze(). */
-export function isIntact(a: IntentArtifact): boolean {
+/** Re-computes the hash; true when the artifact was not modified after approve(). */
+export function isApproved(a: IntentArtifact): boolean {
   if (!a.hash) return false;
   const copy = structuredClone(a);
   delete copy.hash;
@@ -260,11 +260,11 @@ export function approvedIntents(a: IntentArtifact): Intent[] {
 /**
  * Send spec problems back to the team: contradictions found by the
  * consistency check (or any decision raised after derivation) become
- * unanswered decision cards on a thawed copy, so the artifact cannot be
- * frozen again until someone answers them.
+ * unanswered decision cards on a reopened copy, so the artifact cannot be
+ * approved again until someone answers them.
  */
 export function raiseDecisions(a: IntentArtifact, cards: DecisionCard[]): IntentArtifact {
-  const out = thaw(a);
+  const out = reopen(a);
   const known = new Set(out.decisions.map((d) => d.question));
   for (const c of cards) {
     if (known.has(c.question)) continue;

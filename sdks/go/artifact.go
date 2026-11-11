@@ -7,12 +7,12 @@ import (
 	"unicode"
 )
 
-// Intent artifact: creation, human review and freezing.
+// Intent artifact: creation, human review and approval.
 //
 // Extraction is non-deterministic. Review is where a human catches "the AI
-// misunderstood". Freeze pins the reviewed artifact with a content hash;
+// misunderstood". Approve pins the reviewed artifact with a content hash;
 // everything downstream is deterministic and bound to that hash. The hash is
-// the same one the TS SDK computes, so an artifact frozen by one SDK is intact
+// the same one the TS SDK computes, so an artifact approved by one SDK is intact
 // for the other.
 
 // IntentDraft is an intent as an extractor proposes it.
@@ -33,7 +33,7 @@ type DecisionDraft struct {
 	Recommended int
 }
 
-// ArtifactError lists the problems that make an artifact invalid or block freezing.
+// ArtifactError lists the problems that make an artifact invalid or block approval.
 type ArtifactError struct{ Problems []string }
 
 func (e *ArtifactError) Error() string {
@@ -165,7 +165,7 @@ type Review struct {
 func NewReview(a IntentArtifact, reviewer string) *Review {
 	r := &Review{a: clone(a), reviewer: reviewer}
 	if a.Hash != "" {
-		r.err = fmt.Errorf("artifact is frozen; review a copy created with Thaw()")
+		r.err = fmt.Errorf("artifact is approved; review a copy created with Reopen()")
 	}
 	return r
 }
@@ -366,7 +366,7 @@ func ApprovalCount(it Intent) int {
 	return len(it.Approvals)
 }
 
-// PendingReview lists what blocks freezing: intents without enough approvals and unanswered decisions.
+// PendingReview lists what blocks approval: intents without enough approvals and unanswered decisions.
 func PendingReview(a IntentArtifact) []string {
 	p := []string{}
 	need := RequiredApprovals(a)
@@ -385,8 +385,8 @@ func PendingReview(a IntentArtifact) []string {
 	return p
 }
 
-// Freeze pins a fully reviewed artifact with its canonical hash.
-func Freeze(a IntentArtifact) (IntentArtifact, error) {
+// Approve pins a fully reviewed artifact with its canonical hash.
+func Approve(a IntentArtifact) (IntentArtifact, error) {
 	if pending := PendingReview(a); len(pending) > 0 {
 		return IntentArtifact{}, &ArtifactError{Problems: pending}
 	}
@@ -400,19 +400,19 @@ func Freeze(a IntentArtifact) (IntentArtifact, error) {
 	return out, nil
 }
 
-// Thaw returns an unfrozen copy, ready for another review.
-func Thaw(a IntentArtifact) IntentArtifact {
+// Reopen returns a reopened copy, ready for another review.
+func Reopen(a IntentArtifact) IntentArtifact {
 	out := clone(a)
 	out.Hash = ""
 	return out
 }
 
-// IsIntact re-computes the hash: true when the artifact was not modified after Freeze.
-func IsIntact(a IntentArtifact) bool {
+// IsApproved re-computes the hash: true when the artifact was not modified after Approve.
+func IsApproved(a IntentArtifact) bool {
 	if a.Hash == "" {
 		return false
 	}
-	h, err := HashOf(Thaw(a))
+	h, err := HashOf(Reopen(a))
 	return err == nil && h == a.Hash
 }
 
@@ -429,9 +429,9 @@ func ApprovedIntents(a IntentArtifact) []Intent {
 }
 
 // RaiseDecisions sends spec problems back to the team: contradictions become unanswered
-// decision cards on a thawed copy, so the artifact cannot be frozen until someone answers them.
+// decision cards on a reopened copy, so the artifact cannot be approved until someone answers them.
 func RaiseDecisions(a IntentArtifact, cards []DecisionCard) IntentArtifact {
-	out := Thaw(a)
+	out := Reopen(a)
 	known := map[string]bool{}
 	for _, d := range out.Decisions {
 		known[d.Question] = true

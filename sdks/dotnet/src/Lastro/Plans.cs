@@ -14,7 +14,7 @@ public static class Plans
     public static PlanCheck Check(IntentArtifact artifact, ProofPlan plan)
     {
         var errors = new List<string>();
-        if (artifact.Hash is null || !Artifacts.IsIntact(artifact)) errors.Add("artifact is not frozen or was modified after freeze()");
+        if (artifact.Hash is null || !Artifacts.IsApproved(artifact)) errors.Add("artifact is not approved or was modified after approve()");
         if (plan.ArtifactHash != artifact.Hash) errors.Add($"plan was derived from {plan.ArtifactHash}, artifact is {artifact.Hash ?? "undefined"}");
 
         var approved = Artifacts.ApprovedIntents(artifact).Select(i => i.Id).ToList();

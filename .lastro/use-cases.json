@@ -17,12 +17,12 @@
   {
     "slug": "record-not-promised",
     "name": "Record what is not promised",
-    "description": "The extraction returns notPromised: things a reader might assume that the prose does not promise. They are stored on the artifact, reviewers can append more, they are part of the frozen hash, they are sent to the deriver, and the receipt lists them under Not promised."
+    "description": "The extraction returns notPromised: things a reader might assume that the prose does not promise. They are stored on the artifact, reviewers can append more, they are part of the approval hash, they are sent to the deriver, and the receipt lists them under Not promised."
   },
   {
     "slug": "review-intents",
     "name": "Review intents",
-    "description": "review(artifact, reviewer) returns a chainable review on a copy of the artifact (a frozen artifact is thawed first). approve(ids) marks intents approved (an amended intent stays amended) and adds the reviewer to approvals once; approveAll() approves every intent that is not rejected; reject(id, note) sets status rejected, records the note with the reviewer's name and clears approvals; amend(id, statement, patch?, note?) keeps the first original statement, rewrites the statement (optionally kind, provability or beyond-proof reason), sets status amended and resets approvals to the amender alone. done() returns the new artifact; unknown ids throw."
+    "description": "review(artifact, reviewer) returns a chainable review on a copy of the artifact (an approved artifact is reopened first). approve(ids) marks intents approved (an amended intent stays amended) and adds the reviewer to approvals once; approveAll() approves every intent that is not rejected; reject(id, note) sets status rejected, records the note with the reviewer's name and clears approvals; amend(id, statement, patch?, note?) keeps the first original statement, rewrites the statement (optionally kind, provability or beyond-proof reason), sets status amended and resets approvals to the amender alone. done() returns the new artifact; unknown ids throw."
   },
   {
     "slug": "add-missed-intent",
@@ -40,9 +40,9 @@
     "description": "answer(decisionId, option) records the chosen option; an unknown decision or an option out of range throws. For an extraction decision that is all. For a decision raised later (a contradiction), the answer also creates, or rewrites, an intent linked to the decision whose statement is the question plus the chosen option and its consequence; that intent starts proposed with no approvals and must be reviewed like any other."
   },
   {
-    "slug": "freeze-reviewed-intents",
-    "name": "Freeze the reviewed intents",
-    "description": "freeze() refuses with every pending item while anything is pending. Otherwise it returns a copy with hash = sha256 over canonical JSON (keys sorted, undefined dropped) of the artifact without its hash. A frozen artifact cannot be reviewed; thaw() returns an unfrozen copy. isIntact() recomputes the hash, so any edit after the freeze is detected, and plan validation rejects an artifact that is not frozen or not intact."
+    "slug": "approve-reviewed-intents",
+    "name": "Approve the reviewed intents",
+    "description": "approve() refuses with every pending item while anything is pending. Otherwise it returns an approved copy whose hash = sha256 over canonical JSON (keys sorted, undefined dropped) of the artifact without its hash. Only an approved artifact can be sent to proof derivation, so only approved intents generate proofs and reach whoever implements the change. An approved artifact cannot be reviewed; reopen() returns a copy without the hash, which must be approved again. isApproved() recomputes the hash, so any edit after approval is detected, and plan validation rejects an artifact that is not approved or was modified after approval."
   },
   {
     "slug": "carry-review-on-re-extraction",
@@ -62,17 +62,17 @@
   {
     "slug": "derive-proof-plan",
     "name": "Derive the proof plan",
-    "description": "spec(artifact) freezes the artifact and asks the LLM (step \"derive\") with the model, the approved intents only, each decision's question and answer (the chosen or else the recommended option) and notPromised. The answer has clauses (id, intents, description, requires and ensures as LSL JSON strings, assumptions used), assumptions, scenarios (concrete input as a JSON string and an LSL expect) and beyondProof items. Every expression is parsed and validated; the result is a proof plan (proof-plan/v0) bound to the artifact hash. Without an LLM transport or a custom deriver, spec() throws."
+    "description": "spec(artifact) approves the artifact and asks the LLM (step \"derive\") with the model, the approved intents only, each decision's question and answer (the chosen or else the recommended option) and notPromised. The answer has clauses (id, intents, description, requires and ensures as LSL JSON strings, assumptions used), assumptions, scenarios (concrete input as a JSON string and an LSL expect) and beyondProof items. Every expression is parsed and validated; the result is a proof plan (proof-plan/v0) bound to the artifact hash. Without an LLM transport or a custom deriver, spec() throws."
   },
   {
     "slug": "validate-proof-plan",
     "name": "Validate the proof plan",
-    "description": "Before anything is verified, the plan is checked: the artifact is frozen and intact and the plan was derived from its hash; the model has outputs and valid defs; ids are unique; every clause, assumption, scenario and beyond-proof item references at least one known and approved intent (never a rejected one); expressions use only the model; clauses cite known assumptions; assumptions cite known scenarios; each scenario gives an in-domain value for every input; beyond-proof reasons are known. Any error throws a PlanError with all problems. Approved intents covered by nothing are not errors: they are reported as gaps."
+    "description": "Before anything is verified, the plan is checked: the artifact is approved, unchanged since approval, and the plan was derived from its hash; the model has outputs and valid defs; ids are unique; every clause, assumption, scenario and beyond-proof item references at least one known and approved intent (never a rejected one); expressions use only the model; clauses cite known assumptions; assumptions cite known scenarios; each scenario gives an in-domain value for every input; beyond-proof reasons are known. Any error throws a PlanError with all problems. Approved intents covered by nothing are not errors: they are reported as gaps."
   },
   {
     "slug": "return-contradictions-as-decisions",
     "name": "Return contradictions to the team",
-    "description": "After derivation, a consistency check enumerates every output (when there are at most 4096) for each input and looks for inputs where no output satisfies all applicable clauses. Each distinct set of conflicting clauses becomes a decision card (origin consistency-check) asking which clause should give way, with one option per clause and the first recommended. spec.ok is false when any exist. returnDecisions(spec) thaws the artifact and appends these cards, skipping questions it already has, so the artifact cannot be frozen until they are answered and the intents their answers create are approved. The Rust prover runs the same check."
+    "description": "After derivation, a consistency check enumerates every output (when there are at most 4096) for each input and looks for inputs where no output satisfies all applicable clauses. Each distinct set of conflicting clauses becomes a decision card (origin consistency-check) asking which clause should give way, with one option per clause and the first recommended. spec.ok is false when any exist. returnDecisions(spec) reopens the artifact and appends these cards, skipping questions it already has, so the artifact cannot be approved until they are answered and the intents their answers create are approved. The Rust prover runs the same check."
   },
   {
     "slug": "prove-exhaustively",
@@ -177,7 +177,7 @@
   {
     "slug": "share-workspace-across-sdks",
     "name": "Share one workspace across CLIs",
-    "description": "The TypeScript, .NET and Go CLIs read and write the same .lastro/ files, so one can plan, another review, and a third derive and prove. An artifact frozen by one SDK is intact for the others and a plan has the same hash in all three."
+    "description": "The TypeScript, .NET and Go CLIs read and write the same .lastro/ files, so one can plan, another review, and a third derive and prove. An artifact approved by one SDK has a valid approval hash for the others and a plan has the same hash in all three."
   },
   {
     "slug": "prove-code-in-any-language",

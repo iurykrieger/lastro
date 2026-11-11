@@ -83,7 +83,7 @@ public sealed class IntentArtifact
     /// <summary>Explicitly not promised (timing, rate limits...).</summary>
     public List<string> NotPromised { get; set; } = [];
     public ReviewPolicy? Policy { get; set; }
-    /// <summary>Set by <see cref="Artifacts.Freeze"/>.</summary>
+    /// <summary>Set by <see cref="Artifacts.Approve"/>.</summary>
     public string? Hash { get; set; }
 }
 

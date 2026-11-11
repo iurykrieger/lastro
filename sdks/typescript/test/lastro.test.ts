@@ -8,9 +8,9 @@ import {
   checkConsistency,
   createArtifact,
   explainRun,
-  freeze,
+  approve,
   hashOf,
-  isIntact,
+  isApproved,
   review,
   toSmtLib,
   validateExpr,
@@ -27,7 +27,7 @@ import { BUGS, FIXED_I5, LOGIN_SOURCE, MODEL, compileLogin, deriveLoginPlan, ext
 function reviewed(opts: { d1?: number; fixI5?: boolean } = {}): IntentArtifact {
   let r = review(extractLogin()).approveAll().answer("D1", opts.d1 ?? 0).answer("D2", 0);
   if (opts.fixI5 !== false) r = r.amend("I5", FIXED_I5);
-  return freeze(r.done());
+  return approve(r.done());
 }
 
 test("sha256 matches the standard test vectors", () => {
@@ -45,15 +45,15 @@ test("quotes must anchor to the prose (intent map)", () => {
   assert.equal(a.prose.slice(i1.source.start, i1.source.end), i1.source.quote);
 });
 
-test("freeze requires every intent reviewed and every decision answered", () => {
-  assert.throws(() => freeze(extractLogin()), ArtifactError);
-  assert.throws(() => freeze(review(extractLogin()).approveAll().done()), /D1 unanswered/);
+test("approve requires every intent reviewed and every decision answered", () => {
+  assert.throws(() => approve(extractLogin()), ArtifactError);
+  assert.throws(() => approve(review(extractLogin()).approveAll().done()), /D1 unanswered/);
   const f = reviewed();
   assert.ok(f.hash?.startsWith("sha256:"));
-  assert.ok(isIntact(f));
+  assert.ok(isApproved(f));
   const tampered = structuredClone(f);
   tampered.intents[0]!.statement = "something else";
-  assert.equal(isIntact(tampered), false);
+  assert.equal(isApproved(tampered), false);
 });
 
 test("the correct login is proved; beyond-proof intents are reported, not hidden", async () => {
@@ -98,7 +98,7 @@ test("an intent the AI misread and nobody fixed shows up as violated", async () 
 });
 
 test("rejected intents cannot be built, and the plan is bound to the artifact hash", () => {
-  const a = freeze(review(extractLogin()).approveAll().reject("I5", "out of scope").answer("D1", 0).answer("D2", 0).done());
+  const a = approve(review(extractLogin()).approveAll().reject("I5", "out of scope").answer("D1", 0).answer("D2", 0).done());
   const plan = deriveLoginPlan(reviewed());
   assert.throws(() => validatePlan(a, plan), PlanError);
   const own = deriveLoginPlan(a);
@@ -106,7 +106,7 @@ test("rejected intents cannot be built, and the plan is bound to the artifact ha
 });
 
 function tinyPlan(clauses: ProofPlan["clauses"], inputs = { x: D.int(0, 9) }): { a: IntentArtifact; plan: ProofPlan } {
-  const a = freeze(review(createArtifact("x doubles", [{ statement: "y = 2x", kind: "behavior", provability: "formal", quote: "x doubles" }])).approveAll().done());
+  const a = approve(review(createArtifact("x doubles", [{ statement: "y = 2x", kind: "behavior", provability: "formal", quote: "x doubles" }])).approveAll().done());
   return {
     a,
     plan: { lastro: "proof-plan/v0", artifactHash: a.hash!, model: { name: "double", inputs, outputs: { y: D.int(-1000, 10_000_000) } }, clauses, assumptions: [], scenarios: [], beyondProof: [] },
@@ -248,8 +248,8 @@ test("carryReview keeps verdicts for unchanged intents and reapplies amendments"
 });
 
 test("LLM steps turn JSON answers into checked Lastro objects", async () => {
-  const frozen = freeze(reviewedLogin());
-  const reference = deriveLoginPlan(frozen);
+  const approved = approve(reviewedLogin());
+  const reference = deriveLoginPlan(approved);
   const answers: Record<string, unknown> = {
     extract: {
       intents: [{ statement: "Only the right password gets a token.", kind: "invariant", provability: "formal", beyondProofReason: "none", quote: "only the right password gets a token" }],
@@ -265,17 +265,17 @@ test("LLM steps turn JSON answers into checked Lastro objects", async () => {
   };
   const ask: AskJson = async ({ step }) => answers[step];
 
-  const extracted = await new LlmIntentExtractor(ask).extract(frozen.prose);
+  const extracted = await new LlmIntentExtractor(ask).extract(approved.prose);
   assert.equal(extracted.intents[0]!.source.quote, "only the right password gets a token");
 
-  const plan = await new LlmProofDeriver(ask).derive(frozen, MODEL);
-  validatePlan(frozen, plan);
-  const report = await verify(frozen, plan, { subject: makeLogin() });
+  const plan = await new LlmProofDeriver(ask).derive(approved, MODEL);
+  validatePlan(approved, plan);
+  const report = await verify(approved, plan, { subject: makeLogin() });
   assert.equal(report.ok, true);
 
   // A derivation that references a variable outside the model is refused.
   (answers.derive as { clauses: { ensures: string }[] }).clauses[0]!.ensures = JSON.stringify({ var: "out.cookie" });
-  await assert.rejects(new LlmProofDeriver(ask).derive(frozen, MODEL), /cookie/);
+  await assert.rejects(new LlmProofDeriver(ask).derive(approved, MODEL), /cookie/);
 });
 
 // ---------------------------------------------------------------------------
@@ -319,23 +319,23 @@ test("pipeline: a policy of two approvals needs two distinct reviewers before th
 });
 
 test("pipeline: contradictions go back to the team as unanswered decisions", () => {
-  const a = freeze(reviewedLogin());
+  const a = approve(reviewedLogin());
   const raised = raiseDecisions(a, [{ id: "X1", intentIds: ["I5", "I7"], question: "C5 and C7 cannot both hold. Which gives way?", options: [{ label: "Relax C5", consequence: "" }, { label: "Relax C7", consequence: "" }], recommended: 0, origin: "consistency-check" }]);
   assert.equal(raised.hash, undefined);
   assert.equal(raised.decisions.at(-1)!.id, "D3");
-  assert.throws(() => freeze(raised), /D3 unanswered/);
+  assert.throws(() => approve(raised), /D3 unanswered/);
 });
 
 test("pipeline: answering a contradiction adds an intent the team must approve", () => {
-  const raised = raiseDecisions(freeze(reviewedLogin()), [{ id: "X1", intentIds: ["I5", "I7"], question: "C5 and C7 cannot both hold for both+db-fails. Which gives way?", options: [{ label: "Relax C5", consequence: "the database error wins" }, { label: "Relax C7", consequence: "the 400 wins" }], recommended: 0, origin: "consistency-check" }]);
+  const raised = raiseDecisions(approve(reviewedLogin()), [{ id: "X1", intentIds: ["I5", "I7"], question: "C5 and C7 cannot both hold for both+db-fails. Which gives way?", options: [{ label: "Relax C5", consequence: "the database error wins" }, { label: "Relax C7", consequence: "the 400 wins" }], recommended: 0, origin: "consistency-check" }]);
   const answered = review(raised, "ana").answer("D3", 0).done();
   const it = answered.intents.at(-1)!;
   assert.equal(it.decisionId, "D3");
   assert.equal(it.status, "proposed");
   assert.match(it.statement, /Relax C5 \(the database error wins\)/);
-  assert.throws(() => freeze(answered), /I10 not reviewed/);
+  assert.throws(() => approve(answered), /I10 not reviewed/);
   const approved = review(answered, "bruno").approve(it.id).done();
-  assert.ok(freeze(approved).hash);
+  assert.ok(approve(approved).hash);
 });
 
 test("pipeline: failures are structured feedback for whatever writes the code", async () => {
@@ -390,8 +390,8 @@ test("cli: plan → review → spec → prove, answering LLM steps by handoff", 
 
   r = await cli(["spec", ...ws]);
   assert.equal(r.code, 3);
-  const frozen = freeze(JSON.parse(readFile(joinPath(dir, ".lastro", "intents.json"), "utf8")));
-  const plan = deriveLoginPlan(frozen);
+  const approved = approve(JSON.parse(readFile(joinPath(dir, ".lastro", "intents.json"), "utf8")));
+  const plan = deriveLoginPlan(approved);
   writeFile(r.body.answer as string, JSON.stringify({
     clauses: plan.clauses.map((c) => ({ ...c, requires: c.requires ? JSON.stringify(c.requires) : "", ensures: JSON.stringify(c.ensures), assumes: c.assumes ?? [] })),
     assumptions: plan.assumptions,

@@ -18,9 +18,9 @@ public sealed class ArtifactException(IReadOnlyList<string> problems)
 }
 
 /// <summary>
-/// Intent artifacts: creation, review rules, freezing and re-extraction.
+/// Intent artifacts: creation, review rules, approval and re-extraction.
 /// Extraction is non-deterministic; review is where a human catches "the AI misunderstood";
-/// <see cref="Freeze"/> pins the reviewed artifact with a content hash, and everything after is bound to it.
+/// <see cref="Approve"/> pins the reviewed artifact with a content hash, and everything after is bound to it.
 /// </summary>
 public static class Artifacts
 {
@@ -101,7 +101,7 @@ public static class Artifacts
     public static int ApprovalCount(Intent it) =>
         it.Status is not (IntentStatus.Approved or IntentStatus.Amended) ? 0 : it.Approvals?.Count ?? 1;
 
-    /// <summary>What blocks freezing: intents without enough approvals and unanswered decisions.</summary>
+    /// <summary>What blocks approval: intents without enough approvals and unanswered decisions.</summary>
     public static List<string> PendingReview(IntentArtifact a)
     {
         var p = new List<string>();
@@ -115,7 +115,7 @@ public static class Artifacts
         return p;
     }
 
-    public static IntentArtifact Freeze(IntentArtifact a)
+    public static IntentArtifact Approve(IntentArtifact a)
     {
         var pending = PendingReview(a);
         if (pending.Count > 0) throw new ArtifactException(pending);
@@ -125,15 +125,15 @@ public static class Artifacts
         return copy;
     }
 
-    public static IntentArtifact Thaw(IntentArtifact a)
+    public static IntentArtifact Reopen(IntentArtifact a)
     {
         var copy = LastroJson.Clone(a);
         copy.Hash = null;
         return copy;
     }
 
-    /// <summary>True when the artifact was not modified after <see cref="Freeze"/>.</summary>
-    public static bool IsIntact(IntentArtifact a)
+    /// <summary>True when the artifact was not modified after <see cref="Approve"/>.</summary>
+    public static bool IsApproved(IntentArtifact a)
     {
         if (a.Hash is null) return false;
         var copy = LastroJson.Clone(a);
@@ -149,11 +149,11 @@ public static class Artifacts
 
     /// <summary>
     /// Sends spec problems back to the team: contradictions (or any decision raised after derivation)
-    /// become unanswered decision cards on a thawed copy, so it cannot be frozen until someone answers them.
+    /// become unanswered decision cards on a reopened copy, so it cannot be approved until someone answers them.
     /// </summary>
     public static IntentArtifact RaiseDecisions(IntentArtifact a, IEnumerable<DecisionCard> cards)
     {
-        var output = Thaw(a);
+        var output = Reopen(a);
         var known = output.Decisions.Select(d => d.Question).ToHashSet(StringComparer.Ordinal);
         foreach (var c in cards)
         {
@@ -215,7 +215,7 @@ public sealed class Review
 
     public Review(IntentArtifact artifact, string? reviewer = null)
     {
-        if (artifact.Hash is not null) throw new InvalidOperationException("Artifact is frozen; review a copy created with Artifacts.Thaw()");
+        if (artifact.Hash is not null) throw new InvalidOperationException("Artifact is approved; review a copy created with Artifacts.Reopen()");
         _a = LastroJson.Clone(artifact);
         _reviewer = reviewer;
     }

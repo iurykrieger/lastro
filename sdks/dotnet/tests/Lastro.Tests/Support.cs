@@ -48,7 +48,7 @@ internal static class Support
     {
         var r = Artifacts.Review(LoginExample.Extract()).ApproveAll().Answer("D1", d1).Answer("D2", 0);
         if (fixI5) r = r.Amend("I5", LoginExample.FixedI5);
-        return Artifacts.Freeze(r.Done());
+        return Artifacts.Approve(r.Done());
     }
 
     public static IntentArtifact ReviewedLogin()

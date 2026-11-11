@@ -9,7 +9,7 @@ Development): review moves up from code to intent, and every result says plainly
 **proved under trusted assumptions**, **evidenced** to a stated confidence, or **beyond proof**.
 
 ```
-prose ──extract──▶ intents ──review──▶ frozen intents (hash)
+prose ──extract──▶ intents ──review──▶ approved intents (hash)
                                             │
                                      derive ▼
                          proof plan (LSL clauses, trusted pieces, scenarios, beyond-proof)

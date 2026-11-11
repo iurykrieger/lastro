@@ -36,9 +36,9 @@ public class InteropTests
             Assert.Equal(tsCase!["artifactHash"]!.GetValue<string>(), artifact.Hash);
             Assert.Equal(tsCase["planHash"]!.GetValue<string>(), Canonical.HashOf(plan));
 
-            // An artifact frozen by the TypeScript SDK is intact for the .NET SDK, and vice versa.
+            // An artifact approved by the TypeScript SDK is intact for the .NET SDK, and vice versa.
             var tsArtifact = LastroJson.FromNode<IntentArtifact>(tsCase["artifact"]);
-            Assert.True(Artifacts.IsIntact(tsArtifact), name);
+            Assert.True(Artifacts.IsApproved(tsArtifact), name);
 
             foreach (var (bug, expected) in tsCase["bugs"]!.AsObject())
             {
@@ -66,7 +66,7 @@ public class InteropTests
     public async Task SamplingAndContradictionsAreBitIdentical()
     {
         Require(TsBuilt, TsMissing);
-        var big = Artifacts.Freeze(Artifacts.Review(Artifacts.Create("x doubles", [new("y = 2x", IntentKind.Behavior, Provability.Formal, "x doubles")])).ApproveAll().Done());
+        var big = Artifacts.Approve(Artifacts.Review(Artifacts.Create("x doubles", [new("y = 2x", IntentKind.Behavior, Provability.Formal, "x doubles")])).ApproveAll().Done());
         var plan = new ProofPlan
         {
             ArtifactHash = big.Hash!,
@@ -187,8 +187,8 @@ public class InteropTests
 
         r = await DotNet(dir, "spec");
         Assert.Equal(3, r.Code);
-        var frozen = Artifacts.Freeze(LastroJson.Deserialize<IntentArtifact>(File.ReadAllText(Path.Combine(dir, ".lastro", "intents.json"))));
-        Answer(r.Body, CoreTests.DeriveAnswerFor(frozen));
+        var approved = Artifacts.Approve(LastroJson.Deserialize<IntentArtifact>(File.ReadAllText(Path.Combine(dir, ".lastro", "intents.json"))));
+        Answer(r.Body, CoreTests.DeriveAnswerFor(approved));
         r = await DotNet(dir, "spec");
         Assert.True(r.Code == 0, r.Body.ToJsonString());
 
@@ -231,13 +231,13 @@ public class InteropTests
         // TypeScript derives the spec (handoff answered by the .NET test), .NET proves against it.
         n = Node(dir, "spec");
         Assert.Equal(3, n.Code);
-        var frozen = Artifacts.Freeze(LastroJson.Deserialize<IntentArtifact>(File.ReadAllText(Path.Combine(dir, ".lastro", "intents.json"))));
-        Assert.Equal(new LlmRequest("derive", LlmPrompts.DeriveSystem, LlmPrompts.DeriveUserPrompt(frozen, LoginExample.Model), LlmPrompts.DeriveSchema).Id,
+        var approved = Artifacts.Approve(LastroJson.Deserialize<IntentArtifact>(File.ReadAllText(Path.Combine(dir, ".lastro", "intents.json"))));
+        Assert.Equal(new LlmRequest("derive", LlmPrompts.DeriveSystem, LlmPrompts.DeriveUserPrompt(approved, LoginExample.Model), LlmPrompts.DeriveSchema).Id,
             Path.GetFileName(n.Body["answer"]!.GetValue<string>()).Replace(".answer.json", ""));
-        Answer(n.Body, CoreTests.DeriveAnswerFor(frozen));
+        Answer(n.Body, CoreTests.DeriveAnswerFor(approved));
         n = Node(dir, "spec");
         Assert.True(n.Code == 0, n.Body.ToJsonString());
-        Assert.Equal(frozen.Hash, n.Body["artifactHash"]!.GetValue<string>());
+        Assert.Equal(approved.Hash, n.Body["artifactHash"]!.GetValue<string>());
 
         r = await DotNet(dir, "prove", typeof(LoginExample).Assembly.Location, "--export", "Lastro.Tests.LoginExample.SkipPassword");
         Assert.Equal(1, r.Code);

@@ -68,7 +68,7 @@ export function Introduction() {
         </li>
         <li>
           <strong>Review.</strong> People approve, amend or reject each intent. Your team's <A to="concepts/review">policy</A> sets how many approvals an intent needs.
-          The reviewed intents are frozen under a SHA-256 hash.
+          The reviewed intents are approved under a SHA-256 hash.
         </li>
         <li>
           <strong>Spec.</strong> An LLM derives a <A to="concepts/spec">formal spec</A> from the approved intents, in LSL (a JSON AST that is never evaluated as code).
@@ -312,7 +312,7 @@ $ lastro prove ./shipping.mjs`} />
           I4 ("instantly") is <strong>beyond proof</strong>: timing is not a property of the decision. The receipt says so instead of hiding it.
         </li>
         <li>
-          The decision about discounts did not become code. It became a fact the team chose, recorded in the frozen intents.
+          The decision about discounts did not become code. It became a fact the team chose, recorded in the approved intents.
         </li>
       </Ul>
       <P>

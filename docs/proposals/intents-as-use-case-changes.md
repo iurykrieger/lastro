@@ -61,7 +61,7 @@ interface IntentArtifact {
 
 ## Approved intents
 
-"Frozen" goes away as a user-facing term: the reviewed state is called **approved**. An intent is approved when it
+"Frozen" is gone as a user-facing term: the reviewed state is called **approved**. An intent is approved when it
 meets the team's review policy, and the change request is approved when every intent is approved or rejected
 and every decision is answered. Approval is what gates everything downstream:
 
@@ -95,7 +95,7 @@ Everything the framework generates or keeps lives in `.lastro/` (or the folder g
 |---|---|---|
 | Extract | `plan(prose)` | `plan(prose, catalog)`. The prompt gets the catalog and must return changes. Deterministic checks: `modify`/`remove` name an existing slug; `add` uses a new kebab-case slug; `after` is present for add/modify; quotes are anchored as today. `before` is filled from the catalog. |
 | Review | approve / amend / reject statements | Same actions on changes. `amend` rewrites `after` (or the slug of an add). |
-| Approve (today "freeze") | `freeze()` hashes the reviewed artifact | Renamed: when the review policy is met, the change request becomes **approved** and its hash is taken (`approve()`, replacing `freeze()`; `isApproved()` replacing `isIntact()`). The hash also binds `baseline`: if the catalog changed since extraction, the approval is stale and the prose must be extracted again. |
+| Approve | `approve()` (formerly `freeze()`) hashes the reviewed artifact | The hash also binds `baseline`: if the catalog changed since extraction, the approval is stale and the prose must be extracted again. |
 | Derive | clauses from approved intents of a frozen artifact | Clauses from the **after** state of each touched use case. Unchanged use cases are out of scope for this change. |
 | Prove | unchanged | unchanged |
 | Apply | — | New `apply` (library and CLI): writes the approved changes into the catalog, only when the proof is ok, and records the new baseline hash in the receipt. |

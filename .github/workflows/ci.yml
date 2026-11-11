@@ -25,6 +25,8 @@ jobs:
         run: npm run wasm
       - name: SDK tests
         run: npm test -w lastro
+      - name: Lastro's own use-case proofs (regression run on the real SDK and plugin)
+        run: npm run build -w lastro && node sdks/typescript/dist/src/cli.js regress
       - name: Plugin tests (Claude Code and Codex hooks, through the real CLI)
         run: npm test -w @lastro/plugin
       - name: Claude Code plugin checks (manifests, the lastro-board mod's tests)

@@ -103,9 +103,13 @@ jobs:
         working-directory: apps/docs
       - name: Docs UI tests (Playwright)
         run: npm run test:e2e -w @lastro/docs
+      - name: Review app UI tests (Playwright, on a fixture workspace)
+        run: npm run test:e2e -w @lastro/review
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: docs-playwright-report
-          path: apps/docs/playwright-report
+          path: |
+            apps/docs/playwright-report
+            apps/review/playwright-report
           retention-days: 7

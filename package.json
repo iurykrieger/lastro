@@ -9,6 +9,8 @@
     "build:sandbox": "npm run wasm && npm run build -w @lastro/sandbox",
     "build:sandbox:single": "npm run wasm && SINGLEFILE=1 npm run build -w @lastro/sandbox -- --outDir dist-single",
     "docs": "npm run dev -w @lastro/docs",
-    "build:docs": "npm run build -w @lastro/docs"
+    "build:docs": "npm run build -w @lastro/docs",
+    "review": "npm run dev -w @lastro/review",
+    "build:review": "npm run build -w @lastro/review"
   }
 }

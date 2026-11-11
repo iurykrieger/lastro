@@ -16,7 +16,7 @@ Today an intent is a standalone promise read from the prose. The model this prop
 
 ```
 use-cases.json (baseline) ─┐
-                           ├─ extract ─▶ intents: add / modify / remove ─▶ review ─▶ freeze
+                           ├─ extract ─▶ intents: add / modify / remove ─▶ review ─▶ approved
 prose (change request) ────┘                                                    │
                                                                          derive ▼
                                                 proof plan for the use cases after the change
@@ -59,6 +59,19 @@ interface IntentArtifact {
 `kind` goes away: `preserve` is what every untouched use case already is, and `behavior`, `invariant` and
 `non-functional` move into the use case's description.
 
+## Approved intents
+
+"Frozen" goes away as a user-facing term: the reviewed state is called **approved**. An intent is approved when it
+meets the team's review policy, and the change request is approved when every intent is approved or rejected
+and every decision is answered. Approval is what gates everything downstream:
+
+- Only approved intents are sent to proof derivation. Proposed, amended-but-unapproved and rejected intents never are.
+- Only approved intents are handed to whoever implements the change (an agent or a person). A new
+  `brief()` (library) and `lastro brief` (CLI) render the approved changes (use case, before and after) as the
+  implementation brief; failing proofs keep coming back through `feedback`.
+- Changing an approved intent (amend, reject, a new extraction) withdraws the approval of the change request,
+  so derivation, the brief and `apply` refuse until it is approved again.
+
 ## Where files live
 
 Everything the framework generates or keeps lives in `.lastro/` (or the folder given with `--dir`):
@@ -68,7 +81,7 @@ Everything the framework generates or keeps lives in `.lastro/` (or the folder g
   use-cases.json     the catalog: the baseline, versioned with the code
   config.json        model and review policy
   intents.json       the current change request's intents and their review
-  spec.json          the frozen intents and the derived proof plan
+  spec.json          the approved intents and the derived proof plan
   proof.json         the last verification
   receipt.md         the last receipt
   llm/               handoff requests and answers
@@ -82,8 +95,8 @@ Everything the framework generates or keeps lives in `.lastro/` (or the folder g
 |---|---|---|
 | Extract | `plan(prose)` | `plan(prose, catalog)`. The prompt gets the catalog and must return changes. Deterministic checks: `modify`/`remove` name an existing slug; `add` uses a new kebab-case slug; `after` is present for add/modify; quotes are anchored as today. `before` is filled from the catalog. |
 | Review | approve / amend / reject statements | Same actions on changes. `amend` rewrites `after` (or the slug of an add). |
-| Freeze | hash of the artifact | Also binds `baseline`: if the catalog changed since extraction, the artifact is stale and must be extracted again. |
-| Derive | clauses from approved intents | Clauses from the **after** state of each touched use case. Unchanged use cases are out of scope for this change. |
+| Approve (today "freeze") | `freeze()` hashes the reviewed artifact | Renamed: when the review policy is met, the change request becomes **approved** and its hash is taken (`approve()`, replacing `freeze()`; `isApproved()` replacing `isIntact()`). The hash also binds `baseline`: if the catalog changed since extraction, the approval is stale and the prose must be extracted again. |
+| Derive | clauses from approved intents of a frozen artifact | Clauses from the **after** state of each touched use case. Unchanged use cases are out of scope for this change. |
 | Prove | unchanged | unchanged |
 | Apply | — | New `apply` (library and CLI): writes the approved changes into the catalog, only when the proof is ok, and records the new baseline hash in the receipt. |
 | Re-extract | carry review by statement | Carry review by `(change, useCase, after)`, ignoring case and spacing. |

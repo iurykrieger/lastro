@@ -58,4 +58,5 @@ npm test -w @lastro/plugin           # Claude Code / Codex plugin hooks, through
 claude plugin test plugins/lastro-board   # the Claude Code mod's tests
 dotnet test sdks/dotnet          # .NET SDK tests (cross-checks need the TS build and lastro-prove)
 cargo build --release -p lastro-core && (cd sdks/go && go test ./...)   # Go SDK, cross-checked with TS and Rust
+npm run build:sandbox && npm run test:e2e -w @lastro/sandbox   # sandbox UI tests (Playwright)
 ```

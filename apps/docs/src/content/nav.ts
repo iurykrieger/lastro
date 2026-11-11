@@ -22,6 +22,17 @@ export const NAV: NavSection[] = [
     ],
   },
   {
+    title: "Examples",
+    pages: [
+      { slug: "examples/overview", title: "Try it in the browser", description: "Live examples running the real SDK and the Rust prover in your browser.", keywords: "interactive playground live demo wasm" },
+      { slug: "examples/shipping", title: "Fix the shipping fee", description: "Change the code with controls and watch the proof, the feedback and the receipt.", keywords: "interactive playground off by one feedback receipt" },
+      { slug: "examples/login", title: "Run one login", description: "Follow one request through the login and see which clauses apply to it.", keywords: "interactive request flow clause applies explainRun" },
+      { slug: "examples/bugs", title: "Plant a bug", description: "Six realistic bugs, the clause that catches each one, and the counterexample.", keywords: "interactive bug mutant counterexample vacuous" },
+      { slug: "examples/review", title: "Review it yourself", description: "Approve, amend, reject and answer decisions, and see which code passes.", keywords: "interactive review amend reject decision quiz" },
+      { slug: "examples/trust", title: "Trusted pieces and traces", description: "Proved under assumptions, and a production trace that breaks a proved clause.", keywords: "interactive assumptions trusted trace production" },
+    ],
+  },
+  {
     title: "Concepts",
     pages: [
       { slug: "concepts/pipeline", title: "The pipeline", description: "Plan, review, spec, prove: what is AI, what is deterministic, and who writes the code.", keywords: "flow stages harness agnostic" },

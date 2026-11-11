@@ -39,6 +39,10 @@ jobs:
           go test ./...
       - name: Sandbox build
         run: npm run build -w @lastro/sandbox
+      - name: Install Playwright browser
+        run: npx -w @lastro/sandbox playwright install --with-deps chromium
+      - name: Sandbox UI tests
+        run: npm run test:e2e -w @lastro/sandbox
   dotnet:
     runs-on: ubuntu-latest
     env:

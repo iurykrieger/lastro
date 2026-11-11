@@ -53,4 +53,5 @@ npm run build -w lastro && npm run test:examples -w @lastro/docs   # docs exampl
 npm run test:e2e -w @lastro/docs     # docs UI tests (Playwright)
 dotnet test sdks/dotnet          # .NET SDK tests (cross-checks need the TS build and lastro-prove)
 cargo build --release -p lastro-core && (cd sdks/go && go test ./...)   # Go SDK, cross-checked with TS and Rust
+npm run build:sandbox && npm run test:e2e -w @lastro/sandbox   # sandbox UI tests (Playwright)
 ```

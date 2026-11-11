@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { extractLogin } from "@lastro/example-login";
 import { AI_I5, PROSE, REVIEWERS, type Lastro } from "@/state";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { approvalCount } from "@lastro/sdk";
+import { approvalCount, type DecisionCard } from "@lastro/sdk";
 import { PROVABILITY, REASON } from "./verdicts";
 
 const KIND: Record<string, string> = { behavior: "behavior", invariant: "invariant", preserve: "preserve", "non-functional": "non-functional" };
@@ -25,6 +25,19 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
   const [tab, setTab] = useState("intents");
   const [proseDraft, setProseDraft] = useState<string | null>(null);
   const extracting = l.ai.busy === "extract";
+  // Each decision sits under the first intent it affects that is still waiting for approval
+  // (or its first intent, once they are all approved).
+  const isApproved = (id: string) => {
+    const it = a.intents.find((x) => x.id === id);
+    return !!it && (it.status === "rejected" || approvalCount(it) >= l.requiredApprovals);
+  };
+  const hosted = new Map<string, DecisionCard[]>();
+  const orphans: DecisionCard[] = [];
+  for (const d of a.decisions) {
+    const host = d.intentIds.find((id) => a.intents.some((x) => x.id === id) && !isApproved(id)) ?? d.intentIds.find((id) => a.intents.some((x) => x.id === id));
+    if (!host) orphans.push(d);
+    else hosted.set(host, [...(hosted.get(host) ?? []), d]);
+  }
   const original = a.prose === PROSE;
 
   const applyProse = async () => {
@@ -64,8 +77,9 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="prose">Text</TabsTrigger>
-            <TabsTrigger value="intents">Intents ({a.intents.length})</TabsTrigger>
-            <TabsTrigger value="decisions">Decisions ({a.decisions.length})</TabsTrigger>
+            <TabsTrigger value="intents">
+              Intents ({a.intents.length}){a.decisions.length ? ` · ${a.decisions.length} decisions` : ""}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="prose" className="space-y-3">
@@ -150,7 +164,7 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
               <Alert variant="warning">
                 <AlertTitle>Review not finished</AlertTitle>
                 <AlertDescription className="grid gap-2">
-                  <span>Proofs are derived only from approved intents. Pending: {l.pending.join("; ")}.</span>
+                  <span>Proofs are derived only from approved intents. {l.pending.length} item(s) pending: see the top of the page.</span>
                   <span>
                     <Button
                       size="sm"
@@ -204,10 +218,14 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                 <Undo2 /> Restore reviewed example
               </Button>
             </div>
+            {orphans.map((d) => (
+              <DecisionBlock key={d.id} d={d} l={l} open />
+            ))}
             <ul className="grid gap-2">
               {a.intents.map((i) => (
                 <li
                   key={i.id}
+                  aria-label={`Intent ${i.id}`}
                   onMouseEnter={() => setHover(i.id)}
                   onMouseLeave={() => setHover(null)}
                   className={cn(
@@ -305,6 +323,9 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
                       </Button>
                     )}
                   </div>
+                  {hosted.get(i.id)?.map((d) => (
+                    <DecisionBlock key={d.id} d={d} l={l} open={d.chosen === undefined || !isApproved(i.id)} />
+                  ))}
                 </li>
               ))}
             </ul>
@@ -319,41 +340,57 @@ export function ProsePanel({ l, hover, setHover }: { l: Lastro; hover: string | 
               </div>
             )}
           </TabsContent>
-
-          <TabsContent value="decisions" className="space-y-3">
-            {a.decisions.map((d) => (
-              <div key={d.id} className="grid gap-3 rounded-lg border p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Decision {d.id} · affects {d.intentIds.join(", ")}
-                  {d.origin !== "extraction" && " · from the spec: your answer becomes an intent to approve"}
-                </p>
-                <p className="font-medium">{d.question}</p>
-                <RadioGroup
-                  value={d.chosen === undefined ? "" : String(d.chosen)}
-                  onValueChange={(v) => l.reviewAs((r) => r.answer(d.id, Number(v)))}
-                >
-                  {d.options.map((o, k) => (
-                    <Label
-                      key={k}
-                      htmlFor={`${d.id}-${k}`}
-                      className={cn("flex cursor-pointer items-start gap-3 rounded-md border p-3 font-normal", d.chosen === k && "border-brass bg-brass/5")}
-                    >
-                      <RadioGroupItem id={`${d.id}-${k}`} value={String(k)} className="mt-0.5" />
-                      <span className="grid gap-1">
-                        <span className="font-medium">
-                          {o.label}
-                          {k === d.recommended && <span className="ml-1 text-xs text-muted-foreground">(recommended)</span>}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{o.consequence}</span>
-                      </span>
-                    </Label>
-                  ))}
-                </RadioGroup>
-              </div>
-            ))}
-          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
+  );
+}
+
+/** A decision card inside the intent it affects. Collapsed to its answer once settled. */
+function DecisionBlock({ d, l, open }: { d: DecisionCard; l: Lastro; open: boolean }) {
+  const [expanded, setExpanded] = useState(open);
+  const answered = d.chosen !== undefined;
+  const show = expanded || open;
+  return (
+    <div role="group" aria-label={`Decision ${d.id}`} className={cn("grid gap-2 rounded-md border p-3", answered ? "border-border bg-muted/40" : "border-evidence/60 bg-evidence-soft/40")}>
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <Badge variant={answered ? "secondary" : "evidence"}>Decision {d.id}</Badge>
+        <span className="text-muted-foreground">
+          affects {d.intentIds.join(", ")}
+          {d.origin !== "extraction" && " · from the spec: your answer becomes an intent to approve"}
+        </span>
+        {answered && !open && (
+          <Button size="sm" variant="ghost" className="ml-auto h-6 px-2 text-xs" onClick={() => setExpanded((x) => !x)}>
+            {show ? "Hide" : "Change"}
+          </Button>
+        )}
+      </div>
+      <p className="text-sm font-medium">{d.question}</p>
+      {!show && answered ? (
+        <p className="text-xs">
+          <span className="text-muted-foreground">Decided: </span>
+          {d.options[d.chosen!]!.label}
+        </p>
+      ) : (
+        <RadioGroup value={answered ? String(d.chosen) : ""} onValueChange={(v) => l.reviewAs((r) => r.answer(d.id, Number(v)))}>
+          {d.options.map((o, k) => (
+            <Label
+              key={k}
+              htmlFor={`${d.id}-${k}`}
+              className={cn("flex cursor-pointer items-start gap-3 rounded-md border bg-background p-2.5 font-normal", d.chosen === k && "border-brass bg-brass/5")}
+            >
+              <RadioGroupItem id={`${d.id}-${k}`} value={String(k)} className="mt-0.5" />
+              <span className="grid gap-0.5">
+                <span className="text-sm font-medium">
+                  {o.label}
+                  {k === d.recommended && <span className="ml-1 text-xs text-muted-foreground">(recommended)</span>}
+                </span>
+                <span className="text-xs text-muted-foreground">{o.consequence}</span>
+              </span>
+            </Label>
+          ))}
+        </RadioGroup>
+      )}
+    </div>
   );
 }

@@ -3,6 +3,10 @@
 The developer documentation site: Vite + React + shadcn/ui (new-york, zinc, the sandbox's tokens), hash routing,
 no backend. Any static host serves `dist/`.
 
+Published to GitHub Pages at <https://iurykrieger.github.io/lastro/> by `.github/workflows/docs.yml` on every push to
+`main` that touches the docs (or by hand from the Actions tab). The site uses relative asset paths (`base: "./"`), so
+it works under the `/lastro/` path without configuration. One-time setup: Settings → Pages → Source: GitHub Actions.
+
 ```sh
 npm run docs                              # dev server on http://localhost:5174 (from the repo root)
 npm run build -w @lastro/docs             # static site in apps/docs/dist

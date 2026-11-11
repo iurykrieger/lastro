@@ -68,6 +68,7 @@ export {
   proofsFromDerivation,
   proposalFeedback,
   proposalFromExtraction,
+  reservedUseCaseIds,
   proveProposal,
   readPolicy,
   regress,

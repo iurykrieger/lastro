@@ -161,6 +161,8 @@ export interface SurveyInput {
   submittedBy: string;
   useCases: UseCase[];
   policy: ProposalPolicy;
+  /** Use-case ids other open proposals reserved (see reservedUseCaseIds). */
+  reserved?: string[];
   /** Models and subjects already declared in `.lastro/config.json`. */
   config: { models: Record<string, Model>; subjects: Record<string, SubjectDecl> };
 }
@@ -327,7 +329,7 @@ export function proposalFromSurvey(input: SurveyInput, out: SurveyOut): Proposal
     decisions: (out.decisions ?? []).map((d) => ({ slug: d.slug, name: d.name, question: d.question, options: d.options, recommended: d.recommended, intents: d.behaviors })),
     notPromised: (out.notCovered ?? []).map((n) => `Not covered: ${n.path} (${n.reason})`),
   };
-  const p = proposalFromExtraction({ id: input.id, prose, submittedBy: input.submittedBy, useCases, policy: input.policy }, propose);
+  const p = proposalFromExtraction({ id: input.id, prose, submittedBy: input.submittedBy, useCases, policy: input.policy, ...(input.reserved ? { reserved: input.reserved } : {}) }, propose);
   p.intents.forEach((it, k) => (it.grounds = grounds[k]));
   p.origin = { kind: "bootstrap", head: digest.head, digest: digest.hash, scope: [...digest.scope] };
   if (Object.keys(setup.models).length || Object.keys(setup.subjects).length) p.setup = setup;

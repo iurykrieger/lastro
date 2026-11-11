@@ -15,7 +15,7 @@
       "name": "Digest the repository",
       "description": "lastro scan reads the repository without an LLM: every tracked file (git ls-files, or a folder walk outside git that skips build and dependency folders) with its role, language, line count and exported names; every test it finds by name, as <file>::<name>; the manifests (package.json, go.mod, Cargo.toml, *.csproj, pyproject.toml); the newest commits with their subject, the first lines of their body without trailers, and the files they touched; and the areas (manifest folders, otherwise top-level folders) with their size, printed with the suggested scopes.",
       "change": "add",
-      "useCase": "UC-046",
+      "useCase": "UC-051",
       "provability": "empirical",
       "source": {
         "quote": "`lastro scan` reads the repository without any LLM and prints its size",
@@ -32,7 +32,7 @@
       "name": "Deterministic digest",
       "description": "The digest is the same for the same checkout and options: files and tests are sorted, commits follow git log order, and its hash is sha256 over its canonical JSON.",
       "change": "add",
-      "useCase": "UC-046",
+      "useCase": "UC-051",
       "provability": "formal",
       "source": {
         "quote": "The same checkout and options always give the same digest and the same hash.",
@@ -49,7 +49,7 @@
       "name": "Bounded scan",
       "description": "--scope takes comma-separated folders or files and limits files and commits to them (a scope that matches no file is an error); --max-commits (default 400, 0 skips history) and --since bound the history; the digest records the totals and whether files or commits were cut.",
       "change": "add",
-      "useCase": "UC-046",
+      "useCase": "UC-051",
       "provability": "empirical",
       "source": {
         "quote": "`--scope` limits it to some folders, `--max-commits` and `--since` limit the history.",
@@ -66,7 +66,7 @@
       "name": "Survey step",
       "description": "lastro bootstrap scans the repository and asks the survey step (by handoff or the Anthropic API, step name survey) with the recorded use cases, the digest and source excerpts within a character budget (manifests and READMEs, then tests, then source files); it creates the workspace config when there is none.",
       "change": "add",
-      "useCase": "UC-047",
+      "useCase": "UC-052",
       "provability": "empirical",
       "source": {
         "quote": "`lastro bootstrap` scans the repository and sends the digest, with source excerpts, to the survey step",
@@ -83,7 +83,7 @@
       "name": "Grounded behaviors",
       "description": "Each behavior the survey returns must cite files and tests that are in the digest and commits by full hash or a unique prefix of at least 7 characters, with at least one file or test; otherwise the whole answer is refused with every problem listed.",
       "change": "add",
-      "useCase": "UC-047",
+      "useCase": "UC-052",
       "provability": "formal",
       "source": {
         "quote": "Every behavior must be grounded in files, tests or commits that are in the digest",
@@ -100,7 +100,7 @@
       "name": "Leave proven use cases alone",
       "description": "A bootstrap only adds use cases or modifies recorded use cases that have no proofs; an add that reuses a recorded slug, a modify of an unknown slug or of a use case with proofs, or any remove is refused.",
       "change": "add",
-      "useCase": "UC-047",
+      "useCase": "UC-052",
       "provability": "formal",
       "source": {
         "quote": "never lets a bootstrap touch a use case that already has proofs",
@@ -117,7 +117,7 @@
       "name": "Bootstrap proposal",
       "description": "The survey's answer becomes a proposal whose prose is a generated report (one section per use case with its change and confidence, one line per behavior with its grounds, and what is not covered); each behavior becomes an intent on its use case carrying grounds (files, tests, full commit hashes, confidence), and the proposal's origin records kind bootstrap, the commit, the digest hash and the scope. Running it again with --proposal keeps the review of unchanged intents.",
       "change": "add",
-      "useCase": "UC-047",
+      "useCase": "UC-052",
       "provability": "empirical",
       "source": {
         "quote": "The answer becomes a bootstrap proposal.",
@@ -134,7 +134,7 @@
       "name": "Reviewed setup",
       "description": "Models and subjects the survey proposes must be well formed and new to the configuration; they are bound by the approval like the intents, are used by derive and prove, and are added to .lastro/config.json only by apply.",
       "change": "add",
-      "useCase": "UC-047",
+      "useCase": "UC-052",
       "provability": "empirical",
       "source": {
         "quote": "It may bring the models and subjects its proofs need",
@@ -151,7 +151,7 @@
       "name": "The code is the reference",
       "description": "When a bootstrap proposal's proofs fail, prove and feedback start the brief with a note that the code must not change: the reading is wrong (amend the intent) or the code has a bug the team decides about.",
       "change": "add",
-      "useCase": "UC-047",
+      "useCase": "UC-052",
       "provability": "empirical",
       "source": {
         "quote": "The code is the reference",
@@ -168,7 +168,7 @@
       "name": "Bootstrap skill",
       "description": "The plugin's bootstrap skill walks the agent through lastro scan, lastro bootstrap (answering the survey handoff), the user's review with grounds and confidence, derive, prove against the code as it is, and apply, one area at a time for a large repository.",
       "change": "add",
-      "useCase": "UC-048",
+      "useCase": "UC-053",
       "provability": "empirical",
       "source": {
         "quote": "a bootstrap skill walks the agent through scan, bootstrap, the user's review, derive, prove and apply",
@@ -185,7 +185,7 @@
       "name": "Gate suggests a bootstrap",
       "description": "When there is no proposal and no use case is recorded, the gate's reason and the next step tell the agent to run lastro scan and lastro bootstrap first if the repository already has code.",
       "change": "add",
-      "useCase": "UC-048",
+      "useCase": "UC-053",
       "provability": "empirical",
       "source": {
         "quote": "When no use case is recorded yet, the gate tells the agent to bootstrap an existing repository first.",
@@ -202,7 +202,7 @@
       "name": "Review shows grounds",
       "description": "For a bootstrap proposal, the review Markdown says it was read from the code at a commit and shows each intent's confidence, files, tests and short commit hashes instead of the quote.",
       "change": "add",
-      "useCase": "UC-048",
+      "useCase": "UC-053",
       "provability": "empirical",
       "source": {
         "quote": "The review shows each bootstrap intent's grounds and confidence",
@@ -219,7 +219,7 @@
       "name": "Stop hook does not fix bootstrap code",
       "description": "When a bootstrap proposal's proofs fail, the Stop hook does not block the stop or count attempts; it shows the board and tells the agent to take each failing proof to the user to amend or reject.",
       "change": "add",
-      "useCase": "UC-048",
+      "useCase": "UC-053",
       "provability": "empirical",
       "source": {
         "quote": "the Stop hook never sends a failing bootstrap proof back to the agent as code to fix",
@@ -233,7 +233,7 @@
   ],
   "useCases": [
     {
-      "useCase": "UC-046",
+      "useCase": "UC-051",
       "slug": "scan-repository",
       "change": "add",
       "name": "Scan an existing repository",
@@ -245,7 +245,7 @@
       ]
     },
     {
-      "useCase": "UC-047",
+      "useCase": "UC-052",
       "slug": "bootstrap-existing-repository",
       "change": "add",
       "name": "Bootstrap use cases from an existing repository",
@@ -260,7 +260,7 @@
       ]
     },
     {
-      "useCase": "UC-048",
+      "useCase": "UC-053",
       "slug": "bootstrap-with-the-agent-plugin",
       "change": "add",
       "name": "Bootstrap with the agent plugin",

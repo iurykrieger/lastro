@@ -281,6 +281,13 @@ export interface ProposeInput {
   submittedBy: string;
   useCases: UseCase[];
   policy: ProposalPolicy;
+  /** Use-case ids other open proposals already reserved for their adds; new adds number after them too. */
+  reserved?: string[];
+}
+
+/** Use-case ids reserved by the adds of proposals that are not applied or closed (excluding `except`). */
+export function reservedUseCaseIds(proposals: Proposal[], except?: string): string[] {
+  return proposals.filter((p) => p.id !== except && p.status !== "applied" && p.status !== "closed").flatMap((p) => p.useCases.filter((c) => c.change === "add").map((c) => c.useCase));
 }
 
 /** Build a proposal from the extract step's answer. Throws ProposalError with every problem found. */
@@ -289,7 +296,7 @@ export function proposalFromExtraction(input: ProposeInput, out: ProposeOut): Pr
   const problems: string[] = [];
   const bySlug = new Map(useCases.map((u) => [u.slug, u]));
   const reserved = new Map<string, string>();
-  let next = Number(nextId("UC", useCases.map((u) => u.id)).slice(3));
+  let next = Number(nextId("UC", [...useCases.map((u) => u.id), ...(input.reserved ?? [])]).slice(3));
   const ucId = (slug: string, change: ChangeKind): string | undefined => {
     const existing = bySlug.get(slug);
     if (existing) return existing.id;

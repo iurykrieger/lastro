@@ -33,6 +33,7 @@ import {
   carryProposalReview,
   pendingProposal,
   proposalFeedback,
+  reservedUseCaseIds,
   proveProposal,
   regress,
   renderProposalReceipt,
@@ -322,7 +323,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         const previous = args.flags.proposal ? ws.proposal(args.flags.proposal) : existing;
         const id = previous?.id ?? named?.[1] ?? ws.nextProposalId();
         const submittedBy = args.flags.as ?? previous?.submittedBy ?? process.env.LASTRO_USER ?? "submitter";
-        let p = await extractProposal(await pickAsk(args, ws.dir), { id, prose, submittedBy, useCases, policy: cfg.review });
+        let p = await extractProposal(await pickAsk(args, ws.dir), { id, prose, submittedBy, useCases, policy: cfg.review, reserved: reservedUseCaseIds(ws.proposals(), id) });
         if (previous) p = carryProposalReview(previous, p);
         const slug = previous?.slug ?? named?.[2];
         if (slug) p.slug = slug; // slugs are stable
@@ -364,7 +365,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         const id = previous?.id ?? ws.nextProposalId();
         const submittedBy = args.flags.as ?? previous?.submittedBy ?? process.env.LASTRO_USER ?? "submitter";
         const excerpts = excerptsOf(ws.root, digest, args.flags.budget ? Number(args.flags.budget) : undefined);
-        let p = await surveyProposal(await pickAsk(args, ws.dir), { id, digest, submittedBy, useCases, policy: cfg.review, config: cfg }, excerpts);
+        let p = await surveyProposal(await pickAsk(args, ws.dir), { id, digest, submittedBy, useCases, policy: cfg.review, config: cfg, reserved: reservedUseCaseIds(ws.proposals(), id) }, excerpts);
         if (previous) {
           p = carryProposalReview(previous, p);
           p.slug = previous.slug; // slugs are stable

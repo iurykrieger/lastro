@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ProposalError, proposalFromSurvey, renderSurveyReport, type RepoDigest, type SurveyOut, type UseCase } from "../src/index.js";
+import { ProposalError, proposalFromSurvey, renderSurveyReport, reservedUseCaseIds, type RepoDigest, type SurveyOut, type UseCase } from "../src/index.js";
 import { roleOf, scanRepo, symbolsOf, testsOf } from "../src/bootstrap/scan.js";
 import { main as cli } from "../src/cli.js";
 
@@ -268,4 +268,15 @@ test("cli: bootstrap an existing repository into proven use cases", async () => 
   r = await cli(["bootstrap", "--as", "ana", ...ws]);
   assert.equal(r.body.status, "refused");
   assert.match(JSON.stringify(r.body.problems), /already exists as UC-001/);
+});
+
+test("adds number after the use-case ids other open proposals reserved", () => {
+  const { dir, fix } = fixtureRepo();
+  const digest = scanRepo(dir);
+  const first = proposalFromSurvey({ id: "P-001", digest, submittedBy: "ana", useCases: [], policy: POLICY, config: EMPTY }, survey(fix));
+  assert.deepEqual(reservedUseCaseIds([first]), ["UC-001"]);
+  assert.deepEqual(reservedUseCaseIds([first], "P-001"), [], "a proposal does not reserve against itself");
+  assert.deepEqual(reservedUseCaseIds([{ ...first, status: "applied" }]), []);
+  const second = proposalFromSurvey({ id: "P-002", digest, submittedBy: "ana", useCases: [], policy: POLICY, config: EMPTY, reserved: reservedUseCaseIds([first]) }, survey(fix));
+  assert.deepEqual(second.useCases.map((c) => c.useCase), ["UC-002"]);
 });

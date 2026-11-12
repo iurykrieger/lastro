@@ -3,6 +3,5 @@
   "slug": "plug-any-llm",
   "name": "Plug in any LLM transport",
   "description": "The AI steps are transport-free: prompts, schemas and deterministic converters behind one AskJson function that takes the step, system prompt, user content and schema and returns JSON. Any transport works (an API, an in-browser model, a test double), and createLastro also accepts a custom extractor or deriver, including static ones. Nothing the LLM returns is trusted: quotes are anchored, LSL is validated and plans are checked.",
-  "proofs": [],
   "history": []
 }

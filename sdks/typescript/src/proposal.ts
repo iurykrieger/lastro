@@ -60,7 +60,8 @@ export interface ProofEntry {
   slug: string;
   name: string;
   description: string;
-  intent: string; // "P-007.I-03"
+  /** The intent it checks; absent on a proof derived straight from its use case (`UC-012.PF-01`). */
+  intent?: string; // "P-007.I-03"
   useCase: string; // "UC-012"
   model: string;
   subject: string;
@@ -157,9 +158,12 @@ export type ProposalStatus = "open" | "changes-requested" | "approved" | "provin
 export interface ProofOutcome {
   proof: string;
   useCase: string;
-  intent: string;
-  /** "proposal": derived for this proposal; "regression": a use case's proof; "superseded": replaced by this proposal. */
-  role: "proposal" | "regression" | "superseded";
+  intent?: string;
+  /**
+   * "proposal": derived for this proposal; "regression": a use case's passed proof; "superseded": replaced by this
+   * proposal; "usecase": a use case's pending or failed proof, derived from its description (`lastro prove --usecases`).
+   */
+  role: "proposal" | "regression" | "superseded" | "usecase";
   verdict: ClauseVerdict;
   passed: boolean;
   counterexample?: { input: Env; output: Env | null };
@@ -225,6 +229,9 @@ export function nextId(prefix: "UC" | "P", ids: string[]): string {
 }
 
 export const fileNameOf = (e: { id: string; slug: string }) => `${e.id}-${e.slug}.json`;
+
+/** A use case's passed proofs: its regression tests. Pending and failed ones (derived from its description) are not. */
+export const passedProofs = (u: Pick<UseCase, "proofs">): ProofEntry[] => u.proofs.filter((x) => x.status === "passed");
 
 /** sha256 over the canonical use cases without their proofs: what the prose was read against. */
 export function baselineOf(useCases: UseCase[]): string {
@@ -718,6 +725,47 @@ export interface ProofSetup {
   subjects: string[];
 }
 
+/** The check of one derived proof (clause or scenario), parsed and validated against its model; problems are pushed. */
+export function checkFromAnswer(
+  pid: string,
+  d: Pick<DeriveV1Out["proofs"][number], "kind" | "requires" | "ensures" | "assumptions" | "inputJson" | "expect">,
+  model: Model,
+  problems: string[],
+): ProofCheck | undefined {
+  const parse = (where: string, s: string): Expr | undefined => {
+    let e: unknown;
+    try {
+      e = typeof s === "string" ? JSON.parse(s) : s;
+    } catch {
+      problems.push(`${pid}.${where}: not valid JSON: ${s}`);
+      return undefined;
+    }
+    const errs = validateExpr(e, model, [], `${pid}.${where}`);
+    if (errs.length) {
+      problems.push(...errs);
+      return undefined;
+    }
+    return e as Expr;
+  };
+  let check: ProofCheck | undefined;
+  if (d.kind === "clause") {
+    const requires = d.requires && String(d.requires).trim() ? parse("requires", d.requires) : undefined;
+    const ensures = parse("ensures", d.ensures);
+    if (ensures) check = { kind: "clause", ...(requires ? { requires } : {}), ensures, assumptions: d.assumptions ?? [] };
+  } else if (d.kind === "scenario") {
+    let input: Record<string, Value> | undefined;
+    try {
+      input = (typeof d.inputJson === "string" ? JSON.parse(d.inputJson) : d.inputJson) as Record<string, Value>;
+    } catch {
+      problems.push(`${pid}.input: not valid JSON`);
+    }
+    for (const k of Object.keys(model.inputs)) if (input && !(k in input)) problems.push(`${pid}.input: missing model input ${k}`);
+    const expect = parse("expect", d.expect);
+    if (input && expect) check = { kind: "scenario", input, expect };
+  } else problems.push(`${pid}: unknown kind "${d.kind}"`);
+  return check;
+}
+
 /**
  * Check the derive step's answer and attach the pending proofs. When derivation
  * returns decisions (a removal the model cannot express, an existing proof the
@@ -744,37 +792,7 @@ export function proofsFromDerivation(p: Proposal, useCases: UseCase[], setup: Pr
     if (!setup.subjects.includes(d.subject)) problems.push(`${pid}: unknown subject "${d.subject}" (declared: ${setup.subjects.join(", ") || "none"})`);
     for (const r of d.replaces ?? []) if (!it?.replaces.some((x) => x.proof === r)) problems.push(`${pid}: replaces ${r}, which its intent does not list`);
     if (!model) return;
-    const parse = (where: string, s: string): Expr | undefined => {
-      let e: unknown;
-      try {
-        e = typeof s === "string" ? JSON.parse(s) : s;
-      } catch {
-        problems.push(`${pid}.${where}: not valid JSON: ${s}`);
-        return undefined;
-      }
-      const errs = validateExpr(e, model, [], `${pid}.${where}`);
-      if (errs.length) {
-        problems.push(...errs);
-        return undefined;
-      }
-      return e as Expr;
-    };
-    let check: ProofCheck | undefined;
-    if (d.kind === "clause") {
-      const requires = d.requires && String(d.requires).trim() ? parse("requires", d.requires) : undefined;
-      const ensures = parse("ensures", d.ensures);
-      if (ensures) check = { kind: "clause", ...(requires ? { requires } : {}), ensures, assumptions: d.assumptions ?? [] };
-    } else if (d.kind === "scenario") {
-      let input: Record<string, Value> | undefined;
-      try {
-        input = (typeof d.inputJson === "string" ? JSON.parse(d.inputJson) : d.inputJson) as Record<string, Value>;
-      } catch {
-        problems.push(`${pid}.input: not valid JSON`);
-      }
-      for (const k of Object.keys(model.inputs)) if (input && !(k in input)) problems.push(`${pid}.input: missing model input ${k}`);
-      const expect = parse("expect", d.expect);
-      if (input && expect) check = { kind: "scenario", input, expect };
-    } else problems.push(`${pid}: unknown kind "${d.kind}"`);
+    const check = checkFromAnswer(pid, d, model, problems);
     if (!check || !it) return;
     proofs.push({
       id: pid,
@@ -891,7 +909,7 @@ export async function runProofs(proofs: { proof: ProofEntry; role: ProofOutcome[
   let agree: boolean | undefined;
   const role = new Map(proofs.map((x) => [x.proof.id, x.role]));
   const all = proofs.map((x) => x.proof);
-  const missing = (pr: ProofEntry, note: string): ProofOutcome => ({ proof: pr.id, useCase: pr.useCase, intent: pr.intent, role: role.get(pr.id)!, verdict: "not-run", passed: false, note });
+  const missing = (pr: ProofEntry, note: string): ProofOutcome => ({ proof: pr.id, useCase: pr.useCase, ...(pr.intent ? { intent: pr.intent } : {}), role: role.get(pr.id)!, verdict: "not-run", passed: false, note });
   for (const pr of all) {
     if (!o.models[pr.model]) outcomes.push(missing(pr, `model ${pr.model} is not declared`));
     else if (!o.subjects[pr.subject]) outcomes.push(missing(pr, `subject ${pr.subject} is not available`));
@@ -913,7 +931,7 @@ export async function runProofs(proofs: { proof: ProofEntry; role: ProofOutcome[
       outcomes.push({
         proof: pr.id,
         useCase: pr.useCase,
-        intent: pr.intent,
+        ...(pr.intent ? { intent: pr.intent } : {}),
         role: role.get(pr.id)!,
         verdict: r.verdict,
         passed: r.verdict === "proved" || r.verdict === "evidenced",
@@ -927,7 +945,7 @@ export async function runProofs(proofs: { proof: ProofEntry; role: ProofOutcome[
       outcomes.push({
         proof: pr.id,
         useCase: pr.useCase,
-        intent: pr.intent,
+        ...(pr.intent ? { intent: pr.intent } : {}),
         role: role.get(pr.id)!,
         verdict: r.status === "passed" ? "evidenced" : "violated",
         passed: r.status === "passed",
@@ -949,7 +967,7 @@ function resultingUseCases(p: Proposal, useCases: UseCase[]): { id: string; proo
   for (const u of useCases) {
     const c = changes.find((x) => x.useCase === u.id);
     if (c?.change === "remove") continue;
-    out.push({ id: u.id, proofs: u.proofs.filter((x) => !sup.has(x.id)).length + p.proofs.filter((x) => x.useCase === u.id).length });
+    out.push({ id: u.id, proofs: passedProofs(u).filter((x) => !sup.has(x.id)).length + p.proofs.filter((x) => x.useCase === u.id).length });
   }
   for (const c of changes) if (c.change === "add") out.push({ id: c.useCase, proofs: p.proofs.filter((x) => x.useCase === c.useCase).length });
   return out;
@@ -966,7 +984,7 @@ export async function proveProposal(p: Proposal, useCases: UseCase[], o: RunOpti
   if (!p.proofs.length && forwardIntents(p).some((i) => i.provability !== "beyond-proof")) throw new ProposalError([`${p.id} has no proofs: run derive first`]);
   const sup = new Set(p.supersedes);
   const removed = new Set(liveChanges(p).filter((c) => c.change === "remove").map((c) => c.useCase));
-  const existing = useCases.flatMap((u) => u.proofs);
+  const existing = useCases.flatMap(passedProofs);
   const set = [
     ...p.proofs.map((proof) => ({ proof, role: "proposal" as const })),
     ...existing.filter((x) => !sup.has(x.id) && !removed.has(x.useCase)).map((proof) => ({ proof, role: "regression" as const })),
@@ -993,9 +1011,9 @@ export async function proveProposal(p: Proposal, useCases: UseCase[], o: RunOpti
 
 /** Run every use case's proofs alone (`lastro regress`). */
 export async function regress(useCases: UseCase[], o: RunOptions): Promise<ProposalRun> {
-  const { outcomes, enginesAgree } = await runProofs(useCases.flatMap((u) => u.proofs.map((proof) => ({ proof, role: "regression" as const }))), o);
+  const { outcomes, enginesAgree } = await runProofs(useCases.flatMap((u) => passedProofs(u).map((proof) => ({ proof, role: "regression" as const }))), o);
   const regressions = outcomes.filter((x) => !x.passed).map((x) => x.proof);
-  return { ok: !regressions.length && enginesAgree !== false, outcomes, regressions, replacedStillPass: [], unproved: useCases.filter((u) => !u.proofs.length).map((u) => u.id), ...(enginesAgree !== undefined ? { enginesAgree } : {}) };
+  return { ok: !regressions.length && enginesAgree !== false, outcomes, regressions, replacedStillPass: [], unproved: useCases.filter((u) => !passedProofs(u).length).map((u) => u.id), ...(enginesAgree !== undefined ? { enginesAgree } : {}) };
 }
 
 // ---------------------------------------------------------------------------

@@ -21,7 +21,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadRustProver, type RustProver } from "./rust.js";
 import { sha256Hex } from "./sha256.js";
 import type { AskJson } from "./llm/llm.js";
-import { deriveProofs, extractProposal, recombineAfter } from "./llm/proposal.js";
+import { deriveProofs, deriveUseCaseProofs, extractProposal, recombineAfter } from "./llm/proposal.js";
+import { isUseCaseList, proveUseCases } from "./usecase-proofs.js";
 import { surveyProposal } from "./llm/bootstrap.js";
 import { BOOTSTRAP_FEEDBACK_NOTE, isBootstrap, setupOf, suggestScopes } from "./bootstrap.js";
 import { DEFAULT_MAX_COMMITS, excerptsOf, scanRepo, type ScanOptions } from "./bootstrap/scan.js";
@@ -31,6 +32,7 @@ import {
   approveProposal,
   baselineOf,
   carryProposalReview,
+  passedProofs,
   pendingProposal,
   proposalFeedback,
   reservedUseCaseIds,
@@ -73,12 +75,17 @@ const USAGE = `lastro <command> [options]
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
                                                 resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
   derive <P>                                    derive the pending proofs of the approved intents
+  derive --usecases [UC-003,UC-016]             derive proofs straight from the established use cases (default:
+                                                every use case with no passed proof) into .lastro/proof/
   prove <P> [<module.js>] [--export name] [--stream]
                                                 run its proofs and every use case's proofs (regression);
                                                 writes the receipt next to the proposal
+  prove --usecases [<module.js>] [--export name]
+                                                run the use cases' pending proofs with every passed one; a pending
+                                                proof that passes becomes a regression test
   feedback <P>                                  the last run's failures, as a brief for whoever writes the code
-  apply <P>                                     attach the proofs to their use cases and sync .lastro/usecases/
-  regress [<module.js>] [--export name]         run every use case's proofs alone
+  apply <P>                                     write the proofs to .lastro/proof/ and sync .lastro/usecases/
+  regress [<module.js>] [--export name]         run every use case's passed proofs alone
 
   <P> is a proposal id (P-001, or 1) or slug; without it, the latest open proposal.
   --dir <path>          workspace (default .lastro)
@@ -164,6 +171,14 @@ export function section(markdown: string, title: string): string {
     }
   }
   return lines.slice(start + 1, end).join("\n");
+}
+
+/** Use-case proofs that are not regression tests yet, when there are any. */
+function pendingUseCaseProofs(useCases: UseCase[]) {
+  const all = useCases.flatMap((u) => u.proofs);
+  const pending = all.filter((x) => x.status === "pending").map((x) => x.id);
+  const failed = all.filter((x) => x.status === "failed").map((x) => x.id);
+  return { ...(pending.length ? { pendingProofs: pending } : {}), ...(failed.length ? { failedProofs: failed } : {}) };
 }
 
 /** One proposal as the CLI prints it: what a reviewer needs, nothing more. */
@@ -394,7 +409,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         if (!rest[0] && !args.flags.proposal) {
           const all = ws.proposals().map((p) => ({ id: p.id, slug: p.slug, name: p.name, status: p.status, pending: pendingProposal(p).length }));
           const open = all.filter((p) => p.status !== "applied" && p.status !== "closed");
-          return { code: open.length ? 1 : 0, body: { status: "status", useCases: useCases.length, proofs: useCases.reduce((n, u) => n + u.proofs.length, 0), unproved: useCases.filter((u) => !u.proofs.length).map((u) => u.id), proposals: all } };
+          return { code: open.length ? 1 : 0, body: { status: "status", useCases: useCases.length, proofs: useCases.reduce((n, u) => n + passedProofs(u).length, 0), ...pendingUseCaseProofs(useCases), unproved: useCases.filter((u) => !passedProofs(u).length).map((u) => u.id), proposals: all } };
         }
         const p = ws.proposal(rest[0] ?? args.flags.proposal);
         const s = summary(p, useCases);
@@ -434,6 +449,23 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         return { code: 0, body: { status: "reviewed", reviewer: who, ...summary(p, useCases) } };
       }
       case "derive": {
+        if (args.flags.usecases !== undefined) {
+          const cfg = ws.config();
+          const useCases = ws.useCases();
+          const ids = isUseCaseList(args.flags.usecases) ? args.flags.usecases.split(",").map((x) => x.trim()) : undefined;
+          const d = await deriveUseCaseProofs(await pickAsk(args, ws.dir), useCases, ids, { models: cfg.models, subjects: Object.keys(cfg.subjects).length ? Object.keys(cfg.subjects) : Object.keys(cfg.models) });
+          for (const u of d.useCases) ws.writeUseCase(u);
+          if (!d.useCases.length) return { code: 0, body: { status: "nothing-to-derive", note: "every use case has passed proofs" } };
+          return {
+            code: 0,
+            body: {
+              status: "derived",
+              useCases: d.useCases.map((u) => ({ id: u.id, name: u.name, proofs: d.derived.filter((x) => x.useCase === u.id).map((x) => ({ id: x.id, description: x.description, kind: x.check.kind })) })).filter((u) => u.proofs.length),
+              unprovable: d.unprovable,
+              next: "lastro prove --usecases",
+            },
+          };
+        }
         const cfg = ws.config();
         const useCases = ws.useCases();
         const p = ws.proposal(rest[0]);
@@ -446,6 +478,26 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         return { code: 0, body: { status: "derived", ...summary(next, useCases) } };
       }
       case "prove": {
+        if (args.flags.usecases !== undefined) {
+          const cfg = ws.config();
+          const module = args.flags.usecases !== "true" && !isUseCaseList(args.flags.usecases) ? args.flags.usecases : rest[0];
+          const r = await proveUseCases(ws.useCases(), { subjects: await loadSubjects(ws, cfg, args, module), models: cfg.models, rust: await rustProver() });
+          for (const u of r.useCases) ws.writeUseCase(u);
+          return {
+            code: r.run.ok ? 0 : 1,
+            body: {
+              status: r.run.ok ? "passed" : "failed",
+              ok: r.run.ok,
+              enginesAgree: r.run.enginesAgree ?? null,
+              passed: r.run.outcomes.filter((x) => x.role === "usecase" && x.passed).map((x) => x.proof),
+              failed: r.run.failed,
+              regressions: r.run.regressions,
+              failures: r.run.outcomes.filter((x) => !x.passed),
+              unproved: r.run.unproved,
+              ...(r.run.note ? { note: r.run.note } : {}),
+            },
+          };
+        }
         const base = ws.config();
         const useCases = ws.useCases();
         const looksLikeModule = (x: string | undefined) => !!x && /\.(m?js|cjs|ts)$/.test(x);

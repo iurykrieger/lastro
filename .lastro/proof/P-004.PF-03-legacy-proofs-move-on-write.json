@@ -1,0 +1,68 @@
+{
+  "id": "P-004.PF-03",
+  "slug": "legacy-proofs-move-on-write",
+  "name": "Old files keep their proofs and move them",
+  "description": "A use case file with a proofs list is read with its proof, which moves to .lastro/proof/ when the use case is written.",
+  "intent": "P-004.I-03",
+  "useCase": "UC-046",
+  "model": "proof_files",
+  "subject": "proof_files",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.legacy"
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.loaded"
+            },
+            {
+              "const": 1
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "var": "in.rewrite"
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.proofFiles"
+                    },
+                    {
+                      "const": 1
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "out.embedded"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

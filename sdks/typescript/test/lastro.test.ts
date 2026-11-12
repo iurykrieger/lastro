@@ -366,7 +366,7 @@ test("cli: --section reads one Markdown section, up to the next heading of the s
   assert.throws(() => section(md, "Missing"));
 });
 
-test(".lastro/usecases and .lastro/proposals: Lastro's own use cases and proposals are well formed", () => {
+test(".lastro/usecases, .lastro/proof and .lastro/proposals: Lastro's own use cases, proofs and proposals are well formed", () => {
   const lastro = joinPath(toPath(new URL(".", import.meta.url)), "..", "..", "..", "..", ".lastro");
   const kebab = /^[a-z0-9]+(-[a-z0-9]+)*$/;
   const ids = new Set<string>();
@@ -375,7 +375,7 @@ test(".lastro/usecases and .lastro/proposals: Lastro's own use cases and proposa
   assert.ok(files.length > 0);
   for (const f of files) {
     const u = JSON.parse(readFile(joinPath(lastro, "usecases", f), "utf8")) as Record<string, unknown>;
-    assert.deepEqual(Object.keys(u).sort(), ["description", "history", "id", "name", "proofs", "slug"], f);
+    assert.deepEqual(Object.keys(u).sort(), ["description", "history", "id", "name", "slug"], f);
     assert.match(String(u.id), /^UC-\d{3,}$/, `${f}: bad id`);
     assert.match(String(u.slug), kebab, `${f}: slug is not kebab-case`);
     assert.equal(f, `${u.id}-${u.slug}.json`, `${f}: file name must be <id>-<slug>.json`);
@@ -383,7 +383,18 @@ test(".lastro/usecases and .lastro/proposals: Lastro's own use cases and proposa
     ids.add(u.id as string);
     slugs.add(u.slug as string);
     assert.ok(String(u.name).trim() && String(u.description).trim(), `${f}: needs a name and a description`);
-    assert.ok(Array.isArray(u.proofs) && Array.isArray(u.history), `${f}: proofs and history are lists`);
+    assert.ok(Array.isArray(u.history), `${f}: history is a list`);
+  }
+  // Each proof of a use case has its own file in .lastro/proof/, named <proof-id>-<slug>.json.
+  const proofIds = new Set<string>();
+  for (const f of readdirSync(joinPath(lastro, "proof")).filter((f) => f.endsWith(".json"))) {
+    const pr = JSON.parse(readFile(joinPath(lastro, "proof", f), "utf8")) as { id: string; slug: string; useCase: string; status: string; check: { kind: string } };
+    assert.equal(f, `${pr.id}-${pr.slug}.json`, `${f}: file name must be <proof-id>-<slug>.json`);
+    assert.ok(ids.has(pr.useCase), `${f}: unknown use case ${pr.useCase}`);
+    assert.ok(/^(P|UC)-\d{3,}\.PF-\d{2,}$/.test(pr.id) && kebab.test(pr.slug), `${f}: bad id or slug`);
+    assert.ok(["pending", "passed", "failed"].includes(pr.status) && ["clause", "scenario"].includes(pr.check.kind), `${f}: bad status or check`);
+    assert.ok(!proofIds.has(pr.id), `${f}: duplicate proof id`);
+    proofIds.add(pr.id);
   }
   for (const f of readdirSync(joinPath(lastro, "proposals")).filter((f) => f.endsWith(".json"))) {
     const p = JSON.parse(readFile(joinPath(lastro, "proposals", f), "utf8")) as {

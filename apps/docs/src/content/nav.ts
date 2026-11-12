@@ -49,7 +49,7 @@ export const NAV: NavSection[] = [
   {
     title: "CLI",
     pages: [
-      { slug: "cli/overview", title: "Commands", description: "init, propose, status, review, derive, prove, feedback, apply and regress, with their JSON and exit codes.", keywords: "commands flags exit codes json" },
+      { slug: "cli/overview", title: "Commands", description: "init, propose, status, review, derive, prove, feedback, apply and regress, with their JSON and exit codes.", keywords: "commands flags exit codes json derive usecases" },
       { slug: "cli/workspace", title: "The .lastro/ workspace", description: "Every file the CLI writes, and how the three CLIs share one workspace.", keywords: "workspace files config usecases proposals proofs receipt" },
       { slug: "cli/llm", title: "LLM handoff", description: "Run the two AI steps on the Anthropic API, or hand them to the calling agent's own model.", keywords: "handoff anthropic api key agent harness claude code codex exit 3" },
     ],

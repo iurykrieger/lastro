@@ -66,5 +66,10 @@ The code is the reference here. **Never change the code to make a bootstrap proo
 ## 5. Apply
 
 When `<cli> prove <P>` passes, run `<cli> apply <P>`: the use cases are written to `.lastro/usecases/`, their proofs
-become regression tests, and the proposal's models and subjects join `.lastro/config.json`. Commit `.lastro/`.
-Bootstrap the next area, or switch to the `propose` skill for the first change.
+to `.lastro/proof/` as regression tests, and the proposal's models and subjects join `.lastro/config.json`. Commit
+`.lastro/`. Bootstrap the next area, or switch to the `propose` skill for the first change.
+
+Use cases that are already written but have no proofs (`<cli> status` lists them under `unproved`) need no proposal:
+run `<cli> derive --usecases` (answer the handoff from the use cases' descriptions only), then
+`<cli> prove --usecases`. A use case no declared model expresses comes back as `unprovable`; tell the user. A failing
+proof goes to the user with the note, never back to the code.

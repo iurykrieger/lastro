@@ -116,6 +116,7 @@ test("before any review, code edits wait; proposals and allowed paths do not", {
   assert.equal(decision(edit(dir, "docs/notes.md")), "allow");
   assert.equal(classify(ws, dir, join(dir, ".lastro", "llm", "x.answer.json")), "free");
   assert.equal(classify(ws, dir, join(dir, ".lastro", "usecases", "UC-001-x.json")), "generated");
+  assert.equal(classify(ws, dir, join(dir, ".lastro", "proof", "UC-001.PF-01-x.json")), "generated");
   assert.equal(classify(ws, dir, join(dir, ".lastro", "proposals", "P-001-x.json")), "generated");
   assert.equal(classify(ws, dir, join(dir, ".lastro", "proposals", "P-001-x.md")), "free");
 });

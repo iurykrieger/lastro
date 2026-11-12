@@ -1,0 +1,84 @@
+{
+  "id": "P-004.PF-11",
+  "slug": "failing-use-case-proof-goes-to-user",
+  "name": "A failing use case proof goes to the user",
+  "description": "A pending or failed use case proof that fails ends failed, with the note, without feedback to the code.",
+  "intent": "P-004.I-11",
+  "useCase": "UC-054",
+  "model": "usecase_prove",
+  "subject": "usecase_prove",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.codeOk"
+            }
+          ]
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.status"
+            },
+            {
+              "const": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.status"
+            },
+            {
+              "const": "failed"
+            }
+          ]
+        },
+        {
+          "var": "out.note"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.feedback"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.ok"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.regression"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

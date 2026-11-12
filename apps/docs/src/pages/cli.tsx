@@ -1,5 +1,5 @@
 import { A, C, Callout, Code, CodeTabs, DataTable, H1, H2, H3, Lead, P, Ul } from "@/components/doc";
-import { OUT, STREAM, USECASE } from "@/content/outputs";
+import { OUT, PROOF, STREAM, USECASE } from "@/content/outputs";
 
 // ---------------------------------------------------------------------------
 // Commands
@@ -42,12 +42,17 @@ export function CliOverview() {
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
                                                 resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
   derive <P>                                    derive the pending proofs of the approved intents
+  derive --usecases [UC-003,UC-016]             derive proofs straight from the established use cases (default:
+                                                every use case with no passed proof) into .lastro/proof/
   prove <P> [<module.js>] [--export name] [--stream]
                                                 run its proofs and every use case's proofs (regression);
                                                 writes the receipt next to the proposal
+  prove --usecases [<module.js>] [--export name]
+                                                run the use cases' pending proofs with every passed one; a pending
+                                                proof that passes becomes a regression test
   feedback <P>                                  the last run's failures, as a brief for whoever writes the code
-  apply <P>                                     attach the proofs to their use cases and sync .lastro/usecases/
-  regress [<module.js>] [--export name]         run every use case's proofs alone
+  apply <P>                                     write the proofs to .lastro/proof/ and sync .lastro/usecases/
+  regress [<module.js>] [--export name]         run every use case's passed proofs alone
 
   <P> is a proposal id (P-001, or 1) or slug; without it, the latest open proposal.
   --dir <path>          workspace (default .lastro)
@@ -55,7 +60,7 @@ export function CliOverview() {
       />
 
       <P>
-        Everything lives in the workspace: <C>.lastro/config.json</C> (models, subjects, review policy), one file per use case in <C>.lastro/usecases/</C>, and
+        Everything lives in the workspace: <C>.lastro/config.json</C> (models, subjects, review policy), one file per use case in <C>.lastro/usecases/</C>, one file per proof in <C>.lastro/proof/</C>, and
         one file per proposal in <C>.lastro/proposals/</C> with its prose (<C>.md</C>) and its last receipt (<C>.receipt.md</C>). See{" "}
         <A to="concepts/proposals">use cases and proposals</A>. A workspace from an older version (<C>intents.json</C>, <C>spec.json</C>, <C>proof.json</C>) is
         refused: delete those files and run <C>propose</C> again.
@@ -119,6 +124,25 @@ $ lastro review P-001 --as ana recombine UC-001 "keep the wording short"`}
         intent replacing it come back as decisions: the proposal goes back to review (status <C>back-to-review</C>, exit 1).
       </P>
 
+      <H3>derive --usecases</H3>
+      <P>
+        Derives proofs straight from the use cases' descriptions, with no proposal and no intents: they were already reviewed, and they state what the code does
+        today. By default it takes every use case with no passed proof; <C>--usecases UC-003,UC-016</C> names them, and a named use case that already has passed
+        proofs is refused (exit 1), since its proofs change only through a proposal. Each proof is numbered inside its use case (<C>UC-003.PF-01</C>), written to{" "}
+        <C>.lastro/proof/</C> as <C>pending</C>, and replaces that use case's earlier pending or failed ones. A use case no declared model can express gets no proof
+        and comes back under <C>unprovable</C> with the reason: declare a model for it with <C>lastro init --model</C> and derive again.
+      </P>
+      <Code
+        lang="bash"
+        code={`$ lastro derive --usecases          # exit 3: answer the handoff request, then run it again
+$ lastro prove --usecases           # exit 0 when every pending proof passes; they are regression tests from now on`}
+      />
+      <P>
+        <C>prove --usecases</C> runs every pending or failed use-case proof together with every passed one. A pending proof that passes becomes <C>passed</C> and
+        from then on runs in <C>prove</C> and <C>regress</C>. One that fails becomes <C>failed</C>, and the output carries a <C>note</C>: the code is the reference,
+        so either the description is wrong (change it with a proposal) or the code has a bug for you to decide about. It is never sent back to the code as feedback.
+      </P>
+
       <H2>prove</H2>
       <P>
         Runs the proposal's proofs and every use case's proofs (a failing one is a regression) against the code, and writes the receipt next to the proposal.
@@ -174,7 +198,7 @@ $ lastro-go prove P-001 --cmd "python3 decide.py" --prover ./target/release/last
       <H2>apply</H2>
       <P>
         Runs only when the proposal is approved, its baseline still matches the use cases, and its last run passed every proof, new and regression. It writes
-        each use case the proposal adds or changes, deletes the removed ones, moves each proof to its use case as a regression test, drops the superseded proofs
+        each use case the proposal adds or changes, deletes the removed ones, writes each proof to <C>.lastro/proof/</C> as a regression test of its use case, deletes the superseded proofs' files
         and records the proposal in each use case's <C>history</C>. Use cases still without proofs are reported as <C>unproved</C>; they do not block it.
       </P>
       <Code lang="json" title="lastro apply P-001 · stdout" code={OUT.applied} />
@@ -186,7 +210,7 @@ $ lastro-go prove P-001 --cmd "python3 decide.py" --prover ./target/release/last
       </P>
 
       <H2>regress</H2>
-      <P>Runs every use case's proofs alone, against the declared subjects or one module. Exit 1 on any regression.</P>
+      <P>Runs every use case's passed proofs alone, against the declared subjects or one module. Exit 1 on any regression. Pending and failed proofs derived from a use case are not regression tests yet.</P>
       <Code lang="json" title="lastro regress ./shipping.mjs · stdout" code={OUT.regress} />
 
       <H2>Global flags</H2>
@@ -216,7 +240,10 @@ export function CliWorkspace() {
         code={`.lastro/
 ├── config.json                         models, subjects and the review policy (init)
 ├── usecases/
-│   └── UC-001-charge-shipping.json     one use case: its description, its proofs, its history (apply)
+│   └── UC-001-charge-shipping.json     one use case: its description and its history (apply)
+├── proof/
+│   ├── P-001.PF-01-free-from-100.json  one proof of a use case, found by its useCase (apply)
+│   └── UC-003.PF-01-<slug>.json        a proof derived straight from a use case (derive --usecases)
 ├── proposals/
 │   ├── P-001-shipping-fee.md           the prose (propose)
 │   ├── P-001-shipping-fee.json         the proposal: intents, review, proofs, last run (propose … prove)
@@ -232,7 +259,8 @@ export function CliWorkspace() {
         head={["File", "Written by", "Contents"]}
         rows={[
           [<C>config.json</C>, <C>init</C>, <><C>{`{ models, subjects, review: { approvals, submitterCanApprove } }`}</C> (the older <C>model</C> and <C>requiredApprovals</C> keys are still read)</>],
-          [<C>usecases/&lt;id&gt;-&lt;slug&gt;.json</C>, <C>apply</C>, <><C>{`{ id, slug, name, description, proofs, history }`}</C>: the application, one use case per file</>],
+          [<C>usecases/&lt;id&gt;-&lt;slug&gt;.json</C>, <C>apply</C>, <><C>{`{ id, slug, name, description, history }`}</C>: the application, one use case per file. An older file that still has a <C>proofs</C> list is read as before, and its proofs move to <C>proof/</C> the next time the use case is written</>],
+          [<C>proof/&lt;proof-id&gt;-&lt;slug&gt;.json</C>, <><C>apply</C>, <C>derive --usecases</C>, <C>prove --usecases</C></>, <><C>{`{ id, slug, name, description, intent?, useCase, model, subject, check, replaces?, status, verdict?, evidence? }`}</C>: one proof of a use case. Passed ones are its regression tests</>],
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.json</C>, <><C>propose</C>, <C>review</C>, <C>derive</C>, <C>prove</C>, <C>apply</C></>, <>a <A to="concepts/proposals">proposal</A>: prose, intents, use-case changes, decisions, threads, policy, proofs, last run</>],
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.md</C>, <><C>propose</C>, or you</>, "the prose; edit it and run propose on it again"],
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.receipt.md</C>, <><C>prove</C>, <C>apply</C></>, "the Markdown receipt"],
@@ -240,12 +268,13 @@ export function CliWorkspace() {
           [<C>llm/*.json</C>, <>handoff, and the calling agent</>, "AI requests and their answers"],
         ]}
       />
-      <P>A use case after <C>apply</C>, with the proofs that now guard it:</P>
+      <P>A use case after <C>apply</C>, and one of the four proofs that now guard it:</P>
       <Code lang="json" title=".lastro/usecases/UC-001-charge-shipping.json" code={USECASE} />
+      <Code lang="json" title=".lastro/proof/P-001.PF-01-free-from-100.json" code={PROOF} />
 
       <H2>What to commit</H2>
       <P>
-        Commit the whole workspace. The proposals make the review itself reviewable in a pull request, and the use cases carry the proofs every later change is
+        Commit the whole workspace. The proposals make the review itself reviewable in a pull request, and <C>proof/</C> holds the proofs every later change is
         checked against. Committing the <C>llm/*.answer.json</C> files makes the AI steps replayable: a CI job can re-run <C>propose</C>, <C>derive</C> and{" "}
         <C>prove</C> with <C>--llm handoff</C> and no model, and get the same hashes, because a request whose answer file exists is answered from the file.
       </P>

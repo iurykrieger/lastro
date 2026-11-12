@@ -23,7 +23,7 @@ function lastro(cwd, ...args) {
 }
 
 test("the quickstart runs as the docs show it", { skip: !existsSync(cli) && "build the TS SDK first: npm run build -w lastro" }, async () => {
-  const { OUT, RECEIPT, USECASE, STREAM } = await import("../src/content/outputs.ts");
+  const { OUT, RECEIPT, USECASE, PROOF, STREAM } = await import("../src/content/outputs.ts");
   const rust = existsSync(wasm);
   // Without the WASM prover there is no cross-check, so only compare what does not depend on it.
   const same = (real, key) => {
@@ -99,6 +99,7 @@ test("the quickstart runs as the docs show it", { skip: !existsSync(cli) && "bui
   assert.equal(r.code, 0);
   same(r.shown, "applied");
   assert.equal(readFileSync(join(dir, ".lastro", "usecases", "UC-001-charge-shipping.json"), "utf8").trim(), USECASE);
+  assert.equal(readFileSync(join(dir, ".lastro", "proof", "P-001.PF-01-free-from-100.json"), "utf8").trim(), PROOF);
 
   r = lastro(dir, "status");
   same(r.shown, "status");

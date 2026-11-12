@@ -1,0 +1,55 @@
+{
+  "id": "P-004.PF-01",
+  "slug": "proof-in-its-own-file",
+  "name": "A proof lives in its own file",
+  "description": "A use case's proof is read from its own complete file in .lastro/proof/.",
+  "intent": "P-004.I-01",
+  "useCase": "UC-049",
+  "model": "proof_files",
+  "subject": "proof_files",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "not",
+      "args": [
+        {
+          "var": "in.legacy"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.proofFiles"
+            },
+            {
+              "const": 1
+            }
+          ]
+        },
+        {
+          "var": "out.fileComplete"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.loaded"
+            },
+            {
+              "const": 1
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

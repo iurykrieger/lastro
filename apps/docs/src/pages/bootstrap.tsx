@@ -82,7 +82,7 @@ $ lastro bootstrap --as ana`} />
         </Step>
         <Step title="Apply">
           <P>
-            <C>lastro apply</C> writes the use cases to <C>.lastro/usecases/</C> with their proofs as regression tests, and adds the proposal's models and subjects
+            <C>lastro apply</C> writes the use cases to <C>.lastro/usecases/</C> and their proofs to <C>.lastro/proof/</C> as regression tests, and adds the proposal's models and subjects
             to <C>.lastro/config.json</C>. From then on, every proposal is read against them and every change re-runs their proofs.
           </P>
         </Step>
@@ -116,6 +116,19 @@ $ lastro bootstrap --as ana`} />
           [<C>grounds</C>, "intent", <>files, tests (<C>file::name</C>) and full commit hashes, and a confidence: high, medium or low</>],
           [<C>setup</C>, "proposal", <>models and subjects added to <C>.lastro/config.json</C> at apply</>],
         ]}
+      />
+
+      <H2>Use cases without proofs</H2>
+      <P>
+        When the use cases are already written and reviewed (by a bootstrap, or by hand) but some have no proofs yet, derive them straight from the descriptions,
+        with no proposal: <C>lastro derive --usecases</C>, then <C>lastro prove --usecases</C>. Each proof is numbered inside its use case (<C>UC-003.PF-01</C>) and
+        kept in <C>.lastro/proof/</C>; once it passes, it is a regression test. As in a bootstrap, the code is the reference: a failing proof goes to you, never back
+        to the code. See <A to="cli/overview">derive --usecases</A>.
+      </P>
+      <Code
+        lang="bash"
+        code={`$ lastro derive --usecases           # every use case with no passed proof; or --usecases UC-003,UC-016
+$ lastro prove --usecases            # pending proofs that pass become regression tests`}
       />
 
       <Callout kind="note" title="Still two AI steps">

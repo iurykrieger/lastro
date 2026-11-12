@@ -1,0 +1,77 @@
+{
+  "id": "P-001.PF-11",
+  "slug": "counted-approvals",
+  "name": "Which approvals count",
+  "description": "An approved or amended intent counts every reviewer's approval, and the submitter's only when submitterCanApprove is true; other intents count none.",
+  "intent": "P-001.I-21",
+  "useCase": "UC-007",
+  "model": "approval_policy",
+  "subject": "approval_policy",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.counted"
+        },
+        {
+          "op": "ite",
+          "args": [
+            {
+              "op": "in",
+              "args": [
+                {
+                  "var": "in.status"
+                },
+                {
+                  "const": "approved"
+                },
+                {
+                  "const": "amended"
+                }
+              ]
+            },
+            {
+              "op": "add",
+              "args": [
+                {
+                  "var": "in.others"
+                },
+                {
+                  "op": "ite",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "var": "in.submitterSigned"
+                        },
+                        {
+                          "var": "in.submitterCanApprove"
+                        }
+                      ]
+                    },
+                    {
+                      "const": 1
+                    },
+                    {
+                      "const": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "const": 0
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

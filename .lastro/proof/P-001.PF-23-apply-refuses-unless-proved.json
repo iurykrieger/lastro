@@ -1,0 +1,47 @@
+{
+  "id": "P-001.PF-23",
+  "slug": "apply-refuses-unless-proved",
+  "name": "Apply refuses unless proved",
+  "description": "apply goes through exactly when the proposal is approved, its baseline still matches and its last run passed.",
+  "intent": "P-001.I-34",
+  "useCase": "UC-050",
+  "model": "apply_rules",
+  "subject": "apply_rules",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.applied"
+        },
+        {
+          "op": "and",
+          "args": [
+            {
+              "var": "in.approved"
+            },
+            {
+              "var": "in.sameBaseline"
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.run"
+                },
+                {
+                  "const": "passed"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

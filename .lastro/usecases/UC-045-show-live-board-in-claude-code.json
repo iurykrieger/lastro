@@ -3,7 +3,6 @@
   "slug": "show-live-board-in-claude-code",
   "name": "Show approvals and proofs live beside the chat",
   "description": "The lastro-board mod for Claude Code (plugins/lastro-board) reads .lastro/ once a second when the session starts in a repository with a Lastro workspace: config, the current proposal, the use cases and the plugin's progress.jsonl. It opens a pane with the review (each decision answered or not, each intent with its approvals out of the policy's count and the proofs it replaces) and the proofs (○ pending, … running, ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, and the beyond-proof intents), updating each proof as the run under way reports it. It shows a one-line summary above the prompt and in the status line, and a toast when every intent is approved and when a proof run ends. /lastro-board opens the pane. It decides nothing and works only in Claude Code.",
-  "proofs": [],
   "history": [
     "P-001"
   ]

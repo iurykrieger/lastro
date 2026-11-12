@@ -1,0 +1,118 @@
+{
+  "id": "P-001.PF-13",
+  "slug": "policy-from-config",
+  "name": "Policy read from config",
+  "description": "approvals comes from review.approvals, else the legacy requiredApprovals, else 1, and is at least 1; submitterCanApprove defaults to true.",
+  "intent": "P-001.I-20",
+  "useCase": "UC-007",
+  "model": "config_policy",
+  "subject": "config_policy",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.approvals"
+            },
+            {
+              "op": "ite",
+              "args": [
+                {
+                  "op": "lt",
+                  "args": [
+                    {
+                      "op": "ite",
+                      "args": [
+                        {
+                          "var": "in.hasReview"
+                        },
+                        {
+                          "var": "in.reviewApprovals"
+                        },
+                        {
+                          "op": "ite",
+                          "args": [
+                            {
+                              "var": "in.hasLegacy"
+                            },
+                            {
+                              "var": "in.legacy"
+                            },
+                            {
+                              "const": 1
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "const": 1
+                    }
+                  ]
+                },
+                {
+                  "const": 1
+                },
+                {
+                  "op": "ite",
+                  "args": [
+                    {
+                      "var": "in.hasReview"
+                    },
+                    {
+                      "var": "in.reviewApprovals"
+                    },
+                    {
+                      "op": "ite",
+                      "args": [
+                        {
+                          "var": "in.hasLegacy"
+                        },
+                        {
+                          "var": "in.legacy"
+                        },
+                        {
+                          "const": 1
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.submitterCanApprove"
+            },
+            {
+              "op": "ite",
+              "args": [
+                {
+                  "var": "in.hasFlag"
+                },
+                {
+                  "var": "in.flag"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

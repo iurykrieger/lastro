@@ -1,0 +1,36 @@
+{
+  "id": "P-001.PF-20",
+  "slug": "regress-runs-every-proof",
+  "name": "Regress runs every proof",
+  "description": "lastro regress passes exactly when every use case's proofs pass, superseded or not.",
+  "intent": "P-001.I-31",
+  "useCase": "UC-049",
+  "model": "prove_run",
+  "subject": "prove_run",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.regressOk"
+        },
+        {
+          "op": "and",
+          "args": [
+            {
+              "var": "in.regressionPasses"
+            },
+            {
+              "var": "in.supersededPasses"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "UC-054",
+  "slug": "derive-proofs-from-use-cases",
+  "name": "Derive proofs from the established use cases",
+  "description": "lastro derive --usecases derives proofs straight from the established use cases, with no proposal and no intents: by default for every use case that has no proofs, or for the ids it is given (--usecases UC-003,UC-016). The derive step reads each use case's description, the models and subjects declared in .lastro/config.json and the proofs other use cases already have, and writes pending proofs numbered inside their use case (UC-003.PF-01) to .lastro/proof/. A use case the models cannot express gets no proof and is listed as unprovable with the reason. A use case that already has proofs is refused: its proofs change only through a proposal. lastro prove --usecases runs the pending proofs of the use cases together with every passed proof. A pending proof that passes becomes passed and from then on runs as a regression test, in prove and in lastro regress. A pending proof that fails stays failed and is reported with the note that the code is the reference: either the description is wrong, and a proposal fixes it, or the code has a bug the user decides about; it never goes back to the code as feedback.",
+  "history": [
+    "P-004"
+  ]
+}

@@ -200,3 +200,14 @@ test("the existing-repositories page walks through scan, bootstrap, review, prov
   await expect(page).toHaveURL(/#\/plugins\/agents$/);
   await expect(page.getByRole("link", { name: "Existing repositories" }).first()).toBeVisible();
 });
+
+test("proofs live in .lastro/proof, and the CLI page shows how to derive them from the use cases", async ({ page }) => {
+  await page.goto("#/cli/workspace");
+  await expect(page.locator("figure[data-code]", { hasText: ".lastro/proof/P-001.PF-01-free-from-100.json" })).toContainText('"useCase": "UC-001"');
+  await expect(page.locator("figure[data-code]", { hasText: ".lastro/usecases/UC-001-charge-shipping.json" })).not.toContainText('"proofs"');
+  await page.goto("#/cli/overview");
+  await expect(page.getByRole("heading", { name: "derive --usecases", exact: true })).toBeVisible();
+  await page.goto("#/bootstrap");
+  await expect(page.getByRole("heading", { name: "Use cases without proofs", exact: true })).toBeVisible();
+  await expect(page.locator("figure[data-code]", { hasText: "lastro prove --usecases" }).first()).toBeVisible();
+});

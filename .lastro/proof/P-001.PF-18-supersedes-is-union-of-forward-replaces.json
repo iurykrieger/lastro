@@ -1,0 +1,66 @@
+{
+  "id": "P-001.PF-18",
+  "slug": "supersedes-is-union-of-forward-replaces",
+  "name": "Supersedes follows the forward intents",
+  "description": "A proof is superseded exactly when an approved or amended intent replaces it.",
+  "intent": "P-001.I-28",
+  "useCase": "UC-013",
+  "model": "supersedes",
+  "subject": "supersedes",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.first"
+            },
+            {
+              "op": "in",
+              "args": [
+                {
+                  "var": "in.first"
+                },
+                {
+                  "const": "approved"
+                },
+                {
+                  "const": "amended"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.second"
+            },
+            {
+              "op": "in",
+              "args": [
+                {
+                  "var": "in.second"
+                },
+                {
+                  "const": "approved"
+                },
+                {
+                  "const": "amended"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

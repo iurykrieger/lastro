@@ -1,0 +1,44 @@
+{
+  "id": "P-004.PF-04",
+  "slug": "apply-writes-and-deletes-proof-files",
+  "name": "Apply writes and deletes proof files",
+  "description": "Apply writes the new passing proof's file and deletes the superseded proof's file, and only it.",
+  "intent": "P-004.I-04",
+  "useCase": "UC-050",
+  "model": "apply_proof_files",
+  "subject": "apply_proof_files",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.applied"
+        },
+        {
+          "var": "out.newFile"
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.oldFile"
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.supersede"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

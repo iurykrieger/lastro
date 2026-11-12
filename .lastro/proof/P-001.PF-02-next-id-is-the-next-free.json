@@ -1,0 +1,101 @@
+{
+  "id": "P-001.PF-02",
+  "slug": "next-id-is-the-next-free",
+  "name": "Next id is the next free one",
+  "description": "The new use case takes the first number after the highest one in use, so no number is skipped.",
+  "intent": "P-001.I-03",
+  "useCase": "UC-046",
+  "model": "next_use_case_id",
+  "subject": "next_use_case_id",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "or",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.next"
+            },
+            {
+              "op": "add",
+              "args": [
+                {
+                  "var": "in.a"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.next"
+            },
+            {
+              "op": "add",
+              "args": [
+                {
+                  "var": "in.b"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.next"
+            },
+            {
+              "op": "add",
+              "args": [
+                {
+                  "op": "ite",
+                  "args": [
+                    {
+                      "var": "in.hasReserved"
+                    },
+                    {
+                      "var": "in.reserved"
+                    },
+                    {
+                      "const": 0
+                    }
+                  ]
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.next"
+            },
+            {
+              "const": 1
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

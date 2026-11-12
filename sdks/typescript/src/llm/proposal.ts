@@ -5,11 +5,14 @@
  *   extract  prose + use cases (with their proofs) ─▶ intents, resulting use cases, decisions
  *            (also: recombine one use case's `after` from its remaining intents)
  *   derive   approved intents + models ─▶ pending proofs, or decisions
+ *            (also: established use cases + models ─▶ pending proofs per use case, or why one is unprovable)
  */
 import { show } from "../spec/expr.js";
 import { BEYOND_PROOF_REASONS, type Model } from "../types.js";
+import { proofsFromUseCases, useCaseTargets, type UseCaseDerivation, type UseCaseDeriveOut } from "../usecase-proofs.js";
 import {
   forwardIntents,
+  passedProofs,
   proofsFromDerivation,
   proposalFromExtraction,
   type DeriveV1Out,
@@ -228,4 +231,86 @@ export function deriveProofsUserPrompt(p: Proposal, useCases: UseCase[], models:
 export async function deriveProofs(ask: AskJson, p: Proposal, useCases: UseCase[], setup: ProofSetup, opts: VerifyOptions = {}): Promise<Proposal> {
   const out = (await ask({ step: "derive", system: DERIVE_PROOFS_SYSTEM, user: deriveProofsUserPrompt(p, useCases, setup.models, setup.subjects), schema: DERIVE_PROOFS_SCHEMA })) as DeriveV1Out;
   return proofsFromDerivation(p, useCases, setup, out, opts);
+}
+
+// ---------------------------------------------------------------------------
+// Derive from use cases: proofs straight from the established use cases
+// ---------------------------------------------------------------------------
+
+export const DERIVE_USECASE_PROOFS_SYSTEM = `You derive proofs for an application's ESTABLISHED use cases, in LSL (Lastro Spec Language).
+
+Each use case's description was reviewed by people and states what the code does today. You are not changing anything: write deterministic checks that the code does what the description says.
+
+LSL expressions are JSON:
+  {"var":"in.<input>"} | {"var":"out.<output>"} | {"const": true|1|"admin"}
+  {"op": and|or|not|implies|iff|eq|neq|lt|le|gt|ge|add|sub|mul|ite|in, "args":[...]}
+  {"call":"<def>", "args":[...]}
+Only use the variables and defs of the model the proof names. Each expression is returned as a JSON STRING.
+
+Each proof checks one use case ("useCase" is its id) and names its model and subject (from the ones declared):
+- kind "clause": a formal if-then promise "for every input: requires => ensures" (requires is "" when there is no if-part). Prefer both directions. inputJson and expect are "".
+- kind "scenario": a concrete input (inputJson, a JSON object with every model input) and an LSL "expect" over in.* and out.*. requires and ensures are "".
+- Check only what the description states. Never weaken a proof to make it pass, and never assert behavior the description does not state.
+- Every use case to prove gets at least one proof, or goes in "unprovable" with the reason (no declared model expresses it, or what it states is beyond proof: external code, world facts, timing, human judgment). Never both.
+- Slugs are kebab-case and unique within a use case.`;
+
+export const DERIVE_USECASE_PROOFS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["proofs", "unprovable"],
+  properties: {
+    proofs: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["useCase", "slug", "name", "description", "model", "subject", "kind", "requires", "ensures", "assumptions", "inputJson", "expect"],
+        properties: {
+          useCase: STR,
+          slug: STR,
+          name: STR,
+          description: STR,
+          model: STR,
+          subject: STR,
+          kind: { type: "string", enum: ["clause", "scenario"] },
+          requires: STR,
+          ensures: STR,
+          assumptions: STR_ARR,
+          inputJson: STR,
+          expect: STR,
+        },
+      },
+    },
+    unprovable: {
+      type: "array",
+      items: { type: "object", additionalProperties: false, required: ["useCase", "reason"], properties: { useCase: STR, reason: STR } },
+    },
+  },
+};
+
+export function deriveUseCaseProofsUserPrompt(targets: UseCase[], useCases: UseCase[], models: Record<string, Model>, subjects: string[]): string {
+  const wanted = new Set(targets.map((u) => u.id));
+  return JSON.stringify(
+    {
+      models,
+      subjects,
+      useCasesToProve: targets.map((u) => ({ id: u.id, name: u.name, description: u.description })),
+      provenUseCases: useCases.filter((u) => !wanted.has(u.id) && passedProofs(u).length).map((u) => ({ id: u.id, name: u.name, proofs: proofView({ ...u, proofs: passedProofs(u) }) })),
+    },
+    null,
+    2,
+  );
+}
+
+/** The derive step for established use cases: pending proofs, numbered inside each use case, or the reason it cannot be proved. */
+export async function deriveUseCaseProofs(ask: AskJson, useCases: UseCase[], ids: string[] | undefined, setup: ProofSetup): Promise<UseCaseDerivation> {
+  const targets = useCaseTargets(useCases, ids);
+  if (!targets.length) return { useCases: [], derived: [], unprovable: [] };
+  const out = (await ask({
+    step: "derive",
+    system: DERIVE_USECASE_PROOFS_SYSTEM,
+    user: deriveUseCaseProofsUserPrompt(targets, useCases, setup.models, setup.subjects),
+    schema: DERIVE_USECASE_PROOFS_SCHEMA,
+  })) as UseCaseDeriveOut;
+  return proofsFromUseCases(useCases, targets.map((u) => u.id), setup, out);
 }

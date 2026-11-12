@@ -47,6 +47,7 @@ OUT.applied = run("apply", "P-001").text;
 OUT.status = run("status").text;
 OUT.regress = run("regress", "./shipping.mjs").text;
 const USECASE = readFileSync(join(dir, ".lastro", "usecases", "UC-001-charge-shipping.json"), "utf8").trim();
+const PROOF = readFileSync(join(dir, ".lastro", "proof", "P-001.PF-01-free-from-100.json"), "utf8").trim();
 const DERIVE_REQUEST_KEYS = Object.keys(JSON.parse(readFileSync(r.body.request, "utf8")));
 
 // The plugin's board on the same example, at three moments.
@@ -78,6 +79,8 @@ export const OUT = ${JSON.stringify(OUT, null, 2)};
 export const RECEIPT = ${JSON.stringify(RECEIPT)};
 
 export const USECASE = ${JSON.stringify(USECASE)};
+
+export const PROOF = ${JSON.stringify(PROOF)};
 
 export const DERIVE_REQUEST_KEYS = ${JSON.stringify(DERIVE_REQUEST_KEYS)};
 

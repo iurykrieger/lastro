@@ -13,7 +13,7 @@ export const GENERATED = ["config.json", "intents.json", "spec.json", "proof.jso
 
 /** Folders whose JSON files only the CLI writes: the use cases, the proposals and their receipts. */
 const isGenerated = (inWs) =>
-  GENERATED.includes(inWs) || inWs.startsWith("plugin/") || inWs.startsWith("usecases/") || (inWs.startsWith("proposals/") && (inWs.endsWith(".json") || inWs.endsWith(".receipt.md") || inWs.endsWith(".runs.jsonl")));
+  GENERATED.includes(inWs) || inWs.startsWith("plugin/") || inWs.startsWith("usecases/") || inWs.startsWith("proof/") || (inWs.startsWith("proposals/") && (inWs.endsWith(".json") || inWs.endsWith(".receipt.md") || inWs.endsWith(".runs.jsonl")));
 
 export const DEFAULTS = {
   /** The command that runs the Lastro CLI: `lastro`, `npx lastro`, `lastro-go`, `node path/to/cli.js`... */
@@ -101,10 +101,11 @@ export function readProposal(ws, id) {
   return f ? readJson(join(dir, f)) : undefined;
 }
 
-/** The use cases, for the descriptions of the proofs an intent replaces. */
+/** The use cases with their proofs (from .lastro/proof/, or an older use case file's own list), for the proofs an intent replaces. */
 function readUseCases(ws) {
-  const dir = ws.file("usecases");
-  return existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => readJson(join(dir, f))).filter(Boolean) : [];
+  const list = (sub) => (existsSync(ws.file(sub)) ? readdirSync(ws.file(sub)).filter((f) => f.endsWith(".json")).map((f) => readJson(join(ws.file(sub), f))).filter(Boolean) : []);
+  const proofs = list("proof");
+  return list("usecases").map((u) => ({ ...u, proofs: [...(u.proofs ?? []), ...proofs.filter((x) => x.useCase === u.id)] }));
 }
 
 /**

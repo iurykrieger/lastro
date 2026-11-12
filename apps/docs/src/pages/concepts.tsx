@@ -1,7 +1,7 @@
 import { A, C, Callout, Code, CodeTabs, DataTable, H1, H2, H3, Lead, Ol, P, Ul } from "@/components/doc";
 import { Badge } from "@/components/ui/badge";
 import { Pipeline } from "@/components/Pipeline";
-import { OUT, USECASE } from "@/content/outputs";
+import { OUT, PROOF, USECASE } from "@/content/outputs";
 import { ClauseAnatomy, SamplingPlayground } from "@/live/shipping";
 
 // ---------------------------------------------------------------------------
@@ -110,16 +110,18 @@ export function ConceptProposals() {
           ["Use case", <C>UC-001</C>, <C>.lastro/usecases/UC-001-&lt;slug&gt;.json</C>, "One behavior of the application, described as the code implements it, with the proofs that guard it."],
           ["Proposal", <C>P-001</C>, <C>.lastro/proposals/P-001-&lt;slug&gt;.json</C>, "One change: its prose, the intents extracted from it, decisions, review threads and proofs."],
           ["Intent", <C>P-001.I-01</C>, "inside its proposal", "Adds, modifies or removes one use case, in natural language. People approve, amend or reject it."],
-          ["Proof", <C>P-001.PF-01</C>, "in its proposal, then in its use case", "A clause or a scenario derived from one approved intent. Once it passes and the proposal is applied, it is a regression test."],
+          ["Proof", <C>P-001.PF-01</C>, <>in its proposal, then <C>.lastro/proof/P-001.PF-01-&lt;slug&gt;.json</C></>, <>A clause or a scenario derived from one approved intent, or straight from an established use case (<C>UC-003.PF-01</C>). Once it passes, it is a regression test of its use case.</>],
         ]}
       />
       <P>Ids are never reused. A proof keeps the id it was born with, so a use case's history reads straight from its proofs.</P>
 
       <H2>A use case</H2>
       <P>
-        After the quickstart's <C>lastro apply P-001</C>, the shipping rule is one use case with four proofs. Every later proposal runs them as regression tests.
+        After the quickstart's <C>lastro apply P-001</C>, the shipping rule is one use case with four proofs, each in its own file in <C>.lastro/proof/</C>. Every
+        later proposal runs them as regression tests.
       </P>
       <Code lang="json" title=".lastro/usecases/UC-001-charge-shipping.json" code={USECASE} />
+      <Code lang="json" title=".lastro/proof/P-001.PF-01-free-from-100.json" code={PROOF} />
 
       <H2>Intents change use cases</H2>
       <P>

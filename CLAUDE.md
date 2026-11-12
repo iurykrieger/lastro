@@ -39,8 +39,9 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
   implementations come from any agent or person, and Lastro judges them.
 - Everything the framework generates or keeps (use cases, proposals, intents, proofs, receipts, LLM handoff
   files) lives in the `.lastro/` folder. Never write framework files elsewhere.
-- Lastro's own use cases live in `.lastro/usecases/<id>-<slug>.json` (`id`, `slug`, `name`, `description`, `proofs`,
-  `history`), each description stating the complete behavior as the source implements it. When a change adds, alters
+- Lastro's own use cases live in `.lastro/usecases/<id>-<slug>.json` (`id`, `slug`, `name`, `description`, `history`),
+  each description stating the complete behavior as the source implements it; their proofs live one per file in
+  `.lastro/proof/<proof-id>-<slug>.json`, and only the CLI writes them (`apply`, `derive --usecases`, `prove --usecases`). When a change adds, alters
   or removes behavior, update those files in the same change. Ids (`UC-001`...) are never reused; slugs are stable
   kebab-case. Changes are written as proposals in `.lastro/proposals/<id>-<slug>.json` (see
   `docs/proposals/intents-as-use-case-changes.md` for the four entities).

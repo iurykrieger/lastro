@@ -1,0 +1,45 @@
+{
+  "id": "P-001.PF-03",
+  "slug": "slugs-are-kebab-case",
+  "name": "Slugs are kebab-case",
+  "description": "An intent slug is accepted exactly when it is lowercase kebab-case.",
+  "intent": "P-001.I-04",
+  "useCase": "UC-046",
+  "model": "slug_check",
+  "subject": "slug_check",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.accepted"
+        },
+        {
+          "op": "in",
+          "args": [
+            {
+              "var": "in.slug"
+            },
+            {
+              "const": "a"
+            },
+            {
+              "const": "rule"
+            },
+            {
+              "const": "free-shipping"
+            },
+            {
+              "const": "a1-b2"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

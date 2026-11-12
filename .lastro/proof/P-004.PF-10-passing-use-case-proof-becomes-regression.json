@@ -1,0 +1,39 @@
+{
+  "id": "P-004.PF-10",
+  "slug": "passing-use-case-proof-becomes-regression",
+  "name": "A passing proof becomes a regression test",
+  "description": "When the code satisfies it, a use case proof ends passed and runs in regress.",
+  "intent": "P-004.I-10",
+  "useCase": "UC-054",
+  "model": "usecase_prove",
+  "subject": "usecase_prove",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.codeOk"
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.status"
+            },
+            {
+              "const": "passed"
+            }
+          ]
+        },
+        {
+          "var": "out.regression"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

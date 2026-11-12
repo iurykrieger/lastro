@@ -1,0 +1,60 @@
+{
+  "id": "P-001.PF-06",
+  "slug": "use-case-must-fit-the-change",
+  "name": "The named use case must fit the change",
+  "description": "Without replaced proofs, extraction accepts an add only for a new use case and a modify or remove only for an existing one.",
+  "intent": "P-001.I-12",
+  "useCase": "UC-002",
+  "model": "extraction_rules",
+  "subject": "extraction_rules",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.replaces"
+        },
+        {
+          "const": "none"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.accepted"
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.change"
+                },
+                {
+                  "const": "add"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.known"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

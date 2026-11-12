@@ -4,7 +4,7 @@
   "slug": "proofs-folder",
   "name": "Keep proofs in .lastro/proof and derive them from the established use cases",
   "description": "Proofs move out of the use case files into one file each under .lastro/proof/, and lastro derive --usecases derives proofs straight from the reviewed use cases, without a proposal.",
-  "status": "proving",
+  "status": "applied",
   "submittedBy": "claude",
   "prose": "# Keep proofs in .lastro/proof and derive them from the established use cases\n\n## Where proofs live\n\nEvery proof that belongs to a use case lives in its own file, `.lastro/proof/<proof-id>-<slug>.json`, with its id,\nslug, name, description, use case, model, subject, check, status and verdict, and the intent and proposal it came\nfrom when it came from one. Use case files no longer carry the proofs: the workspace finds a use case's proofs by\ntheir `useCase` field. Apply writes each passing proof of the proposal to `.lastro/proof/` and deletes the files of\nthe proofs the proposal supersedes. A use case file that still carries a `proofs` list is read as before, and its\nproofs move to `.lastro/proof/` the next time the workspace writes that use case. The TypeScript, Go and .NET\nworkspaces read and write the same files.\n\n## Proofs from the established use cases\n\nA use case already describes, and people already reviewed, what the code does. `lastro derive --usecases` derives\nproofs straight from those descriptions, with no proposal and no intents: by default for every use case that has no\nproofs, or for the ids it is given (`--usecases UC-003,UC-016`). The derive step reads each use case's description,\nthe models and subjects declared in `.lastro/config.json` and the proofs other use cases already have, and writes\npending proofs numbered inside their use case (`UC-003.PF-01`). A use case the models cannot express gets no proof\nand is listed as unprovable with the reason, so a model can be added for it. A use case that already has proofs is\nrefused: its proofs change only through a proposal.\n\n`lastro prove --usecases` runs the pending proofs of the use cases together with every passed proof. A pending\nproof that passes becomes passed and from then on runs as a regression test, in `prove` and in `lastro regress`. A\npending proof that fails stays failed and is reported with the note that the code is the reference: either the\ndescription is wrong, and a proposal fixes it, or the code has a bug the user decides about. It never goes back to\nthe code as feedback.",
   "baseline": "sha256:3010925e700e5dba481b172a4b3ec4b5147b1cf1331f7197fcb3dabc48ccdc6e",
@@ -369,7 +369,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-004.PF-02",
@@ -408,7 +410,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-004.PF-03",
@@ -474,7 +478,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-004.PF-04",
@@ -516,7 +522,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-004.PF-05",
@@ -561,7 +569,9 @@
           ]
         }
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "evidenced",
+      "evidence": "empirical"
     },
     {
       "id": "P-004.PF-06",
@@ -629,7 +639,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-004.PF-07",
@@ -674,7 +686,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-004.PF-08",
@@ -760,7 +774,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-004.PF-09",
@@ -818,7 +834,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-004.PF-10",
@@ -855,7 +873,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-004.PF-11",
@@ -937,9 +957,353 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     }
   ],
   "supersedes": [],
-  "hash": "sha256:eaf5f6470109208232387444fbd3634fa016bf3c6d4fe0a04543e09a7d02b7af"
+  "hash": "sha256:eaf5f6470109208232387444fbd3634fa016bf3c6d4fe0a04543e09a7d02b7af",
+  "lastRun": {
+    "ok": true,
+    "outcomes": [
+      {
+        "proof": "P-004.PF-01",
+        "useCase": "UC-049",
+        "intent": "P-004.I-01",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-02",
+        "useCase": "UC-046",
+        "intent": "P-004.I-02",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-03",
+        "useCase": "UC-046",
+        "intent": "P-004.I-03",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-04",
+        "useCase": "UC-050",
+        "intent": "P-004.I-04",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-05",
+        "useCase": "UC-036",
+        "intent": "P-004.I-05",
+        "role": "proposal",
+        "verdict": "evidenced",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-06",
+        "useCase": "UC-054",
+        "intent": "P-004.I-06",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-07",
+        "useCase": "UC-054",
+        "intent": "P-004.I-07",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-08",
+        "useCase": "UC-054",
+        "intent": "P-004.I-08",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-09",
+        "useCase": "UC-054",
+        "intent": "P-004.I-09",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-10",
+        "useCase": "UC-054",
+        "intent": "P-004.I-10",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-11",
+        "useCase": "UC-054",
+        "intent": "P-004.I-11",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-04",
+        "useCase": "UC-001",
+        "intent": "P-001.I-08",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-05",
+        "useCase": "UC-001",
+        "intent": "P-001.I-10",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-06",
+        "useCase": "UC-002",
+        "intent": "P-001.I-12",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-07",
+        "useCase": "UC-002",
+        "intent": "P-001.I-13",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-08",
+        "useCase": "UC-005",
+        "intent": "P-001.I-15",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-11",
+        "useCase": "UC-007",
+        "intent": "P-001.I-21",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-13",
+        "useCase": "UC-007",
+        "intent": "P-001.I-20",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-14",
+        "useCase": "UC-007",
+        "intent": "P-001.I-22",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-12",
+        "useCase": "UC-009",
+        "intent": "P-001.I-23",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-16",
+        "useCase": "UC-009",
+        "intent": "P-001.I-24",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-17",
+        "useCase": "UC-010",
+        "intent": "P-001.I-25",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-18",
+        "useCase": "UC-013",
+        "intent": "P-001.I-28",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-26",
+        "useCase": "UC-039",
+        "intent": "P-001.I-40",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-01",
+        "useCase": "UC-046",
+        "intent": "P-001.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-02",
+        "useCase": "UC-046",
+        "intent": "P-001.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-03",
+        "useCase": "UC-046",
+        "intent": "P-001.I-04",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-09",
+        "useCase": "UC-047",
+        "intent": "P-001.I-17",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-10",
+        "useCase": "UC-047",
+        "intent": "P-001.I-18",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-15",
+        "useCase": "UC-048",
+        "intent": "P-001.I-19",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-19",
+        "useCase": "UC-049",
+        "intent": "P-001.I-30",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-20",
+        "useCase": "UC-049",
+        "intent": "P-001.I-31",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-21",
+        "useCase": "UC-049",
+        "intent": "P-001.I-32",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-22",
+        "useCase": "UC-049",
+        "intent": "P-001.I-33",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-23",
+        "useCase": "UC-050",
+        "intent": "P-001.I-34",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-24",
+        "useCase": "UC-050",
+        "intent": "P-001.I-35",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-25",
+        "useCase": "UC-050",
+        "intent": "P-001.I-36",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      }
+    ],
+    "regressions": [],
+    "replacedStillPass": [],
+    "unproved": [
+      "UC-003",
+      "UC-004",
+      "UC-006",
+      "UC-008",
+      "UC-011",
+      "UC-012",
+      "UC-014",
+      "UC-015",
+      "UC-016",
+      "UC-017",
+      "UC-018",
+      "UC-019",
+      "UC-020",
+      "UC-021",
+      "UC-022",
+      "UC-023",
+      "UC-024",
+      "UC-025",
+      "UC-026",
+      "UC-027",
+      "UC-028",
+      "UC-029",
+      "UC-030",
+      "UC-031",
+      "UC-032",
+      "UC-033",
+      "UC-034",
+      "UC-035",
+      "UC-037",
+      "UC-038",
+      "UC-040",
+      "UC-041",
+      "UC-042",
+      "UC-043",
+      "UC-044",
+      "UC-045"
+    ],
+    "enginesAgree": true
+  }
 }

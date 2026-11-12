@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ProposalError, proposalFromSurvey, renderSurveyReport, reservedUseCaseIds, type RepoDigest, type SurveyOut, type UseCase } from "../src/index.js";
@@ -250,7 +250,10 @@ test("cli: bootstrap an existing repository into proven use cases", async () => 
   assert.equal(r.code, 0, JSON.stringify(r.body));
   assert.deepEqual(r.body.config, { models: ["shipping"], subjects: ["shipping"] });
   const uc = JSON.parse(readFileSync(join(dir, ".lastro", "usecases", "UC-001-charge-shipping.json"), "utf8")) as UseCase;
-  assert.deepEqual(uc.proofs.map((x) => [x.id, x.status]), [["P-001.PF-01", "passed"], ["P-001.PF-02", "passed"]]);
+  assert.equal("proofs" in uc, false);
+  const proofFiles = readdirSync(join(dir, ".lastro", "proof")).sort();
+  assert.deepEqual(proofFiles.map((f) => f.match(/^P-\d+\.PF-\d+/)![0]), ["P-001.PF-01", "P-001.PF-02"]);
+  assert.deepEqual(proofFiles.map((f) => (JSON.parse(readFileSync(join(dir, ".lastro", "proof", f), "utf8")) as { useCase: string; status: string })).map((x) => [x.useCase, x.status]), [["UC-001", "passed"], ["UC-001", "passed"]]);
   assert.deepEqual(uc.history, ["P-001"]);
   const cfg = JSON.parse(readFileSync(join(dir, ".lastro", "config.json"), "utf8")) as { models: Record<string, unknown>; subjects: Record<string, unknown> };
   assert.deepEqual(cfg.subjects, { shipping: { module: "src/shipping.mjs" } });

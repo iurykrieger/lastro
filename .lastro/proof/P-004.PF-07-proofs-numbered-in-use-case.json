@@ -1,0 +1,47 @@
+{
+  "id": "P-004.PF-07",
+  "slug": "proofs-numbered-in-use-case",
+  "name": "Proofs are numbered inside the use case",
+  "description": "A derived proof is numbered after the use case's existing proofs (PF-01, or PF-02 after a pending one).",
+  "intent": "P-004.I-07",
+  "useCase": "UC-054",
+  "model": "usecase_derive",
+  "subject": "usecase_derive",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "implies",
+      "args": [
+        {
+          "var": "out.derived"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.number"
+            },
+            {
+              "op": "ite",
+              "args": [
+                {
+                  "var": "in.hasPending"
+                },
+                {
+                  "const": 2
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

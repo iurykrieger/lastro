@@ -1,0 +1,87 @@
+{
+  "id": "P-001.PF-12",
+  "slug": "ready-when-everything-is-resolved",
+  "name": "Ready to approve",
+  "description": "A proposal is ready exactly when every decision is answered, no thread is open, and each intent is rejected or approved or amended with the required approvals.",
+  "intent": "P-001.I-23",
+  "useCase": "UC-009",
+  "model": "approval_policy",
+  "subject": "approval_policy",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.ready"
+        },
+        {
+          "op": "and",
+          "args": [
+            {
+              "var": "in.answered"
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.threadOpen"
+                }
+              ]
+            },
+            {
+              "op": "or",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.status"
+                    },
+                    {
+                      "const": "rejected"
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "in",
+                      "args": [
+                        {
+                          "var": "in.status"
+                        },
+                        {
+                          "const": "approved"
+                        },
+                        {
+                          "const": "amended"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "ge",
+                      "args": [
+                        {
+                          "var": "out.counted"
+                        },
+                        {
+                          "var": "in.required"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

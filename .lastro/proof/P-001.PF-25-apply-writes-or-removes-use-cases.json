@@ -1,0 +1,39 @@
+{
+  "id": "P-001.PF-25",
+  "slug": "apply-writes-or-removes-use-cases",
+  "name": "Apply writes or removes the use case",
+  "description": "apply deletes the use case exactly when the change removes it.",
+  "intent": "P-001.I-36",
+  "useCase": "UC-050",
+  "model": "apply_rules",
+  "subject": "apply_rules",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "out.applied"
+    },
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.removed"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.change"
+            },
+            {
+              "const": "remove"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

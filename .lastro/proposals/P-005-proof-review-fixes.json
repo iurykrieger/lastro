@@ -1,0 +1,136 @@
+{
+  "lastro": "proposal/v1",
+  "id": "P-005",
+  "slug": "proof-review-fixes",
+  "name": "Fix what the use-case proofs found",
+  "description": "Fixes the contradiction check for clauses with no if-part and brings the descriptions of the Rust prover's coverage and of the proof stream in line with the code.",
+  "status": "open",
+  "submittedBy": "claude",
+  "prose": "# Fix what the use-case proofs found\n\n## Contradictions with clauses that always apply\n\nThe consistency check treats a clause with no if-part as applying to every input, in the TypeScript, .NET, Go and\nRust engines alike: for each input it looks for an output that satisfies every clause whose if-part holds, and every\nclause with no if-part. So a clause that says y is true for every input and a clause that says y is false when x\nholds come back as a contradiction for x = true, in every SDK.\n\n## Coverage of the Rust prover\n\nThe Rust prover drops out-of-domain rows and counts missing inputs and nondeterministic rows (an input that appears\nwith two different outputs). It calls coverage complete when every input of the space has a row and no row is\nnondeterministic or out of domain; an input repeated with the same output still counts as covered once.\n\n## Streamed proof runs\n\nlastro prove --stream prints one compact JSON object per line instead of the single result: start (the proposal and\nthe ids of the proofs it runs), progress every 100 runs of the code under proof, one proof event per proof, the\nproposal's own and every use case's regression proof alike (proof, role, verdict, passed, and the counterexample when\nthere is one), crosscheck (enginesAgree) when the Rust prover ran, and result with the body prove prints without\n--stream. Exit codes and the files written are the same as without it. The Go and .NET tests compare their stream\nwith the TypeScript CLI's on one workspace.",
+  "baseline": "sha256:0e92f4f9ddb491b98f226ec9f6390af68aae4c3e3c8d1907c44ba805f80f013c",
+  "intents": [
+    {
+      "id": "P-005.I-01",
+      "slug": "unconditional-clauses-in-consistency",
+      "name": "Clauses with no if-part count in the consistency check",
+      "description": "The consistency check treats a clause with no if-part as applying to every input, so it conflicts with any clause that demands another output for some input; the TypeScript, .NET, Go and Rust engines find the same contradiction.",
+      "change": "modify",
+      "useCase": "UC-015",
+      "provability": "formal",
+      "source": {
+        "quote": "The consistency check treats a clause with no if-part as applying to every input, in the TypeScript, .NET, Go and\nRust engines alike",
+        "start": 88,
+        "end": 220
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-005.I-02",
+      "slug": "coverage-complete-rule",
+      "name": "Coverage is complete when every input has a row and none is nondeterministic or out of domain",
+      "description": "The Rust prover calls coverage complete when every input of the space has a row and no row is nondeterministic or out of domain; an input repeated with the same output still counts as covered once.",
+      "change": "modify",
+      "useCase": "UC-025",
+      "provability": "formal",
+      "source": {
+        "quote": "It calls coverage complete when every input of the space has a row and no row is\nnondeterministic or out of domain",
+        "start": 673,
+        "end": 787
+      },
+      "replaces": [
+        {
+          "proof": "UC-025.PF-01",
+          "reason": "It reads 'every input appears once' as refusing a repeated identical row; a repeated row with the same output now counts as covered."
+        }
+      ],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-005.I-03",
+      "slug": "stream-start-event",
+      "name": "The stream starts with the proposal and its proof ids",
+      "description": "prove --stream starts with a start event naming the proposal and the ids of the proofs it runs.",
+      "change": "modify",
+      "useCase": "UC-043",
+      "provability": "formal",
+      "source": {
+        "quote": "start (the proposal and\nthe ids of the proofs it runs)",
+        "start": 975,
+        "end": 1029
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-005.I-04",
+      "slug": "stream-proof-events",
+      "name": "One proof event per proof",
+      "description": "prove --stream prints one proof event per proof, the proposal's own and every regression proof alike, with the proof id, role, verdict, whether it passed and the counterexample when there is one, instead of clause and scenario events.",
+      "change": "modify",
+      "useCase": "UC-043",
+      "provability": "formal",
+      "source": {
+        "quote": "one proof event per proof",
+        "start": 1080,
+        "end": 1105
+      },
+      "replaces": [
+        {
+          "proof": "UC-043.PF-02",
+          "reason": "It expects one clause event per clause; the stream emits one proof event per proof."
+        }
+      ],
+      "status": "proposed",
+      "approvals": []
+    }
+  ],
+  "useCases": [
+    {
+      "useCase": "UC-015",
+      "slug": "return-contradictions-as-decisions",
+      "change": "modify",
+      "name": "Return contradictions to the team",
+      "before": "After derivation, a consistency check enumerates every output (when there are at most 4096) for each input and looks for inputs where no output satisfies all applicable clauses. Each distinct set of conflicting clauses becomes a decision card (origin consistency-check) asking which clause should give way, with one option per clause and the first recommended. spec.ok is false when any exist. returnDecisions(spec) reopens the artifact and appends these cards, skipping questions it already has, so the artifact cannot be approved until they are answered and the intents their answers create are approved. The Rust prover runs the same check.",
+      "after": "After derivation, a consistency check enumerates every output (when there are at most 4096) for each input and looks for inputs where no output satisfies all applicable clauses; a clause with no if-part applies to every input. Each distinct set of conflicting clauses becomes a decision card (origin consistency-check) asking which clause should give way, with one option per clause and the first recommended. spec.ok is false when any exist. returnDecisions(spec) reopens the artifact and appends these cards, skipping questions it already has, so the artifact cannot be approved until they are answered and the intents their answers create are approved. The TypeScript, .NET and Go engines and the Rust prover run the same check and find the same contradictions.",
+      "intents": [
+        "P-005.I-01"
+      ]
+    },
+    {
+      "useCase": "UC-025",
+      "slug": "cross-check-with-rust-prover",
+      "change": "modify",
+      "name": "Cross-check with an independent prover",
+      "before": "With a Rust prover (lastro-core, loaded as WASM in TypeScript or run as the native lastro-prove binary from Go and .NET), prove() tabulates the code over the whole input space and the prover re-checks every clause from that table. The prover drops out-of-domain rows, counts missing inputs and nondeterministic rows, and calls coverage complete only when every input appears once; it says proved only with complete coverage, checks vacuity, mutants and consistency itself, and returns a SHA-256 digest of the table. The proof is ok only if the SDK report is ok, the prover is ok and both engines give every clause the same verdict.",
+      "after": "With a Rust prover (lastro-core, loaded as WASM in TypeScript or run as the native lastro-prove binary from Go and .NET), prove() tabulates the code over the whole input space and the prover re-checks every clause from that table. The prover drops out-of-domain rows and counts missing inputs and nondeterministic rows (an input that appears with two different outputs). It calls coverage complete when every input of the space has a row and no row is nondeterministic or out of domain; an input repeated with the same output still counts as covered once. It says proved only with complete coverage, checks vacuity, mutants and consistency itself, and returns a SHA-256 digest of the table. The proof is ok only if the SDK report is ok, the prover is ok and both engines give every clause the same verdict.",
+      "intents": [
+        "P-005.I-02"
+      ]
+    },
+    {
+      "useCase": "UC-043",
+      "slug": "stream-proof-progress",
+      "change": "modify",
+      "name": "Stream a proof run as it happens",
+      "before": "lastro prove --stream (TypeScript, Go and .NET CLIs) prints one compact JSON object per line instead of the single result: start (model, clause ids, scenario ids), progress every 100 runs of the code under proof, one clause event per clause in plan order (clauseId, intentIds, verdict, evidence, and the counterexample when there is one), one scenario event per scenario (scenarioId, status), crosscheck (enginesAgree) when the Rust prover ran, and result with the body prove prints without --stream. Exit codes and the files written are the same as without it. The Go and .NET tests compare their stream with the TypeScript CLI's on one workspace.",
+      "after": "lastro prove --stream (TypeScript, Go and .NET CLIs) prints one compact JSON object per line instead of the single result: start (the proposal and the ids of the proofs it runs), progress every 100 runs of the code under proof, one proof event per proof, the proposal's own and every use case's regression proof alike (proof, role, verdict, passed, and the counterexample when there is one), crosscheck (enginesAgree) when the Rust prover ran, and result with the body prove prints without --stream. Exit codes and the files written are the same as without it. The Go and .NET tests compare their stream with the TypeScript CLI's on one workspace.",
+      "intents": [
+        "P-005.I-03",
+        "P-005.I-04"
+      ]
+    }
+  ],
+  "decisions": [],
+  "threads": [],
+  "notPromised": [],
+  "policy": {
+    "approvals": 1,
+    "submitterCanApprove": true
+  },
+  "proofs": [],
+  "supersedes": []
+}

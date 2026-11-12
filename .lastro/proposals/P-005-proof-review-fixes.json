@@ -4,7 +4,7 @@
   "slug": "proof-review-fixes",
   "name": "Fix what the use-case proofs found",
   "description": "Fixes the contradiction check for clauses with no if-part and brings the descriptions of the Rust prover's coverage and of the proof stream in line with the code.",
-  "status": "open",
+  "status": "applied",
   "submittedBy": "claude",
   "prose": "# Fix what the use-case proofs found\n\n## Contradictions with clauses that always apply\n\nThe consistency check treats a clause with no if-part as applying to every input, in the TypeScript, .NET, Go and\nRust engines alike: for each input it looks for an output that satisfies every clause whose if-part holds, and every\nclause with no if-part. So a clause that says y is true for every input and a clause that says y is false when x\nholds come back as a contradiction for x = true, in every SDK.\n\n## Coverage of the Rust prover\n\nThe Rust prover drops out-of-domain rows and counts missing inputs and nondeterministic rows (an input that appears\nwith two different outputs). It calls coverage complete when every input of the space has a row and no row is\nnondeterministic or out of domain; an input repeated with the same output still counts as covered once.\n\n## Streamed proof runs\n\nlastro prove --stream prints one compact JSON object per line instead of the single result: start (the proposal and\nthe ids of the proofs it runs), progress every 100 runs of the code under proof, one proof event per proof, the\nproposal's own and every use case's regression proof alike (proof, role, verdict, passed, and the counterexample when\nthere is one), crosscheck (enginesAgree) when the Rust prover ran, and result with the body prove prints without\n--stream. Exit codes and the files written are the same as without it. The Go and .NET tests compare their stream\nwith the TypeScript CLI's on one workspace.",
   "baseline": "sha256:0e92f4f9ddb491b98f226ec9f6390af68aae4c3e3c8d1907c44ba805f80f013c",
@@ -23,8 +23,10 @@
         "end": 220
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-005.I-02",
@@ -45,8 +47,10 @@
           "reason": "It reads 'every input appears once' as refusing a repeated identical row; a repeated row with the same output now counts as covered."
         }
       ],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-005.I-03",
@@ -62,8 +66,10 @@
         "end": 1029
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-005.I-04",
@@ -84,8 +90,10 @@
           "reason": "It expects one clause event per clause; the stream emits one proof event per proof."
         }
       ],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     }
   ],
   "useCases": [
@@ -131,6 +139,1194 @@
     "approvals": 1,
     "submitterCanApprove": true
   },
-  "proofs": [],
-  "supersedes": []
+  "proofs": [
+    {
+      "id": "P-005.PF-01",
+      "slug": "unconditional-clause-conflicts",
+      "name": "A clause with no if-part conflicts with a conditional one",
+      "description": "A clause with no if-part (y is a) and a clause that demands y is b when x holds come back as a contradiction when a differs from b, whether or not the first has an if-part.",
+      "intent": "P-005.I-01",
+      "useCase": "UC-015",
+      "model": "contradictions",
+      "subject": "contradictions",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.a"
+            },
+            {
+              "var": "in.b"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "ge",
+              "args": [
+                {
+                  "var": "out.cards"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.ok"
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-005.PF-02",
+      "slug": "coverage-complete-rule",
+      "name": "Coverage is complete when every input has a row and none is nondeterministic or out of domain",
+      "description": "The prover calls coverage complete exactly when every input has a row and no row is nondeterministic or out of domain; a repeated row with the same output still counts.",
+      "intent": "P-005.I-02",
+      "useCase": "UC-025",
+      "model": "crosscheck",
+      "subject": "crosscheck",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.complete"
+            },
+            {
+              "op": "in",
+              "args": [
+                {
+                  "var": "in.table"
+                },
+                {
+                  "const": "complete"
+                },
+                {
+                  "const": "repeated-row"
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "replaces": [
+        "UC-025.PF-01"
+      ],
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-005.PF-03",
+      "slug": "start-names-the-proofs",
+      "name": "The stream starts with the proposal and its proof ids",
+      "description": "The first streamed event is start, naming the proposal and the ids of the proofs it runs.",
+      "intent": "P-005.I-03",
+      "useCase": "UC-043",
+      "model": "stream",
+      "subject": "stream",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "var": "out.startFirst"
+            },
+            {
+              "var": "out.startNamesProofs"
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-005.PF-04",
+      "slug": "one-proof-event-per-proof",
+      "name": "One proof event per proof",
+      "description": "The stream has one proof event per proof of the proposal and no clause events.",
+      "intent": "P-005.I-04",
+      "useCase": "UC-043",
+      "model": "stream",
+      "subject": "stream",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.proofEvents"
+                },
+                {
+                  "var": "out.proofs"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.clauseEvents"
+                },
+                {
+                  "const": 0
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "replaces": [
+        "UC-043.PF-02"
+      ],
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    }
+  ],
+  "supersedes": [
+    "UC-025.PF-01",
+    "UC-043.PF-02"
+  ],
+  "hash": "sha256:5d8964e1e67a1b4d349dfc4146fb39e59fc7b11efc996abaef18e66af30aa076",
+  "lastRun": {
+    "ok": true,
+    "outcomes": [
+      {
+        "proof": "P-005.PF-01",
+        "useCase": "UC-015",
+        "intent": "P-005.I-01",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-005.PF-02",
+        "useCase": "UC-025",
+        "intent": "P-005.I-02",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-005.PF-03",
+        "useCase": "UC-043",
+        "intent": "P-005.I-03",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-005.PF-04",
+        "useCase": "UC-043",
+        "intent": "P-005.I-04",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-04",
+        "useCase": "UC-001",
+        "intent": "P-001.I-08",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-05",
+        "useCase": "UC-001",
+        "intent": "P-001.I-10",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-06",
+        "useCase": "UC-002",
+        "intent": "P-001.I-12",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-07",
+        "useCase": "UC-002",
+        "intent": "P-001.I-13",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-01",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-02",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-03",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-04",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-05",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-004.PF-01",
+        "useCase": "UC-004",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-004.PF-02",
+        "useCase": "UC-004",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-004.PF-03",
+        "useCase": "UC-004",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-004.PF-04",
+        "useCase": "UC-004",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-08",
+        "useCase": "UC-005",
+        "intent": "P-001.I-15",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-006.PF-01",
+        "useCase": "UC-006",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-006.PF-02",
+        "useCase": "UC-006",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-006.PF-03",
+        "useCase": "UC-006",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-11",
+        "useCase": "UC-007",
+        "intent": "P-001.I-21",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-13",
+        "useCase": "UC-007",
+        "intent": "P-001.I-20",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-14",
+        "useCase": "UC-007",
+        "intent": "P-001.I-22",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-008.PF-01",
+        "useCase": "UC-008",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-008.PF-02",
+        "useCase": "UC-008",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-008.PF-03",
+        "useCase": "UC-008",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-008.PF-04",
+        "useCase": "UC-008",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-12",
+        "useCase": "UC-009",
+        "intent": "P-001.I-23",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-16",
+        "useCase": "UC-009",
+        "intent": "P-001.I-24",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-17",
+        "useCase": "UC-010",
+        "intent": "P-001.I-25",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-011.PF-01",
+        "useCase": "UC-011",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-011.PF-02",
+        "useCase": "UC-011",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-011.PF-03",
+        "useCase": "UC-011",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-011.PF-04",
+        "useCase": "UC-011",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-012.PF-01",
+        "useCase": "UC-012",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-012.PF-02",
+        "useCase": "UC-012",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-012.PF-03",
+        "useCase": "UC-012",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-012.PF-04",
+        "useCase": "UC-012",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-18",
+        "useCase": "UC-013",
+        "intent": "P-001.I-28",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-014.PF-01",
+        "useCase": "UC-014",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-014.PF-02",
+        "useCase": "UC-014",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-015.PF-02",
+        "useCase": "UC-015",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-015.PF-03",
+        "useCase": "UC-015",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-015.PF-04",
+        "useCase": "UC-015",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-016.PF-01",
+        "useCase": "UC-016",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-016.PF-02",
+        "useCase": "UC-016",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-017.PF-01",
+        "useCase": "UC-017",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-017.PF-02",
+        "useCase": "UC-017",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-018.PF-01",
+        "useCase": "UC-018",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-018.PF-02",
+        "useCase": "UC-018",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-019.PF-01",
+        "useCase": "UC-019",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-019.PF-02",
+        "useCase": "UC-019",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-020.PF-01",
+        "useCase": "UC-020",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-020.PF-02",
+        "useCase": "UC-020",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-020.PF-03",
+        "useCase": "UC-020",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-021.PF-01",
+        "useCase": "UC-021",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-021.PF-02",
+        "useCase": "UC-021",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-021.PF-03",
+        "useCase": "UC-021",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-022.PF-01",
+        "useCase": "UC-022",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-022.PF-02",
+        "useCase": "UC-022",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-023.PF-01",
+        "useCase": "UC-023",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-01",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-02",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-03",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-04",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-05",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-06",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-07",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-025.PF-02",
+        "useCase": "UC-025",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-025.PF-03",
+        "useCase": "UC-025",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-025.PF-04",
+        "useCase": "UC-025",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-025.PF-05",
+        "useCase": "UC-025",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-01",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-02",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-03",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-04",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-05",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-027.PF-01",
+        "useCase": "UC-027",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-027.PF-02",
+        "useCase": "UC-027",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-027.PF-03",
+        "useCase": "UC-027",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-028.PF-01",
+        "useCase": "UC-028",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-029.PF-01",
+        "useCase": "UC-029",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-029.PF-02",
+        "useCase": "UC-029",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-030.PF-01",
+        "useCase": "UC-030",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-030.PF-02",
+        "useCase": "UC-030",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-030.PF-03",
+        "useCase": "UC-030",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-030.PF-04",
+        "useCase": "UC-030",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-031.PF-01",
+        "useCase": "UC-031",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-031.PF-02",
+        "useCase": "UC-031",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-031.PF-03",
+        "useCase": "UC-031",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-032.PF-01",
+        "useCase": "UC-032",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-032.PF-02",
+        "useCase": "UC-032",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-034.PF-01",
+        "useCase": "UC-034",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-034.PF-02",
+        "useCase": "UC-034",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-05",
+        "useCase": "UC-036",
+        "intent": "P-004.I-05",
+        "role": "regression",
+        "verdict": "evidenced",
+        "passed": true
+      },
+      {
+        "proof": "UC-037.PF-01",
+        "useCase": "UC-037",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-26",
+        "useCase": "UC-039",
+        "intent": "P-001.I-40",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-040.PF-01",
+        "useCase": "UC-040",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-040.PF-02",
+        "useCase": "UC-040",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-01",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-02",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-03",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-04",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-05",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-06",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-07",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-042.PF-01",
+        "useCase": "UC-042",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-042.PF-02",
+        "useCase": "UC-042",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-043.PF-01",
+        "useCase": "UC-043",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-044.PF-01",
+        "useCase": "UC-044",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-044.PF-02",
+        "useCase": "UC-044",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-044.PF-03",
+        "useCase": "UC-044",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-044.PF-04",
+        "useCase": "UC-044",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-01",
+        "useCase": "UC-046",
+        "intent": "P-001.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-02",
+        "useCase": "UC-046",
+        "intent": "P-001.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-03",
+        "useCase": "UC-046",
+        "intent": "P-001.I-04",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-02",
+        "useCase": "UC-046",
+        "intent": "P-004.I-02",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-03",
+        "useCase": "UC-046",
+        "intent": "P-004.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-09",
+        "useCase": "UC-047",
+        "intent": "P-001.I-17",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-10",
+        "useCase": "UC-047",
+        "intent": "P-001.I-18",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-15",
+        "useCase": "UC-048",
+        "intent": "P-001.I-19",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-19",
+        "useCase": "UC-049",
+        "intent": "P-001.I-30",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-20",
+        "useCase": "UC-049",
+        "intent": "P-001.I-31",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-21",
+        "useCase": "UC-049",
+        "intent": "P-001.I-32",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-22",
+        "useCase": "UC-049",
+        "intent": "P-001.I-33",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-01",
+        "useCase": "UC-049",
+        "intent": "P-004.I-01",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-23",
+        "useCase": "UC-050",
+        "intent": "P-001.I-34",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-24",
+        "useCase": "UC-050",
+        "intent": "P-001.I-35",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-25",
+        "useCase": "UC-050",
+        "intent": "P-001.I-36",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-04",
+        "useCase": "UC-050",
+        "intent": "P-004.I-04",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-06",
+        "useCase": "UC-054",
+        "intent": "P-004.I-06",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-07",
+        "useCase": "UC-054",
+        "intent": "P-004.I-07",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-08",
+        "useCase": "UC-054",
+        "intent": "P-004.I-08",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-09",
+        "useCase": "UC-054",
+        "intent": "P-004.I-09",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-10",
+        "useCase": "UC-054",
+        "intent": "P-004.I-10",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-11",
+        "useCase": "UC-054",
+        "intent": "P-004.I-11",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      }
+    ],
+    "regressions": [],
+    "replacedStillPass": [],
+    "unproved": [
+      "UC-033",
+      "UC-035",
+      "UC-038",
+      "UC-045"
+    ],
+    "enginesAgree": true
+  }
 }

@@ -99,7 +99,13 @@ export function checkConsistency(plan: ProofPlan, opts: VerifyOptions = {}): Dec
     const ok = outputs.some((output) =>
       plan.clauses.every((c) => {
         const ctx = { input, output, defs: plan.model.defs };
-        return !c.requires || !holds(c.requires, ctx) ? true : holds(c.ensures, ctx);
+        // A clause with no if-part applies to every input; one that cannot be evaluated here does not rule the output
+        // out (as in the Rust prover).
+        try {
+          return c.requires && !holds(c.requires, ctx) ? true : holds(c.ensures, ctx);
+        } catch {
+          return true;
+        }
       }),
     );
     if (ok) continue;

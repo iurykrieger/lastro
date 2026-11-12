@@ -2,6 +2,8 @@
   "id": "UC-025",
   "slug": "cross-check-with-rust-prover",
   "name": "Cross-check with an independent prover",
-  "description": "With a Rust prover (lastro-core, loaded as WASM in TypeScript or run as the native lastro-prove binary from Go and .NET), prove() tabulates the code over the whole input space and the prover re-checks every clause from that table. The prover drops out-of-domain rows, counts missing inputs and nondeterministic rows, and calls coverage complete only when every input appears once; it says proved only with complete coverage, checks vacuity, mutants and consistency itself, and returns a SHA-256 digest of the table. The proof is ok only if the SDK report is ok, the prover is ok and both engines give every clause the same verdict.",
-  "history": []
+  "description": "With a Rust prover (lastro-core, loaded as WASM in TypeScript or run as the native lastro-prove binary from Go and .NET), prove() tabulates the code over the whole input space and the prover re-checks every clause from that table. The prover drops out-of-domain rows and counts missing inputs and nondeterministic rows (an input that appears with two different outputs). It calls coverage complete when every input of the space has a row and no row is nondeterministic or out of domain; an input repeated with the same output still counts as covered once. It says proved only with complete coverage, checks vacuity, mutants and consistency itself, and returns a SHA-256 digest of the table. The proof is ok only if the SDK report is ok, the prover is ok and both engines give every clause the same verdict.",
+  "history": [
+    "P-005"
+  ]
 }

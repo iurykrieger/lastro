@@ -32,7 +32,7 @@
     },
     "assumptions": []
   },
-  "status": "failed",
-  "verdict": "violated",
-  "evidence": "empirical"
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
 }

@@ -157,18 +157,16 @@ func CheckConsistency(plan ProofPlan, o VerifyOptions) ([]DecisionCard, error) {
 			all := true
 			for _, c := range plan.Clauses {
 				ctx := EvalContext{Input: input, Output: out, Defs: defs}
+				// A clause that cannot be evaluated here does not rule the output out (as in the Rust prover).
 				if c.Requires != nil {
 					req, err := Holds(*c.Requires, ctx)
-					if err != nil {
-						return nil, err
-					}
-					if !req {
+					if err != nil || !req {
 						continue
 					}
 				}
 				ens, err := Holds(c.Ensures, ctx)
 				if err != nil {
-					return nil, err
+					continue
 				}
 				if !ens {
 					all = false

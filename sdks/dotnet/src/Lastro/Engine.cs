@@ -75,7 +75,16 @@ public static class Engine
             var ok = outputs.Any(output => plan.Clauses.All(c =>
             {
                 var ctx = new EvalContext(input, output, plan.Model.Defs);
-                return c.Requires is null || !Lsl.Holds(c.Requires, ctx) || Lsl.Holds(c.Ensures, ctx);
+                // A clause with no if-part applies to every input; one that cannot be evaluated here does not rule the
+                // output out (as in the Rust prover).
+                try
+                {
+                    return (c.Requires is not null && !Lsl.Holds(c.Requires, ctx)) || Lsl.Holds(c.Ensures, ctx);
+                }
+                catch (LslException)
+                {
+                    return true;
+                }
             }));
             if (ok) continue;
             var key = string.Join(",", applicable.Select(c => c.Id));

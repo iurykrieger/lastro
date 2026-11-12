@@ -1521,6 +1521,14 @@
           "type": "int",
           "min": 0,
           "max": 5
+        },
+        "proofEvents": {
+          "type": "int",
+          "min": 0,
+          "max": 5
+        },
+        "startNamesProofs": {
+          "type": "bool"
         }
       }
     },

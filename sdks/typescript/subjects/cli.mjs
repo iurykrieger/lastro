@@ -147,6 +147,8 @@ export async function stream({ codeOk }) {
       resultLast: event === "result",
       sameResult: JSON.stringify(result) === JSON.stringify(JSON.parse(plain.stdout)),
       clauseEvents: names.filter((n) => n === "clause").length,
+      proofEvents: events.filter((e) => e.event === "proof" && e.role === "proposal").length,
+      startNamesProofs: events[0]?.proposal === "P-001" && JSON.stringify(events[0]?.proofs) === JSON.stringify(["P-001.PF-01"]),
       proofs: 1,
     };
   });

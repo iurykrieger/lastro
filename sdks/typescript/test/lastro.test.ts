@@ -160,6 +160,17 @@ test("contradictory clauses come back as a decision card", () => {
   assert.deepEqual(cards[0]!.options.map((o) => o.label), ["Relax C1", "Relax C2"]);
 });
 
+test("a clause with no if-part applies to every input in the consistency check", () => {
+  const { plan } = tinyPlan([
+    { id: "C1", intentIds: ["I1"], description: "y is always 1", ensures: L.eq(L.out("y"), 1) },
+    { id: "C2", intentIds: ["I1"], description: "y is 2 when x=3", requires: L.eq(L.in("x"), 3), ensures: L.eq(L.out("y"), 2) },
+  ]);
+  plan.model.outputs = { y: D.int(0, 5) };
+  const cards = checkConsistency(plan);
+  assert.equal(cards.length, 1);
+  assert.match(cards[0]!.question, /^Clauses C1,C2 cannot all hold for input \{"x":3\}/);
+});
+
 test("explainRun classifies each clause for a single run", () => {
   const plan = deriveLoginPlan(reviewed());
   const input = { sends: "email", accountFound: true, password: "right", infra: "ok" };

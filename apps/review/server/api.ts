@@ -216,7 +216,7 @@ export function lastroReviewApi(opts: { dir?: string } = {}): Plugin {
    * they appear.
    */
   function startWatching() {
-    for (const d of [dir, join(dir, "usecases"), join(dir, "proposals")]) {
+    for (const d of [dir, join(dir, "usecases"), join(dir, "proof"), join(dir, "proposals")]) {
       if (watchers.has(d) || !existsSync(d)) continue;
       const w = watch(d, () => {
         if (d === dir) startWatching();

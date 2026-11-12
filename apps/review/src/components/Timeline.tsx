@@ -61,7 +61,7 @@ function groupsOf(p: Proposal, runs: ProofRunRecord[]): Group[] {
   for (const r of runs) for (const o of r.outcomes) if (!seen.has(o.proof)) seen.set(o.proof, o);
   const all = [...seen.values()];
   const groups: Group[] = [];
-  const intents = [...new Set([...p.intents.map((i) => i.id), ...all.filter((o) => o.role === "proposal").map((o) => o.intent)])];
+  const intents = [...new Set([...p.intents.map((i) => i.id), ...all.flatMap((o) => (o.role === "proposal" && o.intent ? [o.intent] : []))])];
   for (const id of intents) {
     const proofs = all.filter((o) => o.role === "proposal" && o.intent === id).map((o) => o.proof);
     if (!proofs.length) continue;
@@ -140,7 +140,7 @@ function ProofDetail({ id, runs, at, proofs, onPick }: { id: string; runs: Proof
         <span className="font-mono text-xs text-muted-foreground">{id}</span>
         <span className="font-semibold">{pf?.name ?? id}</span>
         {o ? <Badge variant={verdictVariant(o)}>{o.verdict}</Badge> : <Badge variant="outline">not in this run</Badge>}
-        {o && <span className="text-xs text-muted-foreground">{o.role === "proposal" ? `proves ${shortId(o.intent)}` : o.role === "regression" ? `regression of ${o.useCase}` : `superseded (${o.useCase})`}</span>}
+        {o && <span className="text-xs text-muted-foreground">{o.role === "proposal" ? `proves ${shortId(o.intent ?? "")}` : o.role === "regression" ? `regression of ${o.useCase}` : `superseded (${o.useCase})`}</span>}
       </div>
       {pf?.description && <p className="text-sm">{pf.description}</p>}
       {pf && (

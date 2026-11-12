@@ -1,0 +1,36 @@
+{
+  "name": "extraction_rules",
+  "inputs": {
+    "change": {
+      "type": "enum",
+      "values": [
+        "add",
+        "modify",
+        "remove"
+      ]
+    },
+    "known": {
+      "type": "bool"
+    },
+    "replaces": {
+      "type": "enum",
+      "values": [
+        "none",
+        "own",
+        "other",
+        "unknown"
+      ]
+    }
+  },
+  "outputs": {
+    "accepted": {
+      "type": "bool"
+    },
+    "replacesAll": {
+      "type": "bool"
+    },
+    "beforeFromUseCase": {
+      "type": "bool"
+    }
+  }
+}

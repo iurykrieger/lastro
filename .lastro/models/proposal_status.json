@@ -1,0 +1,50 @@
+{
+  "name": "proposal_status",
+  "inputs": {
+    "approved": {
+      "type": "bool"
+    },
+    "proofs": {
+      "type": "bool"
+    },
+    "run": {
+      "type": "enum",
+      "values": [
+        "none",
+        "ok",
+        "failed"
+      ]
+    },
+    "allPassed": {
+      "type": "bool"
+    },
+    "stale": {
+      "type": "bool"
+    },
+    "raised": {
+      "type": "bool"
+    },
+    "terminal": {
+      "type": "enum",
+      "values": [
+        "none",
+        "applied",
+        "closed"
+      ]
+    }
+  },
+  "outputs": {
+    "status": {
+      "type": "enum",
+      "values": [
+        "open",
+        "changes-requested",
+        "approved",
+        "proving",
+        "proved",
+        "applied",
+        "closed"
+      ]
+    }
+  }
+}

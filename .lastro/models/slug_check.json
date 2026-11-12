@@ -1,0 +1,27 @@
+{
+  "name": "slug_check",
+  "inputs": {
+    "slug": {
+      "type": "enum",
+      "values": [
+        "a",
+        "rule",
+        "free-shipping",
+        "a1-b2",
+        "A",
+        "Free-Shipping",
+        "free_shipping",
+        "free--shipping",
+        "-free",
+        "free-",
+        "free shipping",
+        ""
+      ]
+    }
+  },
+  "outputs": {
+    "accepted": {
+      "type": "bool"
+    }
+  }
+}

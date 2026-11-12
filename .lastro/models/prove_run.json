@@ -1,0 +1,34 @@
+{
+  "name": "prove_run",
+  "inputs": {
+    "proposalPasses": {
+      "type": "bool"
+    },
+    "regressionPasses": {
+      "type": "bool"
+    },
+    "supersededPasses": {
+      "type": "bool"
+    },
+    "emptyUseCase": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "ok": {
+      "type": "bool"
+    },
+    "regression": {
+      "type": "bool"
+    },
+    "stillPassNoted": {
+      "type": "bool"
+    },
+    "unproved": {
+      "type": "bool"
+    },
+    "regressOk": {
+      "type": "bool"
+    }
+  }
+}

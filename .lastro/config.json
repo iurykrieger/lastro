@@ -1,0 +1,557 @@
+{
+  "models": {
+    "next_use_case_id": {
+      "name": "next_use_case_id",
+      "inputs": {
+        "a": {
+          "type": "int",
+          "min": 0,
+          "max": 12
+        },
+        "b": {
+          "type": "int",
+          "min": 0,
+          "max": 12
+        },
+        "reserved": {
+          "type": "int",
+          "min": 0,
+          "max": 12
+        },
+        "hasReserved": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "next": {
+          "type": "int",
+          "min": 1,
+          "max": 13
+        }
+      }
+    },
+    "slug_check": {
+      "name": "slug_check",
+      "inputs": {
+        "slug": {
+          "type": "enum",
+          "values": [
+            "a",
+            "rule",
+            "free-shipping",
+            "a1-b2",
+            "A",
+            "Free-Shipping",
+            "free_shipping",
+            "free--shipping",
+            "-free",
+            "free-",
+            "free shipping",
+            ""
+          ]
+        }
+      },
+      "outputs": {
+        "accepted": {
+          "type": "bool"
+        }
+      }
+    },
+    "extraction_rules": {
+      "name": "extraction_rules",
+      "inputs": {
+        "change": {
+          "type": "enum",
+          "values": [
+            "add",
+            "modify",
+            "remove"
+          ]
+        },
+        "known": {
+          "type": "bool"
+        },
+        "replaces": {
+          "type": "enum",
+          "values": [
+            "none",
+            "own",
+            "other",
+            "unknown"
+          ]
+        }
+      },
+      "outputs": {
+        "accepted": {
+          "type": "bool"
+        },
+        "replacesAll": {
+          "type": "bool"
+        },
+        "beforeFromUseCase": {
+          "type": "bool"
+        }
+      }
+    },
+    "stale_after": {
+      "name": "stale_after",
+      "inputs": {
+        "action": {
+          "type": "enum",
+          "values": [
+            "approve",
+            "amend",
+            "reject"
+          ]
+        },
+        "sibling": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "stale": {
+          "type": "bool"
+        }
+      }
+    },
+    "thread_resolve": {
+      "name": "thread_resolve",
+      "inputs": {
+        "by": {
+          "type": "enum",
+          "values": [
+            "commenter",
+            "submitter",
+            "other"
+          ]
+        }
+      },
+      "outputs": {
+        "resolved": {
+          "type": "bool"
+        }
+      }
+    },
+    "approval_policy": {
+      "name": "approval_policy",
+      "inputs": {
+        "required": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "submitterCanApprove": {
+          "type": "bool"
+        },
+        "submitterSigned": {
+          "type": "bool"
+        },
+        "others": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "status": {
+          "type": "enum",
+          "values": [
+            "proposed",
+            "approved",
+            "amended",
+            "rejected"
+          ]
+        },
+        "answered": {
+          "type": "bool"
+        },
+        "threadOpen": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "counted": {
+          "type": "int",
+          "min": 0,
+          "max": 4
+        },
+        "ready": {
+          "type": "bool"
+        }
+      }
+    },
+    "config_policy": {
+      "name": "config_policy",
+      "inputs": {
+        "hasReview": {
+          "type": "bool"
+        },
+        "reviewApprovals": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "hasLegacy": {
+          "type": "bool"
+        },
+        "legacy": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "hasFlag": {
+          "type": "bool"
+        },
+        "flag": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "approvals": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "submitterCanApprove": {
+          "type": "bool"
+        }
+      }
+    },
+    "recorded_policy": {
+      "name": "recorded_policy",
+      "inputs": {
+        "atExtraction": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "later": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "signatures": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        }
+      },
+      "outputs": {
+        "ready": {
+          "type": "bool"
+        }
+      }
+    },
+    "proposal_status": {
+      "name": "proposal_status",
+      "inputs": {
+        "approved": {
+          "type": "bool"
+        },
+        "proofs": {
+          "type": "bool"
+        },
+        "run": {
+          "type": "enum",
+          "values": [
+            "none",
+            "ok",
+            "failed"
+          ]
+        },
+        "allPassed": {
+          "type": "bool"
+        },
+        "stale": {
+          "type": "bool"
+        },
+        "raised": {
+          "type": "bool"
+        },
+        "terminal": {
+          "type": "enum",
+          "values": [
+            "none",
+            "applied",
+            "closed"
+          ]
+        }
+      },
+      "outputs": {
+        "status": {
+          "type": "enum",
+          "values": [
+            "open",
+            "changes-requested",
+            "approved",
+            "proving",
+            "proved",
+            "applied",
+            "closed"
+          ]
+        }
+      }
+    },
+    "baseline_binding": {
+      "name": "baseline_binding",
+      "inputs": {
+        "change": {
+          "type": "enum",
+          "values": [
+            "none",
+            "description",
+            "name",
+            "slug",
+            "proofs",
+            "added"
+          ]
+        }
+      },
+      "outputs": {
+        "approves": {
+          "type": "bool"
+        },
+        "sameBaseline": {
+          "type": "bool"
+        }
+      }
+    },
+    "carry_review": {
+      "name": "carry_review",
+      "inputs": {
+        "sameChange": {
+          "type": "bool"
+        },
+        "sameUseCase": {
+          "type": "bool"
+        },
+        "wording": {
+          "type": "enum",
+          "values": [
+            "same",
+            "case",
+            "spacing",
+            "different"
+          ]
+        },
+        "reviewed": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "carried": {
+          "type": "bool"
+        }
+      }
+    },
+    "supersedes": {
+      "name": "supersedes",
+      "inputs": {
+        "first": {
+          "type": "enum",
+          "values": [
+            "proposed",
+            "approved",
+            "amended",
+            "rejected"
+          ]
+        },
+        "second": {
+          "type": "enum",
+          "values": [
+            "proposed",
+            "approved",
+            "amended",
+            "rejected"
+          ]
+        }
+      },
+      "outputs": {
+        "first": {
+          "type": "bool"
+        },
+        "second": {
+          "type": "bool"
+        }
+      }
+    },
+    "prove_run": {
+      "name": "prove_run",
+      "inputs": {
+        "proposalPasses": {
+          "type": "bool"
+        },
+        "regressionPasses": {
+          "type": "bool"
+        },
+        "supersededPasses": {
+          "type": "bool"
+        },
+        "emptyUseCase": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "ok": {
+          "type": "bool"
+        },
+        "regression": {
+          "type": "bool"
+        },
+        "stillPassNoted": {
+          "type": "bool"
+        },
+        "unproved": {
+          "type": "bool"
+        },
+        "regressOk": {
+          "type": "bool"
+        }
+      }
+    },
+    "edit_gate": {
+      "name": "edit_gate",
+      "inputs": {
+        "approved": {
+          "type": "bool"
+        },
+        "proofs": {
+          "type": "bool"
+        },
+        "run": {
+          "type": "enum",
+          "values": [
+            "none",
+            "ok",
+            "failed"
+          ]
+        },
+        "stale": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "phase": {
+          "type": "enum",
+          "values": [
+            "review-pending",
+            "needs-proofs",
+            "implementing",
+            "failed",
+            "passed"
+          ]
+        },
+        "allowEdit": {
+          "type": "bool"
+        }
+      }
+    },
+    "apply_rules": {
+      "name": "apply_rules",
+      "inputs": {
+        "approved": {
+          "type": "bool"
+        },
+        "sameBaseline": {
+          "type": "bool"
+        },
+        "run": {
+          "type": "enum",
+          "values": [
+            "none",
+            "passed",
+            "failed"
+          ]
+        },
+        "change": {
+          "type": "enum",
+          "values": [
+            "add",
+            "modify",
+            "remove"
+          ]
+        }
+      },
+      "outputs": {
+        "applied": {
+          "type": "bool"
+        },
+        "proofs": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "history": {
+          "type": "bool"
+        },
+        "removed": {
+          "type": "bool"
+        }
+      }
+    }
+  },
+  "subjects": {
+    "next_use_case_id": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "nextUseCaseId"
+    },
+    "slug_check": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "slugCheck"
+    },
+    "extraction_rules": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "extractionRules"
+    },
+    "stale_after": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "staleAfter"
+    },
+    "thread_resolve": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "threadResolve"
+    },
+    "approval_policy": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "approvalPolicy"
+    },
+    "config_policy": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "configPolicy"
+    },
+    "recorded_policy": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "recordedPolicy"
+    },
+    "proposal_status": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "proposalStatus"
+    },
+    "baseline_binding": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "baselineBinding"
+    },
+    "carry_review": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "carryReview"
+    },
+    "supersedes": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "supersedes"
+    },
+    "prove_run": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "proveRun"
+    },
+    "edit_gate": {
+      "module": "./plugins/lastro/subjects/gate.mjs",
+      "export": "editGate"
+    },
+    "apply_rules": {
+      "module": "./sdks/typescript/subjects/proposals.mjs",
+      "export": "applyRules"
+    }
+  },
+  "review": {
+    "approvals": 1,
+    "submitterCanApprove": true
+  }
+}

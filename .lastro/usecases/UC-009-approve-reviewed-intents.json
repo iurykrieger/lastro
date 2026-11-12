@@ -2,7 +2,163 @@
   "id": "UC-009",
   "slug": "approve-reviewed-intents",
   "name": "Approve the reviewed intents",
-  "description": "approve() refuses with every pending item while anything is pending. Otherwise it returns an approved copy whose hash = sha256 over canonical JSON (keys sorted, undefined dropped) of the artifact without its hash. Only an approved artifact can be sent to proof derivation, so only approved intents generate proofs and reach whoever implements the change. An approved artifact cannot be reviewed; reopen() returns a copy without the hash, which must be approved again. isApproved() recomputes the hash, so any edit after approval is detected, and plan validation rejects an artifact that is not approved or was modified after approval.",
-  "proofs": [],
-  "history": []
+  "description": "approve() refuses with every pending item while anything is pending; a proposal is approved when every intent is approved, amended or rejected and every decision and thread is resolved. Otherwise it returns an approved copy with status approved whose hash = sha256 over canonical JSON (keys sorted, undefined dropped) of the proposal without its hash, which binds the baseline: if the use cases changed since extraction, the approval is stale and the prose must be extracted again. Only an approved proposal can be derived, so only approved and amended intents generate proofs and reach whoever implements the change; they and the resulting use cases are the implementer's brief. An approved proposal cannot be reviewed; reopen() returns a copy without the hash, which must be approved again. isApproved() recomputes the hash, so any edit after approval is detected, and derive and apply reject a proposal that is not approved or was modified after approval.",
+  "proofs": [
+    {
+      "id": "P-001.PF-12",
+      "slug": "ready-when-everything-is-resolved",
+      "name": "Ready to approve",
+      "description": "A proposal is ready exactly when every decision is answered, no thread is open, and each intent is rejected or approved or amended with the required approvals.",
+      "intent": "P-001.I-23",
+      "useCase": "UC-009",
+      "model": "approval_policy",
+      "subject": "approval_policy",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.ready"
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "var": "in.answered"
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.threadOpen"
+                    }
+                  ]
+                },
+                {
+                  "op": "or",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.status"
+                        },
+                        {
+                          "const": "rejected"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "in",
+                          "args": [
+                            {
+                              "var": "in.status"
+                            },
+                            {
+                              "const": "approved"
+                            },
+                            {
+                              "const": "amended"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "ge",
+                          "args": [
+                            {
+                              "var": "out.counted"
+                            },
+                            {
+                              "var": "in.required"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-001.PF-16",
+      "slug": "approval-bound-to-baseline",
+      "name": "Approval bound to the baseline",
+      "description": "A reviewed proposal is approved only while the use cases' ids, slugs, names and descriptions are what it was extracted against; proofs do not count.",
+      "intent": "P-001.I-24",
+      "useCase": "UC-009",
+      "model": "baseline_binding",
+      "subject": "baseline_binding",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.approves"
+                },
+                {
+                  "op": "in",
+                  "args": [
+                    {
+                      "var": "in.change"
+                    },
+                    {
+                      "const": "none"
+                    },
+                    {
+                      "const": "proofs"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.sameBaseline"
+                },
+                {
+                  "op": "in",
+                  "args": [
+                    {
+                      "var": "in.change"
+                    },
+                    {
+                      "const": "none"
+                    },
+                    {
+                      "const": "proofs"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    }
+  ],
+  "history": [
+    "P-001"
+  ]
 }

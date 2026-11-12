@@ -1,0 +1,150 @@
+{
+  "id": "UC-048",
+  "slug": "track-proposal-status",
+  "name": "Track a proposal's status",
+  "description": "A proposal has one status: open while its review is pending; changes-requested while a reviewer has an open thread; approved once approval succeeds; proving once its proofs are derived; proved when every proof, new and regression, passes; applied once apply has synced the use cases; closed when it is abandoned. status lists the proposals with their status, and status <proposal> its pending items.",
+  "proofs": [
+    {
+      "id": "P-001.PF-15",
+      "slug": "status-lifecycle",
+      "name": "Status lifecycle",
+      "description": "A proposal is open or changes-requested until approved, then approved, proving and proved as its proofs pass; applied and closed are kept.",
+      "intent": "P-001.I-19",
+      "useCase": "UC-048",
+      "model": "proposal_status",
+      "subject": "proposal_status",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.status"
+            },
+            {
+              "op": "ite",
+              "args": [
+                {
+                  "op": "neq",
+                  "args": [
+                    {
+                      "var": "in.terminal"
+                    },
+                    {
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "op": "ite",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.terminal"
+                        },
+                        {
+                          "const": "applied"
+                        }
+                      ]
+                    },
+                    {
+                      "const": "applied"
+                    },
+                    {
+                      "const": "closed"
+                    }
+                  ]
+                },
+                {
+                  "op": "ite",
+                  "args": [
+                    {
+                      "var": "in.approved"
+                    },
+                    {
+                      "op": "ite",
+                      "args": [
+                        {
+                          "op": "not",
+                          "args": [
+                            {
+                              "var": "in.proofs"
+                            }
+                          ]
+                        },
+                        {
+                          "const": "approved"
+                        },
+                        {
+                          "op": "ite",
+                          "args": [
+                            {
+                              "op": "and",
+                              "args": [
+                                {
+                                  "op": "eq",
+                                  "args": [
+                                    {
+                                      "var": "in.run"
+                                    },
+                                    {
+                                      "const": "ok"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "var": "in.allPassed"
+                                }
+                              ]
+                            },
+                            {
+                              "const": "proved"
+                            },
+                            {
+                              "const": "proving"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "op": "ite",
+                      "args": [
+                        {
+                          "op": "or",
+                          "args": [
+                            {
+                              "var": "in.stale"
+                            },
+                            {
+                              "var": "in.raised"
+                            }
+                          ]
+                        },
+                        {
+                          "const": "changes-requested"
+                        },
+                        {
+                          "const": "open"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    }
+  ],
+  "history": [
+    "P-001"
+  ]
+}

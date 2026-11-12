@@ -2,7 +2,9 @@
   "id": "UC-026",
   "slug": "render-receipt",
   "name": "Render a receipt",
-  "description": "The receipt is Markdown for a pull request: the overall result and counts per verdict; the intents and plan hashes; the Rust check with coverage, table digest and whether verdicts agree; a table of intents with verdict, evidence, confidence and what backs each; notes; each clause with verdict, evidence, method (exhaustive, samples with failure bound, traces), mutants killed, formal statement, counterexample, violating trace and notes; scenarios; trusted pieces; where proof stops; not promised; and pending contradictions.",
+  "description": "The receipt is Markdown for a pull request, written next to the proposal: the overall result and counts per verdict; the proposal and plan hashes; the Rust check with coverage, table digest and whether verdicts agree; the use-case diff, with each use case added, modified (before and after) or removed with the intents behind it, each replaced proof next to the proofs that take its place, each superseded proof that still passes, each regression and, after apply, the new baseline hash; a table of intents with verdict, evidence, confidence and what backs each; notes; each proof with verdict, evidence, method (exhaustive, samples with failure bound, traces), mutants killed, formal statement, counterexample, violating trace and notes; trusted pieces; where proof stops; not promised; and pending contradictions.",
   "proofs": [],
-  "history": []
+  "history": [
+    "P-001"
+  ]
 }

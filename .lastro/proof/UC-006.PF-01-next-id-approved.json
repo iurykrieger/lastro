@@ -1,0 +1,54 @@
+{
+  "id": "UC-006.PF-01",
+  "slug": "next-id-approved",
+  "name": "An added intent gets the next id, approved",
+  "description": "An intent added during review gets the next id and status approved, with a note saying a reviewer added it.",
+  "useCase": "UC-006",
+  "model": "reviewer_add",
+  "subject": "reviewer_add",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.id"
+            },
+            {
+              "op": "add",
+              "args": [
+                {
+                  "var": "in.existing"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.status"
+            },
+            {
+              "const": "approved"
+            }
+          ]
+        },
+        {
+          "var": "out.byReviewer"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

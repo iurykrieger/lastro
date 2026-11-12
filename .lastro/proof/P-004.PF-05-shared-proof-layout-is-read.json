@@ -1,0 +1,47 @@
+{
+  "id": "P-004.PF-05",
+  "slug": "shared-proof-layout-is-read",
+  "name": "The shared layout is read back",
+  "description": "Proof files in the shared .lastro/proof/ layout are read as the use case's proofs.",
+  "intent": "P-004.I-05",
+  "useCase": "UC-036",
+  "model": "proof_files",
+  "subject": "proof_files",
+  "check": {
+    "kind": "scenario",
+    "input": {
+      "legacy": false,
+      "rewrite": false
+    },
+    "expect": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.loaded"
+            },
+            {
+              "const": 1
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.proofFiles"
+            },
+            {
+              "const": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "status": "passed",
+  "verdict": "evidenced",
+  "evidence": "empirical"
+}

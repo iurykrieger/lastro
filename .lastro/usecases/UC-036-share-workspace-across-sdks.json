@@ -2,9 +2,9 @@
   "id": "UC-036",
   "slug": "share-workspace-across-sdks",
   "name": "Share one workspace across CLIs",
-  "description": "The TypeScript, .NET and Go CLIs read and write the same .lastro/ files (config.json, usecases/, proposals/ and llm/), so one can propose, another review, and a third derive, prove and apply. A proposal approved by one SDK has a valid approval hash for the others, and proofs and baselines hash the same in all three.",
-  "proofs": [],
+  "description": "The TypeScript, .NET and Go CLIs read and write the same .lastro/ files (config.json, usecases/, proof/, proposals/ and llm/), so one can propose, another review, and a third derive, prove and apply. A proposal approved by one SDK has a valid approval hash for the others, and proofs and baselines hash the same in all three.",
   "history": [
-    "P-001"
+    "P-001",
+    "P-004"
   ]
 }

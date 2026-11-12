@@ -1,0 +1,47 @@
+{
+  "id": "P-001.PF-05",
+  "slug": "remove-replaces-every-proof",
+  "name": "A remove replaces every proof",
+  "description": "A remove of a known use case lists every proof of that use case as replaced, whatever the LLM wrote.",
+  "intent": "P-001.I-10",
+  "useCase": "UC-001",
+  "model": "extraction_rules",
+  "subject": "extraction_rules",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.change"
+            },
+            {
+              "const": "remove"
+            }
+          ]
+        },
+        {
+          "var": "in.known"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.accepted"
+        },
+        {
+          "var": "out.replacesAll"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

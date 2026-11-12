@@ -1,0 +1,37 @@
+{
+  "name": "plan_to_proposal",
+  "inputs": {
+    "tool": {
+      "type": "enum",
+      "values": [
+        "ExitPlanMode",
+        "update_plan",
+        "Read"
+      ]
+    },
+    "existing": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "heading": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "saved": {
+      "type": "bool"
+    },
+    "id": {
+      "type": "int",
+      "min": 0,
+      "max": 9
+    },
+    "slugFromHeading": {
+      "type": "bool"
+    },
+    "reminder": {
+      "type": "bool"
+    }
+  }
+}

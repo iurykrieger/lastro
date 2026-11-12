@@ -1,0 +1,38 @@
+{
+  "id": "UC-015.PF-01",
+  "slug": "conflicts-are-found",
+  "name": "Clauses that cannot hold together are found",
+  "description": "When no output satisfies every applicable clause for some input (C1 says y is a, C2 says y is b when x holds, and a differs from b), the check returns a decision card.",
+  "useCase": "UC-015",
+  "model": "contradictions",
+  "subject": "contradictions",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "neq",
+      "args": [
+        {
+          "var": "in.a"
+        },
+        {
+          "var": "in.b"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "ge",
+      "args": [
+        {
+          "var": "out.cards"
+        },
+        {
+          "const": 1
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

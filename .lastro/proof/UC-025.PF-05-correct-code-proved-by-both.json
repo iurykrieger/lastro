@@ -1,0 +1,57 @@
+{
+  "id": "UC-025.PF-05",
+  "slug": "correct-code-proved-by-both",
+  "name": "Correct code on a complete table is proved by both engines",
+  "description": "Correct code tabulated over the whole space is proved by the prover, and both engines agree.",
+  "useCase": "UC-025",
+  "model": "crosscheck",
+  "subject": "crosscheck",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.table"
+            },
+            {
+              "const": "complete"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.bug"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.proved"
+        },
+        {
+          "var": "out.rustOk"
+        },
+        {
+          "var": "out.agree"
+        },
+        {
+          "var": "out.ok"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

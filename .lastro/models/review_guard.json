@@ -1,0 +1,45 @@
+{
+  "name": "review_guard",
+  "inputs": {
+    "harness": {
+      "type": "enum",
+      "values": [
+        "claude",
+        "codex"
+      ]
+    },
+    "as": {
+      "type": "enum",
+      "values": [
+        "iury",
+        "claude",
+        "codex",
+        "agent",
+        "assistant",
+        "ai",
+        "bot"
+      ]
+    },
+    "action": {
+      "type": "enum",
+      "values": [
+        "approve",
+        "approve-all",
+        "answer",
+        "amend",
+        "reject",
+        "comment"
+      ]
+    }
+  },
+  "outputs": {
+    "decision": {
+      "type": "enum",
+      "values": [
+        "ask",
+        "deny",
+        "none"
+      ]
+    }
+  }
+}

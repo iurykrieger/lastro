@@ -1,0 +1,38 @@
+{
+  "name": "usecase_prove",
+  "inputs": {
+    "status": {
+      "type": "enum",
+      "values": [
+        "pending",
+        "passed",
+        "failed"
+      ]
+    },
+    "codeOk": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "status": {
+      "type": "enum",
+      "values": [
+        "pending",
+        "passed",
+        "failed"
+      ]
+    },
+    "regression": {
+      "type": "bool"
+    },
+    "feedback": {
+      "type": "bool"
+    },
+    "note": {
+      "type": "bool"
+    },
+    "ok": {
+      "type": "bool"
+    }
+  }
+}

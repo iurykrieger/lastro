@@ -27,16 +27,19 @@ Side effects stay outside it.
      "cli": "npx lastro",
      "build": "npm run build",
      "prove": "dist/shipping.js --export shippingFee",
-     "gate": "on",
+     "enabled": true,
      "allow": ["docs/**", "**/*.md"],
      "maxIterations": 5
    }
    ```
 
    `prove` is everything after `lastro prove`: the built module and its export. `build` runs before each proof.
-   `gate: "on"` blocks code edits until the proposal is approved and its proofs derived. `allow` lists paths the
-   gate never blocks.
+   `enabled: true` turns the hooks on: code edits wait until the proposal is approved and its proofs derived, the
+   proofs run when the agent stops, and the board shows progress. `false` turns the plugin off. `allow` lists paths
+   the gate never blocks.
 6. Commit `.lastro/` with the change (except `.lastro/plugin/`, which holds local hook state: add it to
    `.gitignore`). Use cases, proposals and proofs travel with the code, the same way a pull request's review does.
 
-Then use the `propose` skill for the first change.
+If the repository already has code, record what it does today before the first change: use the `bootstrap` skill
+(it can run before step 3, and its proposal brings the models and subjects it finds). Then use the `propose` skill
+for the first change.

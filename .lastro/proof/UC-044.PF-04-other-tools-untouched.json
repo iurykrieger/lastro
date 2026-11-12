@@ -1,0 +1,48 @@
+{
+  "id": "UC-044.PF-04",
+  "slug": "other-tools-untouched",
+  "name": "Other tools are left alone",
+  "description": "Other tools neither save a proposal nor add the reminder.",
+  "useCase": "UC-044",
+  "model": "plan_to_proposal",
+  "subject": "plan_to_proposal",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.tool"
+        },
+        {
+          "const": "Read"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.saved"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.reminder"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

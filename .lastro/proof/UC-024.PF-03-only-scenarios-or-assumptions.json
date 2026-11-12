@@ -1,0 +1,97 @@
+{
+  "id": "UC-024.PF-03",
+  "slug": "only-scenarios-or-assumptions",
+  "name": "Only scenarios or assumptions give evidence with confidence 0",
+  "description": "An intent with no clause and no beyond-proof item, backed only by passing scenarios or assumptions, is evidenced with confidence 0.",
+  "useCase": "UC-024",
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.beyond"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.coverage"
+            },
+            {
+              "const": "none"
+            }
+          ]
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.scenario"
+            },
+            {
+              "const": "failed"
+            }
+          ]
+        },
+        {
+          "op": "or",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.scenario"
+                },
+                {
+                  "const": "passed"
+                }
+              ]
+            },
+            {
+              "var": "in.assumption"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "evidenced"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.confidence"
+            },
+            {
+              "const": "zero"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

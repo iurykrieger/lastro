@@ -1,0 +1,80 @@
+{
+  "id": "UC-003.PF-02",
+  "slug": "one-kind-no-decision",
+  "name": "One change kind raises no decision",
+  "description": "Intents on one use case that all agree on the change kind raise no change-kind decision.",
+  "useCase": "UC-003",
+  "model": "change_kinds",
+  "subject": "change_kinds",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "or",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.second"
+                },
+                {
+                  "const": "none"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.second"
+                },
+                {
+                  "var": "in.first"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.options"
+            },
+            {
+              "const": 0
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.refused"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.mixDecision"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

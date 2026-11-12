@@ -3,6 +3,5 @@
   "slug": "prove-code-in-any-language",
   "name": "Prove code written in any language",
   "description": "The code under proof is a subject: a function from inputs to outputs. The TypeScript CLI imports a JavaScript module export (default or --export name); the .NET CLI loads a public static method from an assembly; the Go SDK takes a Go function, a process that reads one JSON input per line and writes one JSON output per line (prove --cmd), or a recorded input/output table (prove --table), where an input with no row is an error.",
-  "proofs": [],
   "history": []
 }

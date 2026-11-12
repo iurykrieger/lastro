@@ -1,0 +1,19 @@
+{
+  "name": "apply_proof_files",
+  "inputs": {
+    "supersede": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "applied": {
+      "type": "bool"
+    },
+    "newFile": {
+      "type": "bool"
+    },
+    "oldFile": {
+      "type": "bool"
+    }
+  }
+}

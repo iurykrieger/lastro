@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { Installation, Introduction, Quickstart } from "./start";
+import { Bootstrap } from "./bootstrap";
 import { ExampleBugs, ExampleLogin, ExampleReview, ExampleShipping, ExampleTrust, ExamplesOverview } from "./examples";
 import { ConceptDecisions, ConceptIntents, ConceptPipeline, ConceptProposals, ConceptReceipts, ConceptReview, ConceptSpec, ConceptVerdicts } from "./concepts";
 import { CliLlm, CliOverview, CliWorkspace } from "./cli";
@@ -12,6 +13,7 @@ export const PAGE_COMPONENTS: Record<string, ComponentType> = {
   introduction: Introduction,
   installation: Installation,
   quickstart: Quickstart,
+  bootstrap: Bootstrap,
   "examples/overview": ExamplesOverview,
   "examples/shipping": ExampleShipping,
   "examples/login": ExampleLogin,

@@ -3,6 +3,5 @@
   "slug": "record-not-promised",
   "name": "Record what is not promised",
   "description": "The extraction returns notPromised: things a reader might assume that the prose does not promise. They are stored on the artifact, reviewers can append more, they are part of the approval hash, they are sent to the deriver, and the receipt lists them under Not promised.",
-  "proofs": [],
   "history": []
 }

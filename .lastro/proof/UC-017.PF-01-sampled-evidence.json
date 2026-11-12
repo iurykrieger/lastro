@@ -1,0 +1,87 @@
+{
+  "id": "UC-017.PF-01",
+  "slug": "sampled-evidence",
+  "name": "A clause that holds on samples of a large space is evidenced",
+  "description": "On a space above 100,000 inputs, a clause that holds on every applicable sample is evidenced with empirical evidence and a failure-rate bound of 3/N.",
+  "useCase": "UC-017",
+  "model": "verify_clause",
+  "subject": "verify_clause",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "var": "in.large"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.bug"
+            },
+            {
+              "const": "none"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.kind"
+            },
+            {
+              "const": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "evidenced"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.evidence"
+            },
+            {
+              "const": "empirical"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.method"
+            },
+            {
+              "const": "sampling"
+            }
+          ]
+        },
+        {
+          "var": "out.ruleOfThree"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -151,3 +151,49 @@ func DeriveProofs(ctx context.Context, ask AskJSON, p Proposal, useCases []UseCa
 	}
 	return ProofsFromDerivation(p, useCases, setup, out, opts)
 }
+
+// DeriveUseCaseProofsUserPrompt is the user turn of the derive step for established use cases, built like the TS
+// SDK's deriveUseCaseProofsUserPrompt.
+func DeriveUseCaseProofsUserPrompt(targets []UseCase, useCases []UseCase, setup ProofSetup) string {
+	wanted := map[string]bool{}
+	toProve := []obj{}
+	for _, u := range targets {
+		wanted[u.ID] = true
+		toProve = append(toProve, obj{{"id", u.ID}, {"name", u.Name}, {"description", u.Description}})
+	}
+	proven := []obj{}
+	for _, u := range useCases {
+		if wanted[u.ID] || len(PassedProofs(u)) == 0 {
+			continue
+		}
+		v := u
+		v.Proofs = PassedProofs(u)
+		proven = append(proven, obj{{"id", u.ID}, {"name", u.Name}, {"proofs", proofView(v)}})
+	}
+	models := obj{}
+	for _, name := range setup.ModelOrder {
+		models = append(models, kv{name, setup.Models[name]})
+	}
+	return StringifyIndent(obj{{"models", models}, {"subjects", nonNil(setup.Subjects)}, {"useCasesToProve", toProve}, {"provenUseCases", proven}})
+}
+
+// DeriveUseCaseProofs asks the LLM for proofs of established use cases (every one with no passed proof, or ids)
+// and checks its answer.
+func DeriveUseCaseProofs(ctx context.Context, ask AskJSON, useCases []UseCase, ids []string, setup ProofSetup) (UseCaseDerivation, error) {
+	targets, err := UseCaseTargets(useCases, ids)
+	if err != nil {
+		return UseCaseDerivation{}, err
+	}
+	if len(targets) == 0 {
+		return UseCaseDerivation{UseCases: []UseCase{}, Derived: []ProofEntry{}, Unprovable: []Unprovable{}}, nil
+	}
+	var out UseCaseDeriveOut
+	if err := askInto(ctx, ask, AskRequest{Step: "derive", System: DeriveUseCaseProofsSystem, User: DeriveUseCaseProofsUserPrompt(targets, useCases, setup), Schema: json.RawMessage(DeriveUseCaseProofsSchema)}, &out); err != nil {
+		return UseCaseDerivation{}, err
+	}
+	ids = []string{}
+	for _, u := range targets {
+		ids = append(ids, u.ID)
+	}
+	return ProofsFromUseCases(useCases, ids, setup, out)
+}

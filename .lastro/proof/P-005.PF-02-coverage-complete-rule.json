@@ -1,0 +1,42 @@
+{
+  "id": "P-005.PF-02",
+  "slug": "coverage-complete-rule",
+  "name": "Coverage is complete when every input has a row and none is nondeterministic or out of domain",
+  "description": "The prover calls coverage complete exactly when every input has a row and no row is nondeterministic or out of domain; a repeated row with the same output still counts.",
+  "intent": "P-005.I-02",
+  "useCase": "UC-025",
+  "model": "crosscheck",
+  "subject": "crosscheck",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.complete"
+        },
+        {
+          "op": "in",
+          "args": [
+            {
+              "var": "in.table"
+            },
+            {
+              "const": "complete"
+            },
+            {
+              "const": "repeated-row"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "replaces": [
+    "UC-025.PF-01"
+  ],
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

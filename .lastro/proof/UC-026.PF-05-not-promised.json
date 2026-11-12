@@ -1,0 +1,27 @@
+{
+  "id": "UC-026.PF-05",
+  "slug": "not-promised",
+  "name": "The receipt lists what is not promised",
+  "description": "The receipt has a Not promised section with the items, when there are any.",
+  "useCase": "UC-026",
+  "model": "receipt_sections",
+  "subject": "receipt_sections",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.showsNotPromised"
+        },
+        {
+          "var": "in.notPromised"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

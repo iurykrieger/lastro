@@ -1,0 +1,70 @@
+{
+  "id": "UC-024.PF-01",
+  "slug": "nothing-is-a-gap",
+  "name": "An intent covered by nothing is a gap",
+  "description": "An approved intent with no clause, scenario, assumption or beyond-proof item is a gap.",
+  "useCase": "UC-024",
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.coverage"
+            },
+            {
+              "const": "none"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.scenario"
+            },
+            {
+              "const": "none"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.assumption"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.beyond"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.verdict"
+        },
+        {
+          "const": "gap"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

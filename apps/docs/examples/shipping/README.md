@@ -10,6 +10,7 @@ in the docs stay true.
 | `model.json` | The vocabulary of the proofs: inputs, outputs and their domains |
 | `answers/extract.json` | An answer to the `extract` handoff request (what a model would return) |
 | `answers/derive.json` | An answer to the `derive` handoff request |
+| `answers/bootstrap.json` | An answer to the `survey` handoff request of `lastro bootstrap` (the same rule, read from the code) |
 | `shipping-buggy.mjs` | An implementation with an off-by-one bug |
 | `shipping.mjs` | The fixed implementation |
 | `go/` | The same decision core as a Go program that speaks JSON lines, for `lastro-go prove --cmd` |

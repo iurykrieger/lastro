@@ -1,0 +1,57 @@
+{
+  "id": "UC-020.PF-01",
+  "slug": "breaking-trace-violates",
+  "name": "A trace that breaks a clause violates it",
+  "description": "A recorded run that breaks a clause makes it violated, with empirical evidence and the violating trace and its reference in the result.",
+  "useCase": "UC-020",
+  "model": "trace_check",
+  "subject": "trace_check",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.trace"
+        },
+        {
+          "const": "breaks"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "violated"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.evidence"
+            },
+            {
+              "const": "empirical"
+            }
+          ]
+        },
+        {
+          "var": "out.violatingTrace"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

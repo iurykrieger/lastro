@@ -1,0 +1,51 @@
+{
+  "id": "UC-034.PF-02",
+  "slug": "lsl-validated",
+  "name": "LSL is validated",
+  "description": "Whatever transport answers, a derivation whose LSL uses a variable the model does not have is refused.",
+  "useCase": "UC-034",
+  "model": "untrusted_answers",
+  "subject": "untrusted_answers",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.derived"
+        },
+        {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.quote"
+                },
+                {
+                  "const": "anchored"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.lsl"
+                },
+                {
+                  "const": "valid"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

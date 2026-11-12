@@ -1,0 +1,70 @@
+{
+  "id": "UC-024.PF-04",
+  "slug": "nothing-useful-is-a-gap",
+  "name": "Nothing useful left is a gap",
+  "description": "An intent whose only clause is vacuous, with nothing else, is a gap.",
+  "useCase": "UC-024",
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.coverage"
+            },
+            {
+              "const": "vacuous"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.scenario"
+            },
+            {
+              "const": "none"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.assumption"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.beyond"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.verdict"
+        },
+        {
+          "const": "gap"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -52,7 +52,9 @@ export function gateReason(ws, s, paths) {
     case "no-workspace":
       return `Lastro: this repository is not set up yet. ${nextStep(s)}`;
     case "no-proposal":
-      return extract.join("\n");
+      return s.useCases?.length
+        ? extract.join("\n")
+        : [...extract, `No use case is recorded yet: if this repository already has code, first record what it does today with \`${cli} scan\` and \`${cli} bootstrap\` (lastro \`bootstrap\` skill), so the change's intents are read against it.`].join("\n");
     case "passed":
       return [`Lastro: the approved change is done and every proof passes, so this edit is a new change.`, ...extract.slice(1)].join("\n") + `\n\n${renderLine(s)}`;
     case "review-pending":
@@ -137,7 +139,7 @@ function proposalKey(s) {
 
 export function handle(event, input, env = process.env) {
   const ws = loadWorkspace(input.cwd ?? process.cwd(), env);
-  if (!ws) return {}; // the repository does not use the plugin
+  if (!ws || !ws.config.enabled) return {}; // the repository does not use the plugin, or turned it off
   const harness = harnessOf(input, env);
 
   switch (event) {
@@ -180,7 +182,7 @@ export function handle(event, input, env = process.env) {
       const generated = kinds.filter(([, k]) => k === "generated").map(([p]) => p);
       if (generated.length) return deny(`${generated.join(", ")} ${generated.length > 1 ? "are" : "is"} written only by the Lastro CLI. Run the CLI command instead of editing it.`);
       if (kinds.some(([, k]) => k === "config")) return harness === "claude" ? ask("This changes how Lastro gates and proves this repository (.lastro/plugin.json).") : deny("Only the user changes .lastro/plugin.json.");
-      if (ws.config.gate === "off" || !kinds.some(([, k]) => k === "code")) return {};
+      if (!kinds.some(([, k]) => k === "code")) return {};
       const s = snapshot(ws);
       // Code edits belong to an approved proposal whose proofs are not passing yet. Anything else is a new change.
       if (allowsCodeEdits(s.phase)) return {};
@@ -249,6 +251,11 @@ export function handle(event, input, env = process.env) {
       if (r.ok) {
         writeState(ws, { ...readState(ws), proposalHash, attempts: 0 });
         return { systemMessage: renderBoard(s) };
+      }
+      // A bootstrap's proofs describe the code as it is: a failure goes to the user's review, never back to the code.
+      if (s.proposal.origin?.kind === "bootstrap") {
+        writeState(ws, { ...readState(ws), proposalHash, attempts: 0 });
+        return { systemMessage: `${renderBoard(s)}\n\n${nextStep(s)}` };
       }
       const max = Number(ws.config.maxIterations);
       if (attempts >= max) {

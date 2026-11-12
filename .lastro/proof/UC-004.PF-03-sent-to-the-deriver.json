@@ -1,0 +1,19 @@
+{
+  "id": "UC-004.PF-03",
+  "slug": "sent-to-the-deriver",
+  "name": "Not promised is sent to the deriver",
+  "description": "Every not-promised item is in what the deriver receives.",
+  "useCase": "UC-004",
+  "model": "not_promised",
+  "subject": "not_promised",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "var": "out.inDerive"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

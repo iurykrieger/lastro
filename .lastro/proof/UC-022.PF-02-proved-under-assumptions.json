@@ -1,0 +1,57 @@
+{
+  "id": "UC-022.PF-02",
+  "slug": "proved-under-assumptions",
+  "name": "Proved under assumptions",
+  "description": "An intent whose clauses are all proved and that relies on assumptions gets the verdict proved-under-assumptions.",
+  "useCase": "UC-022",
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.coverage"
+            },
+            {
+              "const": "proved"
+            }
+          ]
+        },
+        {
+          "var": "in.assumption"
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.scenario"
+            },
+            {
+              "const": "failed"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.verdict"
+        },
+        {
+          "const": "proved-under-assumptions"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

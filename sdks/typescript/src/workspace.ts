@@ -2,7 +2,8 @@
  * The `.lastro/` workspace on disk (Node only): config, use cases and proposals.
  *
  *   .lastro/config.json                       models, subjects and the review policy
- *   .lastro/usecases/<id>-<slug>.json         one file per use case, with its regression proofs
+ *   .lastro/usecases/<id>-<slug>.json         one file per use case (id, slug, name, description, history)
+ *   .lastro/proof/<proof-id>-<slug>.json      one file per proof of a use case, found by its `useCase`
  *   .lastro/proposals/<id>-<slug>.md          a proposal's prose
  *   .lastro/proposals/<id>-<slug>.json        a proposal
  *   .lastro/proposals/<id>-<slug>.receipt.md  its last receipt
@@ -12,7 +13,7 @@
 import { execFileSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileNameOf, nextId, readPolicy, type Proposal, type ProposalPolicy, type ProposalRun, type UseCase } from "./proposal.js";
+import { fileNameOf, nextId, readPolicy, type ProofEntry, type Proposal, type ProposalPolicy, type ProposalRun, type UseCase } from "./proposal.js";
 import type { Model } from "./types.js";
 
 export interface SubjectRef {
@@ -86,17 +87,42 @@ export function openWorkspace(dir: string) {
       writeJson(file("config.json"), c);
     },
 
-    useCases(): UseCase[] {
-      return listJson("usecases").map((f) => readJson<UseCase>(file("usecases", f)));
+    /** Every proof file in .lastro/proof/, with the file it came from. */
+    proofFiles(): { file: string; proof: ProofEntry }[] {
+      return listJson("proof").map((f) => ({ file: file("proof", f), proof: readJson<ProofEntry>(file("proof", f)) }));
     },
 
+    /**
+     * The use cases, each with its proofs from .lastro/proof/. A use case file that still carries a `proofs` list
+     * (written before proofs had their own files) is read as before; a proof file with the same id wins.
+     */
+    useCases(): UseCase[] {
+      const files = ws.proofFiles().map((x) => x.proof);
+      return listJson("usecases").map((f) => {
+        const { proofs: embedded, ...u } = readJson<UseCase & { proofs?: ProofEntry[] }>(file("usecases", f));
+        const own = files.filter((x) => x.useCase === u.id);
+        const ids = new Set(own.map((x) => x.id));
+        return { ...u, proofs: [...(embedded ?? []).filter((x) => !ids.has(x.id)), ...own] } as UseCase;
+      });
+    },
+
+    /** Write a use case without its proofs, each proof to its own file, and delete the files of proofs it no longer has. */
     writeUseCase(u: UseCase) {
-      writeJson(file("usecases", fileNameOf(u)), u);
+      const { proofs, ...rest } = u;
+      writeJson(file("usecases", fileNameOf(u)), rest);
+      const keep = new Set<string>();
+      for (const pr of proofs) {
+        const path = file("proof", fileNameOf(pr));
+        keep.add(path);
+        writeJson(path, pr);
+      }
+      for (const x of ws.proofFiles()) if (x.proof.useCase === u.id && !keep.has(x.file)) unlinkSync(x.file);
     },
 
     removeUseCase(u: { id: string; slug: string }) {
       const p = file("usecases", fileNameOf(u));
       if (existsSync(p)) unlinkSync(p);
+      for (const x of ws.proofFiles()) if (x.proof.useCase === u.id) unlinkSync(x.file);
     },
 
     proposals(): Proposal[] {

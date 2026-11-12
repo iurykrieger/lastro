@@ -1,0 +1,41 @@
+{
+  "id": "UC-011.PF-01",
+  "slug": "finite-domains",
+  "name": "Bool, enum and bounded int domains are finite",
+  "description": "Bool, enum and bounded int domains are finite; unbounded ints and strings are not.",
+  "useCase": "UC-011",
+  "model": "domain_kinds",
+  "subject": "domain_kinds",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.finite"
+        },
+        {
+          "op": "in",
+          "args": [
+            {
+              "var": "in.kind"
+            },
+            {
+              "const": "bool"
+            },
+            {
+              "const": "enum"
+            },
+            {
+              "const": "int-bounded"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -3,6 +3,5 @@
   "slug": "track-trusted-assumptions",
   "name": "Track trusted pieces",
   "description": "Each assumption names a trusted piece (external code or a world fact), its contract, what you accept, what breaks if it is wrong and the scenarios that check it. Clauses list the assumptions they rely on. An intent backed by assumptions gets trusted evidence and, when all its clauses are proved, the verdict proved-under-assumptions. The receipt shows each piece with its scenarios passed, failed or planned.",
-  "proofs": [],
   "history": []
 }

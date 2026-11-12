@@ -1,0 +1,35 @@
+{
+  "id": "UC-042.PF-02",
+  "slug": "beyond-proof-and-next-step",
+  "name": "The board lists beyond-proof intents and the next step",
+  "description": "The board lists the beyond-proof intents and the next step.",
+  "useCase": "UC-042",
+  "model": "board_mark",
+  "subject": "board_mark",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "implies",
+          "args": [
+            {
+              "var": "in.beyond"
+            },
+            {
+              "var": "out.beyondListed"
+            }
+          ]
+        },
+        {
+          "var": "out.nextStep"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

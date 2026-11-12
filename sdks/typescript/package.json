@@ -20,6 +20,10 @@
     "./workspace": {
       "types": "./dist/src/workspace.d.ts",
       "default": "./dist/src/workspace.js"
+    },
+    "./scan": {
+      "types": "./dist/src/bootstrap/scan.d.ts",
+      "default": "./dist/src/bootstrap/scan.js"
     }
   },
   "scripts": {

@@ -1,0 +1,69 @@
+{
+  "id": "UC-041.PF-02",
+  "slug": "unchanged-pass-ends",
+  "name": "An unchanged code base whose last proof passed ends the turn",
+  "description": "When the last proof passed and the code is unchanged since, the Stop hook ends the turn without proving again.",
+  "useCase": "UC-041",
+  "model": "stop_hook",
+  "subject": "stop_hook",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "var": "in.derived"
+        },
+        {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.lastRun"
+                },
+                {
+                  "const": "passed"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.dirty"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.block"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.proved"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

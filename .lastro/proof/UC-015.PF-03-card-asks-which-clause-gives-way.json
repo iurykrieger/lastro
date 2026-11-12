@@ -1,0 +1,73 @@
+{
+  "id": "UC-015.PF-03",
+  "slug": "card-asks-which-clause-gives-way",
+  "name": "A contradiction card offers one option per clause",
+  "description": "A contradiction card has origin consistency-check, one option per conflicting clause and the first recommended, and the spec is not ok.",
+  "useCase": "UC-015",
+  "model": "contradictions",
+  "subject": "contradictions",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "gt",
+      "args": [
+        {
+          "var": "out.cards"
+        },
+        {
+          "const": 0
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.options"
+            },
+            {
+              "const": 2
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.recommended"
+            },
+            {
+              "const": 0
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.origin"
+            },
+            {
+              "const": "consistency-check"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.ok"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

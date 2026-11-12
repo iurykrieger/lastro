@@ -1,0 +1,148 @@
+{
+  "id": "UC-012.PF-01",
+  "slug": "validate-arity-and-variables",
+  "name": "validateExpr checks arity and variables",
+  "description": "validateExpr rejects an operator with the wrong number of arguments and a variable the model does not have, and nothing else here.",
+  "useCase": "UC-012",
+  "model": "lsl_eval",
+  "subject": "lsl_eval",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.invalid"
+        },
+        {
+          "op": "or",
+          "args": [
+            {
+              "var": "in.unbound"
+            },
+            {
+              "op": "or",
+              "args": [
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.op"
+                        },
+                        {
+                          "const": "not"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "neq",
+                      "args": [
+                        {
+                          "var": "in.arity"
+                        },
+                        {
+                          "const": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.op"
+                        },
+                        {
+                          "const": "eq"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "neq",
+                      "args": [
+                        {
+                          "var": "in.arity"
+                        },
+                        {
+                          "const": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.op"
+                        },
+                        {
+                          "const": "ite"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "neq",
+                      "args": [
+                        {
+                          "var": "in.arity"
+                        },
+                        {
+                          "const": 3
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "in",
+                      "args": [
+                        {
+                          "var": "in.op"
+                        },
+                        {
+                          "const": "add"
+                        },
+                        {
+                          "const": "in"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "lt",
+                      "args": [
+                        {
+                          "var": "in.arity"
+                        },
+                        {
+                          "const": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

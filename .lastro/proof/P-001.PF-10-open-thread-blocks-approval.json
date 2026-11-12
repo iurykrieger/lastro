@@ -1,0 +1,28 @@
+{
+  "id": "P-001.PF-10",
+  "slug": "open-thread-blocks-approval",
+  "name": "An open thread blocks approval",
+  "description": "While a thread is open the proposal is not ready to approve.",
+  "intent": "P-001.I-18",
+  "useCase": "UC-047",
+  "model": "approval_policy",
+  "subject": "approval_policy",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.threadOpen"
+    },
+    "ensures": {
+      "op": "not",
+      "args": [
+        {
+          "var": "out.ready"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

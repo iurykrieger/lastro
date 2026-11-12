@@ -70,6 +70,7 @@ Then ask the agent to "set up Lastro" (the `setup` skill), or write `.lastro/plu
 |---|---|
 | `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json` | The manifests. Both harnesses load the same skills and hooks. |
 | `skills/setup` | Draft the model with the user, `lastro init`, write `.lastro/plugin.json`. |
+| `skills/bootstrap` | For a repository that already has code: `lastro scan` sizes it, `lastro bootstrap` reads its code, tests and commits into a bootstrap proposal of the use cases it implements today, the user reviews it, its proofs are checked against the code as it is, and `lastro apply` records them as the baseline. |
 | `skills/propose` | Prose → proposal and its intents → the user's review (decisions, approve / request changes / reject, threads, the proofs each intent replaces) → `lastro derive`. |
 | `skills/verify` | Prove on demand, read counterexamples and regressions, fix the code, never touch proposals, use cases or proofs. |
 | `hooks/hooks.json` | `SessionStart` adds the board and the rules; `UserPromptSubmit` adds one short line, only when the board changed; `PreToolUse` gates code edits and review commands; `PostToolUse` shows the board after each `lastro` command and marks proofs stale after an edit; `Stop` proves and sends failures back. |
@@ -96,7 +97,7 @@ approval policy.
   "cli": "npx lastro",
   "build": "npm run build",
   "prove": "dist/shipping.js --export shippingFee",
-  "gate": "on",
+  "enabled": true,
   "allow": ["docs/**", "**/*.md"],
   "maxIterations": 5
 }
@@ -108,7 +109,7 @@ approval policy.
 | `dir` | `.lastro` | The workspace. |
 | `build` | none | Runs before each proof. |
 | `prove` | none | The arguments after `lastro prove`. |
-| `gate` | `on` | `off` never blocks edits. |
+| `enabled` | `true` | `false` turns the plugin off in this repository: no gate, no proofs on Stop, no board. (An older `"gate": "off"` still means `false`.) |
 | `allow` | `[]` | Globs the gate never blocks. |
 | `maxIterations` | `5` | How many failing proofs the Stop hook sends back before handing over. |
 

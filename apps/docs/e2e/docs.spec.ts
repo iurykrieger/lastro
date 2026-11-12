@@ -189,3 +189,25 @@ test("search finds the plugin page", async ({ page }) => {
   await dialog.getByRole("textbox", { name: "Search pages" }).fill("codex hooks");
   await expect(dialog.getByRole("option").first()).toContainText("Claude Code and Codex");
 });
+
+test("the existing-repositories page walks through scan, bootstrap, review, prove and apply", async ({ page }) => {
+  await page.goto("#/bootstrap");
+  await expect(page.getByRole("heading", { level: 1, name: "Existing repositories" })).toBeVisible();
+  for (const step of ["Size the repository", "Survey the code", "Review the reading", "Prove against today's code", "Apply"]) await expect(page.getByRole("heading", { name: step, exact: true })).toBeVisible();
+  await expect(page.locator("figure[data-code]", { hasText: "answers/bootstrap.json" })).toContainText('"change": "add"');
+  await expect(page.locator("figure[data-code]", { hasText: "P-001-bootstrap-checkout.md" })).toContainText("Grounds: files `shipping.mjs`.");
+  await page.getByRole("link", { name: "bootstrap skill" }).click();
+  await expect(page).toHaveURL(/#\/plugins\/agents$/);
+  await expect(page.getByRole("link", { name: "Existing repositories" }).first()).toBeVisible();
+});
+
+test("proofs live in .lastro/proof, and the CLI page shows how to derive them from the use cases", async ({ page }) => {
+  await page.goto("#/cli/workspace");
+  await expect(page.locator("figure[data-code]", { hasText: ".lastro/proof/P-001.PF-01-free-from-100.json" })).toContainText('"useCase": "UC-001"');
+  await expect(page.locator("figure[data-code]", { hasText: ".lastro/usecases/UC-001-charge-shipping.json" })).not.toContainText('"proofs"');
+  await page.goto("#/cli/overview");
+  await expect(page.getByRole("heading", { name: "derive --usecases", exact: true })).toBeVisible();
+  await page.goto("#/bootstrap");
+  await expect(page.getByRole("heading", { name: "Use cases without proofs", exact: true })).toBeVisible();
+  await expect(page.locator("figure[data-code]", { hasText: "lastro prove --usecases" }).first()).toBeVisible();
+});

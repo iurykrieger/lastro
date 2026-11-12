@@ -1,0 +1,32 @@
+{
+  "id": "UC-006.PF-02",
+  "slug": "notes-when-not-in-prose",
+  "name": "The note says when the quote is not in the prose",
+  "description": "The added intent's note says it is not in the prose exactly when its quote is not found there.",
+  "useCase": "UC-006",
+  "model": "reviewer_add",
+  "subject": "reviewer_add",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.notInProse"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.inProse"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

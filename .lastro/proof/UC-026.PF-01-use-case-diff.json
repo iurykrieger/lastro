@@ -1,0 +1,19 @@
+{
+  "id": "UC-026.PF-01",
+  "slug": "use-case-diff",
+  "name": "The receipt shows the use-case diff",
+  "description": "The receipt shows each modified use case before and after.",
+  "useCase": "UC-026",
+  "model": "receipt_sections",
+  "subject": "receipt_sections",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "var": "out.showsDiff"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

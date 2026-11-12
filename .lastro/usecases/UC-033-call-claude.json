@@ -3,6 +3,5 @@
   "slug": "call-claude",
   "name": "Run the AI steps on Claude",
   "description": "The Claude transport (lastro/claude in TypeScript, Lastro.Claude in .NET, the claude package in Go) calls the Anthropic Messages API with the step's system prompt, JSON-schema structured output, adaptive thinking and high effort by default, and parses the JSON answer. A refusal or a truncated answer raises an error. The CLIs use it when ANTHROPIC_API_KEY is set or with --llm anthropic.",
-  "proofs": [],
   "history": []
 }

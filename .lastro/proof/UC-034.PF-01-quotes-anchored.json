@@ -1,0 +1,35 @@
+{
+  "id": "UC-034.PF-01",
+  "slug": "quotes-anchored",
+  "name": "Quotes are anchored",
+  "description": "Whatever transport answers, an extracted intent whose quote is not in the prose is refused.",
+  "useCase": "UC-034",
+  "model": "untrusted_answers",
+  "subject": "untrusted_answers",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.extracted"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.quote"
+            },
+            {
+              "const": "anchored"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

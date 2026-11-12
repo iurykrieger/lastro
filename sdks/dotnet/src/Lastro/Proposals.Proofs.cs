@@ -26,6 +26,53 @@ public static partial class Proposals
 
     private sealed record Raised(ProposalDecision Card, string? Breaks);
 
+    /// <summary>The check of one derived proof (clause or scenario), parsed and validated against its model; problems are added.</summary>
+    internal static ProofCheck? CheckFromAnswer(string pid, JsonNode? d, Model model, List<string> problems)
+    {
+        var kind = S(d?["kind"]);
+        Expr? Parse(string where, JsonNode? raw)
+        {
+            var (text, node) = ExprText(raw);
+            if (node is null)
+            {
+                problems.Add($"{pid}.{where}: not valid JSON: {text}");
+                return null;
+            }
+            var errs = Lsl.Validate(node, model, null, $"{pid}.{where}");
+            if (errs.Count > 0)
+            {
+                problems.AddRange(errs);
+                return null;
+            }
+            return Lsl.Parse(node.ToJsonString());
+        }
+        ProofCheck? check = null;
+        switch (kind)
+        {
+            case "clause":
+                var requires = Blank(d?["requires"]) ? null : Parse("requires", d?["requires"]);
+                if (Parse("ensures", d?["ensures"]) is { } ensures)
+                    check = new ProofCheck { Kind = "clause", Requires = requires, Ensures = ensures, Assumptions = A(d?["assumptions"]).Select(S).ToList() };
+                break;
+            case "scenario":
+                var (_, inputNode) = ExprText(d?["inputJson"]);
+                Env? input = null;
+                if (inputNode is not JsonObject inputObj) problems.Add($"{pid}.input: not valid JSON");
+                else
+                {
+                    input = LastroJson.FromNode<Env>(inputObj);
+                    foreach (var k in model.Inputs.Keys)
+                        if (!inputObj.ContainsKey(k)) problems.Add($"{pid}.input: missing model input {k}");
+                }
+                if (Parse("expect", d?["expect"]) is { } expect && input is not null) check = new ProofCheck { Kind = "scenario", Input = input, Expect = expect };
+                break;
+            default:
+                problems.Add($"{pid}: unknown kind \"{kind}\"");
+                break;
+        }
+        return check;
+    }
+
     /// <summary>
     /// Checks the derive step's answer and attaches the pending proofs. When derivation returns decisions
     /// (or the new clauses contradict each other), the proposal goes back to review with no proof kept.
@@ -42,7 +89,7 @@ public static partial class Proposals
         foreach (var d in A(answer?["proofs"]))
         {
             var pid = $"{p.Id}.PF-{Pad(++n, 2)}";
-            var (intentId, slug, modelName, subject, kind) = (S(d?["intent"]), S(d?["slug"]), S(d?["model"]), S(d?["subject"]), S(d?["kind"]));
+            var (intentId, slug, modelName, subject) = (S(d?["intent"]), S(d?["slug"]), S(d?["model"]), S(d?["subject"]));
             var hasIt = byId.TryGetValue(intentId, out var it);
             if (!hasIt) problems.Add($"{pid}: intent {intentId} is not an approved or amended intent of {p.Id}");
             if (!Slug.IsMatch(slug)) problems.Add($"{pid}: slug \"{slug}\" is not kebab-case");
@@ -54,46 +101,7 @@ public static partial class Proposals
             foreach (var r in replaces)
                 if (!(hasIt && it!.Replaces.Any(x => x.Proof == r))) problems.Add($"{pid}: replaces {r}, which its intent does not list");
             if (!hasModel) continue;
-            Expr? Parse(string where, JsonNode? raw)
-            {
-                var (text, node) = ExprText(raw);
-                if (node is null)
-                {
-                    problems.Add($"{pid}.{where}: not valid JSON: {text}");
-                    return null;
-                }
-                var errs = Lsl.Validate(node, model!, null, $"{pid}.{where}");
-                if (errs.Count > 0)
-                {
-                    problems.AddRange(errs);
-                    return null;
-                }
-                return Lsl.Parse(node.ToJsonString());
-            }
-            ProofCheck? check = null;
-            switch (kind)
-            {
-                case "clause":
-                    var requires = Blank(d?["requires"]) ? null : Parse("requires", d?["requires"]);
-                    if (Parse("ensures", d?["ensures"]) is { } ensures)
-                        check = new ProofCheck { Kind = "clause", Requires = requires, Ensures = ensures, Assumptions = A(d?["assumptions"]).Select(S).ToList() };
-                    break;
-                case "scenario":
-                    var (_, inputNode) = ExprText(d?["inputJson"]);
-                    Env? input = null;
-                    if (inputNode is not JsonObject inputObj) problems.Add($"{pid}.input: not valid JSON");
-                    else
-                    {
-                        input = LastroJson.FromNode<Env>(inputObj);
-                        foreach (var k in model!.Inputs.Keys)
-                            if (!inputObj.ContainsKey(k)) problems.Add($"{pid}.input: missing model input {k}");
-                    }
-                    if (Parse("expect", d?["expect"]) is { } expect && input is not null) check = new ProofCheck { Kind = "scenario", Input = input, Expect = expect };
-                    break;
-                default:
-                    problems.Add($"{pid}: unknown kind \"{kind}\"");
-                    break;
-            }
+            var check = CheckFromAnswer(pid, d, model!, problems);
             if (check is null || !hasIt) continue;
             proofs.Add(new ProofEntry
             {
@@ -282,7 +290,7 @@ public static partial class Proposals
         foreach (var u in useCases)
         {
             if (changes.Any(c => c.UseCase == u.Id && c.Change == "remove")) continue;
-            o.Add((u.Id, Own(u.Id) + u.Proofs.Count(x => !sup.Contains(x.Id))));
+            o.Add((u.Id, Own(u.Id) + PassedProofs(u).Count(x => !sup.Contains(x.Id))));
         }
         foreach (var c in changes.Where(c => c.Change == "add")) o.Add((c.UseCase, Own(c.UseCase)));
         return o;
@@ -300,8 +308,8 @@ public static partial class Proposals
         var removed = LiveChanges(p).Where(c => c.Change == "remove").Select(c => c.UseCase).ToHashSet(StringComparer.Ordinal);
         var set = new List<(ProofEntry, string)>();
         set.AddRange(p.Proofs.Select(x => (x, "proposal")));
-        set.AddRange(useCases.SelectMany(u => u.Proofs).Where(x => !sup.Contains(x.Id) && !removed.Contains(x.UseCase)).Select(x => (x, "regression")));
-        set.AddRange(useCases.SelectMany(u => u.Proofs).Where(x => sup.Contains(x.Id)).Select(x => (x, "superseded")));
+        set.AddRange(useCases.SelectMany(PassedProofs).Where(x => !sup.Contains(x.Id) && !removed.Contains(x.UseCase)).Select(x => (x, "regression")));
+        set.AddRange(useCases.SelectMany(PassedProofs).Where(x => sup.Contains(x.Id)).Select(x => (x, "superseded")));
         var (outcomes, agree) = await RunProofsAsync(set, o).ConfigureAwait(false);
         var run = new ProposalRun { Outcomes = outcomes, EnginesAgree = agree };
         var ok = true;
@@ -326,15 +334,15 @@ public static partial class Proposals
         return (WithStatus(next), run);
     }
 
-    /// <summary>Runs every use case's proofs alone (<c>regress</c>).</summary>
+    /// <summary>Runs every use case's passed proofs alone (<c>regress</c>).</summary>
     public static async Task<ProposalRun> RegressAsync(IReadOnlyList<UseCase> useCases, RunOptions o)
     {
-        var (outcomes, agree) = await RunProofsAsync(useCases.SelectMany(u => u.Proofs).Select(x => (x, "regression")).ToList(), o).ConfigureAwait(false);
+        var (outcomes, agree) = await RunProofsAsync(useCases.SelectMany(PassedProofs).Select(x => (x, "regression")).ToList(), o).ConfigureAwait(false);
         var run = new ProposalRun
         {
             Outcomes = outcomes, EnginesAgree = agree,
             Regressions = outcomes.Where(x => !x.Passed).Select(x => x.Proof).ToList(),
-            Unproved = useCases.Where(u => u.Proofs.Count == 0).Select(u => u.Id).ToList(),
+            Unproved = useCases.Where(u => PassedProofs(u).Count == 0).Select(u => u.Id).ToList(),
         };
         run.Ok = run.Regressions.Count == 0 && agree != false;
         return run;

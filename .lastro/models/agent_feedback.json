@@ -1,0 +1,41 @@
+{
+  "name": "agent_feedback",
+  "inputs": {
+    "codeOk": {
+      "type": "bool"
+    },
+    "gap": {
+      "type": "enum",
+      "values": [
+        "none",
+        "vacuous",
+        "uncovered"
+      ]
+    }
+  },
+  "outputs": {
+    "failures": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "brief": {
+      "type": "enum",
+      "values": [
+        "fix",
+        "all-pass"
+      ]
+    },
+    "counterexample": {
+      "type": "bool"
+    },
+    "specGaps": {
+      "type": "int",
+      "min": 0,
+      "max": 5
+    },
+    "listsGaps": {
+      "type": "bool"
+    }
+  }
+}

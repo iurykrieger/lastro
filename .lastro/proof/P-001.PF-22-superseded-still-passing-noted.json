@@ -1,0 +1,28 @@
+{
+  "id": "P-001.PF-22",
+  "slug": "superseded-still-passing-noted",
+  "name": "Superseded proof that still passes",
+  "description": "A superseded proof that still passes is noted, and never fails the run.",
+  "intent": "P-001.I-33",
+  "useCase": "UC-049",
+  "model": "prove_run",
+  "subject": "prove_run",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.stillPassNoted"
+        },
+        {
+          "var": "in.supersededPasses"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

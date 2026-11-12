@@ -1,0 +1,51 @@
+{
+  "name": "trace_check",
+  "inputs": {
+    "subject": {
+      "type": "enum",
+      "values": [
+        "none",
+        "right"
+      ]
+    },
+    "trace": {
+      "type": "enum",
+      "values": [
+        "none",
+        "holds",
+        "breaks"
+      ]
+    }
+  },
+  "outputs": {
+    "verdict": {
+      "type": "enum",
+      "values": [
+        "proved",
+        "evidenced",
+        "violated",
+        "vacuous",
+        "weak",
+        "not-run"
+      ]
+    },
+    "evidence": {
+      "type": "enum",
+      "values": [
+        "formal",
+        "empirical",
+        "trusted",
+        "none"
+      ]
+    },
+    "violatingTrace": {
+      "type": "bool"
+    },
+    "trustedNote": {
+      "type": "bool"
+    },
+    "ruleOfThree": {
+      "type": "bool"
+    }
+  }
+}

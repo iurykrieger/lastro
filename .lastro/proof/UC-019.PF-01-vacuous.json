@@ -1,0 +1,38 @@
+{
+  "id": "UC-019.PF-01",
+  "slug": "vacuous",
+  "name": "A clause no run applies to is vacuous",
+  "description": "A clause whose if-part no run satisfies is vacuous.",
+  "useCase": "UC-019",
+  "model": "verify_clause",
+  "subject": "verify_clause",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.kind"
+        },
+        {
+          "const": "vacuous"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.verdict"
+        },
+        {
+          "const": "vacuous"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

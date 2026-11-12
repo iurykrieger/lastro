@@ -1,0 +1,19 @@
+{
+  "id": "UC-026.PF-02",
+  "slug": "replaced-next-to-replacements",
+  "name": "Each replaced proof sits next to its replacements",
+  "description": "The receipt shows each replaced proof next to the proofs that take its place.",
+  "useCase": "UC-026",
+  "model": "receipt_sections",
+  "subject": "receipt_sections",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "var": "out.showsReplaced"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,52 @@
+{
+  "id": "P-005.PF-01",
+  "slug": "unconditional-clause-conflicts",
+  "name": "A clause with no if-part conflicts with a conditional one",
+  "description": "A clause with no if-part (y is a) and a clause that demands y is b when x holds come back as a contradiction when a differs from b, whether or not the first has an if-part.",
+  "intent": "P-005.I-01",
+  "useCase": "UC-015",
+  "model": "contradictions",
+  "subject": "contradictions",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "neq",
+      "args": [
+        {
+          "var": "in.a"
+        },
+        {
+          "var": "in.b"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "ge",
+          "args": [
+            {
+              "var": "out.cards"
+            },
+            {
+              "const": 1
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.ok"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

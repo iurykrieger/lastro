@@ -1,0 +1,57 @@
+{
+  "id": "UC-004.PF-01",
+  "slug": "kept-on-the-artifact",
+  "name": "What is not promised is kept",
+  "description": "Every item the extraction returns as not promised, and every one a reviewer appends, is stored on the artifact.",
+  "useCase": "UC-004",
+  "model": "not_promised",
+  "subject": "not_promised",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.count"
+        },
+        {
+          "op": "add",
+          "args": [
+            {
+              "op": "ite",
+              "args": [
+                {
+                  "var": "in.extracted"
+                },
+                {
+                  "const": 1
+                },
+                {
+                  "const": 0
+                }
+              ]
+            },
+            {
+              "op": "ite",
+              "args": [
+                {
+                  "var": "in.appended"
+                },
+                {
+                  "const": 1
+                },
+                {
+                  "const": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

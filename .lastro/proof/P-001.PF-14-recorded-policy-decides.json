@@ -1,0 +1,36 @@
+{
+  "id": "P-001.PF-14",
+  "slug": "recorded-policy-decides",
+  "name": "The recorded policy decides",
+  "description": "A proposal is ready once it has the approvals of the policy it was extracted under, whatever the config says later.",
+  "intent": "P-001.I-22",
+  "useCase": "UC-007",
+  "model": "recorded_policy",
+  "subject": "recorded_policy",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.ready"
+        },
+        {
+          "op": "ge",
+          "args": [
+            {
+              "var": "in.signatures"
+            },
+            {
+              "var": "in.atExtraction"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

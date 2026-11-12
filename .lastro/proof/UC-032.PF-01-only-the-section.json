@@ -1,0 +1,54 @@
+{
+  "id": "UC-032.PF-01",
+  "slug": "only-the-section",
+  "name": "Only the section's body is used",
+  "description": "--section uses only the body of the section whose heading matches, ignoring case, up to the next heading of the same or a higher level (subsections included).",
+  "useCase": "UC-032",
+  "model": "section",
+  "subject": "section",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "neq",
+      "args": [
+        {
+          "var": "in.heading"
+        },
+        {
+          "const": "unknown"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.body"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.other"
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "var": "in.nested"
+            },
+            {
+              "var": "out.sub"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

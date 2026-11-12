@@ -1,0 +1,74 @@
+{
+  "id": "P-001.PF-24",
+  "slug": "apply-moves-proofs-and-history",
+  "name": "Apply moves proofs and history",
+  "description": "After apply, a modified use case keeps its other proofs, drops the superseded one and gains the new one, an added one holds the new proof, and both record the proposal in history.",
+  "intent": "P-001.I-35",
+  "useCase": "UC-050",
+  "model": "apply_rules",
+  "subject": "apply_rules",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.applied"
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.change"
+            },
+            {
+              "const": "remove"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.history"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.proofs"
+            },
+            {
+              "op": "ite",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.change"
+                    },
+                    {
+                      "const": "modify"
+                    }
+                  ]
+                },
+                {
+                  "const": 2
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

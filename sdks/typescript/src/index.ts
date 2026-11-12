@@ -64,6 +64,7 @@ export {
   isProposalApproved,
   liveChanges,
   nextId,
+  passedProofs,
   pendingProposal,
   proofsFromDerivation,
   proposalFeedback,
@@ -109,6 +110,10 @@ export {
   RECOMBINE_SCHEMA,
   DERIVE_PROOFS_SYSTEM,
   DERIVE_PROOFS_SCHEMA,
+  DERIVE_USECASE_PROOFS_SYSTEM,
+  DERIVE_USECASE_PROOFS_SCHEMA,
+  deriveUseCaseProofsUserPrompt,
+  deriveUseCaseProofs,
   proposeUserPrompt,
   recombineUserPrompt,
   deriveProofsUserPrompt,
@@ -116,3 +121,11 @@ export {
   recombineAfter,
   deriveProofs,
 } from "./llm/proposal.js";
+// Proofs derived straight from the established use cases.
+export { useCaseTargets, proofsFromUseCases, proveUseCases, isUseCaseList, USECASE_FEEDBACK_NOTE } from "./usecase-proofs.js";
+export type { UseCaseDeriveOut, UseCaseDerivation, UseCaseRun } from "./usecase-proofs.js";
+// Bootstrap (pure). Reading the repository from disk is Node-only: import it from "lastro/scan".
+export { proposalFromSurvey, renderSurveyReport, modelProblems, digestHash, isBootstrap, setupOf, suggestScopes, BOOTSTRAP_FEEDBACK_NOTE } from "./bootstrap.js";
+export type { RepoDigest, RepoFile, RepoTest, RepoCommit, RepoManifest, RepoArea, ProposalOrigin, Grounds, ProposalSetup, SubjectDecl, SurveyOut, SurveyInput } from "./bootstrap.js";
+export { SURVEY_SYSTEM, SURVEY_SCHEMA, surveyUserPrompt, surveyProposal } from "./llm/bootstrap.js";
+export type { Excerpt } from "./llm/bootstrap.js";

@@ -1,0 +1,32 @@
+{
+  "id": "UC-011.PF-04",
+  "slug": "no-outputs-rejected",
+  "name": "A model with no outputs is rejected",
+  "description": "Plan validation rejects a model with no outputs, and only then.",
+  "useCase": "UC-011",
+  "model": "domain_kinds",
+  "subject": "domain_kinds",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.rejected"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.hasOutputs"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,70 @@
+{
+  "id": "UC-003.PF-01",
+  "slug": "mixed-kinds-become-a-decision",
+  "name": "Mixed change kinds become a decision",
+  "description": "Intents on one use case whose change kinds do not fit together (a remove mixed with a modify) come back as a decision instead of a refusal.",
+  "useCase": "UC-003",
+  "model": "change_kinds",
+  "subject": "change_kinds",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.second"
+            },
+            {
+              "const": "none"
+            }
+          ]
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.second"
+            },
+            {
+              "var": "in.first"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.options"
+            },
+            {
+              "const": 0
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.refused"
+            }
+          ]
+        },
+        {
+          "var": "out.mixDecision"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

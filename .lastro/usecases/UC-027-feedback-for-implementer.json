@@ -3,6 +3,5 @@
   "slug": "feedback-for-implementer",
   "name": "Hand failures to whoever writes the code",
   "description": "prove() returns failures (each violated clause or failed scenario with its intents, description, formal statement, counterexample input and output) and specGaps (vacuous or weak clauses, intents with no obligation, contradictions). agentFeedback() renders the failures as a brief telling the implementer to make each obligation hold for every input without breaking the others, or says every proof passes and lists the spec gaps. Lastro never writes the implementation.",
-  "proofs": [],
   "history": []
 }

@@ -83,8 +83,8 @@ type ProofEntry struct {
 	Slug        string     `json:"slug"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
-	Intent      string     `json:"intent"`  // "P-007.I-03"
-	UseCase     string     `json:"useCase"` // "UC-012"
+	Intent      string     `json:"intent,omitempty"` // "P-007.I-03"; empty on a proof derived from its use case
+	UseCase     string     `json:"useCase"`          // "UC-012"
 	Model       string     `json:"model"`
 	Subject     string     `json:"subject"`
 	Check       ProofCheck `json:"check"`
@@ -226,8 +226,9 @@ type ProofCounterexample struct {
 type ProofOutcome struct {
 	Proof   string `json:"proof"`
 	UseCase string `json:"useCase"`
-	Intent  string `json:"intent"`
-	// Role is "proposal" (derived for this proposal), "regression" (a use case's proof) or "superseded" (replaced by it).
+	Intent  string `json:"intent,omitempty"`
+	// Role is "proposal" (derived for this proposal), "regression" (a use case's passed proof), "superseded" (replaced
+	// by it) or "usecase" (a use case's pending or failed proof, derived from its description).
 	Role           string               `json:"role"`
 	Verdict        string               `json:"verdict"`
 	Passed         bool                 `json:"passed"`
@@ -1303,6 +1304,57 @@ func jsonText(raw json.RawMessage) (text string, isString bool) {
 	return string(raw), false
 }
 
+// checkFromAnswer parses and validates the check of one derived proof (clause or scenario) against its model,
+// appending every problem.
+func checkFromAnswer(pid, kind string, requiresRaw, ensuresRaw json.RawMessage, assumptions []string, inputRaw, expectRaw json.RawMessage, model Model, problems *[]string) *ProofCheck {
+	parse := func(where string, raw json.RawMessage) *Expr {
+		text, _ := jsonText(raw)
+		var e Expr
+		if err := json.Unmarshal([]byte(text), &e); err != nil {
+			*problems = append(*problems, fmt.Sprintf("%s.%s: not valid JSON: %s", pid, where, text))
+			return nil
+		}
+		if errs := ValidateExpr(e, model, nil, pid+"."+where); len(errs) > 0 {
+			*problems = append(*problems, errs...)
+			return nil
+		}
+		return &e
+	}
+	var check *ProofCheck
+	switch kind {
+	case "clause":
+		var requires *Expr
+		if text, _ := jsonText(requiresRaw); len(requiresRaw) > 0 && strings.TrimSpace(text) != "" && text != "null" {
+			requires = parse("requires", requiresRaw)
+		}
+		if ensures := parse("ensures", ensuresRaw); ensures != nil {
+			check = &ProofCheck{Kind: "clause", Requires: requires, Ensures: ensures, Assumptions: nonNil(assumptions)}
+		}
+	case "scenario":
+		text, _ := jsonText(inputRaw)
+		var input json.RawMessage
+		var probe map[string]any
+		if err := json.Unmarshal([]byte(text), &probe); err != nil || probe == nil {
+			*problems = append(*problems, pid+".input: not valid JSON")
+		} else {
+			var buf bytes.Buffer
+			_ = json.Compact(&buf, []byte(text))
+			input = buf.Bytes()
+			for _, k := range model.Inputs.Names() {
+				if _, ok := probe[k]; !ok {
+					*problems = append(*problems, fmt.Sprintf("%s.input: missing model input %s", pid, k))
+				}
+			}
+		}
+		if expect := parse("expect", expectRaw); input != nil && expect != nil {
+			check = &ProofCheck{Kind: "scenario", Input: input, Expect: expect}
+		}
+	default:
+		*problems = append(*problems, fmt.Sprintf("%s: unknown kind %q", pid, kind))
+	}
+	return check
+}
+
 // ProofsFromDerivation checks the derive step's answer and attaches the pending proofs. When derivation
 // returns decisions, the proposal goes back to review (see the TS SDK's proofsFromDerivation).
 func ProofsFromDerivation(p Proposal, useCases []UseCase, setup ProofSetup, out DeriveV1Out, opts VerifyOptions) (Proposal, error) {
@@ -1359,51 +1411,7 @@ func ProofsFromDerivation(p Proposal, useCases []UseCase, setup ProofSetup, out 
 		if !hasModel {
 			continue
 		}
-		parse := func(where string, raw json.RawMessage) *Expr {
-			text, _ := jsonText(raw)
-			var e Expr
-			if err := json.Unmarshal([]byte(text), &e); err != nil {
-				problems = append(problems, fmt.Sprintf("%s.%s: not valid JSON: %s", pid, where, text))
-				return nil
-			}
-			if errs := ValidateExpr(e, model, nil, pid+"."+where); len(errs) > 0 {
-				problems = append(problems, errs...)
-				return nil
-			}
-			return &e
-		}
-		var check *ProofCheck
-		switch d.Kind {
-		case "clause":
-			var requires *Expr
-			if text, _ := jsonText(d.Requires); len(d.Requires) > 0 && strings.TrimSpace(text) != "" && text != "null" {
-				requires = parse("requires", d.Requires)
-			}
-			if ensures := parse("ensures", d.Ensures); ensures != nil {
-				check = &ProofCheck{Kind: "clause", Requires: requires, Ensures: ensures, Assumptions: nonNil(d.Assumptions)}
-			}
-		case "scenario":
-			text, _ := jsonText(d.InputJSON)
-			var input json.RawMessage
-			var probe map[string]any
-			if err := json.Unmarshal([]byte(text), &probe); err != nil || probe == nil {
-				problems = append(problems, pid+".input: not valid JSON")
-			} else {
-				var buf bytes.Buffer
-				_ = json.Compact(&buf, []byte(text))
-				input = buf.Bytes()
-				for _, k := range model.Inputs.Names() {
-					if _, ok := probe[k]; !ok {
-						problems = append(problems, fmt.Sprintf("%s.input: missing model input %s", pid, k))
-					}
-				}
-			}
-			if expect := parse("expect", d.Expect); input != nil && expect != nil {
-				check = &ProofCheck{Kind: "scenario", Input: input, Expect: expect}
-			}
-		default:
-			problems = append(problems, fmt.Sprintf("%s: unknown kind %q", pid, d.Kind))
-		}
+		check := checkFromAnswer(pid, d.Kind, d.Requires, d.Ensures, d.Assumptions, d.InputJSON, d.Expect, model, &problems)
 		if check == nil || !hasIt {
 			continue
 		}
@@ -1723,7 +1731,7 @@ func resultingUseCases(p Proposal, useCases []UseCase) []resultingUseCase {
 			continue
 		}
 		n := own(u.ID)
-		for _, x := range u.Proofs {
+		for _, x := range PassedProofs(u) {
 			if !sup[x.ID] {
 				n++
 			}
@@ -1766,14 +1774,14 @@ func ProveProposal(ctx context.Context, p Proposal, useCases []UseCase, o RunOpt
 		set = append(set, RoleProof{x, "proposal"})
 	}
 	for _, u := range useCases {
-		for _, x := range u.Proofs {
+		for _, x := range PassedProofs(u) {
 			if !sup[x.ID] && !removed[x.UseCase] {
 				set = append(set, RoleProof{x, "regression"})
 			}
 		}
 	}
 	for _, u := range useCases {
-		for _, x := range u.Proofs {
+		for _, x := range PassedProofs(u) {
 			if sup[x.ID] {
 				set = append(set, RoleProof{x, "superseded"})
 			}
@@ -1827,11 +1835,11 @@ func ProveProposal(ctx context.Context, p Proposal, useCases []UseCase, o RunOpt
 	return WithStatus(next), run, nil
 }
 
-// Regress runs every use case's proofs alone (`regress`).
+// Regress runs every use case's passed proofs alone (`regress`).
 func Regress(ctx context.Context, useCases []UseCase, o RunOptions) (ProposalRun, error) {
 	set := []RoleProof{}
 	for _, u := range useCases {
-		for _, x := range u.Proofs {
+		for _, x := range PassedProofs(u) {
 			set = append(set, RoleProof{x, "regression"})
 		}
 	}
@@ -1846,7 +1854,7 @@ func Regress(ctx context.Context, useCases []UseCase, o RunOptions) (ProposalRun
 		}
 	}
 	for _, u := range useCases {
-		if len(u.Proofs) == 0 {
+		if len(PassedProofs(u)) == 0 {
 			run.Unproved = append(run.Unproved, u.ID)
 		}
 	}

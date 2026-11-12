@@ -14,3 +14,5 @@ playwright-report/
 
 # Local state of the Lastro plugin (hooks)
 .lastro/plugin/
+# LLM handoff files (requests and answers) are transient: proofs come from the reviewed use cases and proposals
+.lastro/llm/

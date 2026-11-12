@@ -1,0 +1,51 @@
+{
+  "id": "UC-015.PF-04",
+  "slug": "returned-once-and-reopened",
+  "name": "returnDecisions appends each card once and reopens",
+  "description": "returnDecisions appends each contradiction once, even when returned twice, and reopens the artifact so it cannot be approved until they are answered.",
+  "useCase": "UC-015",
+  "model": "contradictions",
+  "subject": "contradictions",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.returned"
+            },
+            {
+              "var": "out.cards"
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "gt",
+              "args": [
+                {
+                  "var": "out.cards"
+                },
+                {
+                  "const": 0
+                }
+              ]
+            },
+            {
+              "var": "out.reopened"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

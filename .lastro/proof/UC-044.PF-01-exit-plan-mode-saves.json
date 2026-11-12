@@ -1,0 +1,57 @@
+{
+  "id": "UC-044.PF-01",
+  "slug": "exit-plan-mode-saves",
+  "name": "Leaving plan mode saves the plan as a proposal",
+  "description": "When Claude Code leaves plan mode, the plan is saved as the prose of a new proposal with the next id, and the agent is told to run lastro propose before editing source.",
+  "useCase": "UC-044",
+  "model": "plan_to_proposal",
+  "subject": "plan_to_proposal",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.tool"
+        },
+        {
+          "const": "ExitPlanMode"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.saved"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.id"
+            },
+            {
+              "op": "add",
+              "args": [
+                {
+                  "var": "in.existing"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "var": "out.reminder"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

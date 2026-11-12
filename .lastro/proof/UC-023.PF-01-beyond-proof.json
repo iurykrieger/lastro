@@ -1,0 +1,68 @@
+{
+  "id": "UC-023.PF-01",
+  "slug": "beyond-proof",
+  "name": "Beyond-proof intents with no useful clause",
+  "description": "An intent with beyond-proof items and no proved or evidenced clause gets the verdict beyond-proof, with notes.",
+  "useCase": "UC-023",
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "var": "in.beyond"
+        },
+        {
+          "op": "in",
+          "args": [
+            {
+              "var": "in.coverage"
+            },
+            {
+              "const": "none"
+            },
+            {
+              "const": "vacuous"
+            }
+          ]
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.scenario"
+            },
+            {
+              "const": "failed"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "beyond-proof"
+            }
+          ]
+        },
+        {
+          "var": "out.notes"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

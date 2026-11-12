@@ -1,0 +1,43 @@
+{
+  "id": "UC-044.PF-03",
+  "slug": "codex-reminder",
+  "name": "Codex's update_plan gets the reminder",
+  "description": "After Codex's update_plan, the plugin adds the same reminder without saving a file.",
+  "useCase": "UC-044",
+  "model": "plan_to_proposal",
+  "subject": "plan_to_proposal",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.tool"
+        },
+        {
+          "const": "update_plan"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.saved"
+            }
+          ]
+        },
+        {
+          "var": "out.reminder"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

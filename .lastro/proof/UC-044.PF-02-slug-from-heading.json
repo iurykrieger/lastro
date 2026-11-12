@@ -1,0 +1,38 @@
+{
+  "id": "UC-044.PF-02",
+  "slug": "slug-from-heading",
+  "name": "The slug comes from the first heading",
+  "description": "The saved proposal's slug is taken from the plan's first heading.",
+  "useCase": "UC-044",
+  "model": "plan_to_proposal",
+  "subject": "plan_to_proposal",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.tool"
+            },
+            {
+              "const": "ExitPlanMode"
+            }
+          ]
+        },
+        {
+          "var": "in.heading"
+        }
+      ]
+    },
+    "ensures": {
+      "var": "out.slugFromHeading"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

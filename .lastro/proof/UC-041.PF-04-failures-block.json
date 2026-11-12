@@ -1,0 +1,121 @@
+{
+  "id": "UC-041.PF-04",
+  "slug": "failures-block",
+  "name": "Failures block the stop, numbered against maxIterations",
+  "description": "A failed build or failing proofs block the stop and go back to the agent, numbered against maxIterations (default 5).",
+  "useCase": "UC-041",
+  "model": "stop_hook",
+  "subject": "stop_hook",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "var": "in.derived"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.lastRun"
+                    },
+                    {
+                      "const": "passed"
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.dirty"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "or",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.proves"
+                }
+              ]
+            },
+            {
+              "var": "in.buildFails"
+            }
+          ]
+        },
+        {
+          "op": "lt",
+          "args": [
+            {
+              "var": "in.attempts"
+            },
+            {
+              "const": 5
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.block"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.attempt"
+            },
+            {
+              "op": "add",
+              "args": [
+                {
+                  "var": "in.attempts"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.max"
+            },
+            {
+              "const": 5
+            }
+          ]
+        },
+        {
+          "var": "out.failuresSent"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

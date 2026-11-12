@@ -1,0 +1,78 @@
+{
+  "id": "UC-008.PF-03",
+  "slug": "contradiction-answer-becomes-an-intent",
+  "name": "A later decision's answer becomes an intent to review",
+  "description": "Answering a decision raised after extraction creates, or rewrites, one intent linked to it, proposed with no approvals.",
+  "useCase": "UC-008",
+  "model": "decision_answer",
+  "subject": "decision_answer",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.origin"
+            },
+            {
+              "const": "extraction"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.throws"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.linked"
+            },
+            {
+              "const": 1
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.status"
+            },
+            {
+              "const": "proposed"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.approvals"
+            },
+            {
+              "const": 0
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "UC-008.PF-01",
+  "slug": "unknown-or-out-of-range-throws",
+  "name": "Unknown decisions and out-of-range options throw",
+  "description": "Answering throws exactly when the decision is unknown or the option is out of range (the card has two options).",
+  "useCase": "UC-008",
+  "model": "decision_answer",
+  "subject": "decision_answer",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.throws"
+        },
+        {
+          "op": "or",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.known"
+                }
+              ]
+            },
+            {
+              "op": "lt",
+              "args": [
+                {
+                  "var": "in.option"
+                },
+                {
+                  "const": 0
+                }
+              ]
+            },
+            {
+              "op": "ge",
+              "args": [
+                {
+                  "var": "in.option"
+                },
+                {
+                  "const": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

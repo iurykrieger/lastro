@@ -1,0 +1,41 @@
+{
+  "id": "P-004.PF-02",
+  "slug": "use-case-file-without-proofs",
+  "name": "Use case files carry no proofs",
+  "description": "A use case file written by the workspace has no proofs list.",
+  "intent": "P-004.I-02",
+  "useCase": "UC-046",
+  "model": "proof_files",
+  "subject": "proof_files",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "or",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.legacy"
+            }
+          ]
+        },
+        {
+          "var": "in.rewrite"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "not",
+      "args": [
+        {
+          "var": "out.embedded"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,39 @@
+{
+  "id": "P-001.PF-04",
+  "slug": "before-copied-from-use-case",
+  "name": "Before is the use case's text",
+  "description": "For an accepted modify or remove, before is the use case's own description, copied by the SDK.",
+  "intent": "P-001.I-08",
+  "useCase": "UC-001",
+  "model": "extraction_rules",
+  "subject": "extraction_rules",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.accepted"
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.change"
+            },
+            {
+              "const": "add"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "var": "out.beforeFromUseCase"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "UC-030.PF-02",
+  "slug": "one-json-object",
+  "name": "One JSON object per command",
+  "description": "Each command prints one JSON object.",
+  "useCase": "UC-030",
+  "model": "cli_exits",
+  "subject": "cli_exits",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "var": "out.json"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,70 @@
+{
+  "id": "UC-024.PF-06",
+  "slug": "evidenced-with-bound",
+  "name": "Sampled clauses give evidence below certainty",
+  "description": "An intent with an evidenced clause is evidenced with confidence 1 minus the failure-rate bound.",
+  "useCase": "UC-024",
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.coverage"
+            },
+            {
+              "const": "evidenced"
+            }
+          ]
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.scenario"
+            },
+            {
+              "const": "failed"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "evidenced"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.confidence"
+            },
+            {
+              "const": "partial"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

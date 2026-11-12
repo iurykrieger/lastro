@@ -1,0 +1,22 @@
+{
+  "id": "UC-022.PF-01",
+  "slug": "assumptions-are-trusted-evidence",
+  "name": "Assumptions give trusted evidence",
+  "description": "An intent backed by assumptions gets trusted evidence.",
+  "useCase": "UC-022",
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.assumption"
+    },
+    "ensures": {
+      "var": "out.trusted"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

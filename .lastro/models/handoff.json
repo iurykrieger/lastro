@@ -1,0 +1,30 @@
+{
+  "name": "handoff",
+  "inputs": {
+    "answered": {
+      "type": "bool"
+    },
+    "rerun": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "exit": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "requestFile": {
+      "type": "bool"
+    },
+    "requestComplete": {
+      "type": "bool"
+    },
+    "answerNamed": {
+      "type": "bool"
+    },
+    "sameId": {
+      "type": "bool"
+    }
+  }
+}

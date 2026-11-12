@@ -486,6 +486,1245 @@
           "type": "bool"
         }
       }
+    },
+    "proof_files": {
+      "name": "proof_files",
+      "inputs": {
+        "legacy": {
+          "type": "bool"
+        },
+        "rewrite": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "loaded": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "proofFiles": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "embedded": {
+          "type": "bool"
+        },
+        "fileComplete": {
+          "type": "bool"
+        }
+      }
+    },
+    "apply_proof_files": {
+      "name": "apply_proof_files",
+      "inputs": {
+        "supersede": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "applied": {
+          "type": "bool"
+        },
+        "newFile": {
+          "type": "bool"
+        },
+        "oldFile": {
+          "type": "bool"
+        }
+      }
+    },
+    "usecase_derive": {
+      "name": "usecase_derive",
+      "inputs": {
+        "hasPassed": {
+          "type": "bool"
+        },
+        "hasPending": {
+          "type": "bool"
+        },
+        "explicit": {
+          "type": "bool"
+        },
+        "listed": {
+          "type": "bool"
+        },
+        "expressible": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "refused": {
+          "type": "bool"
+        },
+        "derived": {
+          "type": "bool"
+        },
+        "unprovable": {
+          "type": "bool"
+        },
+        "number": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "needsProposal": {
+          "type": "bool"
+        }
+      }
+    },
+    "usecase_prove": {
+      "name": "usecase_prove",
+      "inputs": {
+        "status": {
+          "type": "enum",
+          "values": [
+            "pending",
+            "passed",
+            "failed"
+          ]
+        },
+        "codeOk": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "status": {
+          "type": "enum",
+          "values": [
+            "pending",
+            "passed",
+            "failed"
+          ]
+        },
+        "regression": {
+          "type": "bool"
+        },
+        "feedback": {
+          "type": "bool"
+        },
+        "note": {
+          "type": "bool"
+        },
+        "ok": {
+          "type": "bool"
+        }
+      }
+    },
+    "change_kinds": {
+      "name": "change_kinds",
+      "inputs": {
+        "first": {
+          "type": "enum",
+          "values": [
+            "modify",
+            "remove"
+          ]
+        },
+        "second": {
+          "type": "enum",
+          "values": [
+            "none",
+            "modify",
+            "remove"
+          ]
+        },
+        "options": {
+          "type": "int",
+          "min": 0,
+          "max": 5
+        },
+        "recommended": {
+          "type": "int",
+          "min": -1,
+          "max": 5
+        }
+      },
+      "outputs": {
+        "refused": {
+          "type": "bool"
+        },
+        "mixDecision": {
+          "type": "bool"
+        },
+        "llmDecision": {
+          "type": "bool"
+        }
+      }
+    },
+    "decision_answer": {
+      "name": "decision_answer",
+      "inputs": {
+        "origin": {
+          "type": "enum",
+          "values": [
+            "extraction",
+            "consistency-check"
+          ]
+        },
+        "known": {
+          "type": "bool"
+        },
+        "option": {
+          "type": "int",
+          "min": -1,
+          "max": 3
+        },
+        "again": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "throws": {
+          "type": "bool"
+        },
+        "chosen": {
+          "type": "int",
+          "min": -1,
+          "max": 3
+        },
+        "linked": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "status": {
+          "type": "enum",
+          "values": [
+            "none",
+            "proposed",
+            "approved",
+            "amended"
+          ]
+        },
+        "approvals": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        }
+      }
+    },
+    "not_promised": {
+      "name": "not_promised",
+      "inputs": {
+        "extracted": {
+          "type": "bool"
+        },
+        "appended": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "count": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "inHash": {
+          "type": "bool"
+        },
+        "inDerive": {
+          "type": "bool"
+        },
+        "inReceipt": {
+          "type": "bool"
+        }
+      }
+    },
+    "reviewer_add": {
+      "name": "reviewer_add",
+      "inputs": {
+        "existing": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "inProse": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "id": {
+          "type": "int",
+          "min": 1,
+          "max": 4
+        },
+        "status": {
+          "type": "enum",
+          "values": [
+            "proposed",
+            "approved",
+            "amended",
+            "rejected"
+          ]
+        },
+        "notInProse": {
+          "type": "bool"
+        },
+        "byReviewer": {
+          "type": "bool"
+        }
+      }
+    },
+    "domain_kinds": {
+      "name": "domain_kinds",
+      "inputs": {
+        "kind": {
+          "type": "enum",
+          "values": [
+            "bool",
+            "enum",
+            "int-bounded",
+            "int-unbounded",
+            "string"
+          ]
+        },
+        "hasOutputs": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "finite": {
+          "type": "bool"
+        },
+        "size": {
+          "type": "int",
+          "min": 0,
+          "max": 10
+        },
+        "sortedOrder": {
+          "type": "bool"
+        },
+        "rejected": {
+          "type": "bool"
+        }
+      }
+    },
+    "lsl_eval": {
+      "name": "lsl_eval",
+      "inputs": {
+        "op": {
+          "type": "enum",
+          "values": [
+            "not",
+            "eq",
+            "ite",
+            "add",
+            "in"
+          ]
+        },
+        "arity": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "argType": {
+          "type": "enum",
+          "values": [
+            "bool",
+            "int",
+            "string"
+          ]
+        },
+        "unbound": {
+          "type": "bool"
+        },
+        "depth": {
+          "type": "int",
+          "min": 0,
+          "max": 70
+        }
+      },
+      "outputs": {
+        "invalid": {
+          "type": "bool"
+        },
+        "error": {
+          "type": "bool"
+        }
+      }
+    },
+    "plan_check": {
+      "name": "plan_check",
+      "inputs": {
+        "approved": {
+          "type": "bool"
+        },
+        "tampered": {
+          "type": "bool"
+        },
+        "ref": {
+          "type": "enum",
+          "values": [
+            "known-approved",
+            "unknown",
+            "rejected",
+            "none"
+          ]
+        },
+        "duplicate": {
+          "type": "bool"
+        },
+        "scenarioComplete": {
+          "type": "bool"
+        },
+        "covered": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "errors": {
+          "type": "bool"
+        },
+        "gap": {
+          "type": "bool"
+        }
+      }
+    },
+    "contradictions": {
+      "name": "contradictions",
+      "inputs": {
+        "a": {
+          "type": "bool"
+        },
+        "b": {
+          "type": "bool"
+        },
+        "c1Requires": {
+          "type": "bool"
+        },
+        "twice": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "cards": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "ok": {
+          "type": "bool"
+        },
+        "options": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "recommended": {
+          "type": "int",
+          "min": -1,
+          "max": 3
+        },
+        "origin": {
+          "type": "enum",
+          "values": [
+            "none",
+            "extraction",
+            "consistency-check",
+            "verification"
+          ]
+        },
+        "returned": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "reopened": {
+          "type": "bool"
+        }
+      }
+    },
+    "verify_clause": {
+      "name": "verify_clause",
+      "inputs": {
+        "large": {
+          "type": "bool"
+        },
+        "bug": {
+          "type": "enum",
+          "values": [
+            "none",
+            "wrong",
+            "throws",
+            "out-of-domain"
+          ]
+        },
+        "kind": {
+          "type": "enum",
+          "values": [
+            "normal",
+            "vacuous",
+            "weak",
+            "erroring"
+          ]
+        }
+      },
+      "outputs": {
+        "verdict": {
+          "type": "enum",
+          "values": [
+            "proved",
+            "evidenced",
+            "violated",
+            "vacuous",
+            "weak",
+            "not-run"
+          ]
+        },
+        "evidence": {
+          "type": "enum",
+          "values": [
+            "formal",
+            "empirical",
+            "trusted",
+            "none"
+          ]
+        },
+        "method": {
+          "type": "enum",
+          "values": [
+            "exhaustive",
+            "sampling",
+            "traces",
+            "none"
+          ]
+        },
+        "counterexample": {
+          "type": "bool"
+        },
+        "noted": {
+          "type": "bool"
+        },
+        "errorNoted": {
+          "type": "bool"
+        },
+        "ruleOfThree": {
+          "type": "bool"
+        },
+        "checkedAll": {
+          "type": "bool"
+        }
+      }
+    },
+    "trace_check": {
+      "name": "trace_check",
+      "inputs": {
+        "subject": {
+          "type": "enum",
+          "values": [
+            "none",
+            "right"
+          ]
+        },
+        "trace": {
+          "type": "enum",
+          "values": [
+            "none",
+            "holds",
+            "breaks"
+          ]
+        }
+      },
+      "outputs": {
+        "verdict": {
+          "type": "enum",
+          "values": [
+            "proved",
+            "evidenced",
+            "violated",
+            "vacuous",
+            "weak",
+            "not-run"
+          ]
+        },
+        "evidence": {
+          "type": "enum",
+          "values": [
+            "formal",
+            "empirical",
+            "trusted",
+            "none"
+          ]
+        },
+        "violatingTrace": {
+          "type": "bool"
+        },
+        "trustedNote": {
+          "type": "bool"
+        },
+        "ruleOfThree": {
+          "type": "bool"
+        }
+      }
+    },
+    "scenario_run": {
+      "name": "scenario_run",
+      "inputs": {
+        "subject": {
+          "type": "enum",
+          "values": [
+            "none",
+            "right",
+            "wrong",
+            "throws"
+          ]
+        }
+      },
+      "outputs": {
+        "status": {
+          "type": "enum",
+          "values": [
+            "passed",
+            "failed"
+          ]
+        },
+        "output": {
+          "type": "bool"
+        },
+        "error": {
+          "type": "bool"
+        },
+        "empirical": {
+          "type": "bool"
+        }
+      }
+    },
+    "intent_rollup": {
+      "name": "intent_rollup",
+      "inputs": {
+        "coverage": {
+          "type": "enum",
+          "values": [
+            "none",
+            "proved",
+            "evidenced",
+            "violated",
+            "vacuous"
+          ]
+        },
+        "scenario": {
+          "type": "enum",
+          "values": [
+            "none",
+            "passed",
+            "failed"
+          ]
+        },
+        "assumption": {
+          "type": "bool"
+        },
+        "beyond": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "verdict": {
+          "type": "enum",
+          "values": [
+            "proved",
+            "proved-under-assumptions",
+            "evidenced",
+            "violated",
+            "beyond-proof",
+            "gap"
+          ]
+        },
+        "confidence": {
+          "type": "enum",
+          "values": [
+            "zero",
+            "one",
+            "partial"
+          ]
+        },
+        "trusted": {
+          "type": "bool"
+        },
+        "notes": {
+          "type": "bool"
+        },
+        "reportOk": {
+          "type": "bool"
+        }
+      }
+    },
+    "agent_feedback": {
+      "name": "agent_feedback",
+      "inputs": {
+        "codeOk": {
+          "type": "bool"
+        },
+        "gap": {
+          "type": "enum",
+          "values": [
+            "none",
+            "vacuous",
+            "uncovered"
+          ]
+        }
+      },
+      "outputs": {
+        "failures": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "brief": {
+          "type": "enum",
+          "values": [
+            "fix",
+            "all-pass"
+          ]
+        },
+        "counterexample": {
+          "type": "bool"
+        },
+        "specGaps": {
+          "type": "int",
+          "min": 0,
+          "max": 5
+        },
+        "listsGaps": {
+          "type": "bool"
+        }
+      }
+    },
+    "explain_run": {
+      "name": "explain_run",
+      "inputs": {
+        "applies": {
+          "type": "bool"
+        },
+        "holds": {
+          "type": "bool"
+        },
+        "erroring": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "status": {
+          "type": "enum",
+          "values": [
+            "if-part-false",
+            "holds",
+            "fails",
+            "error"
+          ]
+        }
+      }
+    },
+    "crosscheck": {
+      "name": "crosscheck",
+      "inputs": {
+        "table": {
+          "type": "enum",
+          "values": [
+            "complete",
+            "missing-row",
+            "repeated-row",
+            "conflicting-row",
+            "out-of-domain-row"
+          ]
+        },
+        "bug": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "complete": {
+          "type": "bool"
+        },
+        "proved": {
+          "type": "bool"
+        },
+        "rustOk": {
+          "type": "bool"
+        },
+        "digest": {
+          "type": "bool"
+        },
+        "agree": {
+          "type": "bool"
+        },
+        "ok": {
+          "type": "bool"
+        },
+        "sdkOk": {
+          "type": "bool"
+        }
+      }
+    },
+    "receipt_sections": {
+      "name": "receipt_sections",
+      "inputs": {
+        "notPromised": {
+          "type": "bool"
+        },
+        "regression": {
+          "type": "bool"
+        },
+        "stillPass": {
+          "type": "bool"
+        },
+        "violated": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "showsDiff": {
+          "type": "bool"
+        },
+        "showsReplaced": {
+          "type": "bool"
+        },
+        "showsRegression": {
+          "type": "bool"
+        },
+        "showsStillPass": {
+          "type": "bool"
+        },
+        "showsCounterexample": {
+          "type": "bool"
+        },
+        "showsNotPromised": {
+          "type": "bool"
+        }
+      }
+    },
+    "gap_review": {
+      "name": "gap_review",
+      "inputs": {
+        "assumption": {
+          "type": "bool"
+        },
+        "beyond": {
+          "type": "bool"
+        },
+        "answer": {
+          "type": "enum",
+          "values": [
+            "empty",
+            "one"
+          ]
+        }
+      },
+      "outputs": {
+        "step": {
+          "type": "bool"
+        },
+        "intents": {
+          "type": "bool"
+        },
+        "clauses": {
+          "type": "bool"
+        },
+        "pieces": {
+          "type": "bool"
+        },
+        "beyondProof": {
+          "type": "bool"
+        },
+        "source": {
+          "type": "bool"
+        },
+        "gaps": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        }
+      }
+    },
+    "untrusted_answers": {
+      "name": "untrusted_answers",
+      "inputs": {
+        "via": {
+          "type": "enum",
+          "values": [
+            "ask",
+            "static"
+          ]
+        },
+        "quote": {
+          "type": "enum",
+          "values": [
+            "anchored",
+            "missing"
+          ]
+        },
+        "lsl": {
+          "type": "enum",
+          "values": [
+            "valid",
+            "unknown-variable"
+          ]
+        }
+      },
+      "outputs": {
+        "extracted": {
+          "type": "bool"
+        },
+        "derived": {
+          "type": "bool"
+        }
+      }
+    },
+    "cli_exits": {
+      "name": "cli_exits",
+      "inputs": {
+        "situation": {
+          "type": "enum",
+          "values": [
+            "no-command",
+            "unknown-command",
+            "status-empty",
+            "propose-unanswered",
+            "review-without-as",
+            "derive-pending",
+            "status-open"
+          ]
+        }
+      },
+      "outputs": {
+        "exit": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "json": {
+          "type": "bool"
+        },
+        "refusedPending": {
+          "type": "bool"
+        },
+        "approvalsWritten": {
+          "type": "bool"
+        }
+      }
+    },
+    "handoff": {
+      "name": "handoff",
+      "inputs": {
+        "answered": {
+          "type": "bool"
+        },
+        "rerun": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "exit": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "requestFile": {
+          "type": "bool"
+        },
+        "requestComplete": {
+          "type": "bool"
+        },
+        "answerNamed": {
+          "type": "bool"
+        },
+        "sameId": {
+          "type": "bool"
+        }
+      }
+    },
+    "section": {
+      "name": "section",
+      "inputs": {
+        "heading": {
+          "type": "enum",
+          "values": [
+            "exact",
+            "other-case",
+            "unknown"
+          ]
+        },
+        "nested": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "exit": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "body": {
+          "type": "bool"
+        },
+        "sub": {
+          "type": "bool"
+        },
+        "other": {
+          "type": "bool"
+        }
+      }
+    },
+    "subject_module": {
+      "name": "subject_module",
+      "inputs": {
+        "exportName": {
+          "type": "enum",
+          "values": [
+            "default",
+            "named",
+            "missing"
+          ]
+        }
+      },
+      "outputs": {
+        "exit": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "proved": {
+          "type": "bool"
+        }
+      }
+    },
+    "stream": {
+      "name": "stream",
+      "inputs": {
+        "codeOk": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "sameExit": {
+          "type": "bool"
+        },
+        "oneObjectPerLine": {
+          "type": "bool"
+        },
+        "startFirst": {
+          "type": "bool"
+        },
+        "resultLast": {
+          "type": "bool"
+        },
+        "sameResult": {
+          "type": "bool"
+        },
+        "clauseEvents": {
+          "type": "int",
+          "min": 0,
+          "max": 5
+        },
+        "proofs": {
+          "type": "int",
+          "min": 0,
+          "max": 5
+        },
+        "proofEvents": {
+          "type": "int",
+          "min": 0,
+          "max": 5
+        },
+        "startNamesProofs": {
+          "type": "bool"
+        }
+      }
+    },
+    "review_guard": {
+      "name": "review_guard",
+      "inputs": {
+        "harness": {
+          "type": "enum",
+          "values": [
+            "claude",
+            "codex"
+          ]
+        },
+        "as": {
+          "type": "enum",
+          "values": [
+            "iury",
+            "claude",
+            "codex",
+            "agent",
+            "assistant",
+            "ai",
+            "bot"
+          ]
+        },
+        "action": {
+          "type": "enum",
+          "values": [
+            "approve",
+            "approve-all",
+            "answer",
+            "amend",
+            "reject",
+            "comment"
+          ]
+        }
+      },
+      "outputs": {
+        "decision": {
+          "type": "enum",
+          "values": [
+            "ask",
+            "deny",
+            "none"
+          ]
+        }
+      }
+    },
+    "stop_hook": {
+      "name": "stop_hook",
+      "inputs": {
+        "derived": {
+          "type": "bool"
+        },
+        "lastRun": {
+          "type": "enum",
+          "values": [
+            "none",
+            "passed",
+            "failed"
+          ]
+        },
+        "dirty": {
+          "type": "bool"
+        },
+        "proves": {
+          "type": "bool"
+        },
+        "buildFails": {
+          "type": "bool"
+        },
+        "attempts": {
+          "type": "int",
+          "min": 3,
+          "max": 6
+        }
+      },
+      "outputs": {
+        "block": {
+          "type": "bool"
+        },
+        "attempt": {
+          "type": "int",
+          "min": 0,
+          "max": 8
+        },
+        "max": {
+          "type": "int",
+          "min": 0,
+          "max": 8
+        },
+        "proved": {
+          "type": "bool"
+        },
+        "buildFirst": {
+          "type": "bool"
+        },
+        "failuresSent": {
+          "type": "bool"
+        }
+      }
+    },
+    "edit_marks_stale": {
+      "name": "edit_marks_stale",
+      "inputs": {
+        "path": {
+          "type": "enum",
+          "values": [
+            "code",
+            "proposal"
+          ]
+        }
+      },
+      "outputs": {
+        "dirty": {
+          "type": "bool"
+        }
+      }
+    },
+    "board_mark": {
+      "name": "board_mark",
+      "inputs": {
+        "verdict": {
+          "type": "enum",
+          "values": [
+            "pending",
+            "proved",
+            "evidenced",
+            "violated",
+            "weak",
+            "vacuous"
+          ]
+        },
+        "beyond": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "mark": {
+          "type": "enum",
+          "values": [
+            "✓",
+            "≈",
+            "✗",
+            "!",
+            "○",
+            "other"
+          ]
+        },
+        "counterexample": {
+          "type": "bool"
+        },
+        "beyondListed": {
+          "type": "bool"
+        },
+        "nextStep": {
+          "type": "bool"
+        }
+      }
+    },
+    "plan_to_proposal": {
+      "name": "plan_to_proposal",
+      "inputs": {
+        "tool": {
+          "type": "enum",
+          "values": [
+            "ExitPlanMode",
+            "update_plan",
+            "Read"
+          ]
+        },
+        "existing": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "heading": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "saved": {
+          "type": "bool"
+        },
+        "id": {
+          "type": "int",
+          "min": 0,
+          "max": 9
+        },
+        "slugFromHeading": {
+          "type": "bool"
+        },
+        "reminder": {
+          "type": "bool"
+        }
+      }
     }
   },
   "subjects": {
@@ -548,6 +1787,134 @@
     "apply_rules": {
       "module": "./sdks/typescript/subjects/proposals.mjs",
       "export": "applyRules"
+    },
+    "proof_files": {
+      "module": "./sdks/typescript/subjects/usecase-proofs.mjs",
+      "export": "proofFiles"
+    },
+    "apply_proof_files": {
+      "module": "./sdks/typescript/subjects/usecase-proofs.mjs",
+      "export": "applyProofFiles"
+    },
+    "usecase_derive": {
+      "module": "./sdks/typescript/subjects/usecase-proofs.mjs",
+      "export": "usecaseDerive"
+    },
+    "usecase_prove": {
+      "module": "./sdks/typescript/subjects/usecase-proofs.mjs",
+      "export": "usecaseProve"
+    },
+    "change_kinds": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "changeKinds"
+    },
+    "decision_answer": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "decisionAnswer"
+    },
+    "not_promised": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "notPromised"
+    },
+    "reviewer_add": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "reviewerAdd"
+    },
+    "domain_kinds": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "domainKinds"
+    },
+    "lsl_eval": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "lslEval"
+    },
+    "plan_check": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "planCheck"
+    },
+    "contradictions": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "contradictions"
+    },
+    "verify_clause": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "verifyClause"
+    },
+    "trace_check": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "traceCheck"
+    },
+    "scenario_run": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "scenarioRun"
+    },
+    "intent_rollup": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "intentRollup"
+    },
+    "agent_feedback": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "agentFeedback"
+    },
+    "explain_run": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "explainRun"
+    },
+    "crosscheck": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "crosscheck"
+    },
+    "receipt_sections": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "receiptSections"
+    },
+    "gap_review": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "gapReview"
+    },
+    "untrusted_answers": {
+      "module": "./sdks/typescript/subjects/pipeline.mjs",
+      "export": "untrustedAnswers"
+    },
+    "cli_exits": {
+      "module": "./sdks/typescript/subjects/cli.mjs",
+      "export": "cliExits"
+    },
+    "handoff": {
+      "module": "./sdks/typescript/subjects/cli.mjs",
+      "export": "handoff"
+    },
+    "section": {
+      "module": "./sdks/typescript/subjects/cli.mjs",
+      "export": "section"
+    },
+    "subject_module": {
+      "module": "./sdks/typescript/subjects/cli.mjs",
+      "export": "subjectModule"
+    },
+    "stream": {
+      "module": "./sdks/typescript/subjects/cli.mjs",
+      "export": "stream"
+    },
+    "review_guard": {
+      "module": "./plugins/lastro/subjects/hooks.mjs",
+      "export": "reviewGuard"
+    },
+    "stop_hook": {
+      "module": "./plugins/lastro/subjects/hooks.mjs",
+      "export": "stopHook"
+    },
+    "edit_marks_stale": {
+      "module": "./plugins/lastro/subjects/hooks.mjs",
+      "export": "editMarksStale"
+    },
+    "board_mark": {
+      "module": "./plugins/lastro/subjects/hooks.mjs",
+      "export": "boardMark"
+    },
+    "plan_to_proposal": {
+      "module": "./plugins/lastro/subjects/hooks.mjs",
+      "export": "planToProposal"
     }
   },
   "review": {

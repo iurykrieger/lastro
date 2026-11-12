@@ -1,0 +1,54 @@
+{
+  "id": "UC-040.PF-01",
+  "slug": "agents-cannot-review",
+  "name": "An agent cannot sign a review",
+  "description": "A lastro review command that approves, answers, amends or rejects is denied in both harnesses when --as names an agent.",
+  "useCase": "UC-040",
+  "model": "review_guard",
+  "subject": "review_guard",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.action"
+            },
+            {
+              "const": "comment"
+            }
+          ]
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.as"
+            },
+            {
+              "const": "iury"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.decision"
+        },
+        {
+          "const": "deny"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

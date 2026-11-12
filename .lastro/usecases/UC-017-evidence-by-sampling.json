@@ -3,6 +3,5 @@
   "slug": "evidence-by-sampling",
   "name": "Give evidence over large domains",
   "description": "When the input space exceeds 100,000 points or is unbounded, the code runs on 2,000 samples drawn with a fixed seed (42) by a deterministic generator, biased toward int bounds and zero and toward declared string examples. A clause that holds on every applicable sample is evidenced, never proved, with empirical evidence and a failure-rate upper bound at 95% confidence of 3/N (rule of three) over the N applicable samples.",
-  "proofs": [],
   "history": []
 }

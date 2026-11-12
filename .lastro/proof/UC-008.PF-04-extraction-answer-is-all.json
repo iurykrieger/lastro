@@ -1,0 +1,38 @@
+{
+  "id": "UC-008.PF-04",
+  "slug": "extraction-answer-is-all",
+  "name": "An extraction decision's answer creates nothing more",
+  "description": "For an extraction decision, recording the answer is all: no intent is linked to it.",
+  "useCase": "UC-008",
+  "model": "decision_answer",
+  "subject": "decision_answer",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.origin"
+        },
+        {
+          "const": "extraction"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.linked"
+        },
+        {
+          "const": 0
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

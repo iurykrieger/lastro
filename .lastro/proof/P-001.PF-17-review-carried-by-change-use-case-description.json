@@ -1,0 +1,50 @@
+{
+  "id": "P-001.PF-17",
+  "slug": "review-carried-by-change-use-case-description",
+  "name": "Re-extraction carries the review",
+  "description": "An intent keeps its approvals across re-extraction exactly when its change, use case and description (ignoring case and spacing) are unchanged.",
+  "intent": "P-001.I-25",
+  "useCase": "UC-010",
+  "model": "carry_review",
+  "subject": "carry_review",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.carried"
+        },
+        {
+          "op": "and",
+          "args": [
+            {
+              "var": "in.reviewed"
+            },
+            {
+              "var": "in.sameChange"
+            },
+            {
+              "var": "in.sameUseCase"
+            },
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "in.wording"
+                },
+                {
+                  "const": "different"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,36 @@
+{
+  "id": "P-001.PF-09",
+  "slug": "thread-resolved-by-commenter-or-submitter",
+  "name": "Who resolves a thread",
+  "description": "A thread is resolved by the person who started it or by the submitter, and by no one else.",
+  "intent": "P-001.I-17",
+  "useCase": "UC-047",
+  "model": "thread_resolve",
+  "subject": "thread_resolve",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.resolved"
+        },
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.by"
+            },
+            {
+              "const": "other"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -40,7 +40,8 @@ public sealed class ProofEntry
     public string Slug { get; set; } = "";
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
-    public string Intent { get; set; } = "";
+    /// <summary>The intent it checks; null on a proof derived straight from its use case (<c>UC-012.PF-01</c>).</summary>
+    public string? Intent { get; set; }
     public string UseCase { get; set; } = "";
     public string Model { get; set; } = "";
     public string Subject { get; set; } = "";
@@ -155,8 +156,11 @@ public sealed class ProofOutcome
 {
     public string Proof { get; set; } = "";
     public string UseCase { get; set; } = "";
-    public string Intent { get; set; } = "";
-    /// <summary><c>proposal</c> (derived for it), <c>regression</c> (a use case's proof) or <c>superseded</c> (replaced by it).</summary>
+    public string? Intent { get; set; }
+    /// <summary>
+    /// <c>proposal</c> (derived for it), <c>regression</c> (a use case's passed proof), <c>superseded</c> (replaced by it)
+    /// or <c>usecase</c> (a use case's pending or failed proof, derived from its description).
+    /// </summary>
     public string Role { get; set; } = "proposal";
     public string Verdict { get; set; } = "not-run";
     public bool Passed { get; set; }

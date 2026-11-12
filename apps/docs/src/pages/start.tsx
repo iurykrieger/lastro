@@ -8,7 +8,7 @@ import prose from "../../examples/shipping/prose.md?raw";
 import model from "../../examples/shipping/model.json?raw";
 import buggy from "../../examples/shipping/shipping-buggy.mjs?raw";
 import proposeAnswer from "../../examples/shipping/answers/propose.json?raw";
-import { RECEIPT, OUT, USECASE } from "@/content/outputs";
+import { RECEIPT, OUT, PROOF, USECASE } from "@/content/outputs";
 
 // ---------------------------------------------------------------------------
 // Introduction
@@ -318,8 +318,9 @@ $ lastro review P-001 --as ana approve-all`}
         <Step title="Apply it">
           <Code lang="bash" code={`$ lastro apply P-001`} />
           <Code lang="json" title="stdout · exit 0" code={OUT.applied} />
-          <P>The use case now exists, with the four proofs every later change is checked against:</P>
+          <P>The use case now exists, and its four proofs, each in its own file in <C>.lastro/proof/</C>, are what every later change is checked against:</P>
           <Code lang="json" title=".lastro/usecases/UC-001-charge-shipping.json" code={USECASE} />
+          <Code lang="json" title=".lastro/proof/P-001.PF-01-free-from-100.json" code={PROOF} />
         </Step>
       </Steps>
 

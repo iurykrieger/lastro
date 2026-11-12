@@ -1,0 +1,37 @@
+{
+  "name": "plan_check",
+  "inputs": {
+    "approved": {
+      "type": "bool"
+    },
+    "tampered": {
+      "type": "bool"
+    },
+    "ref": {
+      "type": "enum",
+      "values": [
+        "known-approved",
+        "unknown",
+        "rejected",
+        "none"
+      ]
+    },
+    "duplicate": {
+      "type": "bool"
+    },
+    "scenarioComplete": {
+      "type": "bool"
+    },
+    "covered": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "errors": {
+      "type": "bool"
+    },
+    "gap": {
+      "type": "bool"
+    }
+  }
+}

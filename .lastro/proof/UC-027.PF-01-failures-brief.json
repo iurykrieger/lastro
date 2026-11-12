@@ -1,0 +1,54 @@
+{
+  "id": "UC-027.PF-01",
+  "slug": "failures-brief",
+  "name": "Failures become a brief with counterexamples",
+  "description": "When a clause is violated, prove() returns the failure with its counterexample and agentFeedback asks the implementer to make each obligation hold.",
+  "useCase": "UC-027",
+  "model": "agent_feedback",
+  "subject": "agent_feedback",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "not",
+      "args": [
+        {
+          "var": "in.codeOk"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "ge",
+          "args": [
+            {
+              "var": "out.failures"
+            },
+            {
+              "const": 1
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.brief"
+            },
+            {
+              "const": "fix"
+            }
+          ]
+        },
+        {
+          "var": "out.counterexample"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

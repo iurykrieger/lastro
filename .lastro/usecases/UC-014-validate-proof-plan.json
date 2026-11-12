@@ -3,6 +3,5 @@
   "slug": "validate-proof-plan",
   "name": "Validate the proof plan",
   "description": "Before anything is verified, the plan is checked: the artifact is approved, unchanged since approval, and the plan was derived from its hash; the model has outputs and valid defs; ids are unique; every clause, assumption, scenario and beyond-proof item references at least one known and approved intent (never a rejected one); expressions use only the model; clauses cite known assumptions; assumptions cite known scenarios; each scenario gives an in-domain value for every input; beyond-proof reasons are known. Any error throws a PlanError with all problems. Approved intents covered by nothing are not errors: they are reported as gaps.",
-  "proofs": [],
   "history": []
 }

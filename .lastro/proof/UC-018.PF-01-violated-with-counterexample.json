@@ -1,0 +1,105 @@
+{
+  "id": "UC-018.PF-01",
+  "slug": "violated-with-counterexample",
+  "name": "A broken clause is violated with a counterexample",
+  "description": "A run that breaks a clause makes it violated with a counterexample; the evidence is formal when the run was exhaustive and empirical when sampled.",
+  "useCase": "UC-018",
+  "model": "verify_clause",
+  "subject": "verify_clause",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.bug"
+            },
+            {
+              "const": "wrong"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.kind"
+            },
+            {
+              "const": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "violated"
+            }
+          ]
+        },
+        {
+          "var": "out.counterexample"
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.evidence"
+                },
+                {
+                  "const": "formal"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.large"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.evidence"
+                },
+                {
+                  "const": "empirical"
+                }
+              ]
+            },
+            {
+              "var": "in.large"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

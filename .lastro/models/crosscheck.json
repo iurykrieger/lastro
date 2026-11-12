@@ -1,0 +1,41 @@
+{
+  "name": "crosscheck",
+  "inputs": {
+    "table": {
+      "type": "enum",
+      "values": [
+        "complete",
+        "missing-row",
+        "repeated-row",
+        "conflicting-row",
+        "out-of-domain-row"
+      ]
+    },
+    "bug": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "complete": {
+      "type": "bool"
+    },
+    "proved": {
+      "type": "bool"
+    },
+    "rustOk": {
+      "type": "bool"
+    },
+    "digest": {
+      "type": "bool"
+    },
+    "agree": {
+      "type": "bool"
+    },
+    "ok": {
+      "type": "bool"
+    },
+    "sdkOk": {
+      "type": "bool"
+    }
+  }
+}

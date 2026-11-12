@@ -1,0 +1,30 @@
+{
+  "id": "UC-006.PF-03",
+  "slug": "reviewers-append-not-promised",
+  "name": "Reviewers append not-promised items",
+  "description": "A reviewer can append not-promised items to the artifact.",
+  "useCase": "UC-006",
+  "model": "not_promised",
+  "subject": "not_promised",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.appended"
+    },
+    "ensures": {
+      "op": "ge",
+      "args": [
+        {
+          "var": "out.count"
+        },
+        {
+          "const": 1
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

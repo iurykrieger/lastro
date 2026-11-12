@@ -1,0 +1,54 @@
+{
+  "id": "UC-024.PF-02",
+  "slug": "violated-first",
+  "name": "A violated clause or a failed scenario makes the intent violated",
+  "description": "An intent with a violated clause or a failed scenario is violated.",
+  "useCase": "UC-024",
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "or",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.coverage"
+            },
+            {
+              "const": "violated"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.scenario"
+            },
+            {
+              "const": "failed"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.verdict"
+        },
+        {
+          "const": "violated"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

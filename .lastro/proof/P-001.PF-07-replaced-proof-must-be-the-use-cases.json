@@ -1,0 +1,58 @@
+{
+  "id": "P-001.PF-07",
+  "slug": "replaced-proof-must-be-the-use-cases",
+  "name": "Replaced proofs must belong to the use case",
+  "description": "A modify is accepted only when the proof it replaces exists and belongs to the use case it modifies.",
+  "intent": "P-001.I-13",
+  "useCase": "UC-002",
+  "model": "extraction_rules",
+  "subject": "extraction_rules",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.change"
+            },
+            {
+              "const": "modify"
+            }
+          ]
+        },
+        {
+          "var": "in.known"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.accepted"
+        },
+        {
+          "op": "in",
+          "args": [
+            {
+              "var": "in.replaces"
+            },
+            {
+              "const": "none"
+            },
+            {
+              "const": "own"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

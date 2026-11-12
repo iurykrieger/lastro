@@ -1,0 +1,32 @@
+{
+  "name": "section",
+  "inputs": {
+    "heading": {
+      "type": "enum",
+      "values": [
+        "exact",
+        "other-case",
+        "unknown"
+      ]
+    },
+    "nested": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "exit": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "body": {
+      "type": "bool"
+    },
+    "sub": {
+      "type": "bool"
+    },
+    "other": {
+      "type": "bool"
+    }
+  }
+}

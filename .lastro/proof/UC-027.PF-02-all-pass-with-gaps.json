@@ -1,0 +1,81 @@
+{
+  "id": "UC-027.PF-02",
+  "slug": "all-pass-with-gaps",
+  "name": "Passing proofs say so and list the spec gaps",
+  "description": "When every proof passes, agentFeedback says so and lists the spec gaps (vacuous clauses, intents with no obligation).",
+  "useCase": "UC-027",
+  "model": "agent_feedback",
+  "subject": "agent_feedback",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.codeOk"
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.failures"
+            },
+            {
+              "const": 0
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.brief"
+            },
+            {
+              "const": "all-pass"
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "in.gap"
+                },
+                {
+                  "const": "none"
+                }
+              ]
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "ge",
+                  "args": [
+                    {
+                      "var": "out.specGaps"
+                    },
+                    {
+                      "const": 1
+                    }
+                  ]
+                },
+                {
+                  "var": "out.listsGaps"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

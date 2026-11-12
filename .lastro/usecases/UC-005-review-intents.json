@@ -3,68 +3,6 @@
   "slug": "review-intents",
   "name": "Review intents",
   "description": "review(proposal, reviewer) returns a chainable review on a copy of the proposal (an approved proposal is reopened first). approve(ids) marks intents approved (an amended intent stays amended) and adds the reviewer to approvals once; approveAll() approves every intent that is not rejected; reject(id, note) sets status rejected, records the note with the reviewer's name and clears approvals; amend(id, description, patch?, note?) keeps the first original description, rewrites the description (optionally provability or beyond-proof reason), sets status amended and resets approvals to the amender alone. Review shows each intent with the proofs it replaces, their formal statements and the reasons; approving the intent accepts that those proofs will be replaced by proofs of the new behavior, and a reviewer who disagrees with the list amends the intent. A rejected intent drops out of its use case, replaces nothing and never reaches derivation or implementation. Rejecting or amending an intent marks its use case's after stale: the reviewer either writes the new after by hand (rewriteAfter(useCase, text)) or has the LLM recombine it from the remaining intents (recombine(useCase, instructions?), part of the extract step, through the same LLM or handoff), and that use case's intents need review again. done() returns the new proposal; unknown ids throw.",
-  "proofs": [
-    {
-      "id": "P-001.PF-08",
-      "slug": "amend-or-reject-stales-after",
-      "name": "Amend or reject makes after stale",
-      "description": "Amending an intent makes its use case's after stale, and so does rejecting it while another intent of that use case remains.",
-      "intent": "P-001.I-15",
-      "useCase": "UC-005",
-      "model": "stale_after",
-      "subject": "stale_after",
-      "check": {
-        "kind": "clause",
-        "ensures": {
-          "op": "iff",
-          "args": [
-            {
-              "var": "out.stale"
-            },
-            {
-              "op": "or",
-              "args": [
-                {
-                  "op": "eq",
-                  "args": [
-                    {
-                      "var": "in.action"
-                    },
-                    {
-                      "const": "amend"
-                    }
-                  ]
-                },
-                {
-                  "op": "and",
-                  "args": [
-                    {
-                      "op": "eq",
-                      "args": [
-                        {
-                          "var": "in.action"
-                        },
-                        {
-                          "const": "reject"
-                        }
-                      ]
-                    },
-                    {
-                      "var": "in.sibling"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        "assumptions": []
-      },
-      "status": "passed",
-      "verdict": "proved",
-      "evidence": "formal"
-    }
-  ],
   "history": [
     "P-001"
   ]

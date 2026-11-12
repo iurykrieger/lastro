@@ -1,0 +1,22 @@
+{
+  "id": "UC-041.PF-06",
+  "slug": "build-event-first",
+  "name": "The build event comes first",
+  "description": "A proof run's progress starts with a build event.",
+  "useCase": "UC-041",
+  "model": "stop_hook",
+  "subject": "stop_hook",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "out.proved"
+    },
+    "ensures": {
+      "var": "out.buildFirst"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

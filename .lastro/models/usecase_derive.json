@@ -1,0 +1,39 @@
+{
+  "name": "usecase_derive",
+  "inputs": {
+    "hasPassed": {
+      "type": "bool"
+    },
+    "hasPending": {
+      "type": "bool"
+    },
+    "explicit": {
+      "type": "bool"
+    },
+    "listed": {
+      "type": "bool"
+    },
+    "expressible": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "refused": {
+      "type": "bool"
+    },
+    "derived": {
+      "type": "bool"
+    },
+    "unprovable": {
+      "type": "bool"
+    },
+    "number": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "needsProposal": {
+      "type": "bool"
+    }
+  }
+}

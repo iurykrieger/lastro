@@ -13,7 +13,7 @@ export const GENERATED = ["config.json", "intents.json", "spec.json", "proof.jso
 
 /** Folders whose JSON files only the CLI writes: the use cases, the proposals and their receipts. */
 const isGenerated = (inWs) =>
-  GENERATED.includes(inWs) || inWs.startsWith("plugin/") || inWs.startsWith("usecases/") || (inWs.startsWith("proposals/") && (inWs.endsWith(".json") || inWs.endsWith(".receipt.md") || inWs.endsWith(".runs.jsonl")));
+  GENERATED.includes(inWs) || inWs.startsWith("plugin/") || inWs.startsWith("usecases/") || inWs.startsWith("proof/") || (inWs.startsWith("proposals/") && (inWs.endsWith(".json") || inWs.endsWith(".receipt.md") || inWs.endsWith(".runs.jsonl")));
 
 export const DEFAULTS = {
   /** The command that runs the Lastro CLI: `lastro`, `npx lastro`, `lastro-go`, `node path/to/cli.js`... */
@@ -24,8 +24,8 @@ export const DEFAULTS = {
   build: null,
   /** The arguments after `lastro prove`, e.g. "dist/fee.js --export shippingFee" (required to prove). */
   prove: null,
-  /** "on": code edits wait for an approved proposal whose proofs are derived; "off": never block. */
-  gate: "on",
+  /** true: the hooks run (code edits wait for an approved proposal, proofs run on Stop, the board shows); false: the plugin does nothing. */
+  enabled: true,
   /** Paths (globs, relative to the root) the gate never blocks. `.lastro/` proposals and handoff answers are always allowed. */
   allow: [],
   /** How many times the Stop hook sends failing proofs back to the agent before handing over to the user. */
@@ -58,7 +58,12 @@ const readJson = (p) => {
 export function loadWorkspace(cwd, env = process.env) {
   const root = findRoot(cwd);
   if (!root) return null;
-  const config = { ...DEFAULTS, ...(readJson(join(root, PLUGIN_FILE)) ?? {}) };
+  const raw = readJson(join(root, PLUGIN_FILE)) ?? {};
+  const config = { ...DEFAULTS, ...raw };
+  // Before `enabled`, the switch was `gate: "on" | "off"`; an old file keeps meaning what it meant.
+  if (raw.enabled === undefined && raw.gate === "off") config.enabled = false;
+  config.enabled = config.enabled !== false;
+  delete config.gate;
   if (env.LASTRO_CLI) config.cli = env.LASTRO_CLI;
   const dir = resolve(root, config.dir);
   return { root, dir, config, file: (name) => join(dir, name), statePath: join(dir, "plugin", "state.json") };
@@ -96,10 +101,11 @@ export function readProposal(ws, id) {
   return f ? readJson(join(dir, f)) : undefined;
 }
 
-/** The use cases, for the descriptions of the proofs an intent replaces. */
+/** The use cases with their proofs (from .lastro/proof/, or an older use case file's own list), for the proofs an intent replaces. */
 function readUseCases(ws) {
-  const dir = ws.file("usecases");
-  return existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => readJson(join(dir, f))).filter(Boolean) : [];
+  const list = (sub) => (existsSync(ws.file(sub)) ? readdirSync(ws.file(sub)).filter((f) => f.endsWith(".json")).map((f) => readJson(join(ws.file(sub), f))).filter(Boolean) : []);
+  const proofs = list("proof");
+  return list("usecases").map((u) => ({ ...u, proofs: [...(u.proofs ?? []), ...proofs.filter((x) => x.useCase === u.id)] }));
 }
 
 /**
@@ -144,7 +150,9 @@ export function nextStep(s) {
     case "no-workspace":
       return `Set up the workspace first: draft the model of the decision core with the user, then run \`${cli} init --model <model.json>\`.`;
     case "no-proposal":
-      return `Write the proposed change as prose in .lastro/proposals/<slug>.md and run \`${cli} propose .lastro/proposals/<slug>.md\`.`;
+      return s.useCases?.length
+        ? `Write the proposed change as prose in .lastro/proposals/<slug>.md and run \`${cli} propose .lastro/proposals/<slug>.md\`.`
+        : `No use case is recorded yet. If the repository already has code, start with \`${cli} scan\` and \`${cli} bootstrap\` (lastro \`bootstrap\` skill); otherwise write the first change as prose in .lastro/proposals/<slug>.md and run \`${cli} propose\` on it.`;
     case "review-pending":
       return `The user reviews the proposal like a pull request: answer each open decision, then approve, amend or reject each intent (\`${cli} review ${id} --as <user> ...\`, recording only the user's own answers).`;
     case "needs-proofs":
@@ -152,7 +160,9 @@ export function nextStep(s) {
     case "implementing":
       return "Implement the approved intents, then end your turn: the proofs run when you stop.";
     case "failed":
-      return "Fix the code until every proof passes, without breaking the use cases' proofs.";
+      return s.proposal?.origin?.kind === "bootstrap"
+        ? "This bootstrap's proofs describe the code as it is: do not change the code. Show the user each failing proof; on their word amend the intent (the reading was wrong) or reject it (the code has a bug to fix in a later proposal), then derive and prove again."
+        : "Fix the code until every proof passes, without breaking the use cases' proofs.";
     case "passed":
       return `Every proof passes. The user applies it with \`${cli} apply ${id}\`.`;
   }
@@ -267,6 +277,15 @@ function replacedLines(s, i) {
  * use case they change, each with the quote it came from and the proofs it replaces. Every item starts with a list
  * marker, so chat apps that join single newlines still show one per line.
  */
+/** Where a bootstrap intent was read: its confidence, files, tests and commits. */
+function groundsLine(g) {
+  const parts = [`${g.confidence} confidence`];
+  if (g.files?.length) parts.push(`files ${g.files.map((f) => `\`${f}\``).join(", ")}`);
+  if (g.tests?.length) parts.push(`tests ${g.tests.map((t) => `\`${t}\``).join(", ")}`);
+  if (g.commits?.length) parts.push(`commits ${g.commits.map((c) => `\`${c.slice(0, 7)}\``).join(", ")}`);
+  return `↳ ${parts.join("; ")}`;
+}
+
 export function renderReview(s) {
   const p = s.proposal;
   if (!p) return `Lastro: no proposal to review. ${nextStep(s)}`;
@@ -274,6 +293,8 @@ export function renderReview(s) {
   const open = p.decisions.filter((d) => d.chosen === undefined || d.chosen === null);
   const t = tally(s);
   const out = [`**${p.id} ${p.name}, for review:** ${plural(t.intents, "intent")} on ${plural(p.useCases.length, "use case")}, ${t.approved} approved · ${open.length} of ${t.decisions} decisions open`];
+  if (p.origin?.kind === "bootstrap")
+    out.push("", `_Bootstrap: read from ${p.origin.head ? `commit ${p.origin.head.slice(0, 12)}` : "the working tree"}${p.origin.scope?.length ? `, scope ${p.origin.scope.join(", ")}` : ""}. Each intent is what the code does today; check its grounds._`);
   if (open.length) {
     out.push("", "**Decisions**", "");
     for (const d of open) {
@@ -287,7 +308,8 @@ export function renderReview(s) {
     out.push("", `**${change.useCase} ${change.name}** (${CHANGE_LABEL[change.change]}${change.stale ? ", description stale" : ""})`, "");
     for (const i of intents) {
       out.push(`- **${short(s, i.id)}** ${i.description} _(${status(i)})_`);
-      if (i.source?.quote) out.push(`  > ${i.source.quote.replace(/\s+/g, " ").trim()}`);
+      if (i.grounds) out.push(`  ${groundsLine(i.grounds)}`);
+      else if (i.source?.quote) out.push(`  > ${i.source.quote.replace(/\s+/g, " ").trim()}`);
       for (const r of replacedLines(s, i)) out.push(`  - ⚠ ${r}`);
     }
   }

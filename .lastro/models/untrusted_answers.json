@@ -1,0 +1,34 @@
+{
+  "name": "untrusted_answers",
+  "inputs": {
+    "via": {
+      "type": "enum",
+      "values": [
+        "ask",
+        "static"
+      ]
+    },
+    "quote": {
+      "type": "enum",
+      "values": [
+        "anchored",
+        "missing"
+      ]
+    },
+    "lsl": {
+      "type": "enum",
+      "values": [
+        "valid",
+        "unknown-variable"
+      ]
+    }
+  },
+  "outputs": {
+    "extracted": {
+      "type": "bool"
+    },
+    "derived": {
+      "type": "bool"
+    }
+  }
+}

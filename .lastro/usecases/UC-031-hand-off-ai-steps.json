@@ -3,6 +3,5 @@
   "slug": "hand-off-ai-steps",
   "name": "Hand the AI steps to the calling agent",
   "description": "With --llm handoff (the default when ANTHROPIC_API_KEY is not set), each AI request gets a deterministic id from the step and a hash of the request. If the answer file llm/<id>.answer.json exists it is used; otherwise the CLI writes llm/<id>.request.json (instructions, system prompt, user data, JSON Schema) and exits 3 naming the answer path. The calling agent writes its JSON answer there and reruns the command. Ids match across the TypeScript, .NET and Go CLIs.",
-  "proofs": [],
   "history": []
 }

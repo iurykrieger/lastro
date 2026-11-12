@@ -1,0 +1,46 @@
+{
+  "id": "UC-018.PF-02",
+  "slug": "evaluation-error-violates",
+  "name": "An error while evaluating a clause violates it",
+  "description": "A clause whose evaluation raises an error is violated, with the error noted.",
+  "useCase": "UC-018",
+  "model": "verify_clause",
+  "subject": "verify_clause",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.kind"
+        },
+        {
+          "const": "erroring"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "violated"
+            }
+          ]
+        },
+        {
+          "var": "out.errorNoted"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

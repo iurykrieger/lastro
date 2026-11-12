@@ -1,0 +1,22 @@
+{
+  "id": "UC-026.PF-04",
+  "slug": "counterexample",
+  "name": "Violated proofs show their counterexample",
+  "description": "A violated proof shows its counterexample.",
+  "useCase": "UC-026",
+  "model": "receipt_sections",
+  "subject": "receipt_sections",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.violated"
+    },
+    "ensures": {
+      "var": "out.showsCounterexample"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

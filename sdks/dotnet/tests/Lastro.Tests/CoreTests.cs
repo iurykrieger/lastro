@@ -175,6 +175,19 @@ public class CoreTests
     }
 
     [Fact]
+    public void AClauseWithNoIfPartAppliesToEveryInputInTheConsistencyCheck()
+    {
+        var (_, plan) = TinyPlan([
+            new() { Id = "C1", IntentIds = ["I1"], Description = "y is always 1", Ensures = L.Eq(L.Out("y"), 1) },
+            new() { Id = "C2", IntentIds = ["I1"], Description = "y is 2 when x=3", Requires = L.Eq(L.In("x"), 3), Ensures = L.Eq(L.Out("y"), 2) },
+        ]);
+        plan.Model.Outputs = new() { ["y"] = D.Int(0, 5) };
+        var cards = Engine.CheckConsistency(plan);
+        Assert.Single(cards);
+        Assert.StartsWith("Clauses C1,C2 cannot all hold for input {\"x\":3}", cards[0].Question);
+    }
+
+    [Fact]
     public void ExplainRunClassifiesEachClauseForASingleRun()
     {
         var plan = LoginExample.Derive(Reviewed());

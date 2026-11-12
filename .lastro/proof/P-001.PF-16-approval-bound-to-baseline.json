@@ -1,0 +1,66 @@
+{
+  "id": "P-001.PF-16",
+  "slug": "approval-bound-to-baseline",
+  "name": "Approval bound to the baseline",
+  "description": "A reviewed proposal is approved only while the use cases' ids, slugs, names and descriptions are what it was extracted against; proofs do not count.",
+  "intent": "P-001.I-24",
+  "useCase": "UC-009",
+  "model": "baseline_binding",
+  "subject": "baseline_binding",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.approves"
+            },
+            {
+              "op": "in",
+              "args": [
+                {
+                  "var": "in.change"
+                },
+                {
+                  "const": "none"
+                },
+                {
+                  "const": "proofs"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.sameBaseline"
+            },
+            {
+              "op": "in",
+              "args": [
+                {
+                  "var": "in.change"
+                },
+                {
+                  "const": "none"
+                },
+                {
+                  "const": "proofs"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

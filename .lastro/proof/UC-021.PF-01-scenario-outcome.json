@@ -1,0 +1,43 @@
+{
+  "id": "UC-021.PF-01",
+  "slug": "scenario-outcome",
+  "name": "A scenario passes only when the code meets its expectation",
+  "description": "A scenario passes when the code's output on its input meets the expectation, and fails otherwise, when the code throws, or when there is no code.",
+  "useCase": "UC-021",
+  "model": "scenario_run",
+  "subject": "scenario_run",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.status"
+            },
+            {
+              "const": "passed"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.subject"
+            },
+            {
+              "const": "right"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

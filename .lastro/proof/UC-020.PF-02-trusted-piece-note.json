@@ -1,0 +1,46 @@
+{
+  "id": "UC-020.PF-02",
+  "slug": "trusted-piece-note",
+  "name": "A trace against a proved clause blames a trusted piece",
+  "description": "When the clause was proved on the model and a trace breaks it, the note says a trusted piece does not hold.",
+  "useCase": "UC-020",
+  "model": "trace_check",
+  "subject": "trace_check",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.subject"
+            },
+            {
+              "const": "right"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.trace"
+            },
+            {
+              "const": "breaks"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "var": "out.trustedNote"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

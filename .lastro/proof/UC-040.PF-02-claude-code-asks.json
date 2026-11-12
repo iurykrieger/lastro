@@ -1,0 +1,65 @@
+{
+  "id": "UC-040.PF-02",
+  "slug": "claude-code-asks",
+  "name": "Claude Code asks before recording a review",
+  "description": "In Claude Code, a lastro review command that approves, answers, amends or rejects as a person shows a permission prompt.",
+  "useCase": "UC-040",
+  "model": "review_guard",
+  "subject": "review_guard",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.action"
+            },
+            {
+              "const": "comment"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.as"
+            },
+            {
+              "const": "iury"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.harness"
+            },
+            {
+              "const": "claude"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.decision"
+        },
+        {
+          "const": "ask"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

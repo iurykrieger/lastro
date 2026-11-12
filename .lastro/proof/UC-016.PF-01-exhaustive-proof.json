@@ -1,0 +1,92 @@
+{
+  "id": "UC-016.PF-01",
+  "slug": "exhaustive-proof",
+  "name": "A clause that holds on every input of a small space is proved",
+  "description": "On a space of at most 100,000 inputs, a clause that applies and holds on every run is proved, with formal evidence, exhaustively, over every input.",
+  "useCase": "UC-016",
+  "model": "verify_clause",
+  "subject": "verify_clause",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.large"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.bug"
+            },
+            {
+              "const": "none"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.kind"
+            },
+            {
+              "const": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "proved"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.evidence"
+            },
+            {
+              "const": "formal"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.method"
+            },
+            {
+              "const": "exhaustive"
+            }
+          ]
+        },
+        {
+          "var": "out.checkedAll"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

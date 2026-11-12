@@ -1,0 +1,43 @@
+{
+  "id": "UC-024.PF-07",
+  "slug": "report-ok",
+  "name": "The report is ok only with no violated intent and no gap",
+  "description": "The report is ok exactly when the intent is neither violated nor a gap (the spec has no contradiction here).",
+  "useCase": "UC-024",
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.reportOk"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "op": "in",
+              "args": [
+                {
+                  "var": "out.verdict"
+                },
+                {
+                  "const": "violated"
+                },
+                {
+                  "const": "gap"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

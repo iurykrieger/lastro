@@ -1,0 +1,33 @@
+{
+  "name": "cli_exits",
+  "inputs": {
+    "situation": {
+      "type": "enum",
+      "values": [
+        "no-command",
+        "unknown-command",
+        "status-empty",
+        "propose-unanswered",
+        "review-without-as",
+        "derive-pending",
+        "status-open"
+      ]
+    }
+  },
+  "outputs": {
+    "exit": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "json": {
+      "type": "bool"
+    },
+    "refusedPending": {
+      "type": "bool"
+    },
+    "approvalsWritten": {
+      "type": "bool"
+    }
+  }
+}

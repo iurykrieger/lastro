@@ -1,0 +1,23 @@
+{
+  "name": "subject_module",
+  "inputs": {
+    "exportName": {
+      "type": "enum",
+      "values": [
+        "default",
+        "named",
+        "missing"
+      ]
+    }
+  },
+  "outputs": {
+    "exit": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "proved": {
+      "type": "bool"
+    }
+  }
+}

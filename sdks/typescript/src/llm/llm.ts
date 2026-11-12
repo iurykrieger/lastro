@@ -14,7 +14,7 @@ import { BEYOND_PROOF_REASONS } from "../types.js";
 import type { IntentExtractor, ProofDeriver } from "./interfaces.js";
 
 /** Ask an LLM for one JSON value matching `schema`. */
-export type AskJson = (request: { step: "extract" | "derive" | "gap-review"; system: string; user: string; schema: Record<string, unknown> }) => Promise<unknown>;
+export type AskJson = (request: { step: "extract" | "survey" | "derive" | "gap-review"; system: string; user: string; schema: Record<string, unknown> }) => Promise<unknown>;
 
 // ---------------------------------------------------------------------------
 // Extraction

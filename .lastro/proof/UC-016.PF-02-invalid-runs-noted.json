@@ -1,0 +1,33 @@
+{
+  "id": "UC-016.PF-02",
+  "slug": "invalid-runs-noted",
+  "name": "Invalid runs are noted",
+  "description": "Inputs where the code throws or returns an output outside its domain are noted on the clause.",
+  "useCase": "UC-016",
+  "model": "verify_clause",
+  "subject": "verify_clause",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "in",
+      "args": [
+        {
+          "var": "in.bug"
+        },
+        {
+          "const": "throws"
+        },
+        {
+          "const": "out-of-domain"
+        }
+      ]
+    },
+    "ensures": {
+      "var": "out.noted"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

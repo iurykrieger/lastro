@@ -1,0 +1,119 @@
+{
+  "lastro": "proposal/v1",
+  "id": "P-003",
+  "slug": "enabled-switch",
+  "name": "Turn the agent plugin on and off with enabled",
+  "description": "The plugin's switch in .lastro/plugin.json becomes enabled true or false, and lastro init no longer needs a model.",
+  "status": "open",
+  "submittedBy": "claude",
+  "prose": "# Turn the agent plugin on and off with `enabled`\n\nThe plugin's switch in `.lastro/plugin.json` becomes `\"enabled\": true | false` instead of `\"gate\": \"on\" | \"off\"`.\nWith `enabled` true (the default when the key is absent), every hook runs: the gate holds code edits until a\nproposal is approved and its proofs are derived, Stop proves, and the board is shown. With `enabled` false, every\nhook does nothing: no gate, no proofs on Stop, no board. A file written before the change keeps its meaning: a\n`\"gate\": \"off\"` with no `enabled` key reads as `enabled` false, and `gate` is otherwise ignored.\n\n`lastro init` no longer requires `--model`. Without it, init writes a workspace config with no models and no\nsubjects and the review policy (`--approvals`, `--submitter-cannot-approve`), so a repository can start writing and\nreviewing proposals, or bootstrap its use cases, before any model exists. `--subject` without `--model` is refused\nwith exit 2. The TypeScript, Go and .NET CLIs behave the same way and print the same result.",
+  "baseline": "sha256:4de5c723e16e9a3f656b0ba655afccca0c39454c1a64bab329cbd5ccf4ed6efd",
+  "intents": [
+    {
+      "id": "P-003.I-01",
+      "slug": "enabled-runs-every-hook",
+      "name": "enabled true runs every hook",
+      "description": "With \"enabled\" true in .lastro/plugin.json, or with no \"enabled\" key, every hook runs: the gate, the proofs on Stop and the board.",
+      "change": "modify",
+      "useCase": "UC-039",
+      "provability": "empirical",
+      "source": {
+        "quote": "With `enabled` true (the default when the key is absent), every hook runs",
+        "start": 165,
+        "end": 238
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-003.I-02",
+      "slug": "disabled-does-nothing",
+      "name": "enabled false turns every hook off",
+      "description": "With \"enabled\" false every hook returns nothing: no gate, no proofs on Stop, no board.",
+      "change": "modify",
+      "useCase": "UC-039",
+      "provability": "empirical",
+      "source": {
+        "quote": "With `enabled` false, every\nhook does nothing: no gate, no proofs on Stop, no board.",
+        "start": 360,
+        "end": 444
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-003.I-03",
+      "slug": "legacy-gate-off",
+      "name": "An older gate off still turns the plugin off",
+      "description": "A plugin.json with \"gate\": \"off\" and no \"enabled\" key reads as enabled false; gate is otherwise ignored.",
+      "change": "modify",
+      "useCase": "UC-039",
+      "provability": "empirical",
+      "source": {
+        "quote": "a\n`\"gate\": \"off\"` with no `enabled` key reads as `enabled` false",
+        "start": 497,
+        "end": 561
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-003.I-04",
+      "slug": "init-without-model",
+      "name": "init works without a model",
+      "description": "lastro init without --model writes a config with no models and no subjects and the review policy; --subject without --model exits 2. The TypeScript, Go and .NET CLIs print the same result.",
+      "change": "modify",
+      "useCase": "UC-030",
+      "provability": "empirical",
+      "source": {
+        "quote": "`lastro init` no longer requires `--model`.",
+        "start": 597,
+        "end": 640
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    }
+  ],
+  "useCases": [
+    {
+      "useCase": "UC-039",
+      "slug": "gate-agent-edits-on-review",
+      "change": "modify",
+      "name": "Gate an agent's code edits on reviewed intents",
+      "before": "The Lastro plugin for Claude Code and Codex (plugins/lastro) is active in a repository that has .lastro/plugin.json. Its PreToolUse hook treats the first attempt to edit source code, in any mode (plan mode, auto mode, an informal plan or none), as the moment to extract intents: edit tools (Edit, Write, MultiEdit, NotebookEdit, apply_patch) on code outside .lastro/ and outside the configured allow globs are denied, with steps to write the change as prose in .lastro/proposals/<id>-<slug>.md, run lastro propose and start the user's review, unless the current proposal is approved, its proofs were derived from exactly its current intents and decisions, and its last proof run has not passed yet. Once every proof passes, the next source edit is a new change and is denied the same way. With gate \"off\" it never blocks. Proposals and handoff answers inside .lastro/ are always allowed; the proposal and use-case JSON files, receipts, config.json and the plugin's state are denied because only the CLI writes them; edits to .lastro/plugin.json ask the user in Claude Code and are denied in Codex. SessionStart and UserPromptSubmit add the progress board and the rule that the agent is the author of the proposal and never approves it.",
+      "after": "The Lastro plugin for Claude Code and Codex (plugins/lastro) is active in a repository that has .lastro/plugin.json with \"enabled\" true, the default when the key is absent; with \"enabled\" false every hook does nothing (no gate, no proofs on Stop, no board), and an older file with \"gate\": \"off\" and no \"enabled\" key reads as \"enabled\" false. Its PreToolUse hook treats the first attempt to edit source code, in any mode (plan mode, auto mode, an informal plan or none), as the moment to extract intents: edit tools (Edit, Write, MultiEdit, NotebookEdit, apply_patch) on code outside .lastro/ and outside the configured allow globs are denied, with steps to write the change as prose in .lastro/proposals/<id>-<slug>.md, run lastro propose and start the user's review, unless the current proposal is approved, its proofs were derived from exactly its current intents and decisions, and its last proof run has not passed yet. Once every proof passes, the next source edit is a new change and is denied the same way. Proposals and handoff answers inside .lastro/ are always allowed; the proposal and use-case JSON files, receipts, config.json and the plugin's state are denied because only the CLI writes them; edits to .lastro/plugin.json ask the user in Claude Code and are denied in Codex. SessionStart and UserPromptSubmit add the progress board and the rule that the agent is the author of the proposal and never approves it.",
+      "intents": [
+        "P-003.I-01",
+        "P-003.I-02",
+        "P-003.I-03"
+      ]
+    },
+    {
+      "useCase": "UC-030",
+      "slug": "run-pipeline-from-cli",
+      "change": "modify",
+      "name": "Run the pipeline from a CLI",
+      "before": "The CLIs (lastro in TypeScript and .NET, lastro-go in Go) run init --model model.json [--approvals N], propose <prose-file> [--section <heading>] [--as <submitter>], status [<proposal>], review <proposal> --as <name> approve|approve-all|amend|reject|answer|comment|resolve, derive <proposal>, prove <proposal>, feedback <proposal>, apply <proposal> and regress. Each prints one JSON object and keeps state in a workspace directory (default .lastro, --dir to change): config.json (models, subjects and the review block), usecases/, proposals/ with each proposal's receipt, and llm/. init --approvals writes review.approvals. Exit codes: 0 ok, 1 not ok (review pending, contradictions, failing proofs or regressions, apply refused), 2 usage or error, 3 an LLM answer is needed. derive refuses while review is pending and, on contradictions, writes the returned decisions into the proposal.",
+      "after": "The CLIs (lastro in TypeScript and .NET, lastro-go in Go) run init [--model model.json] [--approvals N] (without --model, init writes a config with no models and no subjects, and --subject without --model is refused with exit 2), propose <prose-file> [--section <heading>] [--as <submitter>], status [<proposal>], review <proposal> --as <name> approve|approve-all|amend|reject|answer|comment|resolve, derive <proposal>, prove <proposal>, feedback <proposal>, apply <proposal> and regress. Each prints one JSON object and keeps state in a workspace directory (default .lastro, --dir to change): config.json (models, subjects and the review block), usecases/, proposals/ with each proposal's receipt, and llm/. init --approvals writes review.approvals. Exit codes: 0 ok, 1 not ok (review pending, contradictions, failing proofs or regressions, apply refused), 2 usage or error, 3 an LLM answer is needed. derive refuses while review is pending and, on contradictions, writes the returned decisions into the proposal.",
+      "intents": [
+        "P-003.I-04"
+      ]
+    }
+  ],
+  "decisions": [],
+  "threads": [],
+  "notPromised": [
+    "Any other key of .lastro/plugin.json changes meaning.",
+    "The plugin turns itself on in a repository that has no .lastro/plugin.json."
+  ],
+  "policy": {
+    "approvals": 1,
+    "submitterCanApprove": true
+  },
+  "proofs": [],
+  "supersedes": []
+}

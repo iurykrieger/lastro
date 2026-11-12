@@ -1,0 +1,17 @@
+{
+  "name": "edit_marks_stale",
+  "inputs": {
+    "path": {
+      "type": "enum",
+      "values": [
+        "code",
+        "proposal"
+      ]
+    }
+  },
+  "outputs": {
+    "dirty": {
+      "type": "bool"
+    }
+  }
+}

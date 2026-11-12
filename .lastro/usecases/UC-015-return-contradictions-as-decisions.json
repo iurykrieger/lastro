@@ -2,7 +2,8 @@
   "id": "UC-015",
   "slug": "return-contradictions-as-decisions",
   "name": "Return contradictions to the team",
-  "description": "After derivation, a consistency check enumerates every output (when there are at most 4096) for each input and looks for inputs where no output satisfies all applicable clauses. Each distinct set of conflicting clauses becomes a decision card (origin consistency-check) asking which clause should give way, with one option per clause and the first recommended. spec.ok is false when any exist. returnDecisions(spec) reopens the artifact and appends these cards, skipping questions it already has, so the artifact cannot be approved until they are answered and the intents their answers create are approved. The Rust prover runs the same check.",
-  "proofs": [],
-  "history": []
+  "description": "After derivation, a consistency check enumerates every output (when there are at most 4096) for each input and looks for inputs where no output satisfies all applicable clauses; a clause with no if-part applies to every input. Each distinct set of conflicting clauses becomes a decision card (origin consistency-check) asking which clause should give way, with one option per clause and the first recommended. spec.ok is false when any exist. returnDecisions(spec) reopens the artifact and appends these cards, skipping questions it already has, so the artifact cannot be approved until they are answered and the intents their answers create are approved. The TypeScript, .NET and Go engines and the Rust prover run the same check and find the same contradictions.",
+  "history": [
+    "P-005"
+  ]
 }

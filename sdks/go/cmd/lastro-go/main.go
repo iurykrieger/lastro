@@ -42,7 +42,7 @@ import (
 
 const usage = `lastro-go <command> [options]
 
-  init --model <model.json> [--subject <module>[#export]] [--approvals N] [--submitter-cannot-approve]
+  init [--model <model.json>] [--subject <module>[#export]] [--approvals N] [--submitter-cannot-approve]
                                                 start a .lastro/ workspace (or add a model to it)
   propose <prose-file> [--section <heading>] [--as <submitter>] [--proposal <P>]
                                                 create a proposal and extract its intents against the use cases;
@@ -52,12 +52,17 @@ const usage = `lastro-go <command> [options]
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
                                                 resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
   derive <P>                                    derive the pending proofs of the approved intents
+  derive --usecases [UC-003,UC-016]             derive proofs straight from the established use cases (default:
+                                                every use case with no passed proof) into .lastro/proof/
   prove [<P>] --cmd "<command>" | --table rows.json [--prover path/to/lastro-prove] [--stream]
                                                 run its proofs and every use case's proofs (regression);
                                                 writes the receipt next to the proposal
+  prove --usecases --cmd "<command>" | --table rows.json
+                                                run the use cases' pending proofs with every passed one; a pending
+                                                proof that passes becomes a regression test
   feedback <P>                                  the last run's failures, as a brief for whoever writes the code
-  apply <P>                                     attach the proofs to their use cases and sync .lastro/usecases/
-  regress --cmd "<command>" | --table rows.json run every use case's proofs alone
+  apply <P>                                     write the proofs to .lastro/proof/ and sync .lastro/usecases/
+  regress --cmd "<command>" | --table rows.json run every use case's passed proofs alone
 
   <P> is a proposal id (P-001, or 1) or slug; without it, the latest open proposal.
   The code under proof speaks JSON lines (one input object per line in, one output object per line out).
@@ -258,24 +263,95 @@ func listJSON(dir string) []string {
 	return out
 }
 
+type proofFile struct {
+	path  string
+	proof lastro.ProofEntry
+}
+
+// proofFiles is every proof file in .lastro/proof/, in file-name order.
+func (w workspace) proofFiles() ([]proofFile, error) {
+	out := []proofFile{}
+	for _, f := range listJSON(w.file("proof")) {
+		var pr lastro.ProofEntry
+		if err := readJSON(w.file("proof", f), &pr); err != nil {
+			return nil, fmt.Errorf("%s: %w", f, err)
+		}
+		out = append(out, proofFile{w.file("proof", f), pr})
+	}
+	return out, nil
+}
+
+// useCases reads every use case with its proofs from .lastro/proof/. A use case file that still carries a
+// `proofs` list (written before proofs had their own files) is read as before; a proof file with the same id wins.
 func (w workspace) useCases() ([]lastro.UseCase, error) {
+	files, err := w.proofFiles()
+	if err != nil {
+		return nil, err
+	}
 	out := []lastro.UseCase{}
 	for _, f := range listJSON(w.file("usecases")) {
 		var u lastro.UseCase
 		if err := readJSON(w.file("usecases", f), &u); err != nil {
 			return nil, fmt.Errorf("%s: %w", f, err)
 		}
+		own := []lastro.ProofEntry{}
+		ids := map[string]bool{}
+		for _, x := range files {
+			if x.proof.UseCase == u.ID {
+				own = append(own, x.proof)
+				ids[x.proof.ID] = true
+			}
+		}
+		proofs := []lastro.ProofEntry{}
+		for _, x := range u.Proofs {
+			if !ids[x.ID] {
+				proofs = append(proofs, x)
+			}
+		}
+		u.Proofs = append(proofs, own...)
 		out = append(out, u)
 	}
 	return out, nil
 }
 
+// writeUseCase writes a use case without its proofs, each proof to its own file, and deletes the files of the
+// proofs it no longer has.
 func (w workspace) writeUseCase(u lastro.UseCase) error {
-	return writeJSON(w.file("usecases", lastro.FileNameOf(u.ID, u.Slug)), u)
+	history := u.History
+	if history == nil {
+		history = []string{}
+	}
+	if err := writeJSON(w.file("usecases", lastro.FileNameOf(u.ID, u.Slug)), obj{{"id", u.ID}, {"slug", u.Slug}, {"name", u.Name}, {"description", u.Description}, {"history", history}}); err != nil {
+		return err
+	}
+	keep := map[string]bool{}
+	for _, pr := range u.Proofs {
+		path := w.file("proof", lastro.FileNameOf(pr.ID, pr.Slug))
+		keep[path] = true
+		if err := writeJSON(path, pr); err != nil {
+			return err
+		}
+	}
+	files, err := w.proofFiles()
+	if err != nil {
+		return err
+	}
+	for _, x := range files {
+		if x.proof.UseCase == u.ID && !keep[x.path] {
+			_ = os.Remove(x.path)
+		}
+	}
+	return nil
 }
 
 func (w workspace) removeUseCase(u lastro.UseCase) {
 	_ = os.Remove(w.file("usecases", lastro.FileNameOf(u.ID, u.Slug)))
+	files, _ := w.proofFiles()
+	for _, x := range files {
+		if x.proof.UseCase == u.ID {
+			_ = os.Remove(x.path)
+		}
+	}
 }
 
 func (w workspace) proposals() ([]lastro.Proposal, error) {
@@ -638,12 +714,16 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 
 	switch cmd {
 	case "init":
-		if a.flags["model"] == "" {
-			return 0, nil, fail(2, kv{"error", "init needs --model <model.json>"})
+		// Without --model the workspace starts empty: proposals can be written and reviewed, and a bootstrap brings models later.
+		hasModel := a.flags["model"] != "" && a.flags["model"] != "true"
+		if s := a.flags["subject"]; s != "" && s != "true" && !hasModel {
+			return 0, nil, fail(2, kv{"error", "--subject needs --model <model.json>"})
 		}
 		var model lastro.Model
-		if err := readJSON(a.flags["model"], &model); err != nil {
-			return 0, nil, err
+		if hasModel {
+			if err := readJSON(a.flags["model"], &model); err != nil {
+				return 0, nil, err
+			}
 		}
 		cfg := config{models: map[string]lastro.Model{}, subjects: json.RawMessage("{}"), review: lastro.DefaultPolicy}
 		if ws.exists() {
@@ -652,11 +732,13 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 				return 0, nil, err
 			}
 		}
-		if _, ok := cfg.models[model.Name]; !ok {
-			cfg.modelOrder = append(cfg.modelOrder, model.Name)
+		if hasModel {
+			if _, ok := cfg.models[model.Name]; !ok {
+				cfg.modelOrder = append(cfg.modelOrder, model.Name)
+			}
+			cfg.models[model.Name] = model
 		}
-		cfg.models[model.Name] = model
-		if s := a.flags["subject"]; s != "" && s != "true" {
+		if s := a.flags["subject"]; hasModel && s != "" && s != "true" {
 			module, exp, _ := strings.Cut(s, "#")
 			ref := obj{{"module", module}}
 			if exp != "" {
@@ -821,18 +903,33 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 					open++
 				}
 			}
-			proofs, unproved := 0, []string{}
+			proofs, unproved, pending, failed := 0, []string{}, []string{}, []string{}
 			for _, u := range useCases {
-				proofs += len(u.Proofs)
-				if len(u.Proofs) == 0 {
+				proofs += len(lastro.PassedProofs(u))
+				if len(lastro.PassedProofs(u)) == 0 {
 					unproved = append(unproved, u.ID)
+				}
+				for _, x := range u.Proofs {
+					switch x.Status {
+					case "pending":
+						pending = append(pending, x.ID)
+					case "failed":
+						failed = append(failed, x.ID)
+					}
 				}
 			}
 			code := 0
 			if open > 0 {
 				code = 1
 			}
-			return code, obj{{"status", "status"}, {"useCases", len(useCases)}, {"proofs", proofs}, {"unproved", unproved}, {"proposals", list}}, nil
+			body := obj{{"status", "status"}, {"useCases", len(useCases)}, {"proofs", proofs}}
+			if len(pending) > 0 {
+				body = append(body, kv{"pendingProofs", pending})
+			}
+			if len(failed) > 0 {
+				body = append(body, kv{"failedProofs", failed})
+			}
+			return code, append(body, kv{"unproved", unproved}, kv{"proposals", list}), nil
 		}
 		p, err := ws.proposal(ref)
 		if err != nil {
@@ -936,6 +1033,43 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 		if err != nil {
 			return 0, nil, err
 		}
+		if flag, ok := a.flags["usecases"]; ok {
+			var ids []string
+			if lastro.IsUseCaseList(flag) {
+				for _, x := range strings.Split(flag, ",") {
+					ids = append(ids, strings.TrimSpace(x))
+				}
+			}
+			ask, err := pickAsk(a, ws.dir)
+			if err != nil {
+				return 0, nil, err
+			}
+			d, err := lastro.DeriveUseCaseProofs(ctx, ask, useCases, ids, setup(cfg))
+			if err != nil {
+				return 0, nil, err
+			}
+			for _, u := range d.UseCases {
+				if err := ws.writeUseCase(u); err != nil {
+					return 0, nil, err
+				}
+			}
+			if len(d.UseCases) == 0 {
+				return 0, obj{{"status", "nothing-to-derive"}, {"note", "every use case has passed proofs"}}, nil
+			}
+			list := []obj{}
+			for _, u := range d.UseCases {
+				proofs := []obj{}
+				for _, x := range d.Derived {
+					if x.UseCase == u.ID {
+						proofs = append(proofs, obj{{"id", x.ID}, {"description", x.Description}, {"kind", x.Check.Kind}})
+					}
+				}
+				if len(proofs) > 0 {
+					list = append(list, obj{{"id", u.ID}, {"name", u.Name}, {"proofs", proofs}})
+				}
+			}
+			return 0, obj{{"status", "derived"}, {"useCases", list}, {"unprovable", d.Unprovable}, {"next", "lastro-go prove --usecases"}}, nil
+		}
 		p, err := ws.proposal(arg(rest, 0))
 		if err != nil {
 			return 0, nil, err
@@ -967,6 +1101,44 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 		useCases, err := ws.useCases()
 		if err != nil {
 			return 0, nil, err
+		}
+		if _, ok := a.flags["usecases"]; ok {
+			subs, stop, err := subjects(ctx, a, cfg, nil)
+			if err != nil {
+				return 0, nil, err
+			}
+			defer stop()
+			changed, run, err := lastro.ProveUseCases(ctx, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Rust: rustProver(a)})
+			if err != nil {
+				return 0, nil, err
+			}
+			for _, u := range changed {
+				if err := ws.writeUseCase(u); err != nil {
+					return 0, nil, err
+				}
+			}
+			passed, failures := []string{}, []lastro.ProofOutcome{}
+			for _, x := range run.Outcomes {
+				if x.Role == "usecase" && x.Passed {
+					passed = append(passed, x.Proof)
+				}
+				if !x.Passed {
+					failures = append(failures, x)
+				}
+			}
+			status, code := "passed", 0
+			if !run.OK {
+				status, code = "failed", 1
+			}
+			var agree any
+			if run.EnginesAgree != nil {
+				agree = *run.EnginesAgree
+			}
+			body := obj{{"status", status}, {"ok", run.OK}, {"enginesAgree", agree}, {"passed", passed}, {"failed", run.Failed}, {"regressions", run.Regressions}, {"failures", failures}, {"unproved", run.Unproved}}
+			if run.Note != "" {
+				body = append(body, kv{"note", run.Note})
+			}
+			return code, body, nil
 		}
 		p, err := ws.proposal(arg(rest, 0))
 		if err != nil {

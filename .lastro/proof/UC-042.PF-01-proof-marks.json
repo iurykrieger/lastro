@@ -1,0 +1,167 @@
+{
+  "id": "UC-042.PF-01",
+  "slug": "proof-marks",
+  "name": "One mark per proof",
+  "description": "Each proof line shows ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, ○ pending.",
+  "useCase": "UC-042",
+  "model": "board_mark",
+  "subject": "board_mark",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.verdict"
+                },
+                {
+                  "const": "proved"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.mark"
+                },
+                {
+                  "const": "✓"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.verdict"
+                },
+                {
+                  "const": "evidenced"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.mark"
+                },
+                {
+                  "const": "≈"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.verdict"
+                },
+                {
+                  "const": "violated"
+                }
+              ]
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.mark"
+                    },
+                    {
+                      "const": "✗"
+                    }
+                  ]
+                },
+                {
+                  "var": "out.counterexample"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "in",
+              "args": [
+                {
+                  "var": "in.verdict"
+                },
+                {
+                  "const": "weak"
+                },
+                {
+                  "const": "vacuous"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.mark"
+                },
+                {
+                  "const": "!"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.verdict"
+                },
+                {
+                  "const": "pending"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.mark"
+                },
+                {
+                  "const": "○"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

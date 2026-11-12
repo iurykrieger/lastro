@@ -1,0 +1,65 @@
+{
+  "id": "P-001.PF-26",
+  "slug": "gate-allows-edits-while-implementing",
+  "name": "Edits only while implementing",
+  "description": "The gate allows source edits exactly when the proposal is approved, has proofs and its last run has not passed (or is stale).",
+  "intent": "P-001.I-40",
+  "useCase": "UC-039",
+  "model": "edit_gate",
+  "subject": "edit_gate",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.allowEdit"
+        },
+        {
+          "op": "and",
+          "args": [
+            {
+              "var": "in.approved"
+            },
+            {
+              "var": "in.proofs"
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.run"
+                        },
+                        {
+                          "const": "ok"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "var": "in.stale"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

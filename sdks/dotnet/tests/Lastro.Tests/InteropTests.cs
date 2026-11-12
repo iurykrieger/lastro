@@ -231,7 +231,8 @@ public class InteropTests
         Assert.True(r.Code == 0, r.Body.ToJsonString());
         var useCase = LastroJson.Deserialize<UseCase>(File.ReadAllText(Path.Combine(lastro, "usecases", "UC-001-charge-shipping.json")));
         Assert.Equal(["P-001"], useCase.History);
-        Assert.NotEmpty(useCase.Proofs);
+        Assert.Empty(useCase.Proofs); // each proof has its own file in .lastro/proof/
+        Assert.NotEmpty(Directory.GetFiles(Path.Combine(lastro, "proof"), "P-001.PF-*.json"));
         Assert.Contains("➕ UC-001", File.ReadAllText(Path.Combine(lastro, "proposals", "P-001-shipping-fee.receipt.md")));
 
         Assert.Equal(0, (await DotNet(dir, "regress")).Code);
@@ -327,9 +328,35 @@ public class InteropTests
         n = Node(dir, "apply", "P-001");
         Assert.True(n.Code == 0, n.Body.ToJsonString());
         var uc = Path.Combine(lastro, "usecases", "UC-001-charge-shipping.json");
-        Assert.Equal(File.ReadAllText(uc), JsJson.Stringify(LastroJson.ToNode(LastroJson.Deserialize<UseCase>(File.ReadAllText(uc))), 2) + "\n");
+        Assert.Equal(["id", "slug", "name", "description", "history"], ((JsonObject)JsonNode.Parse(File.ReadAllText(uc))!).Select(kv => kv.Key));
+        foreach (var pf in Directory.GetFiles(Path.Combine(lastro, "proof")))
+            Assert.Equal(File.ReadAllText(pf), JsJson.Stringify(LastroJson.ToNode(LastroJson.Deserialize<ProofEntry>(File.ReadAllText(pf))), 2) + "\n");
         Same("status after apply", Node(dir, "status").Body, (await DotNet(dir, "status")).Body);
         Same("regress", Comparable(Node(dir, "regress", Path.Combine(dir, "shipping.mjs")).Body), Comparable((await DotNet(dir, "regress", Assembly, "--export", "Lastro.Tests.ShippingExample.Fee")).Body));
+
+        // Proofs straight from an established use case: both CLIs ask the same derive question, the .NET CLI writes the
+        // pending proof to .lastro/proof/ and proves it, and the TS CLI reads the same status.
+        File.WriteAllText(Path.Combine(lastro, "usecases", "UC-002-members-ship-free.json"),
+            """{"id":"UC-002","slug":"members-ship-free","name":"Members ship free","description":"A member never pays shipping.","history":[]}""");
+        n = Node(dir, "derive", "--usecases");
+        Assert.Equal(3, n.Code);
+        Same("the derive --usecases handoff", n.Body, (await DotNet(dir, "derive", "--usecases")).Body);
+        File.WriteAllText(Text(n.Body, "answer"), """
+            {"proofs":[{"useCase":"UC-002","slug":"members-free","name":"Members free","description":"A member never pays shipping.","model":"shipping_fee","subject":"shipping_fee",
+            "kind":"clause","requires":"{\"var\":\"in.member\"}","ensures":"{\"op\":\"eq\",\"args\":[{\"var\":\"out.fee\"},{\"const\":0}]}","assumptions":[],"inputJson":"","expect":""}],"unprovable":[]}
+            """);
+        r = await DotNet(dir, "derive", "--usecases");
+        Assert.True(r.Code == 0, r.Body.ToJsonString());
+        var st = (await DotNet(dir, "status")).Body;
+        Same("status with a pending use-case proof", Node(dir, "status").Body, st);
+        Assert.Equal("[\"UC-002.PF-01\"]", st["pendingProofs"]!.ToJsonString());
+        r = await DotNet(dir, "prove", "--usecases", Assembly, "--export", "Lastro.Tests.ShippingExample.Fee");
+        Assert.True(r.Code == 0, r.Body.ToJsonString());
+        Assert.Equal("[\"UC-002.PF-01\"]", r.Body["passed"]!.ToJsonString());
+        Same("status after prove --usecases", Node(dir, "status").Body, (await DotNet(dir, "status")).Body);
+        r = await DotNet(dir, "derive", "--usecases", "UC-002");
+        Assert.Equal(1, r.Code);
+        Assert.Contains("UC-002 already has proofs", r.Body.ToJsonString());
     }
 
     private static JsonObject With(JsonObject head, JsonObject tail)

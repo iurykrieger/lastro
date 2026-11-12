@@ -20,7 +20,7 @@ public static class Cli
     public const string Usage = """
         lastro <command> [options]
 
-          init --model <model.json> [--subject <assembly.dll>#<Namespace.Type.Method>] [--approvals N] [--submitter-cannot-approve]
+          init [--model <model.json>] [--subject <assembly.dll>#<Namespace.Type.Method>] [--approvals N] [--submitter-cannot-approve]
                                                         start a .lastro/ workspace (or add a model to it)
           propose <prose-file> [--section <heading>] [--as <submitter>] [--proposal <P>]
                                                         create a proposal and extract its intents against the use cases;
@@ -30,13 +30,18 @@ public static class Cli
                                                         answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
                                                         resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
           derive <P>                                    derive the pending proofs of the approved intents
+          derive --usecases [UC-003,UC-016]             derive proofs straight from the established use cases (default:
+                                                        every use case with no passed proof) into .lastro/proof/
           prove [<P>] [<assembly.dll> --export <Namespace.Type.Method>] [--stream]
                                                         run its proofs and every use case's proofs (regression);
                                                         writes the receipt next to the proposal
+          prove --usecases [<assembly.dll> --export <Namespace.Type.Method>]
+                                                        run the use cases' pending proofs with every passed one; a pending
+                                                        proof that passes becomes a regression test
           feedback <P>                                  the last run's failures, as a brief for whoever writes the code
-          apply <P>                                     attach the proofs to their use cases and sync .lastro/usecases/
+          apply <P>                                     write the proofs to .lastro/proof/ and sync .lastro/usecases/
           regress [<assembly.dll> --export <Namespace.Type.Method>]
-                                                        run every use case's proofs alone
+                                                        run every use case's passed proofs alone
 
           <P> is a proposal id (P-001, or 1) or slug; without it, the latest open proposal.
           --dir <path>          workspace (default .lastro)
@@ -162,11 +167,47 @@ public static class Cli
         private static IEnumerable<string> JsonFiles(string dir) =>
             Directory.Exists(dir) ? Directory.GetFiles(dir, "*.json").Select(Path.GetFileName).OrderBy(f => f, StringComparer.Ordinal)!.Cast<string>() : [];
 
-        public List<UseCase> UseCases() => JsonFiles(File("usecases")).Select(f => ReadJson<UseCase>(File("usecases", f))).ToList();
+        /// <summary>Every proof file in .lastro/proof/, with the file it came from.</summary>
+        public List<(string File, ProofEntry Proof)> ProofFiles() =>
+            JsonFiles(File("proof")).Select(f => (File("proof", f), ReadJson<ProofEntry>(File("proof", f)))).ToList();
 
-        public void WriteUseCase(UseCase u) => WriteJson(File("usecases", Proposals.FileNameOf(u.Id, u.Slug)), u);
+        /// <summary>
+        /// The use cases, each with its proofs from .lastro/proof/. A use case file that still carries a <c>proofs</c>
+        /// list (written before proofs had their own files) is read as before; a proof file with the same id wins.
+        /// </summary>
+        public List<UseCase> UseCases()
+        {
+            var files = ProofFiles().Select(x => x.Proof).ToList();
+            return JsonFiles(File("usecases")).Select(f =>
+            {
+                var u = ReadJson<UseCase>(File("usecases", f));
+                var own = files.Where(x => x.UseCase == u.Id).ToList();
+                var ids = own.Select(x => x.Id).ToHashSet(StringComparer.Ordinal);
+                u.Proofs = [.. u.Proofs.Where(x => !ids.Contains(x.Id)), .. own];
+                return u;
+            }).ToList();
+        }
 
-        public void RemoveUseCase(UseCase u) => System.IO.File.Delete(File("usecases", Proposals.FileNameOf(u.Id, u.Slug)));
+        /// <summary>Writes a use case without its proofs, each proof to its own file, and deletes the files of proofs it no longer has.</summary>
+        public void WriteUseCase(UseCase u)
+        {
+            WriteJson(File("usecases", Proposals.FileNameOf(u.Id, u.Slug)), Obj(("id", u.Id), ("slug", u.Slug), ("name", u.Name), ("description", u.Description),
+                ("history", LastroJson.ToNode(u.History))));
+            var keep = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var pr in u.Proofs)
+            {
+                var path = File("proof", Proposals.FileNameOf(pr.Id, pr.Slug));
+                keep.Add(path);
+                WriteJson(path, pr);
+            }
+            foreach (var x in ProofFiles().Where(x => x.Proof.UseCase == u.Id && !keep.Contains(x.File))) System.IO.File.Delete(x.File);
+        }
+
+        public void RemoveUseCase(UseCase u)
+        {
+            System.IO.File.Delete(File("usecases", Proposals.FileNameOf(u.Id, u.Slug)));
+            foreach (var x in ProofFiles().Where(x => x.Proof.UseCase == u.Id)) System.IO.File.Delete(x.File);
+        }
 
         public List<Proposal> All() => JsonFiles(File("proposals")).Select(f => ReadJson<Proposal>(File("proposals", f))).ToList();
 
@@ -391,11 +432,12 @@ public static class Cli
             {
                 case "init":
                 {
-                    if (!args.Flags.TryGetValue("model", out var modelPath)) throw new ExitException(2, Obj(("error", "init needs --model <model.json>")));
-                    var model = ReadJson<Model>(Path.GetFullPath(modelPath));
+                    // Without --model the workspace starts empty: proposals can be written and reviewed, and a bootstrap brings models later.
+                    var model = args.Flags.TryGetValue("model", out var modelPath) && modelPath != "true" ? ReadJson<Model>(Path.GetFullPath(modelPath)) : null;
+                    if (model is null && args.Flags.TryGetValue("subject", out var subj) && subj != "true") throw new ExitException(2, Obj(("error", "--subject needs --model <model.json>")));
                     var cfg = ws.Exists ? ws.Config() : new Config();
-                    cfg.Models[model.Name] = model;
-                    if (args.Flags.TryGetValue("subject", out var s) && s != "true")
+                    if (model is not null) cfg.Models[model.Name] = model;
+                    if (model is not null && args.Flags.TryGetValue("subject", out var s) && s != "true")
                     {
                         var hash = s.IndexOf('#');
                         var reference = Obj(("module", hash < 0 ? s : s[..hash]));
@@ -456,8 +498,13 @@ public static class Cli
                         var all = ws.All();
                         var list = new JsonArray([.. all.Select(p => (JsonNode)Obj(("id", p.Id), ("slug", p.Slug), ("name", p.Name), ("status", p.Status), ("pending", Proposals.Pending(p).Count)))]);
                         var open = all.Count(p => p.Status is not ("applied" or "closed"));
-                        return (open > 0 ? 1 : 0, Obj(("status", "status"), ("useCases", useCases.Count), ("proofs", useCases.Sum(u => u.Proofs.Count)),
-                            ("unproved", Strings(useCases.Where(u => u.Proofs.Count == 0).Select(u => u.Id))), ("proposals", list)));
+                        var body = Obj(("status", "status"), ("useCases", useCases.Count), ("proofs", useCases.Sum(u => Proposals.PassedProofs(u).Count)));
+                        var proofs = useCases.SelectMany(u => u.Proofs).ToList();
+                        if (proofs.Where(x => x.Status == "pending").Select(x => x.Id).ToList() is { Count: > 0 } pending) body["pendingProofs"] = Strings(pending);
+                        if (proofs.Where(x => x.Status == "failed").Select(x => x.Id).ToList() is { Count: > 0 } failed) body["failedProofs"] = Strings(failed);
+                        body["unproved"] = Strings(useCases.Where(u => Proposals.PassedProofs(u).Count == 0).Select(u => u.Id));
+                        body["proposals"] = list;
+                        return (open > 0 ? 1 : 0, body);
                     }
                     var one = ws.Proposal(reference);
                     return (Proposals.Pending(one).Count == 0 ? 0 : 1, With(Obj(("status", "status")), Summary(one, useCases)));
@@ -503,6 +550,38 @@ public static class Cli
                     }
                     ws.WriteProposal(p);
                     return (0, With(Obj(("status", "reviewed"), ("reviewer", who)), Summary(p, useCases)));
+                }
+                case "derive" when args.Flags.TryGetValue("usecases", out var ucFlag):
+                {
+                    var cfg = ws.Config();
+                    var useCases = ws.UseCases();
+                    var ids = Proposals.IsUseCaseList(ucFlag) ? ucFlag.Split(',').Select(x => x.Trim()).ToList() : null;
+                    var d = await Proposals.DeriveUseCasesAsync(PickAsk(args, ws.Dir), useCases, ids, Setup(cfg)).ConfigureAwait(false);
+                    foreach (var u in d.UseCases) ws.WriteUseCase(u);
+                    if (d.UseCases.Count == 0) return (0, Obj(("status", "nothing-to-derive"), ("note", "every use case has passed proofs")));
+                    var list = new JsonArray();
+                    foreach (var u in d.UseCases)
+                    {
+                        var mine = d.Derived.Where(x => x.UseCase == u.Id).ToList();
+                        if (mine.Count == 0) continue;
+                        list.Add(Obj(("id", u.Id), ("name", u.Name), ("proofs", new JsonArray([.. mine.Select(x => (JsonNode)Obj(("id", x.Id), ("description", x.Description), ("kind", x.Check.Kind)))]))));
+                    }
+                    var unprovable = new JsonArray([.. d.Unprovable.Select(x => (JsonNode)Obj(("useCase", x.UseCase), ("reason", x.Reason)))]);
+                    return (0, Obj(("status", "derived"), ("useCases", list), ("unprovable", unprovable), ("next", "lastro prove --usecases")));
+                }
+                case "prove" when args.Flags.TryGetValue("usecases", out var ucFlag):
+                {
+                    var cfg = ws.Config();
+                    var files = ucFlag.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ? [ucFlag, .. rest] : rest;
+                    var (changed, run) = await Proposals.ProveUseCasesAsync(ws.UseCases(), new RunOptions(SubjectsOf(args, files, cfg, ws, null), cfg.Models, RustProver.Locate())).ConfigureAwait(false);
+                    foreach (var u in changed) ws.WriteUseCase(u);
+                    var body = Obj(("status", run.Ok ? "passed" : "failed"), ("ok", run.Ok), ("enginesAgree", run.EnginesAgree is { } ea ? JsonValue.Create(ea) : null),
+                        ("passed", Strings(run.Outcomes.Where(x => x.Role == "usecase" && x.Passed).Select(x => x.Proof))),
+                        ("failed", Strings(run.Failed)), ("regressions", Strings(run.Regressions)),
+                        ("failures", new JsonArray([.. run.Outcomes.Where(x => !x.Passed).Select(x => LastroJson.ToNode(x))])),
+                        ("unproved", Strings(run.Unproved)));
+                    if (run.Note is { } note) body["note"] = note;
+                    return (run.Ok ? 0 : 1, body);
                 }
                 case "derive":
                 {

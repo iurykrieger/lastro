@@ -162,8 +162,12 @@ func TestGoCLIAlone(t *testing.T) {
 	}
 	var u lastro.UseCase
 	must(0, readJSON(filepath.Join(dir, ".lastro", "usecases", "UC-001-charge-shipping.json"), &u))
-	if len(u.Proofs) != 4 || !reflect.DeepEqual(u.History, []string{"P-001"}) {
+	if len(u.Proofs) != 0 || !reflect.DeepEqual(u.History, []string{"P-001"}) {
 		t.Fatal(u)
+	}
+	// Each proof has its own file in .lastro/proof/.
+	if files, _ := filepath.Glob(filepath.Join(dir, ".lastro", "proof", "P-001.PF-0*.json")); len(files) != 4 {
+		t.Fatal(files)
 	}
 	if code, body := goCLI(t, ws, "regress", "--table", bad); code != 1 || !reflect.DeepEqual(ids(body["regressions"]), []string{"P-001.PF-01"}) {
 		t.Fatal(body)
@@ -328,5 +332,36 @@ for await (const line of createInterface({ input: process.stdin })) process.stdo
 	same("status after apply", a, b)
 	if code, body := goCLI(t, ws, "regress", "--cmd", subject("shipping.mjs")); code != 0 || len(body["failures"].([]any)) != 0 {
 		t.Fatal(body)
+	}
+
+	// Proofs straight from an established use case: both CLIs ask the same derive question, the TS CLI writes
+	// the pending proof to .lastro/proof/, and the Go CLI proves it.
+	write(t, filepath.Join(lastroDir, "usecases", "UC-002-members-ship-free.json"), obj{{"id", "UC-002"}, {"slug", "members-ship-free"}, {"name", "Members ship free"}, {"description", "A member never pays shipping."}, {"history", []string{}}})
+	_, tsBody = ts("derive", "--usecases")
+	_, goBody = goCLI(t, ws, "derive", "--usecases")
+	same("the derive --usecases handoff", tsBody, goBody)
+	write(t, tsBody["answer"].(string), map[string]any{
+		"proofs": []map[string]any{{"useCase": "UC-002", "slug": "members-free", "name": "Members free", "description": "A member never pays shipping.", "model": "shipping_fee", "subject": "shipping_fee",
+			"kind": "clause", "requires": `{"var":"in.member"}`, "ensures": `{"op":"eq","args":[{"var":"out.fee"},{"const":0}]}`, "assumptions": []string{}, "inputJson": "", "expect": ""}},
+		"unprovable": []any{},
+	})
+	if code, body := ts("derive", "--usecases"); code != 0 {
+		t.Fatal(body)
+	}
+	_, a = ts("status")
+	_, b = goCLI(t, ws, "status")
+	same("status with a pending use-case proof", a, b)
+	if !reflect.DeepEqual(ids(b["pendingProofs"]), []string{"UC-002.PF-01"}) {
+		t.Fatal(b)
+	}
+	code, goBody = goCLI(t, ws, "prove", "--usecases", "--cmd", subject("shipping.mjs"))
+	if code != 0 || !reflect.DeepEqual(ids(goBody["passed"]), []string{"UC-002.PF-01"}) {
+		t.Fatal(goBody)
+	}
+	_, a = ts("status")
+	_, b = goCLI(t, ws, "status")
+	same("status after prove --usecases", a, b)
+	if code, body := ts("derive", "--usecases", "UC-002"); code != 1 {
+		t.Fatalf("a proven use case is refused: %v", body)
 	}
 }

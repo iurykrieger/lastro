@@ -1,0 +1,38 @@
+{
+  "id": "UC-025.PF-04",
+  "slug": "ok-needs-both-engines",
+  "name": "The proof is ok only when both engines agree and pass",
+  "description": "The proof is ok exactly when the SDK report is ok, the prover is ok and both engines give every clause the same verdict.",
+  "useCase": "UC-025",
+  "model": "crosscheck",
+  "subject": "crosscheck",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.ok"
+        },
+        {
+          "op": "and",
+          "args": [
+            {
+              "var": "out.sdkOk"
+            },
+            {
+              "var": "out.rustOk"
+            },
+            {
+              "var": "out.agree"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

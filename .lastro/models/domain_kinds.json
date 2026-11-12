@@ -1,0 +1,34 @@
+{
+  "name": "domain_kinds",
+  "inputs": {
+    "kind": {
+      "type": "enum",
+      "values": [
+        "bool",
+        "enum",
+        "int-bounded",
+        "int-unbounded",
+        "string"
+      ]
+    },
+    "hasOutputs": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "finite": {
+      "type": "bool"
+    },
+    "size": {
+      "type": "int",
+      "min": 0,
+      "max": 10
+    },
+    "sortedOrder": {
+      "type": "bool"
+    },
+    "rejected": {
+      "type": "bool"
+    }
+  }
+}

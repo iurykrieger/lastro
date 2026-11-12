@@ -1,0 +1,38 @@
+{
+  "id": "UC-032.PF-02",
+  "slug": "unknown-heading",
+  "name": "An unknown heading is an error",
+  "description": "An unknown heading is an error (exit 2).",
+  "useCase": "UC-032",
+  "model": "section",
+  "subject": "section",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.heading"
+        },
+        {
+          "const": "unknown"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.exit"
+        },
+        {
+          "const": 2
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

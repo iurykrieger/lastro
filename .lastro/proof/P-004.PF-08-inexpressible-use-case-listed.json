@@ -1,0 +1,88 @@
+{
+  "id": "P-004.PF-08",
+  "slug": "inexpressible-use-case-listed",
+  "name": "A use case the models cannot express is listed",
+  "description": "A target use case the models cannot express gets no proof and is listed as unprovable.",
+  "intent": "P-004.I-08",
+  "useCase": "UC-054",
+  "model": "usecase_derive",
+  "subject": "usecase_derive",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.unprovable"
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "var": "in.hasPassed"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "or",
+                      "args": [
+                        {
+                          "op": "not",
+                          "args": [
+                            {
+                              "var": "in.explicit"
+                            }
+                          ]
+                        },
+                        {
+                          "var": "in.listed"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.expressible"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "var": "out.unprovable"
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.derived"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

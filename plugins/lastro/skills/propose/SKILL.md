@@ -6,7 +6,7 @@ description: Turn a requested change into a Lastro proposal the user reviews lik
 # Propose a change through Lastro
 
 In this repository **the intents are the code review**. The application is its list of use cases
-(`.lastro/usecases/`), each with the proofs that keep it working. Every change is a **proposal**: prose whose
+(`.lastro/usecases/`), each with the proofs that keep it working (`.lastro/proof/`). Every change is a **proposal**: prose whose
 **intents** add, change or remove use cases. You write the proposal; the LLM that extracts the intents is their
 author; the user is the reviewer. They review intents the way they would review a pull request, before any code
 exists. You never approve, answer or amend on their behalf. Code edits stay blocked until the proposal is approved

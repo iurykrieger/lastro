@@ -1,0 +1,62 @@
+{
+  "id": "UC-020.PF-03",
+  "slug": "traces-alone-evidence",
+  "name": "Traces alone give evidence",
+  "description": "With traces but no code under proof, a clause that holds on every applicable trace is evidenced with the rule-of-three bound.",
+  "useCase": "UC-020",
+  "model": "trace_check",
+  "subject": "trace_check",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.subject"
+            },
+            {
+              "const": "none"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.trace"
+            },
+            {
+              "const": "holds"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "evidenced"
+            }
+          ]
+        },
+        {
+          "var": "out.ruleOfThree"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

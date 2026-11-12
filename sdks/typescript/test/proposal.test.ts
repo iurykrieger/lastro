@@ -378,7 +378,9 @@ test("cli: propose → review → derive → prove → apply → regress, LLM st
   assert.equal(r.code, 0, JSON.stringify(r.body));
   assert.deepEqual(r.body.written, ["UC-001"]);
   const uc = JSON.parse(readFileSync(join(dir, ".lastro", "usecases", "UC-001-charge-shipping.json"), "utf8")) as UseCase;
-  assert.deepEqual(uc.proofs.map((x) => x.id), ["P-001.PF-01", "P-001.PF-02", "P-001.PF-03", "P-001.PF-04"]);
+  assert.equal("proofs" in uc, false);
+  const proofFiles = readdirSync(join(dir, ".lastro", "proof")).sort();
+  assert.deepEqual(proofFiles.map((f) => f.match(/^P-\d+\.PF-\d+/)![0]), ["P-001.PF-01", "P-001.PF-02", "P-001.PF-03", "P-001.PF-04"]);
   assert.match(readFileSync(join(dir, ".lastro", "proposals", "P-001-shipping-fee.receipt.md"), "utf8"), /Status: \*\*applied\*\*/);
 
   assert.equal((await cli(["regress", ...ws])).code, 0);

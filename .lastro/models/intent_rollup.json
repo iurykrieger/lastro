@@ -1,0 +1,59 @@
+{
+  "name": "intent_rollup",
+  "inputs": {
+    "coverage": {
+      "type": "enum",
+      "values": [
+        "none",
+        "proved",
+        "evidenced",
+        "violated",
+        "vacuous"
+      ]
+    },
+    "scenario": {
+      "type": "enum",
+      "values": [
+        "none",
+        "passed",
+        "failed"
+      ]
+    },
+    "assumption": {
+      "type": "bool"
+    },
+    "beyond": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "verdict": {
+      "type": "enum",
+      "values": [
+        "proved",
+        "proved-under-assumptions",
+        "evidenced",
+        "violated",
+        "beyond-proof",
+        "gap"
+      ]
+    },
+    "confidence": {
+      "type": "enum",
+      "values": [
+        "zero",
+        "one",
+        "partial"
+      ]
+    },
+    "trusted": {
+      "type": "bool"
+    },
+    "notes": {
+      "type": "bool"
+    },
+    "reportOk": {
+      "type": "bool"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "UC-031.PF-02",
+  "slug": "answer-used",
+  "name": "An existing answer file is used",
+  "description": "When the answer file exists, the CLI uses it and does not ask again.",
+  "useCase": "UC-031",
+  "model": "handoff",
+  "subject": "handoff",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.answered"
+    },
+    "ensures": {
+      "op": "neq",
+      "args": [
+        {
+          "var": "out.exit"
+        },
+        {
+          "const": 3
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

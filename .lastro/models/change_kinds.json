@@ -1,0 +1,41 @@
+{
+  "name": "change_kinds",
+  "inputs": {
+    "first": {
+      "type": "enum",
+      "values": [
+        "modify",
+        "remove"
+      ]
+    },
+    "second": {
+      "type": "enum",
+      "values": [
+        "none",
+        "modify",
+        "remove"
+      ]
+    },
+    "options": {
+      "type": "int",
+      "min": 0,
+      "max": 5
+    },
+    "recommended": {
+      "type": "int",
+      "min": -1,
+      "max": 5
+    }
+  },
+  "outputs": {
+    "refused": {
+      "type": "bool"
+    },
+    "mixDecision": {
+      "type": "bool"
+    },
+    "llmDecision": {
+      "type": "bool"
+    }
+  }
+}

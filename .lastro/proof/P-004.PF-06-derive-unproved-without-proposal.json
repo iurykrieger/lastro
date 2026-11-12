@@ -1,0 +1,70 @@
+{
+  "id": "P-004.PF-06",
+  "slug": "derive-unproved-without-proposal",
+  "name": "Unproved use cases get proofs without a proposal",
+  "description": "Without ids, every use case with no passed proof that the models express gets a proof, with no proposal.",
+  "intent": "P-004.I-06",
+  "useCase": "UC-054",
+  "model": "usecase_derive",
+  "subject": "usecase_derive",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "not",
+      "args": [
+        {
+          "var": "in.explicit"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.needsProposal"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.refused"
+            }
+          ]
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.derived"
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.hasPassed"
+                    }
+                  ]
+                },
+                {
+                  "var": "in.expressible"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

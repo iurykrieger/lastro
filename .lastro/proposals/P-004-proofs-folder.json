@@ -1,0 +1,1309 @@
+{
+  "lastro": "proposal/v1",
+  "id": "P-004",
+  "slug": "proofs-folder",
+  "name": "Keep proofs in .lastro/proof and derive them from the established use cases",
+  "description": "Proofs move out of the use case files into one file each under .lastro/proof/, and lastro derive --usecases derives proofs straight from the reviewed use cases, without a proposal.",
+  "status": "applied",
+  "submittedBy": "claude",
+  "prose": "# Keep proofs in .lastro/proof and derive them from the established use cases\n\n## Where proofs live\n\nEvery proof that belongs to a use case lives in its own file, `.lastro/proof/<proof-id>-<slug>.json`, with its id,\nslug, name, description, use case, model, subject, check, status and verdict, and the intent and proposal it came\nfrom when it came from one. Use case files no longer carry the proofs: the workspace finds a use case's proofs by\ntheir `useCase` field. Apply writes each passing proof of the proposal to `.lastro/proof/` and deletes the files of\nthe proofs the proposal supersedes. A use case file that still carries a `proofs` list is read as before, and its\nproofs move to `.lastro/proof/` the next time the workspace writes that use case. The TypeScript, Go and .NET\nworkspaces read and write the same files.\n\n## Proofs from the established use cases\n\nA use case already describes, and people already reviewed, what the code does. `lastro derive --usecases` derives\nproofs straight from those descriptions, with no proposal and no intents: by default for every use case that has no\nproofs, or for the ids it is given (`--usecases UC-003,UC-016`). The derive step reads each use case's description,\nthe models and subjects declared in `.lastro/config.json` and the proofs other use cases already have, and writes\npending proofs numbered inside their use case (`UC-003.PF-01`). A use case the models cannot express gets no proof\nand is listed as unprovable with the reason, so a model can be added for it. A use case that already has proofs is\nrefused: its proofs change only through a proposal.\n\n`lastro prove --usecases` runs the pending proofs of the use cases together with every passed proof. A pending\nproof that passes becomes passed and from then on runs as a regression test, in `prove` and in `lastro regress`. A\npending proof that fails stays failed and is reported with the note that the code is the reference: either the\ndescription is wrong, and a proposal fixes it, or the code has a bug the user decides about. It never goes back to\nthe code as feedback.",
+  "baseline": "sha256:3010925e700e5dba481b172a4b3ec4b5147b1cf1331f7197fcb3dabc48ccdc6e",
+  "intents": [
+    {
+      "id": "P-004.I-01",
+      "slug": "proof-file-per-proof",
+      "name": "One file per proof in .lastro/proof",
+      "description": "Every proof of a use case is stored in its own file, .lastro/proof/<proof-id>-<slug>.json, with its id, slug, name, description, use case, model, subject, check, status, verdict, and its intent and proposal when it has them.",
+      "change": "modify",
+      "useCase": "UC-049",
+      "provability": "empirical",
+      "source": {
+        "quote": "Every proof that belongs to a use case lives in its own file, `.lastro/proof/<proof-id>-<slug>.json`",
+        "start": 101,
+        "end": 201
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-02",
+      "slug": "use-case-files-without-proofs",
+      "name": "Use case files no longer carry proofs",
+      "description": "Use case files are written without a proofs list; the workspace finds a use case's proofs by their useCase field.",
+      "change": "modify",
+      "useCase": "UC-046",
+      "provability": "empirical",
+      "source": {
+        "quote": "Use case files no longer carry the proofs: the workspace finds a use case's proofs by\ntheir `useCase` field.",
+        "start": 358,
+        "end": 466
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-03",
+      "slug": "old-use-case-files-move",
+      "name": "Old use case files move their proofs",
+      "description": "A use case file that still has a proofs list is read as before; its proofs move to .lastro/proof/ the next time that use case is written.",
+      "change": "modify",
+      "useCase": "UC-046",
+      "provability": "empirical",
+      "source": {
+        "quote": "A use case file that still carries a `proofs` list is read as before, and its\nproofs move to `.lastro/proof/` the next time the workspace writes that use case.",
+        "start": 596,
+        "end": 755
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-04",
+      "slug": "apply-writes-proof-files",
+      "name": "Apply writes and deletes proof files",
+      "description": "apply writes each passing proof of the proposal to .lastro/proof/ and deletes the files of the proofs it supersedes.",
+      "change": "modify",
+      "useCase": "UC-050",
+      "provability": "empirical",
+      "source": {
+        "quote": "Apply writes each passing proof of the proposal to `.lastro/proof/` and deletes the files of\nthe proofs the proposal supersedes.",
+        "start": 467,
+        "end": 595
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-05",
+      "slug": "three-sdks-share-proof-folder",
+      "name": "The three SDKs share .lastro/proof",
+      "description": "The TypeScript, Go and .NET workspaces read and write the same .lastro/proof/ files.",
+      "change": "modify",
+      "useCase": "UC-036",
+      "provability": "empirical",
+      "source": {
+        "quote": "The TypeScript, Go and .NET\nworkspaces read and write the same files.",
+        "start": 756,
+        "end": 825
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-06",
+      "slug": "derive-from-use-cases",
+      "name": "Derive proofs from the established use cases",
+      "description": "lastro derive --usecases derives proofs from use case descriptions, with no proposal and no intents, for every use case without proofs or for the ids given.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "empirical",
+      "source": {
+        "quote": "`lastro derive --usecases` derives\nproofs straight from those descriptions, with no proposal and no intents",
+        "start": 948,
+        "end": 1055
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-07",
+      "slug": "use-case-proof-ids",
+      "name": "Proofs numbered inside their use case",
+      "description": "Proofs derived from a use case are pending and numbered inside it, UC-003.PF-01, reading the description, the declared models and subjects and the other use cases' proofs.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "formal",
+      "source": {
+        "quote": "writes\npending proofs numbered inside their use case (`UC-003.PF-01`)",
+        "start": 1322,
+        "end": 1391
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-08",
+      "slug": "unprovable-use-cases-listed",
+      "name": "Use cases the models cannot express are listed",
+      "description": "A use case the declared models cannot express gets no proof and is listed as unprovable with the reason.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "empirical",
+      "source": {
+        "quote": "A use case the models cannot express gets no proof\nand is listed as unprovable with the reason",
+        "start": 1393,
+        "end": 1487
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-09",
+      "slug": "proven-use-cases-refused",
+      "name": "Use cases with proofs are refused",
+      "description": "derive --usecases refuses a use case that already has proofs; those change only through a proposal.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "formal",
+      "source": {
+        "quote": "A use case that already has proofs is\nrefused: its proofs change only through a proposal.",
+        "start": 1521,
+        "end": 1610
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-10",
+      "slug": "prove-use-case-proofs",
+      "name": "Prove the use cases' pending proofs",
+      "description": "lastro prove --usecases runs the pending use case proofs with every passed proof; a pending proof that passes becomes a regression test in prove and regress.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "formal",
+      "source": {
+        "quote": "A pending\nproof that passes becomes passed and from then on runs as a regression test",
+        "start": 1713,
+        "end": 1798
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    },
+    {
+      "id": "P-004.I-11",
+      "slug": "failed-use-case-proof-goes-to-user",
+      "name": "A failing use case proof goes to the user",
+      "description": "A pending use case proof that fails stays failed and is reported with the note that the code is the reference; it never goes back to the code as feedback.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "empirical",
+      "source": {
+        "quote": "A\npending proof that fails stays failed and is reported with the note that the code is the reference",
+        "start": 1836,
+        "end": 1936
+      },
+      "replaces": [],
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
+    }
+  ],
+  "useCases": [
+    {
+      "useCase": "UC-049",
+      "slug": "keep-proofs-in-use-cases",
+      "change": "modify",
+      "name": "Keep proofs as regression tests",
+      "before": "A proof that passed belongs to its use case, stored in the use case's file with its id, the intent and proposal it came from, its model, subject and check. prove(proposal) runs the proposal's pending proofs and the proofs of every use case except the ones the proposal supersedes, so a change that breaks any use case fails as a regression, on a touched use case or not; a superseded proof that still passes is noted, since the behavior may not have changed; failures go back to the implementer through feedback. lastro regress runs every use case's proofs alone, for example in CI. A use case with no proofs yet is reported as unproved rather than failing.",
+      "after": "A proof that passed belongs to its use case, stored in its own file, .lastro/proof/<proof-id>-<slug>.json, with its id, slug, name, description, use case, model, subject, check, status and verdict, and the intent and proposal it came from when it came from one; the workspace finds a use case's proofs by their useCase field. Only passed proofs run as regression tests; a pending or failed proof derived from a use case does not. prove(proposal) runs the proposal's pending proofs and the proofs of every use case except the ones the proposal supersedes, so a change that breaks any use case fails as a regression, on a touched use case or not; a superseded proof that still passes is noted, since the behavior may not have changed; failures go back to the implementer through feedback. lastro regress runs every use case's proofs alone, for example in CI. A use case with no proofs yet is reported as unproved rather than failing.",
+      "intents": [
+        "P-004.I-01"
+      ]
+    },
+    {
+      "useCase": "UC-046",
+      "slug": "store-use-cases-and-proposals",
+      "change": "modify",
+      "name": "Store use cases and proposals",
+      "before": "The workspace keeps one file per entity: each use case in .lastro/usecases/<id>-<slug>.json (id, slug, name, description, proofs, history) and each proposal in .lastro/proposals/<id>-<slug>.json, with its receipt next to it. Use cases are numbered UC-001, UC-002... and proposals P-001, P-002... with the next free number, never reused even after a removal; intents and proofs are numbered inside their proposal (P-007.I-03, P-007.PF-05) and keep that id when a proof moves to its use case. Slugs are kebab-case and stable: a rename changes only the name. intents.json, spec.json and proof.json are no longer written.",
+      "after": "The workspace keeps one file per entity: each use case in .lastro/usecases/<id>-<slug>.json (id, slug, name, description, history), each proof of a use case in .lastro/proof/<proof-id>-<slug>.json and each proposal in .lastro/proposals/<id>-<slug>.json, with its receipt next to it. Use cases are numbered UC-001, UC-002... and proposals P-001, P-002... with the next free number, never reused even after a removal; intents and proofs are numbered inside their proposal (P-007.I-03, P-007.PF-05) and keep that id when a proof moves to its use case; proofs derived straight from a use case are numbered inside it (UC-003.PF-01). Slugs are kebab-case and stable: a rename changes only the name. intents.json, spec.json and proof.json are no longer written. A use case file that still carries a proofs list is read as before, and its proofs move to .lastro/proof/ the next time the workspace writes that use case.",
+      "intents": [
+        "P-004.I-02",
+        "P-004.I-03"
+      ]
+    },
+    {
+      "useCase": "UC-050",
+      "slug": "apply-proposal",
+      "change": "modify",
+      "name": "Apply a proposal",
+      "before": "apply(proposal), in the library and as lastro apply <proposal>, refuses unless the proposal is approved, unchanged since approval, has no open decision, and every proof, new and regression, passes. It then writes each resulting use case (adds the use case file, replaces the description and name, or deletes the file of a removed use case), moves each passing proof into its use case as a regression test, removes the superseded proofs, appends the proposal id to each touched use case's history, records the new baseline hash in the receipt and sets the proposal's status to applied.",
+      "after": "apply(proposal), in the library and as lastro apply <proposal>, refuses unless the proposal is approved, unchanged since approval, has no open decision, and every proof, new and regression, passes. It then writes each resulting use case (adds the use case file, replaces the description and name, or deletes the file of a removed use case), writes each passing proof to .lastro/proof/ as a regression test of its use case, deletes the files of the superseded proofs, appends the proposal id to each touched use case's history, records the new baseline hash in the receipt and sets the proposal's status to applied.",
+      "intents": [
+        "P-004.I-04"
+      ]
+    },
+    {
+      "useCase": "UC-036",
+      "slug": "share-workspace-across-sdks",
+      "change": "modify",
+      "name": "Share one workspace across CLIs",
+      "before": "The TypeScript, .NET and Go CLIs read and write the same .lastro/ files (config.json, usecases/, proposals/ and llm/), so one can propose, another review, and a third derive, prove and apply. A proposal approved by one SDK has a valid approval hash for the others, and proofs and baselines hash the same in all three.",
+      "after": "The TypeScript, .NET and Go CLIs read and write the same .lastro/ files (config.json, usecases/, proof/, proposals/ and llm/), so one can propose, another review, and a third derive, prove and apply. A proposal approved by one SDK has a valid approval hash for the others, and proofs and baselines hash the same in all three.",
+      "intents": [
+        "P-004.I-05"
+      ]
+    },
+    {
+      "useCase": "UC-054",
+      "slug": "derive-proofs-from-use-cases",
+      "change": "add",
+      "name": "Derive proofs from the established use cases",
+      "after": "lastro derive --usecases derives proofs straight from the established use cases, with no proposal and no intents: by default for every use case that has no proofs, or for the ids it is given (--usecases UC-003,UC-016). The derive step reads each use case's description, the models and subjects declared in .lastro/config.json and the proofs other use cases already have, and writes pending proofs numbered inside their use case (UC-003.PF-01) to .lastro/proof/. A use case the models cannot express gets no proof and is listed as unprovable with the reason. A use case that already has proofs is refused: its proofs change only through a proposal. lastro prove --usecases runs the pending proofs of the use cases together with every passed proof. A pending proof that passes becomes passed and from then on runs as a regression test, in prove and in lastro regress. A pending proof that fails stays failed and is reported with the note that the code is the reference: either the description is wrong, and a proposal fixes it, or the code has a bug the user decides about; it never goes back to the code as feedback.",
+      "intents": [
+        "P-004.I-06",
+        "P-004.I-07",
+        "P-004.I-08",
+        "P-004.I-09",
+        "P-004.I-10",
+        "P-004.I-11"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "slug": "review-derived-proofs",
+      "name": "Who accepts a proof derived from a use case",
+      "origin": "extraction",
+      "question": "Must a person approve each proof derived from a use case before it counts as a regression test, or is passing against the code enough?",
+      "options": [
+        {
+          "label": "A person approves each proof",
+          "consequence": "lastro review gains an approve step for use case proofs; a proof runs as a regression test only after it is approved and passes, so a proof that checks the wrong thing is caught by a reviewer."
+        },
+        {
+          "label": "Passing is enough",
+          "consequence": "A derived proof that passes becomes a regression test at once; a proof that checks too little or the wrong thing is only caught if someone reads .lastro/proof/."
+        }
+      ],
+      "recommended": 0,
+      "intents": [
+        "P-004.I-06",
+        "P-004.I-10"
+      ],
+      "chosen": 1,
+      "answeredBy": "iury"
+    }
+  ],
+  "threads": [],
+  "notPromised": [
+    "Proofs a proposal derived stay inside the proposal file until apply; only use case proofs live in .lastro/proof/.",
+    "derive --usecases writes no models or subjects: a use case it lists as unprovable needs a model added to .lastro/config.json first.",
+    "The usage of the other CLI commands (UC-030) changes."
+  ],
+  "policy": {
+    "approvals": 1,
+    "submitterCanApprove": true
+  },
+  "proofs": [
+    {
+      "id": "P-004.PF-01",
+      "slug": "proof-in-its-own-file",
+      "name": "A proof lives in its own file",
+      "description": "A use case's proof is read from its own complete file in .lastro/proof/.",
+      "intent": "P-004.I-01",
+      "useCase": "UC-049",
+      "model": "proof_files",
+      "subject": "proof_files",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.legacy"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.proofFiles"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            },
+            {
+              "var": "out.fileComplete"
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.loaded"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-004.PF-02",
+      "slug": "use-case-file-without-proofs",
+      "name": "Use case files carry no proofs",
+      "description": "A use case file written by the workspace has no proofs list.",
+      "intent": "P-004.I-02",
+      "useCase": "UC-046",
+      "model": "proof_files",
+      "subject": "proof_files",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "or",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.legacy"
+                }
+              ]
+            },
+            {
+              "var": "in.rewrite"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.embedded"
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-004.PF-03",
+      "slug": "legacy-proofs-move-on-write",
+      "name": "Old files keep their proofs and move them",
+      "description": "A use case file with a proofs list is read with its proof, which moves to .lastro/proof/ when the use case is written.",
+      "intent": "P-004.I-03",
+      "useCase": "UC-046",
+      "model": "proof_files",
+      "subject": "proof_files",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "var": "in.legacy"
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.loaded"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "var": "in.rewrite"
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.proofFiles"
+                        },
+                        {
+                          "const": 1
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "var": "out.embedded"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-004.PF-04",
+      "slug": "apply-writes-and-deletes-proof-files",
+      "name": "Apply writes and deletes proof files",
+      "description": "Apply writes the new passing proof's file and deletes the superseded proof's file, and only it.",
+      "intent": "P-004.I-04",
+      "useCase": "UC-050",
+      "model": "apply_proof_files",
+      "subject": "apply_proof_files",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "var": "out.applied"
+            },
+            {
+              "var": "out.newFile"
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.oldFile"
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.supersede"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-004.PF-05",
+      "slug": "shared-proof-layout-is-read",
+      "name": "The shared layout is read back",
+      "description": "Proof files in the shared .lastro/proof/ layout are read as the use case's proofs.",
+      "intent": "P-004.I-05",
+      "useCase": "UC-036",
+      "model": "proof_files",
+      "subject": "proof_files",
+      "check": {
+        "kind": "scenario",
+        "input": {
+          "legacy": false,
+          "rewrite": false
+        },
+        "expect": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.loaded"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.proofFiles"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "status": "passed",
+      "verdict": "evidenced",
+      "evidence": "empirical"
+    },
+    {
+      "id": "P-004.PF-06",
+      "slug": "derive-unproved-without-proposal",
+      "name": "Unproved use cases get proofs without a proposal",
+      "description": "Without ids, every use case with no passed proof that the models express gets a proof, with no proposal.",
+      "intent": "P-004.I-06",
+      "useCase": "UC-054",
+      "model": "usecase_derive",
+      "subject": "usecase_derive",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.explicit"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.needsProposal"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.refused"
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.derived"
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "var": "in.hasPassed"
+                        }
+                      ]
+                    },
+                    {
+                      "var": "in.expressible"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-004.PF-07",
+      "slug": "proofs-numbered-in-use-case",
+      "name": "Proofs are numbered inside the use case",
+      "description": "A derived proof is numbered after the use case's existing proofs (PF-01, or PF-02 after a pending one).",
+      "intent": "P-004.I-07",
+      "useCase": "UC-054",
+      "model": "usecase_derive",
+      "subject": "usecase_derive",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "implies",
+          "args": [
+            {
+              "var": "out.derived"
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.number"
+                },
+                {
+                  "op": "ite",
+                  "args": [
+                    {
+                      "var": "in.hasPending"
+                    },
+                    {
+                      "const": 2
+                    },
+                    {
+                      "const": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-004.PF-08",
+      "slug": "inexpressible-use-case-listed",
+      "name": "A use case the models cannot express is listed",
+      "description": "A target use case the models cannot express gets no proof and is listed as unprovable.",
+      "intent": "P-004.I-08",
+      "useCase": "UC-054",
+      "model": "usecase_derive",
+      "subject": "usecase_derive",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.unprovable"
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "not",
+                          "args": [
+                            {
+                              "var": "in.hasPassed"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "or",
+                          "args": [
+                            {
+                              "op": "not",
+                              "args": [
+                                {
+                                  "var": "in.explicit"
+                                }
+                              ]
+                            },
+                            {
+                              "var": "in.listed"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "var": "in.expressible"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "var": "out.unprovable"
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "out.derived"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-004.PF-09",
+      "slug": "proven-use-case-refused",
+      "name": "A use case with proofs is refused",
+      "description": "Naming a use case that has passed proofs is refused and derives nothing.",
+      "intent": "P-004.I-09",
+      "useCase": "UC-054",
+      "model": "usecase_derive",
+      "subject": "usecase_derive",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.refused"
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "var": "in.explicit"
+                    },
+                    {
+                      "var": "in.listed"
+                    },
+                    {
+                      "var": "in.hasPassed"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "var": "out.refused"
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "out.derived"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-004.PF-10",
+      "slug": "passing-use-case-proof-becomes-regression",
+      "name": "A passing proof becomes a regression test",
+      "description": "When the code satisfies it, a use case proof ends passed and runs in regress.",
+      "intent": "P-004.I-10",
+      "useCase": "UC-054",
+      "model": "usecase_prove",
+      "subject": "usecase_prove",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "var": "in.codeOk"
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.status"
+                },
+                {
+                  "const": "passed"
+                }
+              ]
+            },
+            {
+              "var": "out.regression"
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    },
+    {
+      "id": "P-004.PF-11",
+      "slug": "failing-use-case-proof-goes-to-user",
+      "name": "A failing use case proof goes to the user",
+      "description": "A pending or failed use case proof that fails ends failed, with the note, without feedback to the code.",
+      "intent": "P-004.I-11",
+      "useCase": "UC-054",
+      "model": "usecase_prove",
+      "subject": "usecase_prove",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.codeOk"
+                }
+              ]
+            },
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "in.status"
+                },
+                {
+                  "const": "passed"
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.status"
+                },
+                {
+                  "const": "failed"
+                }
+              ]
+            },
+            {
+              "var": "out.note"
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.feedback"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.ok"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.regression"
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    }
+  ],
+  "supersedes": [],
+  "hash": "sha256:eaf5f6470109208232387444fbd3634fa016bf3c6d4fe0a04543e09a7d02b7af",
+  "lastRun": {
+    "ok": true,
+    "outcomes": [
+      {
+        "proof": "P-004.PF-01",
+        "useCase": "UC-049",
+        "intent": "P-004.I-01",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-02",
+        "useCase": "UC-046",
+        "intent": "P-004.I-02",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-03",
+        "useCase": "UC-046",
+        "intent": "P-004.I-03",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-04",
+        "useCase": "UC-050",
+        "intent": "P-004.I-04",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-05",
+        "useCase": "UC-036",
+        "intent": "P-004.I-05",
+        "role": "proposal",
+        "verdict": "evidenced",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-06",
+        "useCase": "UC-054",
+        "intent": "P-004.I-06",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-07",
+        "useCase": "UC-054",
+        "intent": "P-004.I-07",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-08",
+        "useCase": "UC-054",
+        "intent": "P-004.I-08",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-09",
+        "useCase": "UC-054",
+        "intent": "P-004.I-09",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-10",
+        "useCase": "UC-054",
+        "intent": "P-004.I-10",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-11",
+        "useCase": "UC-054",
+        "intent": "P-004.I-11",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-04",
+        "useCase": "UC-001",
+        "intent": "P-001.I-08",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-05",
+        "useCase": "UC-001",
+        "intent": "P-001.I-10",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-06",
+        "useCase": "UC-002",
+        "intent": "P-001.I-12",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-07",
+        "useCase": "UC-002",
+        "intent": "P-001.I-13",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-08",
+        "useCase": "UC-005",
+        "intent": "P-001.I-15",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-11",
+        "useCase": "UC-007",
+        "intent": "P-001.I-21",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-13",
+        "useCase": "UC-007",
+        "intent": "P-001.I-20",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-14",
+        "useCase": "UC-007",
+        "intent": "P-001.I-22",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-12",
+        "useCase": "UC-009",
+        "intent": "P-001.I-23",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-16",
+        "useCase": "UC-009",
+        "intent": "P-001.I-24",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-17",
+        "useCase": "UC-010",
+        "intent": "P-001.I-25",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-18",
+        "useCase": "UC-013",
+        "intent": "P-001.I-28",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-26",
+        "useCase": "UC-039",
+        "intent": "P-001.I-40",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-01",
+        "useCase": "UC-046",
+        "intent": "P-001.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-02",
+        "useCase": "UC-046",
+        "intent": "P-001.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-03",
+        "useCase": "UC-046",
+        "intent": "P-001.I-04",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-09",
+        "useCase": "UC-047",
+        "intent": "P-001.I-17",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-10",
+        "useCase": "UC-047",
+        "intent": "P-001.I-18",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-15",
+        "useCase": "UC-048",
+        "intent": "P-001.I-19",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-19",
+        "useCase": "UC-049",
+        "intent": "P-001.I-30",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-20",
+        "useCase": "UC-049",
+        "intent": "P-001.I-31",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-21",
+        "useCase": "UC-049",
+        "intent": "P-001.I-32",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-22",
+        "useCase": "UC-049",
+        "intent": "P-001.I-33",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-23",
+        "useCase": "UC-050",
+        "intent": "P-001.I-34",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-24",
+        "useCase": "UC-050",
+        "intent": "P-001.I-35",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-25",
+        "useCase": "UC-050",
+        "intent": "P-001.I-36",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      }
+    ],
+    "regressions": [],
+    "replacedStillPass": [],
+    "unproved": [
+      "UC-003",
+      "UC-004",
+      "UC-006",
+      "UC-008",
+      "UC-011",
+      "UC-012",
+      "UC-014",
+      "UC-015",
+      "UC-016",
+      "UC-017",
+      "UC-018",
+      "UC-019",
+      "UC-020",
+      "UC-021",
+      "UC-022",
+      "UC-023",
+      "UC-024",
+      "UC-025",
+      "UC-026",
+      "UC-027",
+      "UC-028",
+      "UC-029",
+      "UC-030",
+      "UC-031",
+      "UC-032",
+      "UC-033",
+      "UC-034",
+      "UC-035",
+      "UC-037",
+      "UC-038",
+      "UC-040",
+      "UC-041",
+      "UC-042",
+      "UC-043",
+      "UC-044",
+      "UC-045"
+    ],
+    "enginesAgree": true
+  }
+}

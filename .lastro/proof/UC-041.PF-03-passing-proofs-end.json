@@ -1,0 +1,80 @@
+{
+  "id": "UC-041.PF-03",
+  "slug": "passing-proofs-end",
+  "name": "Passing proofs end the turn",
+  "description": "When the build and the proofs pass, the stop goes through.",
+  "useCase": "UC-041",
+  "model": "stop_hook",
+  "subject": "stop_hook",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "var": "in.derived"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.lastRun"
+                    },
+                    {
+                      "const": "passed"
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.dirty"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "var": "in.proves"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.buildFails"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.proved"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.block"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

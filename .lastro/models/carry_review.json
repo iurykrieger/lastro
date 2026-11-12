@@ -1,0 +1,28 @@
+{
+  "name": "carry_review",
+  "inputs": {
+    "sameChange": {
+      "type": "bool"
+    },
+    "sameUseCase": {
+      "type": "bool"
+    },
+    "wording": {
+      "type": "enum",
+      "values": [
+        "same",
+        "case",
+        "spacing",
+        "different"
+      ]
+    },
+    "reviewed": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "carried": {
+      "type": "bool"
+    }
+  }
+}

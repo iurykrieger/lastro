@@ -1,0 +1,8 @@
+{
+  "id": "UC-019",
+  "slug": "catch-vacuous-and-weak-clauses",
+  "name": "Catch clauses that prove nothing",
+  "description": "A clause whose if-part no run satisfies is vacuous. A clause that held is then tested against planted output mutants (negate each bool output, force each output with at most 16 values to each value, shift each int output by +1 and -1): if it rejects none, it is weak. Both are listed as spec gaps for the team, not code failures. The TypeScript engine keeps the formal or empirical evidence label on a weak clause while the Rust prover labels it none; verdicts are what the cross-check compares.",
+  "proofs": [],
+  "history": []
+}

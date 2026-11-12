@@ -1,0 +1,37 @@
+{
+  "name": "config_policy",
+  "inputs": {
+    "hasReview": {
+      "type": "bool"
+    },
+    "reviewApprovals": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "hasLegacy": {
+      "type": "bool"
+    },
+    "legacy": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "hasFlag": {
+      "type": "bool"
+    },
+    "flag": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "approvals": {
+      "type": "int",
+      "min": 1,
+      "max": 3
+    },
+    "submitterCanApprove": {
+      "type": "bool"
+    }
+  }
+}

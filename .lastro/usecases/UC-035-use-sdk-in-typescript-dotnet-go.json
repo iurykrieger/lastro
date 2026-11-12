@@ -1,0 +1,10 @@
+{
+  "id": "UC-035",
+  "slug": "use-sdk-in-typescript-dotnet-go",
+  "name": "Use Lastro from TypeScript, .NET or Go",
+  "description": "Three SDKs expose the same pipeline (propose against the use cases, review with threads, pending, derive, returnDecisions, prove with the regression run, apply, gap review) with the same entities (use case, proposal, intent, proof), wire format, canonical hashes, seeded sampling, verdicts, receipts and prompts. Cross-check tests compare the .NET and Go reports and hashes with the TypeScript SDK, and all three with the Rust prover, on the reference login and its planted bugs.",
+  "proofs": [],
+  "history": [
+    "P-001"
+  ]
+}

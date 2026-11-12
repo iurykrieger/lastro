@@ -1,0 +1,8 @@
+{
+  "id": "UC-023",
+  "slug": "mark-beyond-proof",
+  "name": "Mark where proof stops",
+  "description": "Beyond-proof items tie an intent to one of five reasons (external-code, world-facts, termination-timing, human-judgment, unstated) with a note. An intent with beyond-proof items and no useful clause gets the verdict beyond-proof, with notes and any passing scenarios as partial evidence. The receipt lists them under Where proof stops.",
+  "proofs": [],
+  "history": []
+}

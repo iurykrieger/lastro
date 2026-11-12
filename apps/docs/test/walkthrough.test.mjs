@@ -18,85 +18,93 @@ function lastro(cwd, ...args) {
   const env = { ...process.env };
   delete env.ANTHROPIC_API_KEY; // the walkthrough uses the handoff, never the API
   const r = spawnSync(process.execPath, [cli, ...args], { cwd, env, encoding: "utf8" });
-  return { code: r.status, body: JSON.parse(r.stdout) };
+  const text = r.stdout.trim().split(cwd).join("/home/you/shop");
+  return { code: r.status, body: JSON.parse(r.stdout), shown: JSON.parse(text) };
 }
 
 test("the quickstart runs as the docs show it", { skip: !existsSync(cli) && "build the TS SDK first: npm run build -w lastro" }, async () => {
+  const { OUT, RECEIPT, USECASE, STREAM } = await import("../src/content/outputs.ts");
+  const rust = existsSync(wasm);
+  // Without the WASM prover there is no cross-check, so only compare what does not depend on it.
+  const same = (real, key) => {
+    const strip = (o) => JSON.parse(JSON.stringify(o, (k, v) => (k === "enginesAgree" ? undefined : v)));
+    if (rust) assert.deepEqual(real, JSON.parse(OUT[key]), `OUT.${key} matches the real output`);
+    else assert.deepEqual(strip(real), strip(JSON.parse(OUT[key])), `OUT.${key} matches the real output`);
+  };
   const dir = mkdtempSync(join(tmpdir(), "lastro-docs-"));
   for (const f of ["model.json", "prose.md", "shipping.mjs", "shipping-buggy.mjs"]) copyFileSync(join(example, f), join(dir, f));
 
   let r = lastro(dir, "init", "--model", "model.json");
   assert.equal(r.code, 0);
-  assert.equal(r.body.status, "initialized");
-  assert.equal(r.body.requiredApprovals, 1);
+  same(r.shown, "init");
 
-  // plan: the extraction is handed off to the calling agent (exit 3), which writes the answer and runs plan again.
-  r = lastro(dir, "plan", "prose.md");
+  // propose: the extraction is handed off to the calling agent (exit 3), which writes the answer and runs propose again.
+  r = lastro(dir, "propose", "prose.md", "--as", "ana");
   assert.equal(r.code, 3);
   assert.equal(r.body.status, "needs-llm");
   assert.equal(r.body.step, "extract");
-  assert.match(r.body.request, /extract-6e77fe54fe3e\.request\.json$/, "the request id the docs show");
+  same(r.shown, "proposeNeedsLlm");
   const request = JSON.parse(readFileSync(r.body.request, "utf8"));
   assert.ok(request.system && request.user && request.schema, "the request carries instructions, data and a JSON Schema");
-  copyFileSync(join(example, "answers", "extract.json"), r.body.answer);
+  copyFileSync(join(example, "answers", "propose.json"), r.body.answer);
 
-  r = lastro(dir, "plan", "prose.md");
-  assert.equal(r.code, 1, "planned, but the review is pending");
-  assert.deepEqual(r.body.intents.map((i) => i.id), ["I1", "I2", "I3", "I4"]);
-  assert.equal(r.body.decisions[0].id, "D1");
-  assert.equal(r.body.ready, false);
+  r = lastro(dir, "propose", "prose.md", "--as", "ana");
+  assert.equal(r.code, 1, "proposed, but the review is pending");
+  same(r.shown, "proposed");
+  assert.ok(existsSync(join(dir, ".lastro", "proposals", "P-001-shipping-fee.json")));
 
-  r = lastro(dir, "review", "--as", "ana", "answer", "D1", "1");
+  r = lastro(dir, "review", "P-001", "--as", "ana", "answer", "D1", "1");
   assert.equal(r.code, 0);
-  assert.equal(r.body.decisions[0].chosen, 1);
-
-  r = lastro(dir, "review", "--as", "ana", "approve-all");
+  r = lastro(dir, "review", "P-001", "--as", "ana", "approve-all");
   assert.equal(r.code, 0);
-  assert.equal(r.body.ready, true);
-  assert.deepEqual(r.body.intents[0].approvals, ["ana"]);
+  same(r.shown, "reviewed");
 
-  r = lastro(dir, "spec");
+  r = lastro(dir, "derive", "P-001");
   assert.equal(r.code, 3);
   assert.equal(r.body.step, "derive");
-  assert.match(r.body.request, /derive-dca5b7ce966e\.request\.json$/);
-  copyFileSync(join(example, "answers", "derive.json"), r.body.answer);
-
-  r = lastro(dir, "spec");
+  same(r.shown, "deriveNeedsLlm");
+  copyFileSync(join(example, "answers", "proofs.json"), r.body.answer);
+  r = lastro(dir, "derive", "P-001");
   assert.equal(r.code, 0);
-  assert.equal(r.body.status, "spec");
-  assert.deepEqual(r.body.clauses.map((c) => c.id), ["C1", "C2", "C3"]);
-  assert.equal(r.body.beyondProof[0].intentId, "I4");
+  same(r.shown, "derived");
 
   // The buggy implementation: an order of exactly 100 still pays.
-  r = lastro(dir, "prove", "./shipping-buggy.mjs");
+  r = lastro(dir, "prove", "P-001", "./shipping-buggy.mjs");
   assert.equal(r.code, 1);
   assert.equal(r.body.status, "not-proved");
-  assert.equal(r.body.failures.length, 1);
-  assert.equal(r.body.failures[0].id, "C1");
-  assert.deepEqual(r.body.failures[0].input, { member: false, subtotal: 100 });
-  assert.deepEqual(r.body.failures[0].output, { fee: 15 });
-  if (existsSync(wasm)) assert.equal(r.body.enginesAgree, true);
+  assert.deepEqual(r.body.failures.map((f) => f.proof), ["P-001.PF-01"]);
+  assert.deepEqual(r.body.failures[0].counterexample, { input: { member: false, subtotal: 100 }, output: { fee: 15 } });
+  same(r.shown, "notProved");
 
   // --stream: the same run, one event per line, as the CLI page shows it.
-  const streamed = spawnSync(process.execPath, [cli, "prove", "./shipping-buggy.mjs", "--stream"], { cwd: dir, encoding: "utf8", env: { ...process.env, ANTHROPIC_API_KEY: "" } });
+  const streamed = spawnSync(process.execPath, [cli, "prove", "P-001", "./shipping-buggy.mjs", "--stream"], { cwd: dir, encoding: "utf8", env: { ...process.env, ANTHROPIC_API_KEY: "" } });
   assert.equal(streamed.status, 1);
-  const { STREAM } = await import("../src/content/outputs.ts");
   const shown = STREAM.split("\n").map((l) => JSON.parse(l));
   const real = streamed.stdout.trim().split(dir).join("/home/you/shop").split("\n").map((l) => JSON.parse(l));
-  if (existsSync(wasm)) assert.deepEqual(real, shown);
+  if (rust) assert.deepEqual(real, shown);
   else assert.deepEqual(real.filter((e) => e.event !== "crosscheck").map((e) => e.event), shown.filter((e) => e.event !== "crosscheck").map((e) => e.event));
 
-  r = lastro(dir, "feedback");
+  r = lastro(dir, "feedback", "P-001");
   assert.equal(r.code, 1);
-  assert.match(r.body.feedback, /counterexample: \{"member":false,"subtotal":100\} returned \{"fee":15\}/);
+  same(r.shown, "feedback");
 
-  r = lastro(dir, "prove", "./shipping.mjs");
+  r = lastro(dir, "prove", "P-001", "./shipping.mjs");
   assert.equal(r.code, 0);
   assert.equal(r.body.status, "proved");
-  assert.equal(r.body.feedback, "Every proof passes.");
-  const receipt = readFileSync(join(dir, ".lastro", "receipt.md"), "utf8");
-  assert.match(receipt, /Proved: 3 · Under assumptions: 0 · Evidenced: 0 · Beyond proof: 1/);
-  if (existsSync(wasm)) assert.match(receipt, /coverage 402\/402 inputs/);
+  same(r.shown, "proved");
+  const receipt = readFileSync(join(dir, ".lastro", "proposals", "P-001-shipping-fee.receipt.md"), "utf8").trim();
+  if (rust) assert.equal(receipt, RECEIPT);
+
+  r = lastro(dir, "apply", "P-001");
+  assert.equal(r.code, 0);
+  same(r.shown, "applied");
+  assert.equal(readFileSync(join(dir, ".lastro", "usecases", "UC-001-charge-shipping.json"), "utf8").trim(), USECASE);
+
+  r = lastro(dir, "status");
+  same(r.shown, "status");
+  r = lastro(dir, "regress", "./shipping.mjs");
+  assert.equal(r.code, 0);
+  same(r.shown, "regress");
 });
 
 test("the library example proves the same thing, with the same hashes", { skip: !existsSync(cli) && "build the TS SDK first: npm run build -w lastro" }, async () => {

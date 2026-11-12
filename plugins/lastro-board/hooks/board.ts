@@ -4,16 +4,15 @@ import type { Board, IntentRow, Phase, ProofRow } from '../types'
 
 export type Files = {
   config?: string
-  intents?: string
-  spec?: string
-  proof?: string
+  /** The current proposal: the latest .lastro/proposals/<id>-<slug>.json that is not applied or closed. */
+  proposal?: string
   /** .lastro/plugin/progress.jsonl: the last proof run's `prove --stream` events. */
   progress?: string
 }
 
 type Json = any // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const parse = (text: string | undefined): Json => {
+export const parse = (text: string | undefined): Json => {
   if (!text) return undefined
   try {
     return JSON.parse(text)
@@ -22,53 +21,52 @@ const parse = (text: string | undefined): Json => {
   }
 }
 
-const reviewKey = (a: Json) =>
-  a
-    ? JSON.stringify({
-        intents: (a.intents ?? []).map((i: Json) => [i.id, i.statement, i.status]),
-        decisions: (a.decisions ?? []).map((d: Json) => [d.id, d.chosen ?? null]),
-      })
-    : null
+/** A proposal that still needs work: not applied, not closed. */
+export const isOpen = (p: Json) => !!p && p.status !== 'applied' && p.status !== 'closed'
 
-const PASSING = new Set(['proved', 'proved-under-assumptions', 'evidenced'])
+const PASSING = new Set(['proved', 'evidenced'])
 
-const short = (v: unknown) => JSON.stringify(v)
+const json = (v: unknown) => JSON.stringify(v)
 
 export function readBoard(files: Files): Board | null {
-  const config = parse(files.config)
-  if (!config) return null
-  const artifact = parse(files.intents)
-  const required = Number(config.requiredApprovals ?? 1)
-  const model = String(config.model?.name ?? '')
-  const empty: Board = { model, phase: 'no-proposal', intents: [], decisions: [], proofs: [], beyondProof: [], runs: 0 }
-  if (!artifact) return empty
+  if (!parse(files.config)) return null
+  const p = parse(files.proposal)
+  const empty: Board = { title: '', phase: 'no-proposal', intents: [], decisions: [], proofs: [], beyondProof: [], regressions: [], runs: 0 }
+  if (!isOpen(p)) return empty
 
-  const intents: IntentRow[] = (artifact.intents ?? []).map((i: Json) => {
-    const approvals = (i.approvals ?? []).length
-    const status = i.status === 'rejected' ? 'rejected' : i.status === 'approved' && approvals >= required ? 'approved' : 'pending'
-    return { id: i.id, statement: i.statement, status, approvals, required }
+  const short = (id: string) => (id.startsWith(`${p.id}.`) ? id.slice(p.id.length + 1) : id)
+  const required = Math.max(1, Number(p.policy?.approvals ?? 1))
+  const counts = (i: Json) =>
+    i.status === 'approved' || i.status === 'amended'
+      ? (i.approvals ?? []).filter((a: string) => p.policy?.submitterCanApprove !== false || a !== p.submittedBy).length
+      : 0
+  const intents: IntentRow[] = (p.intents ?? []).map((i: Json) => {
+    const approvals = counts(i)
+    const status = i.status === 'rejected' ? 'rejected' : approvals >= required ? 'approved' : 'pending'
+    return { id: short(i.id), useCase: i.useCase, statement: i.description, status, approvals, required, replaces: (i.replaces ?? []).map((r: Json) => r.proof) }
   })
-  const decisions = (artifact.decisions ?? []).map((d: Json) => ({ id: d.id, question: d.question, answered: d.chosen !== undefined && d.chosen !== null }))
-  const reviewDone = intents.every((i) => i.status !== 'pending') && decisions.every((d: { answered: boolean }) => d.answered)
+  const decisions = (p.decisions ?? []).map((d: Json) => ({ id: d.id, question: d.question, answered: d.chosen !== undefined && d.chosen !== null }))
+  const board: Board = {
+    ...empty,
+    title: `${p.id} ${p.name}`,
+    intents,
+    decisions,
+    beyondProof: (p.intents ?? []).filter((i: Json) => i.provability === 'beyond-proof' && i.status !== 'rejected').map((i: Json) => `${short(i.id)} (${i.beyondProofReason})`),
+  }
+  if (!p.hash) return { ...board, phase: 'review-pending' }
+  if (!(p.proofs ?? []).length) return { ...board, phase: 'needs-proofs' }
 
-  const spec = parse(files.spec)
-  const specCurrent = !!spec && reviewKey(spec.artifact) === reviewKey(artifact)
-  const board: Board = { ...empty, intents, decisions }
-  if (!reviewDone) return { ...board, phase: 'review-pending' }
-  if (!specCurrent) return { ...board, phase: 'needs-spec' }
-
-  const clauses: Json[] = spec.plan?.clauses ?? []
-  board.beyondProof = (spec.plan?.beyondProof ?? []).map((b: Json) => `${b.intentId} (${b.reason})`)
   const rows = new Map<string, ProofRow>(
-    clauses.map((c) => [c.id, { id: c.id, intents: c.intentIds ?? [], description: c.description ?? '', status: 'pending' }]),
+    (p.proofs as Json[]).map((x) => [x.id, { id: short(x.id), intents: [short(x.intent)], description: x.description ?? '', status: 'pending' }]),
   )
+  // The last finished run of this proposal.
+  const last = p.lastRun
+  if (last) {
+    for (const o of last.outcomes ?? []) if (o.role === 'proposal') setVerdict(rows, o)
+    board.regressions = (last.regressions ?? []).slice()
+  }
 
-  // The last finished proof of this spec.
-  const proof = parse(files.proof)
-  const proofCurrent = !!proof && proof.report?.artifactHash === spec.artifact?.hash
-  if (proofCurrent) for (const r of proof.report.clauses ?? []) setVerdict(rows, r)
-
-  // A run under way (or just finished) overrides it, clause by clause, as its events arrive.
+  // A run under way (or just finished) overrides it, proof by proof, as its events arrive.
   const events: Json[] = (files.progress ?? '')
     .split('\n')
     .map((l) => parse(l))
@@ -77,15 +75,20 @@ export function readBoard(files: Files): Board | null {
   const run = start >= 0 ? events.slice(start) : []
   const started = run.find((e) => e.event === 'start')
   const result = run.find((e) => e.event === 'result')
-  const sameSpec = !started || short(started.clauses) === short(clauses.map((c) => c.id))
-  let phase: Phase = proofCurrent ? (proof.ok ? 'passed' : 'failed') : 'implementing'
-  if (run.length && sameSpec) {
+  const same = !started || (started.proposal === p.id && json(started.proofs) === json(p.proofs.map((x: Json) => x.id)))
+  let phase: Phase = last ? (last.ok ? 'passed' : 'failed') : 'implementing'
+  if (run.length && same) {
     if (!result) {
       phase = 'running'
       for (const row of rows.values()) row.status = 'running'
       board.runs = Math.max(0, ...run.filter((e) => e.event === 'progress').map((e) => Number(e.runs)))
     }
-    for (const e of run) if (e.event === 'clause') setVerdict(rows, e)
+    const regressions: string[] = []
+    for (const e of run.filter((x) => x.event === 'proof')) {
+      if (e.role === 'proposal') setVerdict(rows, e)
+      else if (e.role === 'regression' && !e.passed) regressions.push(e.proof)
+    }
+    if (run.some((x) => x.event === 'proof')) board.regressions = regressions
     if (result?.error) {
       board.error = String(result.error)
       phase = 'failed'
@@ -95,10 +98,10 @@ export function readBoard(files: Files): Board | null {
 }
 
 function setVerdict(rows: Map<string, ProofRow>, r: Json) {
-  const row = rows.get(r.clauseId)
+  const row = rows.get(r.proof)
   if (!row) return
   row.status = r.verdict
-  row.counterexample = r.counterexample ? `${short(r.counterexample.input)} → ${short(r.counterexample.output)}` : undefined
+  row.counterexample = r.counterexample ? `${json(r.counterexample.input)} → ${json(r.counterexample.output)}` : undefined
 }
 
 export const isPassing = (row: ProofRow) => PASSING.has(row.status)
@@ -108,22 +111,24 @@ export function summary(b: Board): string {
   const approved = b.intents.filter((i) => i.status === 'approved').length
   const answered = b.decisions.filter((d) => d.answered).length
   const passed = b.proofs.filter(isPassing).length
-  const failed = b.proofs.filter((p) => ['violated', 'weak', 'vacuous'].includes(p.status)).length
+  const failed = b.proofs.filter((p) => ['violated', 'weak', 'vacuous', 'not-run'].includes(p.status)).length
+  const head = b.title ? `Lastro ${b.title.split(' ')[0]}` : 'Lastro'
+  const reg = b.regressions.length ? ` · ${b.regressions.length} regressions` : ''
   switch (b.phase) {
     case 'none':
     case 'no-proposal':
       return 'Lastro · no proposal yet'
     case 'review-pending':
-      return `Lastro · review: ${approved}/${b.intents.length} intents approved · ${answered}/${b.decisions.length} decisions answered`
-    case 'needs-spec':
-      return `Lastro · ${approved}/${b.intents.length} intents approved · proofs not derived yet`
+      return `${head} · review: ${approved}/${b.intents.length} intents approved · ${answered}/${b.decisions.length} decisions answered`
+    case 'needs-proofs':
+      return `${head} · ${approved}/${b.intents.length} intents approved · proofs not derived yet`
     case 'implementing':
-      return `Lastro · ${b.proofs.length} proofs pending`
+      return `${head} · ${b.proofs.length} proofs pending`
     case 'running':
-      return `Lastro · proving… ${passed + failed}/${b.proofs.length} checked${b.runs ? ` · ${b.runs} runs` : ''}`
+      return `${head} · proving… ${passed + failed}/${b.proofs.length} checked${b.runs ? ` · ${b.runs} runs` : ''}`
     case 'passed':
-      return `Lastro · ${passed}/${b.proofs.length} proofs passed`
+      return `${head} · ${passed}/${b.proofs.length} proofs passed`
     case 'failed':
-      return b.error ? 'Lastro · the proof run failed' : `Lastro · ${passed}/${b.proofs.length} proofs passed · ${failed} failed`
+      return b.error ? `${head} · the proof run failed` : `${head} · ${passed}/${b.proofs.length} proofs passed · ${failed} failed${reg}`
   }
 }

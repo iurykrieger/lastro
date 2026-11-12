@@ -1,0 +1,43 @@
+{
+  "name": "apply_rules",
+  "inputs": {
+    "approved": {
+      "type": "bool"
+    },
+    "sameBaseline": {
+      "type": "bool"
+    },
+    "run": {
+      "type": "enum",
+      "values": [
+        "none",
+        "passed",
+        "failed"
+      ]
+    },
+    "change": {
+      "type": "enum",
+      "values": [
+        "add",
+        "modify",
+        "remove"
+      ]
+    }
+  },
+  "outputs": {
+    "applied": {
+      "type": "bool"
+    },
+    "proofs": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "history": {
+      "type": "bool"
+    },
+    "removed": {
+      "type": "bool"
+    }
+  }
+}

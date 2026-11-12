@@ -1,0 +1,8 @@
+{
+  "id": "UC-018",
+  "slug": "find-counterexamples",
+  "name": "Report counterexamples",
+  "description": "The first applicable run that breaks a clause makes it violated and is kept as its counterexample (input and output); the evidence is formal when the run was exhaustive and empirical when sampled. An error while evaluating a clause also makes it violated, with the error noted.",
+  "proofs": [],
+  "history": []
+}

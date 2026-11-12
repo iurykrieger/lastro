@@ -1,0 +1,24 @@
+{
+  "name": "baseline_binding",
+  "inputs": {
+    "change": {
+      "type": "enum",
+      "values": [
+        "none",
+        "description",
+        "name",
+        "slug",
+        "proofs",
+        "added"
+      ]
+    }
+  },
+  "outputs": {
+    "approves": {
+      "type": "bool"
+    },
+    "sameBaseline": {
+      "type": "bool"
+    }
+  }
+}

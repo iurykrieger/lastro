@@ -2,14 +2,16 @@
 
 A Claude Code mod that shows, beside the chat, where a Lastro change stands:
 
-- **Review**: each decision (answered or not) and each intent with its approvals out of the policy's count, like a
-  pull request waiting for reviewers.
+- **Review** of the current proposal: each decision (answered or not) and each intent, with the use case it changes,
+  its approvals out of the policy's count and the proofs it replaces, like a pull request waiting for reviewers.
 - **Proofs**: one row per proof, updated as the run under way reports it: `○` pending, `…` running, `✓` proved,
-  `≈` evidenced, `✗` violated (with its counterexample), `!` weak or vacuous.
+  `≈` evidenced, `✗` violated (with its counterexample), `!` weak or vacuous, then the use cases' proofs the change
+  broke (regressions).
 - A one-line summary above the prompt and in the status line, and a toast when every intent is approved and when a
   proof run ends.
 
-It reads `.lastro/` once a second (the files the `lastro` CLI writes, and `.lastro/plugin/progress.jsonl`, which
+It reads `.lastro/` once a second (the current proposal in `.lastro/proposals/`, the latest one not applied or
+closed, and `.lastro/plugin/progress.jsonl`, which
 the [Lastro plugin](../lastro)'s Stop hook fills with `lastro prove --stream`). It decides nothing. `/lastro-board`
 opens the pane.
 

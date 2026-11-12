@@ -1,0 +1,31 @@
+{
+  "name": "supersedes",
+  "inputs": {
+    "first": {
+      "type": "enum",
+      "values": [
+        "proposed",
+        "approved",
+        "amended",
+        "rejected"
+      ]
+    },
+    "second": {
+      "type": "enum",
+      "values": [
+        "proposed",
+        "approved",
+        "amended",
+        "rejected"
+      ]
+    }
+  },
+  "outputs": {
+    "first": {
+      "type": "bool"
+    },
+    "second": {
+      "type": "bool"
+    }
+  }
+}

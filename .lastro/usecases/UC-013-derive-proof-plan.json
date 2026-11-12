@@ -1,0 +1,77 @@
+{
+  "id": "UC-013",
+  "slug": "derive-proof-plan",
+  "name": "Derive the proof plan",
+  "description": "derive(proposal) requires an approved proposal and asks the LLM (step \"derive\") with the models declared in .lastro/config.json, each touched use case's before and after with its approved and amended intents, the existing proofs of those use cases, each decision's question and answer (the chosen or else the recommended option) and notPromised. It writes pending proofs into the proposal, numbered P-n.PF-nn: each has a slug, name and description, the intent and use case it checks, the model and subject it runs against, and a check that is either a clause (requires and ensures in LSL, assumptions used) or a scenario (concrete input and an LSL expect); plus assumptions and beyondProof items. Every remove intent gets a proof, written from the use case's before, that the old behavior no longer happens; when the model cannot express it, derivation returns a decision for the reviewer and the proposal cannot be applied while it is open. Derivation never retires a proof: the proposal's supersedes is the union of replaces over the approved and amended intents, each new proof that takes the place of one lists it, and an existing proof the approved behavior breaks that no approved intent replaces comes back as a decision that sends the intent back to review with the proof added to its replaces. Every expression is parsed and validated. The proposal moves to proving. Without an LLM transport or a custom deriver, derive() throws.",
+  "proofs": [
+    {
+      "id": "P-001.PF-18",
+      "slug": "supersedes-is-union-of-forward-replaces",
+      "name": "Supersedes follows the forward intents",
+      "description": "A proof is superseded exactly when an approved or amended intent replaces it.",
+      "intent": "P-001.I-28",
+      "useCase": "UC-013",
+      "model": "supersedes",
+      "subject": "supersedes",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.first"
+                },
+                {
+                  "op": "in",
+                  "args": [
+                    {
+                      "var": "in.first"
+                    },
+                    {
+                      "const": "approved"
+                    },
+                    {
+                      "const": "amended"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.second"
+                },
+                {
+                  "op": "in",
+                  "args": [
+                    {
+                      "var": "in.second"
+                    },
+                    {
+                      "const": "approved"
+                    },
+                    {
+                      "const": "amended"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
+    }
+  ],
+  "history": [
+    "P-001"
+  ]
+}

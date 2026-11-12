@@ -18,7 +18,8 @@ Side effects stay outside it.
    (`{"type":"int","min":0,"max":200}`, `{"type":"bool"}`, `{"type":"enum","values":[...]}`). Show it to the user
    and ask them to confirm the names and the ranges. The ranges decide what "proved" covers.
 4. **Create the workspace**: `<cli> init --model .lastro/model.json` (add `--approvals N` if the team wants more
-   than one reviewer per intent, as a branch protection rule would).
+   than one reviewer per intent, as a branch protection rule would, and `--submitter-cannot-approve` if whoever
+   asked for a change must not approve its intents). The policy lands in `.lastro/config.json` under `review`.
 5. **Write `.lastro/plugin.json`** with the user:
 
    ```json
@@ -33,9 +34,9 @@ Side effects stay outside it.
    ```
 
    `prove` is everything after `lastro prove`: the built module and its export. `build` runs before each proof.
-   `gate: "on"` blocks code edits until the intents are approved and the proofs derived. `allow` lists paths the
+   `gate: "on"` blocks code edits until the proposal is approved and its proofs derived. `allow` lists paths the
    gate never blocks.
 6. Commit `.lastro/` with the change (except `.lastro/plugin/`, which holds local hook state: add it to
-   `.gitignore`). Approved intents and proofs travel with the code, the same way a pull request's review does.
+   `.gitignore`). Use cases, proposals and proofs travel with the code, the same way a pull request's review does.
 
 Then use the `propose` skill for the first change.

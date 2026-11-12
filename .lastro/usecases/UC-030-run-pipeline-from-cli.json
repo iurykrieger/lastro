@@ -1,0 +1,10 @@
+{
+  "id": "UC-030",
+  "slug": "run-pipeline-from-cli",
+  "name": "Run the pipeline from a CLI",
+  "description": "The CLIs (lastro in TypeScript and .NET, lastro-go in Go) run init --model model.json [--approvals N], propose <prose-file> [--section <heading>] [--as <submitter>], status [<proposal>], review <proposal> --as <name> approve|approve-all|amend|reject|answer|comment|resolve, derive <proposal>, prove <proposal>, feedback <proposal>, apply <proposal> and regress. Each prints one JSON object and keeps state in a workspace directory (default .lastro, --dir to change): config.json (models, subjects and the review block), usecases/, proposals/ with each proposal's receipt, and llm/. init --approvals writes review.approvals. Exit codes: 0 ok, 1 not ok (review pending, contradictions, failing proofs or regressions, apply refused), 2 usage or error, 3 an LLM answer is needed. derive refuses while review is pending and, on contradictions, writes the returned decisions into the proposal.",
+  "proofs": [],
+  "history": [
+    "P-001"
+  ]
+}

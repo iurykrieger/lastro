@@ -21,7 +21,7 @@ export function ExamplesOverview() {
       <Callout kind="note" title="What runs, and what is replayed">
         Lastro has two AI steps, extracting intents and deriving the proofs. The examples replay those two answers (written by hand, the same way the{" "}
         <A to="quickstart">quickstart</A> does with the handoff), so they work offline and give the same result for everyone. Everything after that is live:
-        review, freezing, validation, both engines, the receipt and the agent feedback.
+        review, approval, validation, both engines, the receipt and the agent feedback.
       </Callout>
 
       <H2>Two programs</H2>

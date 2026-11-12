@@ -1,0 +1,10 @@
+{
+  "id": "UC-038",
+  "slug": "explore-in-sandbox",
+  "name": "Explore the pipeline in the sandbox",
+  "description": "A web app (Vite, React, shadcn/ui) runs the real TypeScript SDK and the WASM prover on a store-login example with its own use cases. Under the pipeline gates, a feedback banner says what Lastro needs next and from whom: the team when review is pending or the spec contradicts itself (with a button that sends the contradictions back as decisions), whoever writes the code when proofs fail or a regression appears (the agent brief with counterexamples, copyable, with the same count as the Prove gate), or that every gate passes. The prose panel shows the example as a proposal: the intent map and, in one tab, intents grouped by use case as changes (add, modify, remove) with a before and after diff and the proofs each replaces, intent cards (approve, amend, reject, comment) with each decision card under the first intent it affects that is not yet approved (or its first intent once all are), collapsed to its answer once settled, with reviewers Ana and Bruno and a one- or two-approval policy; edited prose is extracted again by Claude (the page's Claude on claude.ai, or a dev-server endpoint with ANTHROPIC_API_KEY), the review is carried over, and new proofs are derived. The code panel edits the implementation, and plants bugs shown as a diff. The contrast panel shows per-proof verdicts from both engines, regressions in the other use cases, mutants, runnable counterexamples, LSL and SMT-LIB2, the intent roll-up, trusted pieces, where proof stops, a production-trace toggle, a single-login runner and the receipt.",
+  "proofs": [],
+  "history": [
+    "P-001"
+  ]
+}

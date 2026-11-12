@@ -7,8 +7,8 @@ import { Pipeline } from "@/components/Pipeline";
 import prose from "../../examples/shipping/prose.md?raw";
 import model from "../../examples/shipping/model.json?raw";
 import buggy from "../../examples/shipping/shipping-buggy.mjs?raw";
-import extractAnswer from "../../examples/shipping/answers/extract.json?raw";
-import { RECEIPT, OUT } from "@/content/outputs";
+import proposeAnswer from "../../examples/shipping/answers/propose.json?raw";
+import { RECEIPT, OUT, USECASE } from "@/content/outputs";
 
 // ---------------------------------------------------------------------------
 // Introduction
@@ -17,7 +17,7 @@ import { RECEIPT, OUT } from "@/content/outputs";
 const CARDS = [
   { icon: ListChecks, title: "Quickstart", body: "Prove a real function from a paragraph of prose with the CLI.", to: "quickstart" },
   { icon: Sigma, title: "Concepts", body: "Intents, review policy, decisions, the formal spec and what each verdict means.", to: "concepts/pipeline" },
-  { icon: FileText, title: "CLI", body: "Seven commands, JSON out, state in .lastro/, usable from any agent harness.", to: "cli/overview" },
+  { icon: FileText, title: "CLI", body: "Nine commands, JSON out, state in .lastro/, usable from any agent harness.", to: "cli/overview" },
   { icon: ShieldCheck, title: "SDKs", body: "TypeScript, Go and .NET: one data model, the same hashes and verdicts.", to: "sdks/typescript" },
 ];
 
@@ -65,22 +65,32 @@ export function Introduction() {
       </Callout>
 
       <H2>What Lastro does</H2>
+      <P>
+        Your application is a list of <A to="concepts/proposals">use cases</A>, each described as the code implements it and guarded by the proofs earlier
+        changes left behind. Every change starts as a proposal.
+      </P>
       <Ol>
         <li>
-          <strong>Plan.</strong> An LLM reads your prose and proposes <A to="concepts/intents">intents</A>: one checkable promise each, anchored to the words it came
-          from. Ambiguities come back as <A to="concepts/decisions">decision cards</A>, never as silent guesses.
+          <strong>Propose.</strong> An LLM reads your prose against the use cases and writes <A to="concepts/intents">intents</A>: each one adds, changes or removes
+          one use case, anchored to the words it came from, and lists the existing proofs it replaces on purpose. Ambiguities come back as{" "}
+          <A to="concepts/decisions">decision cards</A>, never as silent guesses.
         </li>
         <li>
-          <strong>Review.</strong> People approve, amend or reject each intent. Your team's <A to="concepts/review">policy</A> sets how many approvals an intent needs.
-          The reviewed intents are approved under a SHA-256 hash.
+          <strong>Review.</strong> People approve, amend or reject each intent, like the comments of a pull request. Your team's{" "}
+          <A to="concepts/review">policy</A> sets how many approvals an intent needs. The reviewed proposal is approved under a SHA-256 hash, bound to the use cases
+          it was read against.
         </li>
         <li>
-          <strong>Spec.</strong> An LLM derives a <A to="concepts/spec">formal spec</A> from the approved intents, in LSL (a JSON AST that is never evaluated as code).
-          Lastro validates it and checks it for contradictions, which go back to the team as decisions.
+          <strong>Derive.</strong> An LLM derives <A to="concepts/spec">proofs</A> from the approved intents, in LSL (a JSON AST that is never evaluated as code).
+          Lastro validates them and checks them for contradictions, which go back to the team as decisions.
         </li>
         <li>
-          <strong>Prove.</strong> Lastro checks the spec against your code, deterministically, in two independent engines (TypeScript and Rust), and writes a{" "}
-          <A to="concepts/receipts">receipt</A>. Failures come with counterexamples, as a brief for whoever writes the code.
+          <strong>Prove.</strong> Lastro checks the proposal's proofs and every use case's proofs against your code, deterministically, in two independent engines
+          (TypeScript and Rust), and writes a <A to="concepts/receipts">receipt</A>. Failures and regressions come with counterexamples, as a brief for whoever
+          writes the code.
+        </li>
+        <li>
+          <strong>Apply.</strong> When every proof passes, the proofs join their use cases as regression tests and the use cases take their new descriptions.
         </li>
       </Ol>
 
@@ -190,7 +200,7 @@ $ cargo build --release -p lastro-core --bin lastro-prove`,
 
       <H2>The AI steps</H2>
       <P>
-        Planning and deriving the spec need an LLM. You have two options, and neither needs a plugin for a specific agent:
+        Extracting intents and deriving proofs need an LLM. You have two options, and neither needs a plugin for a specific agent:
       </P>
       <Ul>
         <li>
@@ -201,7 +211,7 @@ $ cargo build --release -p lastro-core --bin lastro-prove`,
         </li>
       </Ul>
       <P>
-        Everything after the spec (proving, receipts, feedback) is deterministic and never calls a model.
+        Everything after the derivation (proving, receipts, feedback, apply) is deterministic and never calls a model.
       </P>
 
       <H2>Try the sandbox</H2>
@@ -222,8 +232,8 @@ export function Quickstart() {
     <>
       <H1>Quickstart</H1>
       <Lead>
-        Take a shipping rule written in prose, turn it into reviewed intents, derive a formal spec, and prove a function against it. Everything below is real
-        output of the TypeScript CLI.
+        Take a shipping rule written in prose, turn it into a proposal with reviewed intents, derive its proofs, prove a function against them, and apply it.
+        Everything below is real output of the TypeScript CLI.
       </Lead>
       <Callout kind="tip" title="No API key needed">
         This walkthrough uses <C>--llm handoff</C>: the CLI writes each AI request to a file and you (or your agent) answer it. The answers are in{" "}
@@ -245,64 +255,71 @@ export function Quickstart() {
           <Code lang="bash" code={`$ lastro init --model model.json`} />
           <Code lang="json" title="stdout · exit 0" code={OUT.init} />
           <P>
-            <C>--approvals 2</C> would require two distinct reviewers per intent. The default policy is one.
+            <C>--approvals 2</C> would require two distinct reviewers per intent, and <C>--submitter-cannot-approve</C> would keep whoever wrote the prose from
+            approving it. The default policy is one approval, and the submitter counts.
           </P>
         </Step>
 
-        <Step title="Extract intents">
-          <Code lang="bash" code={`$ lastro plan prose.md`} />
+        <Step title="Propose the change">
+          <Code lang="bash" code={`$ lastro propose prose.md --as ana`} />
           <P>
             Without <C>ANTHROPIC_API_KEY</C>, the CLI hands the step to you and exits with code 3:
           </P>
-          <Code lang="json" title="stdout · exit 3" code={OUT.planNeedsLlm} />
+          <Code lang="json" title="stdout · exit 3" code={OUT.proposeNeedsLlm} />
           <P>
-            The request file holds the system prompt, the prose and a JSON Schema. An agent answers it with its own model and writes the answer to the path given. Ours
-            proposes four intents and one question the prose leaves open:
+            The request file holds the system prompt, the prose with the current use cases (none yet) and a JSON Schema. An agent answers it with its own model
+            and writes the answer to the path given. Ours adds one use case through four intents, and asks one question the prose leaves open:
           </P>
-          <Code lang="json" title=".lastro/llm/extract-6e77fe54fe3e.answer.json" code={extractAnswer} />
-          <P>Run the same command again:</P>
-          <Code lang="bash" code={`$ lastro plan prose.md`} />
-          <Code lang="json" title="stdout · exit 1 (review pending)" code={OUT.planned} />
+          <Code lang="json" title=".lastro/llm/extract-….answer.json" code={proposeAnswer} />
+          <P>Run the same command again. The proposal is <C>P-001</C>, in <C>.lastro/proposals/</C>:</P>
+          <Code lang="bash" code={`$ lastro propose prose.md --as ana`} />
+          <Code lang="json" title="stdout · exit 1 (review pending)" code={OUT.proposed} />
         </Step>
 
         <Step title="Review">
-          <P>Answer the decision and approve the intents. Each command signs with the reviewer's name.</P>
+          <P>Answer the decision and approve the intents. Each command signs with the reviewer's name; once nothing is pending, the proposal is approved.</P>
           <Code
             lang="bash"
-            code={`$ lastro review --as ana answer D1 1      # "After discounts"
-$ lastro review --as ana approve-all`}
+            code={`$ lastro review P-001 --as ana answer D1 1      # "After discounts"
+$ lastro review P-001 --as ana approve-all`}
           />
           <Code lang="json" title="stdout · exit 0" code={OUT.reviewed} />
         </Step>
 
-        <Step title="Derive the spec">
-          <Code lang="bash" code={`$ lastro spec`} />
+        <Step title="Derive the proofs">
+          <Code lang="bash" code={`$ lastro derive P-001`} />
           <P>
-            This is the second AI step, so it exits 3 with a <C>derive</C> request. Once answered, the CLI validates the plan (only approved intents, only model
-            variables, every intent covered) and checks the clauses for contradictions:
+            This is the second AI step, so it exits 3 with a <C>derive</C> request. Once answered, the CLI validates the proofs (only approved intents, only model
+            variables, every intent covered) and checks them for contradictions:
           </P>
-          <Code lang="json" title="stdout · exit 0" code={OUT.spec} />
+          <Code lang="json" title="stdout · exit 0" code={OUT.derived} />
         </Step>
 
         <Step title="Prove the code">
           <P>Someone (a coding agent, or you) wrote this implementation. It has an off-by-one:</P>
-          <Code lang="js" title="shipping.mjs" code={buggy} />
-          <Code lang="bash" code={`$ lastro prove ./shipping.mjs`} />
+          <Code lang="js" title="shipping-buggy.mjs" code={buggy} />
+          <Code lang="bash" code={`$ lastro prove P-001 ./shipping-buggy.mjs`} />
           <Code lang="json" title="stdout · exit 1" code={OUT.notProved} />
           <P>
-            Lastro checked all 402 inputs in both engines and found the one that breaks C1. <C>lastro feedback</C> prints the same failures as a brief you can paste
-            into any coding agent.
+            Lastro checked all 402 inputs in both engines and found the one that breaks PF-01. <C>lastro feedback P-001</C> prints the same failures as a brief you
+            can paste into any coding agent.
           </P>
         </Step>
 
         <Step title="Fix it and prove again">
-          <Code lang="bash" code={`$ sed -i 's/subtotal > 100/subtotal >= 100/' shipping.mjs
-$ lastro prove ./shipping.mjs`} />
+          <Code lang="bash" code={`$ lastro prove P-001 ./shipping.mjs`} />
           <Code lang="json" title="stdout · exit 0" code={OUT.proved} />
           <P>
-            The receipt in <C>.lastro/receipt.md</C> is ready for the pull request:
+            The receipt next to the proposal is ready for the pull request:
           </P>
-          <Code lang="markdown" title=".lastro/receipt.md" code={RECEIPT} wrap={false} />
+          <Code lang="markdown" title=".lastro/proposals/P-001-shipping-fee.receipt.md" code={RECEIPT} wrap={false} />
+        </Step>
+
+        <Step title="Apply it">
+          <Code lang="bash" code={`$ lastro apply P-001`} />
+          <Code lang="json" title="stdout · exit 0" code={OUT.applied} />
+          <P>The use case now exists, with the four proofs every later change is checked against:</P>
+          <Code lang="json" title=".lastro/usecases/UC-001-charge-shipping.json" code={USECASE} />
         </Step>
       </Steps>
 
@@ -310,13 +327,17 @@ $ lastro prove ./shipping.mjs`} />
       <Ul>
         <li>
           <CheckCircle2 className="mr-1 inline h-4 w-4 text-proved" />
-          I1 to I3 are <strong>proved</strong>: every one of the 402 inputs was checked, and the Rust prover agreed verdict by verdict.
+          I-01 to I-03 are <strong>proved</strong>: every one of the 402 inputs was checked, and the Rust prover agreed verdict by verdict.
         </li>
         <li>
-          I4 ("instantly") is <strong>beyond proof</strong>: timing is not a property of the decision. The receipt says so instead of hiding it.
+          I-04 ("instantly") is <strong>beyond proof</strong>: timing is not a property of the decision. The receipt says so instead of hiding it.
         </li>
         <li>
-          The decision about discounts did not become code. It became a fact the team chose, recorded in the approved intents.
+          The decision about discounts did not become code. It became a fact the team chose, recorded in the approved proposal.
+        </li>
+        <li>
+          The next change to shipping starts from <C>UC-001</C>: an intent that changes the threshold must list PF-01 as a proof it replaces, and every other proof
+          of the use case keeps running as a regression test.
         </li>
       </Ul>
       <P>

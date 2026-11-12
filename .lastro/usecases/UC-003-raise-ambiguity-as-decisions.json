@@ -1,0 +1,10 @@
+{
+  "id": "UC-003",
+  "slug": "raise-ambiguity-as-decisions",
+  "name": "Turn ambiguity into decision cards",
+  "description": "The extraction prompt tells the model not to guess when the prose is ambiguous and to return a decision instead: one question, two to four options each with a consequence, and the index of the recommended option, preferably about cases the author has not considered. Each becomes a decision card tied to the intents it concerns. Intents on one use case whose change kinds do not fit together (an add or a remove mixed with a modify, or a remove combined with anything) and two intents that contradict each other on one use case also come back as decisions. A card with origin extraction records the chosen option when answered and creates no intent.",
+  "proofs": [],
+  "history": [
+    "P-001"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "UC-006",
+  "slug": "add-missed-intent",
+  "name": "Add an intent the extractor missed",
+  "description": "During review, add(draft) appends an intent with the next id, status approved and a note saying it was added by a reviewer. Its quote is anchored when found in the prose; otherwise the note says it is not in the prose. Reviewers can also append notPromised items.",
+  "proofs": [],
+  "history": []
+}

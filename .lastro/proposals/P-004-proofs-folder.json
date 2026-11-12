@@ -1,0 +1,298 @@
+{
+  "lastro": "proposal/v1",
+  "id": "P-004",
+  "slug": "proofs-folder",
+  "name": "Keep proofs in .lastro/proof and derive them from the established use cases",
+  "description": "Proofs move out of the use case files into one file each under .lastro/proof/, and lastro derive --usecases derives proofs straight from the reviewed use cases, without a proposal.",
+  "status": "open",
+  "submittedBy": "claude",
+  "prose": "# Keep proofs in .lastro/proof and derive them from the established use cases\n\n## Where proofs live\n\nEvery proof that belongs to a use case lives in its own file, `.lastro/proof/<proof-id>-<slug>.json`, with its id,\nslug, name, description, use case, model, subject, check, status and verdict, and the intent and proposal it came\nfrom when it came from one. Use case files no longer carry the proofs: the workspace finds a use case's proofs by\ntheir `useCase` field. Apply writes each passing proof of the proposal to `.lastro/proof/` and deletes the files of\nthe proofs the proposal supersedes. A use case file that still carries a `proofs` list is read as before, and its\nproofs move to `.lastro/proof/` the next time the workspace writes that use case. The TypeScript, Go and .NET\nworkspaces read and write the same files.\n\n## Proofs from the established use cases\n\nA use case already describes, and people already reviewed, what the code does. `lastro derive --usecases` derives\nproofs straight from those descriptions, with no proposal and no intents: by default for every use case that has no\nproofs, or for the ids it is given (`--usecases UC-003,UC-016`). The derive step reads each use case's description,\nthe models and subjects declared in `.lastro/config.json` and the proofs other use cases already have, and writes\npending proofs numbered inside their use case (`UC-003.PF-01`). A use case the models cannot express gets no proof\nand is listed as unprovable with the reason, so a model can be added for it. A use case that already has proofs is\nrefused: its proofs change only through a proposal.\n\n`lastro prove --usecases` runs the pending proofs of the use cases together with every passed proof. A pending\nproof that passes becomes passed and from then on runs as a regression test, in `prove` and in `lastro regress`. A\npending proof that fails stays failed and is reported with the note that the code is the reference: either the\ndescription is wrong, and a proposal fixes it, or the code has a bug the user decides about. It never goes back to\nthe code as feedback.",
+  "baseline": "sha256:3010925e700e5dba481b172a4b3ec4b5147b1cf1331f7197fcb3dabc48ccdc6e",
+  "intents": [
+    {
+      "id": "P-004.I-01",
+      "slug": "proof-file-per-proof",
+      "name": "One file per proof in .lastro/proof",
+      "description": "Every proof of a use case is stored in its own file, .lastro/proof/<proof-id>-<slug>.json, with its id, slug, name, description, use case, model, subject, check, status, verdict, and its intent and proposal when it has them.",
+      "change": "modify",
+      "useCase": "UC-049",
+      "provability": "empirical",
+      "source": {
+        "quote": "Every proof that belongs to a use case lives in its own file, `.lastro/proof/<proof-id>-<slug>.json`",
+        "start": 101,
+        "end": 201
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-02",
+      "slug": "use-case-files-without-proofs",
+      "name": "Use case files no longer carry proofs",
+      "description": "Use case files are written without a proofs list; the workspace finds a use case's proofs by their useCase field.",
+      "change": "modify",
+      "useCase": "UC-046",
+      "provability": "empirical",
+      "source": {
+        "quote": "Use case files no longer carry the proofs: the workspace finds a use case's proofs by\ntheir `useCase` field.",
+        "start": 358,
+        "end": 466
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-03",
+      "slug": "old-use-case-files-move",
+      "name": "Old use case files move their proofs",
+      "description": "A use case file that still has a proofs list is read as before; its proofs move to .lastro/proof/ the next time that use case is written.",
+      "change": "modify",
+      "useCase": "UC-046",
+      "provability": "empirical",
+      "source": {
+        "quote": "A use case file that still carries a `proofs` list is read as before, and its\nproofs move to `.lastro/proof/` the next time the workspace writes that use case.",
+        "start": 596,
+        "end": 755
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-04",
+      "slug": "apply-writes-proof-files",
+      "name": "Apply writes and deletes proof files",
+      "description": "apply writes each passing proof of the proposal to .lastro/proof/ and deletes the files of the proofs it supersedes.",
+      "change": "modify",
+      "useCase": "UC-050",
+      "provability": "empirical",
+      "source": {
+        "quote": "Apply writes each passing proof of the proposal to `.lastro/proof/` and deletes the files of\nthe proofs the proposal supersedes.",
+        "start": 467,
+        "end": 595
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-05",
+      "slug": "three-sdks-share-proof-folder",
+      "name": "The three SDKs share .lastro/proof",
+      "description": "The TypeScript, Go and .NET workspaces read and write the same .lastro/proof/ files.",
+      "change": "modify",
+      "useCase": "UC-036",
+      "provability": "empirical",
+      "source": {
+        "quote": "The TypeScript, Go and .NET\nworkspaces read and write the same files.",
+        "start": 756,
+        "end": 825
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-06",
+      "slug": "derive-from-use-cases",
+      "name": "Derive proofs from the established use cases",
+      "description": "lastro derive --usecases derives proofs from use case descriptions, with no proposal and no intents, for every use case without proofs or for the ids given.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "empirical",
+      "source": {
+        "quote": "`lastro derive --usecases` derives\nproofs straight from those descriptions, with no proposal and no intents",
+        "start": 948,
+        "end": 1055
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-07",
+      "slug": "use-case-proof-ids",
+      "name": "Proofs numbered inside their use case",
+      "description": "Proofs derived from a use case are pending and numbered inside it, UC-003.PF-01, reading the description, the declared models and subjects and the other use cases' proofs.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "formal",
+      "source": {
+        "quote": "writes\npending proofs numbered inside their use case (`UC-003.PF-01`)",
+        "start": 1322,
+        "end": 1391
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-08",
+      "slug": "unprovable-use-cases-listed",
+      "name": "Use cases the models cannot express are listed",
+      "description": "A use case the declared models cannot express gets no proof and is listed as unprovable with the reason.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "empirical",
+      "source": {
+        "quote": "A use case the models cannot express gets no proof\nand is listed as unprovable with the reason",
+        "start": 1393,
+        "end": 1487
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-09",
+      "slug": "proven-use-cases-refused",
+      "name": "Use cases with proofs are refused",
+      "description": "derive --usecases refuses a use case that already has proofs; those change only through a proposal.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "formal",
+      "source": {
+        "quote": "A use case that already has proofs is\nrefused: its proofs change only through a proposal.",
+        "start": 1521,
+        "end": 1610
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-10",
+      "slug": "prove-use-case-proofs",
+      "name": "Prove the use cases' pending proofs",
+      "description": "lastro prove --usecases runs the pending use case proofs with every passed proof; a pending proof that passes becomes a regression test in prove and regress.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "formal",
+      "source": {
+        "quote": "A pending\nproof that passes becomes passed and from then on runs as a regression test",
+        "start": 1713,
+        "end": 1798
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-004.I-11",
+      "slug": "failed-use-case-proof-goes-to-user",
+      "name": "A failing use case proof goes to the user",
+      "description": "A pending use case proof that fails stays failed and is reported with the note that the code is the reference; it never goes back to the code as feedback.",
+      "change": "add",
+      "useCase": "UC-054",
+      "provability": "empirical",
+      "source": {
+        "quote": "A\npending proof that fails stays failed and is reported with the note that the code is the reference",
+        "start": 1836,
+        "end": 1936
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    }
+  ],
+  "useCases": [
+    {
+      "useCase": "UC-049",
+      "slug": "keep-proofs-in-use-cases",
+      "change": "modify",
+      "name": "Keep proofs as regression tests",
+      "before": "A proof that passed belongs to its use case, stored in the use case's file with its id, the intent and proposal it came from, its model, subject and check. prove(proposal) runs the proposal's pending proofs and the proofs of every use case except the ones the proposal supersedes, so a change that breaks any use case fails as a regression, on a touched use case or not; a superseded proof that still passes is noted, since the behavior may not have changed; failures go back to the implementer through feedback. lastro regress runs every use case's proofs alone, for example in CI. A use case with no proofs yet is reported as unproved rather than failing.",
+      "after": "A proof that passed belongs to its use case, stored in its own file, .lastro/proof/<proof-id>-<slug>.json, with its id, slug, name, description, use case, model, subject, check, status and verdict, and the intent and proposal it came from when it came from one; the workspace finds a use case's proofs by their useCase field. Only passed proofs run as regression tests; a pending or failed proof derived from a use case does not. prove(proposal) runs the proposal's pending proofs and the proofs of every use case except the ones the proposal supersedes, so a change that breaks any use case fails as a regression, on a touched use case or not; a superseded proof that still passes is noted, since the behavior may not have changed; failures go back to the implementer through feedback. lastro regress runs every use case's proofs alone, for example in CI. A use case with no proofs yet is reported as unproved rather than failing.",
+      "intents": [
+        "P-004.I-01"
+      ]
+    },
+    {
+      "useCase": "UC-046",
+      "slug": "store-use-cases-and-proposals",
+      "change": "modify",
+      "name": "Store use cases and proposals",
+      "before": "The workspace keeps one file per entity: each use case in .lastro/usecases/<id>-<slug>.json (id, slug, name, description, proofs, history) and each proposal in .lastro/proposals/<id>-<slug>.json, with its receipt next to it. Use cases are numbered UC-001, UC-002... and proposals P-001, P-002... with the next free number, never reused even after a removal; intents and proofs are numbered inside their proposal (P-007.I-03, P-007.PF-05) and keep that id when a proof moves to its use case. Slugs are kebab-case and stable: a rename changes only the name. intents.json, spec.json and proof.json are no longer written.",
+      "after": "The workspace keeps one file per entity: each use case in .lastro/usecases/<id>-<slug>.json (id, slug, name, description, history), each proof of a use case in .lastro/proof/<proof-id>-<slug>.json and each proposal in .lastro/proposals/<id>-<slug>.json, with its receipt next to it. Use cases are numbered UC-001, UC-002... and proposals P-001, P-002... with the next free number, never reused even after a removal; intents and proofs are numbered inside their proposal (P-007.I-03, P-007.PF-05) and keep that id when a proof moves to its use case; proofs derived straight from a use case are numbered inside it (UC-003.PF-01). Slugs are kebab-case and stable: a rename changes only the name. intents.json, spec.json and proof.json are no longer written. A use case file that still carries a proofs list is read as before, and its proofs move to .lastro/proof/ the next time the workspace writes that use case.",
+      "intents": [
+        "P-004.I-02",
+        "P-004.I-03"
+      ]
+    },
+    {
+      "useCase": "UC-050",
+      "slug": "apply-proposal",
+      "change": "modify",
+      "name": "Apply a proposal",
+      "before": "apply(proposal), in the library and as lastro apply <proposal>, refuses unless the proposal is approved, unchanged since approval, has no open decision, and every proof, new and regression, passes. It then writes each resulting use case (adds the use case file, replaces the description and name, or deletes the file of a removed use case), moves each passing proof into its use case as a regression test, removes the superseded proofs, appends the proposal id to each touched use case's history, records the new baseline hash in the receipt and sets the proposal's status to applied.",
+      "after": "apply(proposal), in the library and as lastro apply <proposal>, refuses unless the proposal is approved, unchanged since approval, has no open decision, and every proof, new and regression, passes. It then writes each resulting use case (adds the use case file, replaces the description and name, or deletes the file of a removed use case), writes each passing proof to .lastro/proof/ as a regression test of its use case, deletes the files of the superseded proofs, appends the proposal id to each touched use case's history, records the new baseline hash in the receipt and sets the proposal's status to applied.",
+      "intents": [
+        "P-004.I-04"
+      ]
+    },
+    {
+      "useCase": "UC-036",
+      "slug": "share-workspace-across-sdks",
+      "change": "modify",
+      "name": "Share one workspace across CLIs",
+      "before": "The TypeScript, .NET and Go CLIs read and write the same .lastro/ files (config.json, usecases/, proposals/ and llm/), so one can propose, another review, and a third derive, prove and apply. A proposal approved by one SDK has a valid approval hash for the others, and proofs and baselines hash the same in all three.",
+      "after": "The TypeScript, .NET and Go CLIs read and write the same .lastro/ files (config.json, usecases/, proof/, proposals/ and llm/), so one can propose, another review, and a third derive, prove and apply. A proposal approved by one SDK has a valid approval hash for the others, and proofs and baselines hash the same in all three.",
+      "intents": [
+        "P-004.I-05"
+      ]
+    },
+    {
+      "useCase": "UC-054",
+      "slug": "derive-proofs-from-use-cases",
+      "change": "add",
+      "name": "Derive proofs from the established use cases",
+      "after": "lastro derive --usecases derives proofs straight from the established use cases, with no proposal and no intents: by default for every use case that has no proofs, or for the ids it is given (--usecases UC-003,UC-016). The derive step reads each use case's description, the models and subjects declared in .lastro/config.json and the proofs other use cases already have, and writes pending proofs numbered inside their use case (UC-003.PF-01) to .lastro/proof/. A use case the models cannot express gets no proof and is listed as unprovable with the reason. A use case that already has proofs is refused: its proofs change only through a proposal. lastro prove --usecases runs the pending proofs of the use cases together with every passed proof. A pending proof that passes becomes passed and from then on runs as a regression test, in prove and in lastro regress. A pending proof that fails stays failed and is reported with the note that the code is the reference: either the description is wrong, and a proposal fixes it, or the code has a bug the user decides about; it never goes back to the code as feedback.",
+      "intents": [
+        "P-004.I-06",
+        "P-004.I-07",
+        "P-004.I-08",
+        "P-004.I-09",
+        "P-004.I-10",
+        "P-004.I-11"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "slug": "review-derived-proofs",
+      "name": "Who accepts a proof derived from a use case",
+      "origin": "extraction",
+      "question": "Must a person approve each proof derived from a use case before it counts as a regression test, or is passing against the code enough?",
+      "options": [
+        {
+          "label": "A person approves each proof",
+          "consequence": "lastro review gains an approve step for use case proofs; a proof runs as a regression test only after it is approved and passes, so a proof that checks the wrong thing is caught by a reviewer."
+        },
+        {
+          "label": "Passing is enough",
+          "consequence": "A derived proof that passes becomes a regression test at once; a proof that checks too little or the wrong thing is only caught if someone reads .lastro/proof/."
+        }
+      ],
+      "recommended": 0,
+      "intents": [
+        "P-004.I-06",
+        "P-004.I-10"
+      ]
+    }
+  ],
+  "threads": [],
+  "notPromised": [
+    "Proofs a proposal derived stay inside the proposal file until apply; only use case proofs live in .lastro/proof/.",
+    "derive --usecases writes no models or subjects: a use case it lists as unprovable needs a model added to .lastro/config.json first.",
+    "The usage of the other CLI commands (UC-030) changes."
+  ],
+  "policy": {
+    "approvals": 1,
+    "submitterCanApprove": true
+  },
+  "proofs": [],
+  "supersedes": []
+}

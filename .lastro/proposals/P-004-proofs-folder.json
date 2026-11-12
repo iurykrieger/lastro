@@ -280,7 +280,9 @@
       "intents": [
         "P-004.I-06",
         "P-004.I-10"
-      ]
+      ],
+      "chosen": 1,
+      "answeredBy": "iury"
     }
   ],
   "threads": [],

@@ -73,7 +73,7 @@ Then ask the agent to "set up Lastro" (the `setup` skill), or write `.lastro/plu
 | `skills/bootstrap` | For a repository that already has code: `lastro scan` sizes it, `lastro bootstrap` reads its code, tests and commits into a bootstrap proposal of the use cases it implements today, the user reviews it, its proofs are checked against the code as it is, and `lastro apply` records them as the baseline. |
 | `skills/propose` | Prose → proposal and its intents → the user's review (decisions, approve / request changes / reject, threads, the proofs each intent replaces) → `lastro derive`. |
 | `skills/verify` | Prove on demand, read counterexamples and regressions, fix the code, never touch proposals, use cases or proofs. |
-| `hooks/hooks.json` | `SessionStart`/`UserPromptSubmit` add the board and the rules; `PreToolUse` gates code edits and review commands; `PostToolUse` shows the board after each `lastro` command and marks proofs stale after an edit; `Stop` proves and sends failures back. |
+| `hooks/hooks.json` | `SessionStart` adds the board and the rules; `UserPromptSubmit` adds one short line, only when the board changed; `PreToolUse` gates code edits and review commands; `PostToolUse` shows the board after each `lastro` command and marks proofs stale after an edit; `Stop` proves and sends failures back. |
 | `scripts/lastro-plugin.mjs` | The hook entry point, plus `board [--line]`, `review` and `prove` for people and status lines. |
 
 ## The hooks

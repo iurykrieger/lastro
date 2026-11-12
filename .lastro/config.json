@@ -486,6 +486,131 @@
           "type": "bool"
         }
       }
+    },
+    "proof_files": {
+      "name": "proof_files",
+      "inputs": {
+        "legacy": {
+          "type": "bool"
+        },
+        "rewrite": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "loaded": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "proofFiles": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "embedded": {
+          "type": "bool"
+        },
+        "fileComplete": {
+          "type": "bool"
+        }
+      }
+    },
+    "apply_proof_files": {
+      "name": "apply_proof_files",
+      "inputs": {
+        "supersede": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "applied": {
+          "type": "bool"
+        },
+        "newFile": {
+          "type": "bool"
+        },
+        "oldFile": {
+          "type": "bool"
+        }
+      }
+    },
+    "usecase_derive": {
+      "name": "usecase_derive",
+      "inputs": {
+        "hasPassed": {
+          "type": "bool"
+        },
+        "hasPending": {
+          "type": "bool"
+        },
+        "explicit": {
+          "type": "bool"
+        },
+        "listed": {
+          "type": "bool"
+        },
+        "expressible": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "refused": {
+          "type": "bool"
+        },
+        "derived": {
+          "type": "bool"
+        },
+        "unprovable": {
+          "type": "bool"
+        },
+        "number": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "needsProposal": {
+          "type": "bool"
+        }
+      }
+    },
+    "usecase_prove": {
+      "name": "usecase_prove",
+      "inputs": {
+        "status": {
+          "type": "enum",
+          "values": [
+            "pending",
+            "passed",
+            "failed"
+          ]
+        },
+        "codeOk": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "status": {
+          "type": "enum",
+          "values": [
+            "pending",
+            "passed",
+            "failed"
+          ]
+        },
+        "regression": {
+          "type": "bool"
+        },
+        "feedback": {
+          "type": "bool"
+        },
+        "note": {
+          "type": "bool"
+        },
+        "ok": {
+          "type": "bool"
+        }
+      }
     }
   },
   "subjects": {
@@ -548,6 +673,22 @@
     "apply_rules": {
       "module": "./sdks/typescript/subjects/proposals.mjs",
       "export": "applyRules"
+    },
+    "proof_files": {
+      "module": "./sdks/typescript/subjects/usecase-proofs.mjs",
+      "export": "proofFiles"
+    },
+    "apply_proof_files": {
+      "module": "./sdks/typescript/subjects/usecase-proofs.mjs",
+      "export": "applyProofFiles"
+    },
+    "usecase_derive": {
+      "module": "./sdks/typescript/subjects/usecase-proofs.mjs",
+      "export": "usecaseDerive"
+    },
+    "usecase_prove": {
+      "module": "./sdks/typescript/subjects/usecase-proofs.mjs",
+      "export": "usecaseProve"
     }
   },
   "review": {

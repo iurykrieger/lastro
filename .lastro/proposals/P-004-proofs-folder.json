@@ -4,7 +4,7 @@
   "slug": "proofs-folder",
   "name": "Keep proofs in .lastro/proof and derive them from the established use cases",
   "description": "Proofs move out of the use case files into one file each under .lastro/proof/, and lastro derive --usecases derives proofs straight from the reviewed use cases, without a proposal.",
-  "status": "open",
+  "status": "proving",
   "submittedBy": "claude",
   "prose": "# Keep proofs in .lastro/proof and derive them from the established use cases\n\n## Where proofs live\n\nEvery proof that belongs to a use case lives in its own file, `.lastro/proof/<proof-id>-<slug>.json`, with its id,\nslug, name, description, use case, model, subject, check, status and verdict, and the intent and proposal it came\nfrom when it came from one. Use case files no longer carry the proofs: the workspace finds a use case's proofs by\ntheir `useCase` field. Apply writes each passing proof of the proposal to `.lastro/proof/` and deletes the files of\nthe proofs the proposal supersedes. A use case file that still carries a `proofs` list is read as before, and its\nproofs move to `.lastro/proof/` the next time the workspace writes that use case. The TypeScript, Go and .NET\nworkspaces read and write the same files.\n\n## Proofs from the established use cases\n\nA use case already describes, and people already reviewed, what the code does. `lastro derive --usecases` derives\nproofs straight from those descriptions, with no proposal and no intents: by default for every use case that has no\nproofs, or for the ids it is given (`--usecases UC-003,UC-016`). The derive step reads each use case's description,\nthe models and subjects declared in `.lastro/config.json` and the proofs other use cases already have, and writes\npending proofs numbered inside their use case (`UC-003.PF-01`). A use case the models cannot express gets no proof\nand is listed as unprovable with the reason, so a model can be added for it. A use case that already has proofs is\nrefused: its proofs change only through a proposal.\n\n`lastro prove --usecases` runs the pending proofs of the use cases together with every passed proof. A pending\nproof that passes becomes passed and from then on runs as a regression test, in `prove` and in `lastro regress`. A\npending proof that fails stays failed and is reported with the note that the code is the reference: either the\ndescription is wrong, and a proposal fixes it, or the code has a bug the user decides about. It never goes back to\nthe code as feedback.",
   "baseline": "sha256:3010925e700e5dba481b172a4b3ec4b5147b1cf1331f7197fcb3dabc48ccdc6e",
@@ -23,8 +23,10 @@
         "end": 201
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-02",
@@ -40,8 +42,10 @@
         "end": 466
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-03",
@@ -57,8 +61,10 @@
         "end": 755
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-04",
@@ -74,8 +80,10 @@
         "end": 595
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-05",
@@ -91,8 +99,10 @@
         "end": 825
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-06",
@@ -108,8 +118,10 @@
         "end": 1055
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-07",
@@ -125,8 +137,10 @@
         "end": 1391
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-08",
@@ -142,8 +156,10 @@
         "end": 1487
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-09",
@@ -159,8 +175,10 @@
         "end": 1610
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-10",
@@ -176,8 +194,10 @@
         "end": 1798
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-004.I-11",
@@ -193,8 +213,10 @@
         "end": 1936
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     }
   ],
   "useCases": [
@@ -295,6 +317,629 @@
     "approvals": 1,
     "submitterCanApprove": true
   },
-  "proofs": [],
-  "supersedes": []
+  "proofs": [
+    {
+      "id": "P-004.PF-01",
+      "slug": "proof-in-its-own-file",
+      "name": "A proof lives in its own file",
+      "description": "A use case's proof is read from its own complete file in .lastro/proof/.",
+      "intent": "P-004.I-01",
+      "useCase": "UC-049",
+      "model": "proof_files",
+      "subject": "proof_files",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.legacy"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.proofFiles"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            },
+            {
+              "var": "out.fileComplete"
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.loaded"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-02",
+      "slug": "use-case-file-without-proofs",
+      "name": "Use case files carry no proofs",
+      "description": "A use case file written by the workspace has no proofs list.",
+      "intent": "P-004.I-02",
+      "useCase": "UC-046",
+      "model": "proof_files",
+      "subject": "proof_files",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "or",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.legacy"
+                }
+              ]
+            },
+            {
+              "var": "in.rewrite"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.embedded"
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-03",
+      "slug": "legacy-proofs-move-on-write",
+      "name": "Old files keep their proofs and move them",
+      "description": "A use case file with a proofs list is read with its proof, which moves to .lastro/proof/ when the use case is written.",
+      "intent": "P-004.I-03",
+      "useCase": "UC-046",
+      "model": "proof_files",
+      "subject": "proof_files",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "var": "in.legacy"
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.loaded"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "var": "in.rewrite"
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.proofFiles"
+                        },
+                        {
+                          "const": 1
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "var": "out.embedded"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-04",
+      "slug": "apply-writes-and-deletes-proof-files",
+      "name": "Apply writes and deletes proof files",
+      "description": "Apply writes the new passing proof's file and deletes the superseded proof's file, and only it.",
+      "intent": "P-004.I-04",
+      "useCase": "UC-050",
+      "model": "apply_proof_files",
+      "subject": "apply_proof_files",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "var": "out.applied"
+            },
+            {
+              "var": "out.newFile"
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.oldFile"
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.supersede"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-05",
+      "slug": "shared-proof-layout-is-read",
+      "name": "The shared layout is read back",
+      "description": "Proof files in the shared .lastro/proof/ layout are read as the use case's proofs.",
+      "intent": "P-004.I-05",
+      "useCase": "UC-036",
+      "model": "proof_files",
+      "subject": "proof_files",
+      "check": {
+        "kind": "scenario",
+        "input": {
+          "legacy": false,
+          "rewrite": false
+        },
+        "expect": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.loaded"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.proofFiles"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-06",
+      "slug": "derive-unproved-without-proposal",
+      "name": "Unproved use cases get proofs without a proposal",
+      "description": "Without ids, every use case with no passed proof that the models express gets a proof, with no proposal.",
+      "intent": "P-004.I-06",
+      "useCase": "UC-054",
+      "model": "usecase_derive",
+      "subject": "usecase_derive",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.explicit"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.needsProposal"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.refused"
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.derived"
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "var": "in.hasPassed"
+                        }
+                      ]
+                    },
+                    {
+                      "var": "in.expressible"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-07",
+      "slug": "proofs-numbered-in-use-case",
+      "name": "Proofs are numbered inside the use case",
+      "description": "A derived proof is numbered after the use case's existing proofs (PF-01, or PF-02 after a pending one).",
+      "intent": "P-004.I-07",
+      "useCase": "UC-054",
+      "model": "usecase_derive",
+      "subject": "usecase_derive",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "implies",
+          "args": [
+            {
+              "var": "out.derived"
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.number"
+                },
+                {
+                  "op": "ite",
+                  "args": [
+                    {
+                      "var": "in.hasPending"
+                    },
+                    {
+                      "const": 2
+                    },
+                    {
+                      "const": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-08",
+      "slug": "inexpressible-use-case-listed",
+      "name": "A use case the models cannot express is listed",
+      "description": "A target use case the models cannot express gets no proof and is listed as unprovable.",
+      "intent": "P-004.I-08",
+      "useCase": "UC-054",
+      "model": "usecase_derive",
+      "subject": "usecase_derive",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.unprovable"
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "not",
+                          "args": [
+                            {
+                              "var": "in.hasPassed"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "or",
+                          "args": [
+                            {
+                              "op": "not",
+                              "args": [
+                                {
+                                  "var": "in.explicit"
+                                }
+                              ]
+                            },
+                            {
+                              "var": "in.listed"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "var": "in.expressible"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "var": "out.unprovable"
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "out.derived"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-09",
+      "slug": "proven-use-case-refused",
+      "name": "A use case with proofs is refused",
+      "description": "Naming a use case that has passed proofs is refused and derives nothing.",
+      "intent": "P-004.I-09",
+      "useCase": "UC-054",
+      "model": "usecase_derive",
+      "subject": "usecase_derive",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "var": "out.refused"
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "var": "in.explicit"
+                    },
+                    {
+                      "var": "in.listed"
+                    },
+                    {
+                      "var": "in.hasPassed"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "var": "out.refused"
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "out.derived"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-10",
+      "slug": "passing-use-case-proof-becomes-regression",
+      "name": "A passing proof becomes a regression test",
+      "description": "When the code satisfies it, a use case proof ends passed and runs in regress.",
+      "intent": "P-004.I-10",
+      "useCase": "UC-054",
+      "model": "usecase_prove",
+      "subject": "usecase_prove",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "var": "in.codeOk"
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.status"
+                },
+                {
+                  "const": "passed"
+                }
+              ]
+            },
+            {
+              "var": "out.regression"
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-004.PF-11",
+      "slug": "failing-use-case-proof-goes-to-user",
+      "name": "A failing use case proof goes to the user",
+      "description": "A pending or failed use case proof that fails ends failed, with the note, without feedback to the code.",
+      "intent": "P-004.I-11",
+      "useCase": "UC-054",
+      "model": "usecase_prove",
+      "subject": "usecase_prove",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.codeOk"
+                }
+              ]
+            },
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "in.status"
+                },
+                {
+                  "const": "passed"
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.status"
+                },
+                {
+                  "const": "failed"
+                }
+              ]
+            },
+            {
+              "var": "out.note"
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.feedback"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.ok"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "out.regression"
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    }
+  ],
+  "supersedes": [],
+  "hash": "sha256:eaf5f6470109208232387444fbd3634fa016bf3c6d4fe0a04543e09a7d02b7af"
 }

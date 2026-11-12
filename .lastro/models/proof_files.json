@@ -1,0 +1,29 @@
+{
+  "name": "proof_files",
+  "inputs": {
+    "legacy": {
+      "type": "bool"
+    },
+    "rewrite": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "loaded": {
+      "type": "int",
+      "min": 0,
+      "max": 2
+    },
+    "proofFiles": {
+      "type": "int",
+      "min": 0,
+      "max": 2
+    },
+    "embedded": {
+      "type": "bool"
+    },
+    "fileComplete": {
+      "type": "bool"
+    }
+  }
+}

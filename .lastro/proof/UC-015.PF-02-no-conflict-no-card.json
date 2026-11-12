@@ -1,0 +1,46 @@
+{
+  "id": "UC-015.PF-02",
+  "slug": "no-conflict-no-card",
+  "name": "Compatible clauses raise no card",
+  "description": "When the clauses agree, no decision card is raised and the spec is ok.",
+  "useCase": "UC-015",
+  "model": "contradictions",
+  "subject": "contradictions",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.a"
+        },
+        {
+          "var": "in.b"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.cards"
+            },
+            {
+              "const": 0
+            }
+          ]
+        },
+        {
+          "var": "out.ok"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

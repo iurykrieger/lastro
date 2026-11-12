@@ -1,0 +1,49 @@
+{
+  "id": "UC-031.PF-01",
+  "slug": "request-and-exit-3",
+  "name": "An unanswered step writes its request and exits 3",
+  "description": "Without an answer file, the CLI writes llm/<id>.request.json with the instructions, system prompt, user data and JSON Schema, and exits 3 naming the answer path.",
+  "useCase": "UC-031",
+  "model": "handoff",
+  "subject": "handoff",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "not",
+      "args": [
+        {
+          "var": "in.answered"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.exit"
+            },
+            {
+              "const": 3
+            }
+          ]
+        },
+        {
+          "var": "out.requestFile"
+        },
+        {
+          "var": "out.requestComplete"
+        },
+        {
+          "var": "out.answerNamed"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

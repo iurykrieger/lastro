@@ -1,0 +1,30 @@
+{
+  "id": "UC-030.PF-03",
+  "slug": "derive-refuses-pending-review",
+  "name": "derive refuses while review is pending",
+  "description": "derive refuses while the proposal's review is pending.",
+  "useCase": "UC-030",
+  "model": "cli_exits",
+  "subject": "cli_exits",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.situation"
+        },
+        {
+          "const": "derive-pending"
+        }
+      ]
+    },
+    "ensures": {
+      "var": "out.refusedPending"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

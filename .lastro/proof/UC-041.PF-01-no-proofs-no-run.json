@@ -1,0 +1,45 @@
+{
+  "id": "UC-041.PF-01",
+  "slug": "no-proofs-no-run",
+  "name": "Without derived proofs the stop goes through",
+  "description": "With no derived proofs, the Stop hook neither proves nor blocks.",
+  "useCase": "UC-041",
+  "model": "stop_hook",
+  "subject": "stop_hook",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "not",
+      "args": [
+        {
+          "var": "in.derived"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.block"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.proved"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

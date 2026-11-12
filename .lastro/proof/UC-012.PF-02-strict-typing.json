@@ -1,0 +1,110 @@
+{
+  "id": "UC-012.PF-02",
+  "slug": "strict-typing",
+  "name": "Evaluation is strictly typed",
+  "description": "Evaluating a valid expression fails exactly when a non-boolean is used where a boolean is expected or a non-number in arithmetic.",
+  "useCase": "UC-012",
+  "model": "lsl_eval",
+  "subject": "lsl_eval",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.invalid"
+            }
+          ]
+        },
+        {
+          "op": "lt",
+          "args": [
+            {
+              "var": "in.depth"
+            },
+            {
+              "const": 60
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.error"
+        },
+        {
+          "op": "or",
+          "args": [
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "in",
+                  "args": [
+                    {
+                      "var": "in.op"
+                    },
+                    {
+                      "const": "not"
+                    },
+                    {
+                      "const": "ite"
+                    }
+                  ]
+                },
+                {
+                  "op": "neq",
+                  "args": [
+                    {
+                      "var": "in.argType"
+                    },
+                    {
+                      "const": "bool"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.op"
+                    },
+                    {
+                      "const": "add"
+                    }
+                  ]
+                },
+                {
+                  "op": "neq",
+                  "args": [
+                    {
+                      "var": "in.argType"
+                    },
+                    {
+                      "const": "int"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

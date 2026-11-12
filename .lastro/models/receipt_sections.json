@@ -1,0 +1,37 @@
+{
+  "name": "receipt_sections",
+  "inputs": {
+    "notPromised": {
+      "type": "bool"
+    },
+    "regression": {
+      "type": "bool"
+    },
+    "stillPass": {
+      "type": "bool"
+    },
+    "violated": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "showsDiff": {
+      "type": "bool"
+    },
+    "showsReplaced": {
+      "type": "bool"
+    },
+    "showsRegression": {
+      "type": "bool"
+    },
+    "showsStillPass": {
+      "type": "bool"
+    },
+    "showsCounterexample": {
+      "type": "bool"
+    },
+    "showsNotPromised": {
+      "type": "bool"
+    }
+  }
+}

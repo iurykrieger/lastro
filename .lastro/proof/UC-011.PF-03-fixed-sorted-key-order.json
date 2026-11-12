@@ -1,0 +1,22 @@
+{
+  "id": "UC-011.PF-03",
+  "slug": "fixed-sorted-key-order",
+  "name": "Finite spaces enumerate in a fixed, sorted-key order",
+  "description": "Enumerating a finite input space gives the same order whatever order its inputs were declared in.",
+  "useCase": "UC-011",
+  "model": "domain_kinds",
+  "subject": "domain_kinds",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "out.finite"
+    },
+    "ensures": {
+      "var": "out.sortedOrder"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

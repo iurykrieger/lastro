@@ -1,0 +1,83 @@
+{
+  "id": "UC-014.PF-02",
+  "slug": "uncovered-is-a-gap",
+  "name": "An uncovered approved intent is a gap, not an error",
+  "description": "On an otherwise valid plan, an approved intent covered by nothing is reported as a gap and is not an error.",
+  "useCase": "UC-014",
+  "model": "plan_check",
+  "subject": "plan_check",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "var": "in.approved"
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.tampered"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.ref"
+            },
+            {
+              "const": "known-approved"
+            }
+          ]
+        },
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "in.duplicate"
+            }
+          ]
+        },
+        {
+          "var": "in.scenarioComplete"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.errors"
+            }
+          ]
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.gap"
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.covered"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "not_promised",
+  "inputs": {
+    "extracted": {
+      "type": "bool"
+    },
+    "appended": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "count": {
+      "type": "int",
+      "min": 0,
+      "max": 2
+    },
+    "inHash": {
+      "type": "bool"
+    },
+    "inDerive": {
+      "type": "bool"
+    },
+    "inReceipt": {
+      "type": "bool"
+    }
+  }
+}

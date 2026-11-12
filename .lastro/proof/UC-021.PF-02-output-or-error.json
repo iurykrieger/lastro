@@ -1,0 +1,62 @@
+{
+  "id": "UC-021.PF-02",
+  "slug": "output-or-error",
+  "name": "A scenario reports the output or the error",
+  "description": "A scenario reports the output when the code returns and the error when it throws.",
+  "useCase": "UC-021",
+  "model": "scenario_run",
+  "subject": "scenario_run",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "iff",
+          "args": [
+            {
+              "var": "out.output"
+            },
+            {
+              "op": "in",
+              "args": [
+                {
+                  "var": "in.subject"
+                },
+                {
+                  "const": "right"
+                },
+                {
+                  "const": "wrong"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.subject"
+                },
+                {
+                  "const": "throws"
+                }
+              ]
+            },
+            {
+              "var": "out.error"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

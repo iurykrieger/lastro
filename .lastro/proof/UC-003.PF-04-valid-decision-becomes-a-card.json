@@ -1,0 +1,62 @@
+{
+  "id": "UC-003.PF-04",
+  "slug": "valid-decision-becomes-a-card",
+  "name": "A valid decision becomes a card",
+  "description": "A decision from the extractor with at least two options and a recommended option among them becomes a decision card.",
+  "useCase": "UC-003",
+  "model": "change_kinds",
+  "subject": "change_kinds",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "ge",
+          "args": [
+            {
+              "var": "in.recommended"
+            },
+            {
+              "const": 0
+            }
+          ]
+        },
+        {
+          "op": "lt",
+          "args": [
+            {
+              "var": "in.recommended"
+            },
+            {
+              "var": "in.options"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.llmDecision"
+        },
+        {
+          "op": "ge",
+          "args": [
+            {
+              "var": "in.options"
+            },
+            {
+              "const": 2
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

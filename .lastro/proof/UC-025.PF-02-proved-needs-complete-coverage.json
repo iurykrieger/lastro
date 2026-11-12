@@ -1,0 +1,22 @@
+{
+  "id": "UC-025.PF-02",
+  "slug": "proved-needs-complete-coverage",
+  "name": "The prover proves only with complete coverage",
+  "description": "The prover says proved only with complete coverage.",
+  "useCase": "UC-025",
+  "model": "crosscheck",
+  "subject": "crosscheck",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "out.proved"
+    },
+    "ensures": {
+      "var": "out.complete"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

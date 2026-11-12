@@ -1,0 +1,35 @@
+{
+  "id": "UC-008.PF-02",
+  "slug": "records-the-chosen-option",
+  "name": "The chosen option is recorded",
+  "description": "An accepted answer records the chosen option.",
+  "useCase": "UC-008",
+  "model": "decision_answer",
+  "subject": "decision_answer",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "not",
+      "args": [
+        {
+          "var": "out.throws"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.chosen"
+        },
+        {
+          "var": "in.option"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

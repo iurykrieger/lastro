@@ -1,0 +1,78 @@
+{
+  "id": "UC-003.PF-03",
+  "slug": "decision-needs-options-and-recommendation",
+  "name": "A decision needs options and a recommended one among them",
+  "description": "A decision from the extractor is refused when it has fewer than two options or its recommended index is not one of its options.",
+  "useCase": "UC-003",
+  "model": "change_kinds",
+  "subject": "change_kinds",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.refused"
+        },
+        {
+          "op": "and",
+          "args": [
+            {
+              "op": "gt",
+              "args": [
+                {
+                  "var": "in.options"
+                },
+                {
+                  "const": 0
+                }
+              ]
+            },
+            {
+              "op": "or",
+              "args": [
+                {
+                  "op": "lt",
+                  "args": [
+                    {
+                      "var": "in.options"
+                    },
+                    {
+                      "const": 2
+                    }
+                  ]
+                },
+                {
+                  "op": "lt",
+                  "args": [
+                    {
+                      "var": "in.recommended"
+                    },
+                    {
+                      "const": 0
+                    }
+                  ]
+                },
+                {
+                  "op": "ge",
+                  "args": [
+                    {
+                      "var": "in.recommended"
+                    },
+                    {
+                      "var": "in.options"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

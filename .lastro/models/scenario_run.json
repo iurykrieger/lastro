@@ -1,0 +1,32 @@
+{
+  "name": "scenario_run",
+  "inputs": {
+    "subject": {
+      "type": "enum",
+      "values": [
+        "none",
+        "right",
+        "wrong",
+        "throws"
+      ]
+    }
+  },
+  "outputs": {
+    "status": {
+      "type": "enum",
+      "values": [
+        "passed",
+        "failed"
+      ]
+    },
+    "output": {
+      "type": "bool"
+    },
+    "error": {
+      "type": "bool"
+    },
+    "empirical": {
+      "type": "bool"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "stop_hook",
+  "inputs": {
+    "derived": {
+      "type": "bool"
+    },
+    "lastRun": {
+      "type": "enum",
+      "values": [
+        "none",
+        "passed",
+        "failed"
+      ]
+    },
+    "dirty": {
+      "type": "bool"
+    },
+    "proves": {
+      "type": "bool"
+    },
+    "buildFails": {
+      "type": "bool"
+    },
+    "attempts": {
+      "type": "int",
+      "min": 3,
+      "max": 6
+    }
+  },
+  "outputs": {
+    "block": {
+      "type": "bool"
+    },
+    "attempt": {
+      "type": "int",
+      "min": 0,
+      "max": 8
+    },
+    "max": {
+      "type": "int",
+      "min": 0,
+      "max": 8
+    },
+    "proved": {
+      "type": "bool"
+    },
+    "buildFirst": {
+      "type": "bool"
+    },
+    "failuresSent": {
+      "type": "bool"
+    }
+  }
+}

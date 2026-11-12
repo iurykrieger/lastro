@@ -1,0 +1,62 @@
+{
+  "id": "UC-014.PF-01",
+  "slug": "plan-errors",
+  "name": "Plan check errors",
+  "description": "The plan check reports errors exactly when the artifact is not approved or changed after approval, a clause references no known approved intent (an unknown, a rejected or none), ids repeat, or a scenario misses an input.",
+  "useCase": "UC-014",
+  "model": "plan_check",
+  "subject": "plan_check",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.errors"
+        },
+        {
+          "op": "or",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.approved"
+                }
+              ]
+            },
+            {
+              "var": "in.tampered"
+            },
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "in.ref"
+                },
+                {
+                  "const": "known-approved"
+                }
+              ]
+            },
+            {
+              "var": "in.duplicate"
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.scenarioComplete"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

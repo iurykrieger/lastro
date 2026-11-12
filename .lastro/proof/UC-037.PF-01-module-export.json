@@ -1,0 +1,49 @@
+{
+  "id": "UC-037.PF-01",
+  "slug": "module-export",
+  "name": "The TypeScript CLI imports a module export",
+  "description": "The TypeScript CLI proves a JavaScript module's default export, or the export named by --export.",
+  "useCase": "UC-037",
+  "model": "subject_module",
+  "subject": "subject_module",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "in",
+      "args": [
+        {
+          "var": "in.exportName"
+        },
+        {
+          "const": "default"
+        },
+        {
+          "const": "named"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.exit"
+            },
+            {
+              "const": 0
+            }
+          ]
+        },
+        {
+          "var": "out.proved"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

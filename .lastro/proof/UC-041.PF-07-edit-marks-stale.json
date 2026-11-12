@@ -1,0 +1,35 @@
+{
+  "id": "UC-041.PF-07",
+  "slug": "edit-marks-stale",
+  "name": "A code edit marks the proof stale",
+  "description": "A code edit marks the last proof stale in the plugin state; editing a proposal does not.",
+  "useCase": "UC-041",
+  "model": "edit_marks_stale",
+  "subject": "edit_marks_stale",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.dirty"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.path"
+            },
+            {
+              "const": "code"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

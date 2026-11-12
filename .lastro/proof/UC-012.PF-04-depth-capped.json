@@ -1,0 +1,30 @@
+{
+  "id": "UC-012.PF-04",
+  "slug": "depth-capped",
+  "name": "Recursion is capped at depth 64",
+  "description": "Evaluating an expression nested deeper than 64 levels is an error.",
+  "useCase": "UC-012",
+  "model": "lsl_eval",
+  "subject": "lsl_eval",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "gt",
+      "args": [
+        {
+          "var": "in.depth"
+        },
+        {
+          "const": 64
+        }
+      ]
+    },
+    "ensures": {
+      "var": "out.error"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

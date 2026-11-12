@@ -1,0 +1,147 @@
+{
+  "id": "UC-028.PF-01",
+  "slug": "explains-each-clause",
+  "name": "One run explained",
+  "description": "For a clause on one run, explainRun says its if-part is false, it holds, it fails, or evaluating it raised an error.",
+  "useCase": "UC-028",
+  "model": "explain_run",
+  "subject": "explain_run",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.applies"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.status"
+                },
+                {
+                  "const": "if-part-false"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "and",
+              "args": [
+                {
+                  "var": "in.applies"
+                },
+                {
+                  "var": "in.erroring"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.status"
+                },
+                {
+                  "const": "error"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "and",
+              "args": [
+                {
+                  "var": "in.applies"
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.erroring"
+                    }
+                  ]
+                },
+                {
+                  "var": "in.holds"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.status"
+                },
+                {
+                  "const": "holds"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "and",
+              "args": [
+                {
+                  "var": "in.applies"
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.erroring"
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "var": "in.holds"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.status"
+                },
+                {
+                  "const": "fails"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

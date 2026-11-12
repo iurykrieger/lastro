@@ -1,0 +1,22 @@
+{
+  "id": "UC-012.PF-03",
+  "slug": "unbound-rejected",
+  "name": "Unbound variables are rejected",
+  "description": "Evaluating an expression with a variable the context does not bind is an error.",
+  "useCase": "UC-012",
+  "model": "lsl_eval",
+  "subject": "lsl_eval",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.unbound"
+    },
+    "ensures": {
+      "var": "out.error"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

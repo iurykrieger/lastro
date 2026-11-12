@@ -1,0 +1,30 @@
+{
+  "id": "UC-021.PF-03",
+  "slug": "scenarios-are-empirical",
+  "name": "Scenarios are empirical evidence",
+  "description": "A scenario counts as empirical evidence for its intent.",
+  "useCase": "UC-021",
+  "model": "scenario_run",
+  "subject": "scenario_run",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "neq",
+      "args": [
+        {
+          "var": "in.subject"
+        },
+        {
+          "const": "none"
+        }
+      ]
+    },
+    "ensures": {
+      "var": "out.empirical"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

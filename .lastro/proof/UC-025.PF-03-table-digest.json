@@ -1,0 +1,19 @@
+{
+  "id": "UC-025.PF-03",
+  "slug": "table-digest",
+  "name": "The table has a SHA-256 digest",
+  "description": "The prover returns a SHA-256 digest of the table.",
+  "useCase": "UC-025",
+  "model": "crosscheck",
+  "subject": "crosscheck",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "var": "out.digest"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

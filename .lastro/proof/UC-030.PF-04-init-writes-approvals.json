@@ -1,0 +1,19 @@
+{
+  "id": "UC-030.PF-04",
+  "slug": "init-writes-approvals",
+  "name": "init --approvals writes review.approvals",
+  "description": "init --approvals writes review.approvals to config.json.",
+  "useCase": "UC-030",
+  "model": "cli_exits",
+  "subject": "cli_exits",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "var": "out.approvalsWritten"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

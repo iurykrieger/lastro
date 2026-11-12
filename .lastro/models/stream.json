@@ -1,0 +1,35 @@
+{
+  "name": "stream",
+  "inputs": {
+    "codeOk": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "sameExit": {
+      "type": "bool"
+    },
+    "oneObjectPerLine": {
+      "type": "bool"
+    },
+    "startFirst": {
+      "type": "bool"
+    },
+    "resultLast": {
+      "type": "bool"
+    },
+    "sameResult": {
+      "type": "bool"
+    },
+    "clauseEvents": {
+      "type": "int",
+      "min": 0,
+      "max": 5
+    },
+    "proofs": {
+      "type": "int",
+      "min": 0,
+      "max": 5
+    }
+  }
+}

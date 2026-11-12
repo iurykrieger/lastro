@@ -1,0 +1,92 @@
+{
+  "id": "UC-003.PF-05",
+  "slug": "extraction-card-creates-no-intent",
+  "name": "An extraction card's answer creates no intent",
+  "description": "Answering a card with origin extraction records the chosen option and creates no intent.",
+  "useCase": "UC-003",
+  "model": "decision_answer",
+  "subject": "decision_answer",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.origin"
+            },
+            {
+              "const": "extraction"
+            }
+          ]
+        },
+        {
+          "var": "in.known"
+        },
+        {
+          "op": "ge",
+          "args": [
+            {
+              "var": "in.option"
+            },
+            {
+              "const": 0
+            }
+          ]
+        },
+        {
+          "op": "lt",
+          "args": [
+            {
+              "var": "in.option"
+            },
+            {
+              "const": 2
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "not",
+          "args": [
+            {
+              "var": "out.throws"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.chosen"
+            },
+            {
+              "var": "in.option"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.linked"
+            },
+            {
+              "const": 0
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

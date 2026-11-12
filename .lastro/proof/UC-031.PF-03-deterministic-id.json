@@ -1,0 +1,19 @@
+{
+  "id": "UC-031.PF-03",
+  "slug": "deterministic-id",
+  "name": "Request ids are deterministic",
+  "description": "The same request gets the same id, so the agent's answer is found when the command runs again.",
+  "useCase": "UC-031",
+  "model": "handoff",
+  "subject": "handoff",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "var": "out.sameId"
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

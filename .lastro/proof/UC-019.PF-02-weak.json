@@ -1,0 +1,102 @@
+{
+  "id": "UC-019.PF-02",
+  "slug": "weak",
+  "name": "A clause that rejects no mutant is weak",
+  "description": "A clause that holds but rejects none of the planted output mutants is weak, and the TypeScript engine keeps its formal or empirical evidence label.",
+  "useCase": "UC-019",
+  "model": "verify_clause",
+  "subject": "verify_clause",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.kind"
+            },
+            {
+              "const": "weak"
+            }
+          ]
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.bug"
+            },
+            {
+              "const": "none"
+            }
+          ]
+        }
+      ]
+    },
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.verdict"
+            },
+            {
+              "const": "weak"
+            }
+          ]
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.evidence"
+                },
+                {
+                  "const": "formal"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "var": "in.large"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.evidence"
+                },
+                {
+                  "const": "empirical"
+                }
+              ]
+            },
+            {
+              "var": "in.large"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

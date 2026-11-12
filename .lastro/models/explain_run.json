@@ -1,0 +1,25 @@
+{
+  "name": "explain_run",
+  "inputs": {
+    "applies": {
+      "type": "bool"
+    },
+    "holds": {
+      "type": "bool"
+    },
+    "erroring": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "status": {
+      "type": "enum",
+      "values": [
+        "if-part-false",
+        "holds",
+        "fails",
+        "error"
+      ]
+    }
+  }
+}

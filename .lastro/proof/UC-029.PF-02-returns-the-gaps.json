@@ -1,0 +1,75 @@
+{
+  "id": "UC-029.PF-02",
+  "slug": "returns-the-gaps",
+  "name": "The gaps come back as given, an empty list included",
+  "description": "gapReview returns the gaps the LLM gives back; an empty list is valid.",
+  "useCase": "UC-029",
+  "model": "gap_review",
+  "subject": "gap_review",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.answer"
+                },
+                {
+                  "const": "empty"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.gaps"
+                },
+                {
+                  "const": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.answer"
+                },
+                {
+                  "const": "one"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.gaps"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

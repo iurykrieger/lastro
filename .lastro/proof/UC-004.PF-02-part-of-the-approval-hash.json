@@ -1,0 +1,35 @@
+{
+  "id": "UC-004.PF-02",
+  "slug": "part-of-the-approval-hash",
+  "name": "Not promised is part of the approval hash",
+  "description": "The not-promised items are part of the approval hash: with any of them the hash differs from the same artifact without them.",
+  "useCase": "UC-004",
+  "model": "not_promised",
+  "subject": "not_promised",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.inHash"
+        },
+        {
+          "op": "gt",
+          "args": [
+            {
+              "var": "out.count"
+            },
+            {
+              "const": 0
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

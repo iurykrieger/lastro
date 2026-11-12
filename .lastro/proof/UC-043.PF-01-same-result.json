@@ -1,0 +1,36 @@
+{
+  "id": "UC-043.PF-01",
+  "slug": "same-result",
+  "name": "The stream ends with the same result",
+  "description": "prove --stream prints one JSON object per line, starting with start and ending with result, which holds the body prove prints without --stream, with the same exit code.",
+  "useCase": "UC-043",
+  "model": "stream",
+  "subject": "stream",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "var": "out.sameExit"
+        },
+        {
+          "var": "out.oneObjectPerLine"
+        },
+        {
+          "var": "out.startFirst"
+        },
+        {
+          "var": "out.resultLast"
+        },
+        {
+          "var": "out.sameResult"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

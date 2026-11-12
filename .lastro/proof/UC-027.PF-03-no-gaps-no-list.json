@@ -1,0 +1,38 @@
+{
+  "id": "UC-027.PF-03",
+  "slug": "no-gaps-no-list",
+  "name": "No spec gaps, none listed",
+  "description": "With every intent covered by a useful clause, there are no spec gaps.",
+  "useCase": "UC-027",
+  "model": "agent_feedback",
+  "subject": "agent_feedback",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "in.gap"
+        },
+        {
+          "const": "none"
+        }
+      ]
+    },
+    "ensures": {
+      "op": "eq",
+      "args": [
+        {
+          "var": "out.specGaps"
+        },
+        {
+          "const": 0
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

@@ -1,0 +1,35 @@
+{
+  "id": "UC-025.PF-01",
+  "slug": "complete-coverage",
+  "name": "Coverage is complete only when every input appears once",
+  "description": "The prover calls coverage complete only when every input of the space appears exactly once in the table, in its domain.",
+  "useCase": "UC-025",
+  "model": "crosscheck",
+  "subject": "crosscheck",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "iff",
+      "args": [
+        {
+          "var": "out.complete"
+        },
+        {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.table"
+            },
+            {
+              "const": "complete"
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "failed",
+  "verdict": "violated",
+  "evidence": "empirical"
+}

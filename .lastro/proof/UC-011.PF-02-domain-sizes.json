@@ -1,0 +1,102 @@
+{
+  "id": "UC-011.PF-02",
+  "slug": "domain-sizes",
+  "name": "Finite domains enumerate their values",
+  "description": "A bool domain has 2 values, the enum a, b, c has 3, and the int from 0 to 4 has 5.",
+  "useCase": "UC-011",
+  "model": "domain_kinds",
+  "subject": "domain_kinds",
+  "check": {
+    "kind": "clause",
+    "ensures": {
+      "op": "and",
+      "args": [
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.kind"
+                },
+                {
+                  "const": "bool"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.size"
+                },
+                {
+                  "const": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.kind"
+                },
+                {
+                  "const": "enum"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.size"
+                },
+                {
+                  "const": 3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.kind"
+                },
+                {
+                  "const": "int-bounded"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.size"
+                },
+                {
+                  "const": 5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

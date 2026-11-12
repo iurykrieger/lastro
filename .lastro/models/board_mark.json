@@ -1,0 +1,41 @@
+{
+  "name": "board_mark",
+  "inputs": {
+    "verdict": {
+      "type": "enum",
+      "values": [
+        "pending",
+        "proved",
+        "evidenced",
+        "violated",
+        "weak",
+        "vacuous"
+      ]
+    },
+    "beyond": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "mark": {
+      "type": "enum",
+      "values": [
+        "✓",
+        "≈",
+        "✗",
+        "!",
+        "○",
+        "other"
+      ]
+    },
+    "counterexample": {
+      "type": "bool"
+    },
+    "beyondListed": {
+      "type": "bool"
+    },
+    "nextStep": {
+      "type": "bool"
+    }
+  }
+}

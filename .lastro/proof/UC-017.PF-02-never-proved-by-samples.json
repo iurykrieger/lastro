@@ -1,0 +1,30 @@
+{
+  "id": "UC-017.PF-02",
+  "slug": "never-proved-by-samples",
+  "name": "Samples never prove",
+  "description": "A clause checked on samples is never proved.",
+  "useCase": "UC-017",
+  "model": "verify_clause",
+  "subject": "verify_clause",
+  "check": {
+    "kind": "clause",
+    "requires": {
+      "var": "in.large"
+    },
+    "ensures": {
+      "op": "neq",
+      "args": [
+        {
+          "var": "out.verdict"
+        },
+        {
+          "const": "proved"
+        }
+      ]
+    },
+    "assumptions": []
+  },
+  "status": "passed",
+  "verdict": "proved",
+  "evidence": "formal"
+}

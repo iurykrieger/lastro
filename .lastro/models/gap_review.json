@@ -1,0 +1,43 @@
+{
+  "name": "gap_review",
+  "inputs": {
+    "assumption": {
+      "type": "bool"
+    },
+    "beyond": {
+      "type": "bool"
+    },
+    "answer": {
+      "type": "enum",
+      "values": [
+        "empty",
+        "one"
+      ]
+    }
+  },
+  "outputs": {
+    "step": {
+      "type": "bool"
+    },
+    "intents": {
+      "type": "bool"
+    },
+    "clauses": {
+      "type": "bool"
+    },
+    "pieces": {
+      "type": "bool"
+    },
+    "beyondProof": {
+      "type": "bool"
+    },
+    "source": {
+      "type": "bool"
+    },
+    "gaps": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    }
+  }
+}

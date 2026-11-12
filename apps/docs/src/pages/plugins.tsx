@@ -161,3 +161,80 @@ export function PluginAgents() {
     </>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Review app
+// ---------------------------------------------------------------------------
+
+export function PluginReviewApp() {
+  return (
+    <>
+      <H1>Review app</H1>
+      <Lead>
+        A web app to browse the use cases, their proofs and the proposals, and to review intents together, the way a team reviews a pull request. Intent review
+        replaces code review, so it gets the same tools: a diff per use case, approvals per reviewer, threads, and a merge box that says what still blocks.
+      </Lead>
+
+      <H2>Run it</H2>
+      <Code lang="bash" title="from the repository" code={`$ npm install
+$ npm run review                              # this repository's .lastro/, at http://localhost:5175
+$ LASTRO_DIR=../shop/.lastro npm run review   # any other workspace`} />
+      <P>
+        The app lives in <C>apps/review</C>. It reads and writes the <A to="cli/workspace">workspace</A> through the TypeScript SDK (<C>reviewProposal</C>,{" "}
+        <C>approveProposal</C>, <C>recombineAfter</C>), so every action means exactly what <C>lastro review</C> means. It runs on a small server (Vite's dev
+        server, or <C>vite preview</C> after a build), never as a static page, because it writes files.
+      </P>
+
+      <H2>What you see</H2>
+      <DataTable
+        head={["Page", "What it shows"]}
+        rows={[
+          ["Proposals", "Every proposal with its status, how many intents are settled, what blocks it, and how many intents wait for you."],
+          ["Conversation", "The prose, the decisions to answer, the threads, and what the proposal does not promise."],
+          [
+            "Use cases changed",
+            "One block per touched use case, like a changed file: its description before and after as a word diff, then its intents. Each intent shows the quote it came from and the proofs approving it replaces. Filter by all, not settled, or waiting for me.",
+          ],
+          ["Proofs", "The proofs derived for the proposal, the ones it supersedes, and the last run."],
+          [
+            "Time-lapse",
+            "Every lastro prove run of the proposal while the code is written, as a Gantt: one bar per intent (failing, then passing since run n) and one row per proof, plus the use cases' regression proofs. Play it, scrub it, or click a run or a cell to see what the proof checks, its verdict, the counterexample, and what changed since the run before.",
+          ],
+          ["Use cases", "The application today: every use case, its regression proofs, its history, and the changes open proposals make to it."],
+        ]}
+      />
+
+      <H2>Reviewing</H2>
+      <P>
+        Approve, amend or reject each intent, answer each decision, and comment in threads. Rejecting or amending an intent makes its use case's after stale: write
+        it by hand (<C>Edit after</C>) or ask the LLM to recombine it from the remaining intents; either way those intents need review again. When nothing blocks,
+        the app approves the proposal under its policy, as the CLI does, and the approved intents become the brief for whoever writes the code.
+      </P>
+      <Callout kind="note" title="People review, agents author">
+        The LLM is the author of the intents; every person is a reviewer. The app refuses agent names (<C>claude</C>, <C>codex</C>, <C>agent</C>,{" "}
+        <C>assistant</C>, <C>ai</C>, <C>bot</C>) as reviewers, and the policy in <C>.lastro/config.json</C> decides how many approvals an intent needs and
+        whether the submitter counts.
+      </Callout>
+
+      <H2>Following the implementation</H2>
+      <P>
+        Once a proposal is approved and its proofs derived, each <C>lastro prove</C> appends its run to{" "}
+        <C>.lastro/proposals/&lt;id&gt;-&lt;slug&gt;.runs.jsonl</C>: when it ran, the commit and whether the tree had uncommitted changes, and every proof's
+        outcome. The time-lapse tab draws that history and updates as new runs land, so you can watch an agent's implementation converge, see which intent
+        started passing when, spot a regression the moment it appears, and open the counterexample of any run to troubleshoot.
+      </P>
+
+      <H2>Reviewing together</H2>
+      <P>
+        Collaboration is file-backed, like the rest of Lastro. Who you are is the name in the header: <C>LASTRO_REVIEWER</C> or <C>git config user.name</C> by
+        default, changeable per browser. Everyone who opens the same server reviews the same files: actions are applied one at a time to the latest file, and every
+        open page updates as soon as a file in <C>.lastro/</C> changes, whether a reviewer, an agent running the CLI, or a <C>git pull</C> changed it. Reviewers on
+        other machines run the app on their own checkout and share the proposal file through git, like any other change.
+      </P>
+      <P>
+        Recombining an after asks the LLM: with <C>ANTHROPIC_API_KEY</C> set on the server it calls Claude; without it, it writes the same{" "}
+        <A to="cli/llm">handoff</A> request as the CLI to <C>.lastro/llm/</C>, an agent answers it, and you recombine again.
+      </P>
+    </>
+  );
+}

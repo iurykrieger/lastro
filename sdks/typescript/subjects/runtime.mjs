@@ -595,7 +595,114 @@ const pending = (what) => () => {
   throw new Error(`not implemented yet: ${what}`);
 };
 // I-16, I-36: the Rust prover and the Go and .NET ports.
-export const smCrosscheck = pending("state machines in the Rust prover");
-export const sdkParity = pending("the Go and .NET ports");
+// The other engines, built once per run: the Rust prover (WASM), the Go CLI and the .NET CLI.
+const ENGINE_DIR = mkdtempSync(join(tmpdir(), "lastro-engines-"));
+let rustEngine;
+const engines = {
+  async rust(request) {
+    rustEngine ??= await Lastro.loadRustProver(readFileSync(join(ROOT, "sdks", "typescript", "wasm", "lastro_core.wasm")));
+    return rustEngine.proveMachine(request);
+  },
+  go(request) {
+    const bin = join(ENGINE_DIR, "lastro-go");
+    if (!existsSync(bin)) execFileSync("go", ["build", "-o", bin, "./cmd/lastro-go"], { cwd: join(ROOT, "sdks", "go"), stdio: "ignore" });
+    return explore([bin], request);
+  },
+  dotnet(request) {
+    const dll = join(ENGINE_DIR, "dotnet", "Lastro.Cli.dll");
+    if (!existsSync(dll)) execFileSync("dotnet", ["build", join(ROOT, "sdks", "dotnet", "src", "Lastro.Cli"), "-c", "Release", "-o", join(ENGINE_DIR, "dotnet")], { stdio: "ignore" });
+    return explore(["dotnet", dll], request);
+  },
+};
+function explore([cmd, ...args], request) {
+  const file = join(ENGINE_DIR, "request.json");
+  writeFileSync(file, JSON.stringify(request));
+  const body = JSON.parse(execFileSync(cmd === "dotnet" ? "dotnet" : cmd, [...args, "explore", file], { encoding: "utf8" }));
+  return { ...body.report, mermaid: body.mermaid };
+}
+
+// The machines the engines are compared on: a correct counter, and one bug per kind of clause.
+const CROSS_STEPS = {
+  none: (x) => (x.event === "read" && x.pc === "idle" ? { n: x.n + 1, pc: "done" } : null),
+  invariant: (x) => (x.event === "read" && x.pc === "idle" ? { n: x.n + 2, pc: "done" } : null),
+  race: (x) => (x.event === "read" && x.pc === "idle" ? { t: x.n, pc: "read" } : x.event === "write" && x.pc === "read" ? { n: x.t + 1, pc: "done" } : null),
+  step: (x) => (x.event === "read" && x.pc === "idle" ? { t: x.n, pc: "read" } : x.event === "write" && x.pc === "read" ? { n: x.n + 1, pc: "idle" } : null),
+};
+function crossCase(bug) {
+  const v = (n) => ({ var: n });
+  const k = (x) => ({ const: x });
+  const op = (o, ...args) => ({ op: o, args });
+  const model = { ...counterModel(true), actors: 2 };
+  delete model.transitions;
+  const done = (a) => op("ite", op("eq", v(`in.pc_${a}`), k("done")), k(1), k(0));
+  const clauses = [
+    { id: "C1", kind: "invariant", holds: op("eq", v("in.n"), op("add", done(1), done(2))) },
+    { id: "C2", kind: "step", requires: op("eq", v("in.event"), k("write")), ensures: op("eq", v("out.pc"), k("done")) },
+    { id: "C3", kind: "reach", condition: op("eq", v("in.n"), k(2)) },
+  ];
+  return { model, clauses, step: CROSS_STEPS[bug] };
+}
+async function tsExplore(model, clauses, code) {
+  const table = [];
+  const step = (x) => {
+    const out = code(x);
+    table.push({ input: { ...x }, output: out ?? null });
+    return out;
+  };
+  const report = await Lastro.exploreMachine(model, step, clauses);
+  const path = report.clauses.find((r) => r.verdict === "violated" && r.path)?.path ?? [];
+  const chart = Lastro.mermaidStatechart(await Lastro.statechart(model, step, clauses, path));
+  return { report, request: { machine: model, clauses, table, path }, mermaid: chart };
+}
+
+// I-16: the Rust prover, the Go SDK and the .NET SDK explore state machines exactly as the TS engine does.
+export async function smCrosscheck({ bug, engine }) {
+  const { model, clauses, step } = crossCase(bug);
+  const ts = await tsExplore(model, clauses, step);
+  const other = await engines[engine](ts.request);
+  const pathOf = (r) => Lastro.canonicalJson(r?.path ?? null);
+  return {
+    sameVerdict: ts.report.clauses.every((c) => other.clauses.find((x) => x.clauseId === c.clauseId)?.verdict === c.verdict),
+    sameCounterexample: ts.report.clauses.every((c) => pathOf(c) === pathOf(other.clauses.find((x) => x.clauseId === c.clauseId))),
+    sameStates: ts.report.states === other.states && (other.missing ?? 0) === 0,
+  };
+}
+
+// I-36: the Go and .NET SDKs give byte-identical artifacts. Each is compared by the SDK's own cross-check against the
+// TS SDK (built from this checkout): the feature map and the structural diff by the map/snapshot helpers check, the
+// statechart and the machine verdicts by exploring the same machines, the verdicts and the snapshot hashes by one
+// workspace shared by both CLIs (same prove bodies, same receipts with the same SHA-256).
+const PARITY_TESTS = {
+  go: {
+    map: "TestFeatureMapAndSnapshotsMatchTS",
+    diff: "TestFeatureMapAndSnapshotsMatchTS",
+    statechart: "TestMachinesAreExploredAsTheTSEngineDoes",
+    verdict: "TestMachinesAreExploredAsTheTSEngineDoes|TestSharedWorkspaceWithTheTSCLI|TestTypeScriptCrossCheck",
+    "snapshot-hash": "TestSharedWorkspaceWithTheTSCLI",
+  },
+  dotnet: {
+    map: "FullyQualifiedName~FeatureMapAndSnapshotHelpersMatchTheTsSdk",
+    diff: "FullyQualifiedName~FeatureMapAndSnapshotHelpersMatchTheTsSdk",
+    statechart: "FullyQualifiedName~MachinesAreExploredAsTheTsEngineDoes",
+    verdict: "FullyQualifiedName~MachinesAreExploredAsTheTsEngineDoes|FullyQualifiedName~OneWorkspaceSharedByTheDotNetAndTypeScriptClis|FullyQualifiedName~TypeScriptAndDotNetAgreeOnHashesVerdictsAndReceipts",
+    "snapshot-hash": "FullyQualifiedName~OneWorkspaceSharedByTheDotNetAndTypeScriptClis",
+  },
+};
+const parityRuns = new Map();
+export function sdkParity({ sdk, artifact }) {
+  const filter = PARITY_TESTS[sdk][artifact];
+  const key = `${sdk}:${filter}`;
+  if (!parityRuns.has(key)) parityRuns.set(key, runParity(sdk, filter));
+  return { same: parityRuns.get(key) };
+}
+function runParity(sdk, filter) {
+  try {
+    if (sdk === "go") execFileSync("go", ["test", "-count=1", "-run", filter, "./..."], { cwd: join(ROOT, "sdks", "go"), stdio: "ignore" });
+    else execFileSync("dotnet", ["test", join(ROOT, "sdks", "dotnet"), "--filter", filter], { stdio: "ignore", env: { ...process.env, LASTRO_REQUIRE_CROSSCHECK: "1" } });
+    return true;
+  } catch {
+    return false;
+  }
+}
 // I-37: the plugin's review screen.
 export const pluginReviewEvidence = pending("evidence in the plugin's review");

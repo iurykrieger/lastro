@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -53,6 +54,8 @@ const usage = `lastro-go <command> [options]
                                                 resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
                                                 after the proof run: signoff <I> | request-changes <I> <note>
                                                 accept <U>
+  explore [<request.json>]                      explore a state machine over a recorded step table (stdin without a
+                                                file), as the Rust prover does: the engines' cross-check
   map [<P>]                                     the feature map (surfaces and dependencies); with a proposal, the
                                                 features it changes and the ones affected
   derive <P>                                    derive the pending proofs of the approved intents
@@ -909,6 +912,33 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 			code = 0
 		}
 		return code, append(obj{{"status", "proposed"}, {"file", ws.proposalPath(p, ".json")}}, s...), nil
+
+	case "explore":
+		// A state machine over a recorded step table, as the Rust prover takes it: the cross-check of the engines.
+		var req struct {
+			Machine lastro.MachineModel    `json:"machine"`
+			Clauses []lastro.MachineClause `json:"clauses"`
+			Table   []lastro.StepRow       `json:"table"`
+			Limit   int                    `json:"limit"`
+			Path    []lastro.MachineEvent  `json:"path"`
+		}
+		var data []byte
+		var err error
+		if f := arg(rest, 0); f != "" {
+			data, err = os.ReadFile(f)
+		} else {
+			data, err = io.ReadAll(os.Stdin)
+		}
+		if err != nil {
+			return 0, nil, err
+		}
+		if err := json.Unmarshal(data, &req); err != nil {
+			return 2, obj{{"error", "explore needs {machine, clauses, table}: " + err.Error()}}, nil
+		}
+		step := lastro.TableStep(req.Table)
+		report := lastro.ExploreMachine(req.Machine, step, req.Clauses, lastro.MachineOptions{Limit: req.Limit})
+		chart := lastro.MachineStatechart(req.Machine, step, req.Clauses, req.Path, req.Limit)
+		return 0, obj{{"status", "explored"}, {"report", report}, {"statechart", chart}, {"mermaid", lastro.MermaidStatechart(chart)}}, nil
 
 	case "map":
 		useCases, err := ws.useCases()

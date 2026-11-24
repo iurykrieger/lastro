@@ -31,6 +31,8 @@ public static class Cli
                                                         resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
                                                         after the proof run: signoff <I> | request-changes <I> <note>
                                                         accept <U>
+          explore [<request.json>]                      explore a state machine over a recorded step table (stdin without a
+                                                        file), as the Rust prover does: the engines' cross-check
           map [<P>]                                     the feature map (surfaces and dependencies); with a proposal, the
                                                         features it changes and the ones affected
           derive <P>                                    derive the pending proofs of the approved intents
@@ -504,6 +506,19 @@ public static class Cli
                         if (inProposals && !named.Success) File.Delete(proseFile); // a draft in .lastro/proposals/ becomes <id>-<slug>.md
                     }
                     return (Proposals.Pending(p).Count == 0 ? 0 : 1, With(Obj(("status", "proposed"), ("file", ws.ProposalPath(p, ".json"))), Summary(p, useCases)));
+                }
+                case "explore":
+                {
+                    // A state machine over a recorded step table, as the Rust prover takes it: the cross-check of the engines.
+                    var text = rest.Count > 0 ? File.ReadAllText(rest[0]) : await Console.In.ReadToEndAsync().ConfigureAwait(false);
+                    var req = JsonNode.Parse(text) as JsonObject ?? throw new ExitException(2, Obj(("error", "explore needs {machine, clauses, table}")));
+                    var m = LastroJson.FromNode<MachineModel>(req["machine"]);
+                    var clauses = LastroJson.FromNode<List<MachineClause>>(req["clauses"]);
+                    var step = Machines.TableStep(LastroJson.FromNode<List<StepRow>>(req["table"]));
+                    var limit = req["limit"]?.GetValue<int>() ?? 0;
+                    var report = await Machines.ExploreAsync(m, step, clauses, limit).ConfigureAwait(false);
+                    var chart = await Machines.StatechartAsync(m, step, clauses, req["path"] is { } path ? LastroJson.FromNode<List<MachineEvent>>(path) : [], limit).ConfigureAwait(false);
+                    return (0, Obj(("status", "explored"), ("report", LastroJson.ToNode(report)), ("statechart", LastroJson.ToNode(chart)), ("mermaid", Machines.Mermaid(chart))));
                 }
                 case "map":
                 {

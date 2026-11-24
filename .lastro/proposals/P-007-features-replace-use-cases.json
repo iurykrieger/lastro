@@ -3,10 +3,10 @@
   "id": "P-007",
   "slug": "features-replace-use-cases",
   "name": "Features replace use cases",
-  "description": "Lastro says feature wherever it said use case, in files, ids, CLI, SDKs, prompts, UIs and docs; behavior does not change and old workspaces migrate.",
+  "description": "Lastro says feature wherever it said use case, in files, ids, CLI, SDKs, prompts, UIs and docs; features are broader and functionality-oriented, an intent may change one or more features, and this repository migrates once with no backward compatibility.",
   "status": "open",
   "submittedBy": "iury",
-  "prose": "# Features replace use cases\n\nThe application is its list of features. \"Feature\" is the word the business already uses for what a product does\nfor its users, so Lastro uses it everywhere it said \"use case\": in the files, the ids, the CLI, the SDKs' public\nAPI, the prompts, the review app, the plugin, the board, the receipt and the docs. Only the name changes: a feature\nhas the same fields, the same history and the same proofs a use case had, and every rule that held for use cases\nholds for features.\n\n## Files and ids\n\nEach feature lives in `.lastro/features/<id>-<slug>.json` and is numbered F-001, F-002... with the next free\nnumber, never reused. Proofs derived straight from a feature are numbered inside it (F-003.PF-01); proofs that came\nfrom a proposal keep their proposal id. A proof file names its feature in a `feature` field. A proposal's intents\nname the feature they add, modify or remove, and its baseline is the hash over the canonical features.\n\nA workspace that still has `.lastro/usecases/` is read as before: each use case is read as the feature with the same\nnumber (UC-003 becomes F-003) and the proof ids that start with its old id are read with the new one. The next time\nthe workspace writes, it moves the files to `.lastro/features/`, renames the ids and rewrites every proof and\nproposal that names them, and records each old id in the feature's history so a link to UC-003 still resolves.\n\n## Commands and API\n\n`lastro derive --features`, `lastro prove --features` and every other option that took use cases take features.\nThe old `--usecases` options keep working and print a notice that they were renamed. In the TypeScript, Go and .NET\nSDKs every public type, function and field that said use case says feature, and the old names stay as deprecated\naliases for one release. The extraction and derivation prompts and their schemas say feature, and the .NET and Go\nprompts are generated from the TypeScript ones as before.\n\n## What people see\n\nThe review app, the plugin's review, the progress board and the receipt say feature and show F- ids. The docs\nexplain features as what the product does for its users, in the user's words, and keep one note saying they were\ncalled use cases before.",
+  "prose": "# Features replace use cases\n\nThe application is its list of features. \"Feature\" is the word the business already uses for what a product does\nfor its users, so Lastro uses it everywhere it said \"use case\": in the files, the ids, the CLI, the SDKs' public\nAPI, the prompts, the review app, the plugin, the board, the receipt and the docs. A feature has the same fields, the\nsame history and the same proofs a use case had, and every rule that held for use cases holds for features.\n\n## What a feature is\n\nA feature is broader than a use case and is written around the functionality itself: what the product lets its users\ndo, in the business's words, with the complete behavior of that functionality as the code implements it. The\nextraction and survey prompts write and group features that way.\n\nAn intent is the intention to change the application: it modifies one or more existing features, adds a new one or\nremoves one. A modify intent names every feature it changes, and each of those features' new description combines all\nthe intents that change it.\n\n## Files and ids\n\nEach feature lives in `.lastro/features/<id>-<slug>.json` and is numbered F-001, F-002... with the next free\nnumber, never reused. Proofs derived straight from a feature are numbered inside it (F-003.PF-01); proofs that came\nfrom a proposal keep their proposal id. A proof file names its feature in a `feature` field. A proposal's intents\nname the features they add, modify or remove, and its baseline is the hash over the canonical features.\n\nThis repository's own use cases are migrated once, as part of this change: each use case becomes the feature with\nthe same number (UC-003 becomes F-003), every proof and proposal that names it is rewritten with the new id, and\n`.lastro/usecases/` is removed. Lastro keeps no reader for the old layout and no old names: the framework has no\nusers yet.\n\n## Commands and API\n\n`lastro derive --features`, `lastro prove --features` and every other option that took use cases take features;\n`--usecases` no longer exists. In the TypeScript, Go and .NET SDKs every public type, function and field that said\nuse case says feature, with no aliases. The extraction and derivation prompts and their schemas say feature, and\nthe .NET and Go prompts are generated from the TypeScript ones as before.\n\n## What people see\n\nThe review app, the plugin's review, the progress board and the receipt say feature and show F- ids. The docs\nexplain features as what the product does for its users, in the user's words, and nothing in the repository says use\ncase any more.",
   "baseline": "sha256:e1df572be471d7f3a5c74a900afa64c438ffb7d13755a66229196de4ecbc7c07",
   "intents": [
     {
@@ -19,8 +19,8 @@
       "provability": "empirical",
       "source": {
         "quote": "The extraction and derivation prompts and their schemas say feature",
-        "start": 1809,
-        "end": 1876
+        "start": 2161,
+        "end": 2228
       },
       "replaces": [],
       "status": "approved",
@@ -129,8 +129,8 @@
       "provability": "empirical",
       "source": {
         "quote": "The extraction and derivation prompts and their schemas say feature",
-        "start": 1809,
-        "end": 1876
+        "start": 2161,
+        "end": 2228
       },
       "replaces": [],
       "status": "approved",
@@ -148,8 +148,8 @@
       "provability": "empirical",
       "source": {
         "quote": "The review app, the plugin's review, the progress board and the receipt say feature and show F- ids.",
-        "start": 1977,
-        "end": 2077
+        "start": 2329,
+        "end": 2429
       },
       "replaces": [],
       "status": "approved",
@@ -185,9 +185,9 @@
       "useCase": "UC-035",
       "provability": "empirical",
       "source": {
-        "quote": "In the TypeScript, Go and .NET\nSDKs every public type, function and field that said use case says feature",
-        "start": 1640,
-        "end": 1745
+        "quote": "In the TypeScript, Go and .NET SDKs every public type, function and field that said\nuse case says feature, with no aliases.",
+        "start": 2037,
+        "end": 2160
       },
       "replaces": [],
       "status": "approved",
@@ -224,8 +224,8 @@
       "provability": "empirical",
       "source": {
         "quote": "The docs\nexplain features as what the product does for its users",
-        "start": 2078,
-        "end": 2142
+        "start": 2430,
+        "end": 2494
       },
       "replaces": [],
       "status": "approved",
@@ -243,8 +243,8 @@
       "provability": "empirical",
       "source": {
         "quote": "The review app, the plugin's review, the progress board and the receipt say feature and show F- ids.",
-        "start": 1977,
-        "end": 2077
+        "start": 2329,
+        "end": 2429
       },
       "replaces": [],
       "status": "approved",
@@ -262,8 +262,8 @@
       "provability": "empirical",
       "source": {
         "quote": "The review app, the plugin's review, the progress board and the receipt say feature and show F- ids.",
-        "start": 1977,
-        "end": 2077
+        "start": 2329,
+        "end": 2429
       },
       "replaces": [],
       "status": "approved",
@@ -281,8 +281,8 @@
       "provability": "empirical",
       "source": {
         "quote": "The review app, the plugin's review, the progress board and the receipt say feature and show F- ids.",
-        "start": 1977,
-        "end": 2077
+        "start": 2329,
+        "end": 2429
       },
       "replaces": [],
       "status": "approved",
@@ -319,8 +319,8 @@
       "provability": "empirical",
       "source": {
         "quote": "The review app, the plugin's review, the progress board and the receipt say feature and show F- ids.",
-        "start": 1977,
-        "end": 2077
+        "start": 2329,
+        "end": 2429
       },
       "replaces": [],
       "status": "approved",
@@ -338,8 +338,8 @@
       "provability": "formal",
       "source": {
         "quote": "Each feature lives in `.lastro/features/<id>-<slug>.json` and is numbered F-001, F-002... with the next free\nnumber, never reused.",
-        "start": 524,
-        "end": 654
+        "start": 1077,
+        "end": 1207
       },
       "replaces": [],
       "status": "approved",
@@ -376,8 +376,8 @@
       "provability": "formal",
       "source": {
         "quote": "A proof file names its feature in a `feature` field.",
-        "start": 789,
-        "end": 841
+        "start": 1342,
+        "end": 1394
       },
       "replaces": [],
       "status": "approved",
@@ -413,9 +413,9 @@
       "useCase": "UC-054",
       "provability": "empirical",
       "source": {
-        "quote": "`lastro derive --features`, `lastro prove --features` and every other option that took use cases take features.",
-        "start": 1443,
-        "end": 1554
+        "quote": "`lastro derive --features`, `lastro prove --features` and every other option that took use cases take features;",
+        "start": 1894,
+        "end": 2005
       },
       "replaces": [],
       "status": "approved",
@@ -425,16 +425,16 @@
     },
     {
       "id": "P-007.I-23",
-      "slug": "migrate-use-case-workspaces",
-      "name": "Old workspaces migrate on the next write",
-      "description": "A workspace with .lastro/usecases/ is read as features with the same numbers, and the next write moves the files, renames the ids everywhere and keeps each old id in the feature's history.",
+      "slug": "migrate-this-repository",
+      "name": "This repository's use cases become features once",
+      "description": "Each of this repository's use cases becomes the feature with the same number (UC-003 becomes F-003), every proof and proposal that names it is rewritten with the new id, and .lastro/usecases/ is removed; Lastro keeps no reader for the old layout.",
       "change": "modify",
       "useCase": "UC-046",
       "provability": "formal",
       "source": {
-        "quote": "A workspace that still has `.lastro/usecases/` is read as before",
-        "start": 967,
-        "end": 1031
+        "quote": "This repository's own use cases are migrated once, as part of this change",
+        "start": 1521,
+        "end": 1594
       },
       "replaces": [],
       "status": "proposed",
@@ -442,16 +442,16 @@
     },
     {
       "id": "P-007.I-24",
-      "slug": "old-options-still-work",
-      "name": "--usecases still works with a notice",
-      "description": "The old --usecases options keep working and print a notice that they were renamed.",
+      "slug": "no-usecases-option",
+      "name": "--usecases no longer exists",
+      "description": "Every option that took use cases takes features; --usecases is removed with no notice or alias.",
       "change": "modify",
       "useCase": "UC-054",
       "provability": "formal",
       "source": {
-        "quote": "The old `--usecases` options keep working and print a notice that they were renamed.",
-        "start": 1555,
-        "end": 1639
+        "quote": "`--usecases` no longer exists.",
+        "start": 2006,
+        "end": 2036
       },
       "replaces": [],
       "status": "proposed",
@@ -459,16 +459,50 @@
     },
     {
       "id": "P-007.I-25",
-      "slug": "deprecated-aliases",
-      "name": "Old API names stay as deprecated aliases",
-      "description": "In the three SDKs the old use-case names stay as deprecated aliases for one release.",
+      "slug": "no-aliases",
+      "name": "No old names in the SDKs",
+      "description": "The three SDKs rename every use-case type, function and field to feature with no deprecated aliases, and nothing in the repository says use case any more.",
       "change": "modify",
       "useCase": "UC-035",
       "provability": "empirical",
       "source": {
-        "quote": "the old names stay as deprecated\naliases for one release",
-        "start": 1751,
-        "end": 1807
+        "quote": "with no aliases.",
+        "start": 2144,
+        "end": 2160
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-007.I-26",
+      "slug": "features-are-functionality",
+      "name": "Features are broad and written around the functionality",
+      "description": "The extraction and survey prompts write and group features at the level of a functionality: what the product lets its users do, in the business's words, with its complete behavior as the code implements it.",
+      "change": "modify",
+      "useCase": "UC-001",
+      "provability": "empirical",
+      "source": {
+        "quote": "A feature is broader than a use case and is written around the functionality itself",
+        "start": 505,
+        "end": 588
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-007.I-27",
+      "slug": "intent-changes-many-features",
+      "name": "An intent can change one or more features",
+      "description": "An intent modifies one or more existing features, adds a new one or removes one; a modify intent names every feature it changes, and each changed feature's new description combines all the intents that change it.",
+      "change": "modify",
+      "useCase": "UC-001",
+      "provability": "formal",
+      "source": {
+        "quote": "An intent is the intention to change the application: it modifies one or more existing features, adds a new one or\nremoves one.",
+        "start": 797,
+        "end": 924
       },
       "replaces": [],
       "status": "proposed",
@@ -482,9 +516,11 @@
       "change": "modify",
       "name": "Extract intents from prose",
       "before": "propose(prose, { submittedBy }) creates the next proposal file in .lastro/proposals/ with status open and sends the prose and the current use cases to an LLM through an AskJson transport with a fixed system prompt and JSON Schema (step \"extract\"). The answer lists intents, each the addition, removal or change of exactly one use case: id (P-n.I-nn), slug, name, a natural-language description of the change, change (add, modify or remove), the use case (an existing id, or a newly reserved id and slug for an add), a provability (formal, empirical, beyond-proof), a beyondProofReason (\"none\" or one of the five reasons) and a verbatim quote, and replaces: the existing proofs of that use case the new behavior contradicts, each with a reason (extraction receives every touched use case with its proofs in readable notation; for a remove the SDK lists every proof of the use case itself); one resulting use case per touched use case with its name and, for add and modify, the complete new description (after), all its intents combined, and the intents that produce it; decisions that reference intents by zero-based index; and notPromised items. The SDK fills each modify and remove with the use case's current description (before); the LLM never supplies it. The proposal (lastro: proposal/v1) records the baseline (sha256 over the canonical use cases without their proofs), the submitter, every intent proposed with no approvals, decisions D1, D2... with origin extraction, and the review policy. Intents have no kind. Without an LLM transport or a custom extractor, propose() throws.",
-      "after": "propose(prose, { submittedBy }) creates the next proposal file in .lastro/proposals/ with status open and sends the prose and the current features to an LLM through an AskJson transport with a fixed system prompt and JSON Schema (step \"extract\"). The answer lists intents, each the addition, removal or change of exactly one feature: id (P-n.I-nn), slug, name, a natural-language description of the change, change (add, modify or remove), the feature (an existing id, or a newly reserved id and slug for an add), a provability (formal, empirical, beyond-proof), a beyondProofReason (\"none\" or one of the five reasons) and a verbatim quote, and replaces: the existing proofs of that feature the new behavior contradicts, each with a reason (extraction receives every touched feature with its proofs in readable notation; for a remove the SDK lists every proof of the feature itself); one resulting feature per touched feature with its name and, for add and modify, the complete new description (after), all its intents combined, and the intents that produce it; decisions that reference intents by zero-based index; and notPromised items. The SDK fills each modify and remove with the feature's current description (before); the LLM never supplies it. The proposal (lastro: proposal/v1) records the baseline (sha256 over the canonical features without their proofs), the submitter, every intent proposed with no approvals, decisions D1, D2... with origin extraction, and the review policy. Intents have no kind. Without an LLM transport or a custom extractor, propose() throws.",
+      "after": "propose(prose, { submittedBy }) creates the next proposal file in .lastro/proposals/ with status open and sends the prose and the current features to an LLM through an AskJson transport with a fixed system prompt and JSON Schema (step \"extract\"). The answer lists intents, each the addition, removal or change of exactly one feature: id (P-n.I-nn), slug, name, a natural-language description of the change, change (add, modify or remove), the feature (an existing id, or a newly reserved id and slug for an add), a provability (formal, empirical, beyond-proof), a beyondProofReason (\"none\" or one of the five reasons) and a verbatim quote, and replaces: the existing proofs of that feature the new behavior contradicts, each with a reason (extraction receives every touched feature with its proofs in readable notation; for a remove the SDK lists every proof of the feature itself); one resulting feature per touched feature with its name and, for add and modify, the complete new description (after), all its intents combined, and the intents that produce it; decisions that reference intents by zero-based index; and notPromised items. The SDK fills each modify and remove with the feature's current description (before); the LLM never supplies it. The proposal (lastro: proposal/v1) records the baseline (sha256 over the canonical features without their proofs), the submitter, every intent proposed with no approvals, decisions D1, D2... with origin extraction, and the review policy. Intents have no kind. Without an LLM transport or a custom extractor, propose() throws. Features are written and grouped at the level of a functionality: what the product lets its users do, in the business's words, with its complete behavior. An intent modifies one or more existing features, adds a new one or removes one; a modify intent names every feature it changes, and each changed feature's after combines all the intents that change it.",
       "intents": [
-        "P-007.I-01"
+        "P-007.I-01",
+        "P-007.I-26",
+        "P-007.I-27"
       ]
     },
     {
@@ -581,7 +617,7 @@
       "change": "modify",
       "name": "Use Lastro from TypeScript, .NET or Go",
       "before": "Three SDKs expose the same pipeline (propose against the use cases, review with threads, pending, derive, returnDecisions, prove with the regression run, apply, gap review) with the same entities (use case, proposal, intent, proof), wire format, canonical hashes, seeded sampling, verdicts, receipts and prompts. Cross-check tests compare the .NET and Go reports and hashes with the TypeScript SDK, and all three with the Rust prover, on the reference login and its planted bugs.",
-      "after": "Three SDKs expose the same pipeline (propose against the features, review with threads, pending, derive, returnDecisions, prove with the regression run, apply, gap review) with the same entities (feature, proposal, intent, proof), wire format, canonical hashes, seeded sampling, verdicts, receipts and prompts. Cross-check tests compare the .NET and Go reports and hashes with the TypeScript SDK, and all three with the Rust prover, on the reference login and its planted bugs. Every public type, function and field that said use case says feature; the old names stay as deprecated aliases for one release.",
+      "after": "Three SDKs expose the same pipeline (propose against the features, review with threads, pending, derive, returnDecisions, prove with the regression run, apply, gap review) with the same entities (feature, proposal, intent, proof), wire format, canonical hashes, seeded sampling, verdicts, receipts and prompts. Cross-check tests compare the .NET and Go reports and hashes with the TypeScript SDK, and all three with the Rust prover, on the reference login and its planted bugs. Every public type, function and field that said use case says feature, with no aliases.",
       "intents": [
         "P-007.I-10",
         "P-007.I-25"
@@ -670,7 +706,7 @@
       "change": "modify",
       "name": "Store features and proposals",
       "before": "The workspace keeps one file per entity: each use case in .lastro/usecases/<id>-<slug>.json (id, slug, name, description, history), each proof of a use case in .lastro/proof/<proof-id>-<slug>.json and each proposal in .lastro/proposals/<id>-<slug>.json, with its receipt next to it. Use cases are numbered UC-001, UC-002... and proposals P-001, P-002... with the next free number, never reused even after a removal; intents and proofs are numbered inside their proposal (P-007.I-03, P-007.PF-05) and keep that id when a proof moves to its use case; proofs derived straight from a use case are numbered inside it (UC-003.PF-01). Slugs are kebab-case and stable: a rename changes only the name. intents.json, spec.json and proof.json are no longer written. A use case file that still carries a proofs list is read as before, and its proofs move to .lastro/proof/ the next time the workspace writes that use case.",
-      "after": "The workspace keeps one file per entity: each feature in .lastro/features/<id>-<slug>.json (id, slug, name, description, history), each proof of a feature in .lastro/proof/<proof-id>-<slug>.json and each proposal in .lastro/proposals/<id>-<slug>.json, with its receipt next to it. Features are numbered F-001, F-002... and proposals P-001, P-002... with the next free number, never reused even after a removal; intents and proofs are numbered inside their proposal (P-007.I-03, P-007.PF-05) and keep that id when a proof moves to its feature; proofs derived straight from a feature are numbered inside it (F-003.PF-01). Slugs are kebab-case and stable: a rename changes only the name. intents.json, spec.json and proof.json are no longer written. A feature file that still carries a proofs list is read as before, and its proofs move to .lastro/proof/ the next time the workspace writes that feature. A workspace that still has .lastro/usecases/ is read as before: each use case is read as the feature with the same number (UC-003 as F-003) and proof ids that start with its old id are read with the new one; the next write moves the files to .lastro/features/, renames the ids, rewrites every proof and proposal that names them and records each old id in the feature's history so a link to UC-003 still resolves.",
+      "after": "The workspace keeps one file per entity: each feature in .lastro/features/<id>-<slug>.json (id, slug, name, description, history), each proof of a feature in .lastro/proof/<proof-id>-<slug>.json and each proposal in .lastro/proposals/<id>-<slug>.json, with its receipt next to it. Features are numbered F-001, F-002... and proposals P-001, P-002... with the next free number, never reused even after a removal; intents and proofs are numbered inside their proposal (P-007.I-03, P-007.PF-05) and keep that id when a proof moves to its feature; proofs derived straight from a feature are numbered inside it (F-003.PF-01). Slugs are kebab-case and stable: a rename changes only the name. intents.json, spec.json and proof.json are no longer written. A feature file that still carries a proofs list is read as before, and its proofs move to .lastro/proof/ the next time the workspace writes that feature.",
       "intents": [
         "P-007.I-18",
         "P-007.I-23"
@@ -715,7 +751,7 @@
       "change": "modify",
       "name": "Derive proofs from the established features",
       "before": "lastro derive --usecases derives proofs straight from the established use cases, with no proposal and no intents: by default for every use case that has no proofs, or for the ids it is given (--usecases UC-003,UC-016). The derive step reads each use case's description, the models and subjects declared in .lastro/config.json and the proofs other use cases already have, and writes pending proofs numbered inside their use case (UC-003.PF-01) to .lastro/proof/. A use case the models cannot express gets no proof and is listed as unprovable with the reason. A use case that already has proofs is refused: its proofs change only through a proposal. lastro prove --usecases runs the pending proofs of the use cases together with every passed proof. A pending proof that passes becomes passed and from then on runs as a regression test, in prove and in lastro regress. A pending proof that fails stays failed and is reported with the note that the code is the reference: either the description is wrong, and a proposal fixes it, or the code has a bug the user decides about; it never goes back to the code as feedback.",
-      "after": "lastro derive --features derives proofs straight from the established features, with no proposal and no intents: by default for every feature that has no proofs, or for the ids it is given (--features F-003,F-016). The derive step reads each feature's description, the models and subjects declared in .lastro/config.json and the proofs other features already have, and writes pending proofs numbered inside their feature (F-003.PF-01) to .lastro/proof/. A feature the models cannot express gets no proof and is listed as unprovable with the reason. A feature that already has proofs is refused: its proofs change only through a proposal. lastro prove --features runs the pending proofs of the features together with every passed proof. A pending proof that passes becomes passed and from then on runs as a regression test, in prove and in lastro regress. A pending proof that fails stays failed and is reported with the note that the code is the reference: either the description is wrong, and a proposal fixes it, or the code has a bug the user decides about; it never goes back to the code as feedback. The old --usecases options keep working and print a notice that they were renamed.",
+      "after": "lastro derive --features derives proofs straight from the established features, with no proposal and no intents: by default for every feature that has no proofs, or for the ids it is given (--features F-003,F-016). The derive step reads each feature's description, the models and subjects declared in .lastro/config.json and the proofs other features already have, and writes pending proofs numbered inside their feature (F-003.PF-01) to .lastro/proof/. A feature the models cannot express gets no proof and is listed as unprovable with the reason. A feature that already has proofs is refused: its proofs change only through a proposal. lastro prove --features runs the pending proofs of the features together with every passed proof. A pending proof that passes becomes passed and from then on runs as a regression test, in prove and in lastro regress. A pending proof that fails stays failed and is reported with the note that the code is the reference: either the description is wrong, and a proposal fixes it, or the code has a bug the user decides about; it never goes back to the code as feedback. There is no --usecases option.",
       "intents": [
         "P-007.I-22",
         "P-007.I-24"
@@ -781,6 +817,10 @@
         {
           "by": "iury",
           "text": "Feature é algo um pouco mais abrangente e com escrita orientada a funcionalidade em si"
+        },
+        {
+          "by": "claude",
+          "text": "Changed: features are broader and written around the functionality, in the business's words; the extraction and survey prompts write and group them that way (I-26)."
         }
       ],
       "resolved": false
@@ -793,6 +833,10 @@
         {
           "by": "iury",
           "text": "Os intents são intenções de modificação de uma ou mais features, ou a adição ou remoção de uma nova"
+        },
+        {
+          "by": "claude",
+          "text": "Changed: an intent modifies one or more features, adds one or removes one; each changed feature's after combines all its intents (I-27)."
         }
       ],
       "resolved": false
@@ -805,6 +849,10 @@
         {
           "by": "iury",
           "text": "Migre cada usecase para uma feature e remova a pasta antiga"
+        },
+        {
+          "by": "claude",
+          "text": "Changed: each use case becomes the feature with the same number, ids are rewritten and .lastro/usecases/ is removed, with no reader for the old layout (I-23)."
         }
       ],
       "resolved": false
@@ -817,6 +865,10 @@
         {
           "by": "iury",
           "text": "Sem usecases ou funcionamento antigo retrocompativel. Mude tudo para features e remova menções a usecases"
+        },
+        {
+          "by": "claude",
+          "text": "Changed: --usecases is removed with no notice or alias (I-24)."
         }
       ],
       "resolved": false
@@ -829,13 +881,18 @@
         {
           "by": "iury",
           "text": "No deprecated aliases, framework is not being used yet, just change que values"
+        },
+        {
+          "by": "claude",
+          "text": "Changed: no deprecated aliases; nothing in the repository says use case any more (I-25)."
         }
       ],
       "resolved": false
     }
   ],
   "notPromised": [
-    "No behavior of any feature changes.",
+    "No other behavior of any feature changes.",
+    "Workspaces outside this repository are not migrated.",
     "Feature slugs do not change; only names and ids do.",
     "Proposals already applied are not rewritten except for the ids they name."
   ],

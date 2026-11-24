@@ -1,12 +1,48 @@
-# Review intents first, and see the feature map and the code before and after
+# Review intents where the agent works, understand every screen, and see the feature map and the code before and after
 
-The review app is where a team reviews a proposal before any code exists, and where it comes back to see what the
-change did. It already lets reviewers approve, amend and reject intents; this proposal makes that review the app's
-first screen, adds a map of the features and how they depend on each other, and shows what the implementation did
-to the code: the cyclomatic complexity of its functions and the dependencies between its modules, before and after.
-None of this judges the code: proofs stay the only verdicts, and the new views are evidence for the reviewer.
+Intents are reviewed before any code exists, so the review has to come to the reviewer the moment there is
+something to review, and every part of it has to say what it is. The review therefore opens inside Claude Code, in
+the Lastro pane, by itself whenever a proposal has intents waiting; the web app stays the place where a team reviews
+together. Both explain each thing they show, and both add a map of the features and how they depend on each other,
+and what the implementation did to the code: the cyclomatic complexity of its functions and the dependencies between
+its modules, before and after. None of this judges the code: proofs stay the only verdicts, and the new views are
+evidence for the reviewer.
 
-## Reviewing intents
+## Reviewing in the Lastro pane
+
+The Lastro pane in Claude Code (the board mod) opens by itself, with the keyboard on it, whenever the current
+proposal has intents or decisions waiting for the reviewer, before the agent writes any code: right after the
+intents are extracted, and again whenever a re-extraction or a derivation sends intents back to review. The reviewer
+can close it; it opens again only when something new waits for them.
+
+The pane shows the proposal's open decisions first, each with its options and the recommended one, then its
+intents one at a time, each with the feature it changes, the feature's description before and after, the quote it
+came from and the proofs approving it would replace. Buttons with keys answer a decision, approve an intent, amend
+it (with a field for the new wording) or reject it (with a field for the reason), and after an amend or a reject
+they rewrite the feature's description or ask for it to be recombined. Each press runs the same `lastro review`
+command the chat review uses, as the reviewer, whose name comes from `LASTRO_REVIEWER` or git and is never an
+agent's; the press is the reviewer's own act, so no permission prompt follows. The pane then moves to the next
+item that waits, and says when nothing does.
+
+While the pane is installed, the agent is told that the review happens there: it points the reviewer to the pane
+instead of asking each decision and intent in the chat, and waits. Without the pane (in Codex, or with the mod not
+installed) the chat review works as today.
+
+The pane also has a Map view and a Code view that show, as text, the same feature map and code comparisons as the
+web app below, for the current proposal.
+
+## Understanding what is on the screen
+
+Every part of the pane and of the web app says what it is. Each section starts with one sentence on what it shows
+and what the reviewer does there (a decision is a question the extraction could not settle; an intent is one promise
+of the change, on one feature; approving an intent that replaces proofs accepts that they stop guarding the old
+behavior). Every badge and mark has an explanation on hover in the web app and in a legend the pane shows with `?`:
+add, modify and remove; formal, empirical and beyond proof (and why proof stops there); the approvals count against
+the policy; each proof verdict; and each state on the map and in the code views. A glossary page in the web app,
+and the same text in the pane's legend, define proposal, intent, feature, decision, proof, regression, snapshot and
+verdict in one sentence each. An empty view says why it is empty and what makes it fill.
+
+## Reviewing intents in the web app
 
 Every open proposal has an Intents tab, the one the app opens first while the proposal has intents to review. It
 lists the proposal's intents in order, each with the feature it adds, modifies or removes, the feature's

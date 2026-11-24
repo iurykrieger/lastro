@@ -2,25 +2,25 @@
   "lastro": "proposal/v1",
   "id": "P-006",
   "slug": "feature-map-runtime-and-formal-review",
-  "name": "Feature map, runtime and state-machine proofs, and review with before/after captures",
-  "description": "Use cases learn their surfaces and dependencies, drivers run the application through them, state machines are proved exhaustively when finite, action-sequence properties are evidenced, and reviewers see before/after captures, statecharts and verdicts per intent.",
+  "name": "Feature map, formal proofs whenever possible, and review with before/after snapshots",
+  "description": "Features learn their surfaces and dependencies, derivation proves formally whenever a finite model fits (including state machines with interleaving actors, exportable to TLA+), drivers run the application, action-sequence properties are evidenced, and reviewers see before/after snapshots of screens, contracts, data and examples per intent.",
   "status": "open",
   "submittedBy": "iury",
-  "prose": "# Feature map, runtime and state-machine proofs, and review with before/after captures\n\nLastro learns how a user reaches each use case, runs the application through that path, proves state machines\nexhaustively when they are finite, and shows the reviewer what changed on screen next to the intents and verdicts.\nThe engines stay the judges: Lastro never writes or fixes application code, and its only AI steps stay intent\nextraction (with the survey that reads code) and proof derivation.\n\n## The feature map\n\nA use case may carry surfaces and dependencies. A surface says how a user reaches the use case from the user's\npoint of view: its kind (screen, route, command or api), a name in the user's words (\"the left sidebar's chat list\")\nand a locator the driver understands (a URL path, a CLI command, a selector). A dependency names another use case\nthis one needs to work (opening a chat depends on signing in). The extraction step proposes surfaces and dependencies\nfor every use case an intent adds or modifies, and the reviewer approves them with the intent, like the description.\nA use case with no surface is not reachable by the driver and is listed as such.\n\n`lastro features` prints the feature map: every use case with its surfaces, what it depends on and what depends on\nit. It is deterministic. It rejects a dependency on a use case that does not exist or that was removed, and a\ndependency cycle, naming the use cases in it. When a proposal changes a use case, the map lists the use cases that\ndepend on it, directly or not, as affected: their proofs and captures run again with the proposal's own.\n\nFor a repository whose use cases have no surfaces yet, `lastro bootstrap --features` asks the survey step to read the\ncode and propose surfaces and dependencies for them. It writes a bootstrap proposal whose intents only add surfaces\nand dependencies, never change a description, and that proposal is reviewed like any other.\n\n## Driving the application\n\nA driver is a process named in `.lastro/config.json` under `drivers`, written in any language, that Lastro starts\nand talks to over JSON lines: Lastro sends a surface and a list of user actions (open, click, type, press, wait for),\nand the driver answers with the observed state (named values the model declares as outputs) and the paths of the\ncaptures it took. Lastro ships no browser of its own; the docs show a Playwright driver for web and Electron apps\nand a process driver for CLIs.\n\nA scenario may name a surface and a list of actions instead of a concrete input. It then runs through the driver:\nthe expectation is checked against the observed state, the result is empirical evidence, and a driver that fails to\nstart or times out fails the scenario with the driver's error, never passes it.\n\n## State-machine proofs\n\nA model may be a state machine: state variables with finite domains, an initial state, and events, each with finite\ninputs. The code under proof is a step function from a state and an event to the next state. Clauses are of three\nkinds: an invariant must hold in every reachable state; a step clause relates a state, an event and the next state;\na reachability clause says a state that satisfies a condition can be reached, which guards the other clauses against\nproving nothing.\n\nWhen the reachable state space has at most 100,000 states, Lastro visits all of it breadth first, and a clause that\nholds everywhere it applies is proved, with formal evidence and the number of states visited. A larger or unbounded\nspace is explored by random walks from the initial state with a fixed seed, and a clause that holds is evidenced,\nnever proved. A violation comes back as the shortest sequence of events from the initial state that reaches it. The\nTypeScript engine, the Rust prover, the Go SDK and the .NET SDK visit the states in the same order and give the same\nverdicts and counterexamples.\n\n## Properties over user action sequences\n\nA property-based check names a surface, the actions a user can take there and an invariant over the observed state.\nLastro generates action sequences with a fixed seed, runs each through the driver and checks the invariant after\nevery action. A property that holds on every sequence is evidenced, with the number of sequences and actions run and\nthe rule-of-three failure bound; it is never proved. A failing sequence is shortened to the shortest prefix that\nstill fails and then replayed once: if the replay does not fail, the check is reported as nondeterministic instead of\nviolated.\n\n## Before and after captures\n\nWhen a proposal is extracted, every intent that touches a use case with a screen or route surface gets a before\ncapture: Lastro runs that surface's scenarios through the driver on the current code and stores what the driver\ncaptured. When the proposal is proved, the same scenarios run on the new code and give the after capture. Captures\nlive in `.lastro/captures/<proposal>/<use case>/before|after/` and are never committed to git; the proposal records\nthe SHA-256 of each capture, so anyone can capture again and see whether the result still matches. A pixel\ncomparison of each before and after pair is computed deterministically and reported as the share of pixels changed.\n\nAn intent whose promise is a matter of human judgment (the layout looks right, the message is clear) stays beyond\nproof, but after the proof run it waits for a sign-off: a reviewer looks at its before and after captures and signs\nit off or requests changes. A proposal is not proved while such an intent waits for its sign-off.\n\n## Reviewing the evidence\n\nThe review app shows, for each intent: the use case's place in the feature map (its surfaces, what it depends on and\nwhat it affects), the statechart drawn from its state-machine model when it has one, its before capture during the\nreview and its before and after captures with the pixel comparison after the proof run, and the verdict of every\nproof and property with its counterexample. The receipt adds a Feature map section with the affected use cases, a\nstate diagram in Mermaid for every state-machine model, the captures with their hashes and pixel comparison, and the\nsign-offs with who gave them.\n\nThe CLI, the TypeScript, Go and .NET SDKs, the docs and the plugin's skills cover all of this, and the plugin's\nreview shows the captures' paths and the sign-offs still due.",
+  "prose": "# Feature map, formal proofs whenever possible, and review with before/after snapshots\n\nLastro learns how a user reaches each feature, proves behavior formally whenever a finite model can express it\n(including state machines whose actors interleave, as TLA+ model checking does), runs the application through its\nsurfaces, and shows the reviewer what changed next to the intents and verdicts: screens for the frontend, contracts,\ndata structures and examples of behavior for the backend. The engines stay the judges: Lastro never writes or fixes\napplication code, and its only AI steps stay intent extraction (with the survey that reads code) and proof\nderivation. This proposal speaks of features, as the proposal that renames use cases to features does.\n\n## The feature map\n\nA feature may carry surfaces and dependencies. A surface says how a user or a client reaches the feature: its kind\n(screen, route, command or api), a name in the user's words (\"the left sidebar's chat list\") and a locator the\ndriver understands (a URL path, a CLI command, an HTTP method and path, a selector). A dependency names another\nfeature this one needs to work (opening a chat depends on signing in). The extraction step proposes surfaces and\ndependencies for every feature an intent adds or modifies, and the reviewer approves them with the intent, like the\ndescription. A feature with no surface is not reachable by the driver and is listed as such.\n\n`lastro map` prints the feature map: every feature with its surfaces, what it depends on and what depends on it. It\nis deterministic. It rejects a dependency on a feature that does not exist or that was removed, and a dependency\ncycle, naming the features in it. When a proposal changes a feature, the map lists the features that depend on it,\ndirectly or not, as affected: their proofs and snapshots run again with the proposal's own.\n\nFor a repository whose features have no surfaces yet, `lastro bootstrap --surfaces` asks the survey step to read the\ncode and propose surfaces and dependencies for them. It writes a bootstrap proposal whose intents only add surfaces\nand dependencies, never change a description, and that proposal is reviewed like any other.\n\n## Formal whenever possible\n\nThe derive step must prove formally whenever it can. For each approved intent it first tries a finite model the\ncode can be checked against exhaustively: an input space of at most 100,000 points, or a state machine whose\nreachable states number at most 100,000. Only when no such model can express the intent does it fall back to\nsampling, traces or scenarios, and it then records why, in one of the reasons where proof stops or as a domain too\nlarge to enumerate. The receipt counts how many intents are proved formally, evidenced, and beyond proof, with the\nreason for each one that is not formal.\n\n## State-machine proofs\n\nA model may be a state machine: state variables with finite domains, an initial state, and events, each with finite\ninputs. It may declare actors, several copies of the same process (two devices, three clients) that share part of\nthe state; their events interleave in every possible order, which is how races between them are found. The code\nunder proof is a step function from a state and an event (with the actor that raised it) to the next state.\n\nClauses are of three kinds: an invariant must hold in every reachable state; a step clause relates a state, an\nevent and the next state; a reachability clause says a state that satisfies a condition can be reached, which guards\nthe other clauses against proving nothing. When the reachable state space, across every interleaving, has at most\n100,000 states, Lastro visits all of it breadth first, and a clause that holds everywhere it applies is proved, with\nformal evidence and the number of states visited. A larger or unbounded space is explored by random walks from the\ninitial state with a fixed seed, and a clause that holds is evidenced, never proved. A violation comes back as the\nshortest sequence of events, each with its actor, from the initial state that reaches it. The TypeScript engine, the\nRust prover, the Go SDK and the .NET SDK visit the states in the same order and give the same verdicts and\ncounterexamples.\n\nEvery state-machine model can be exported as a TLA+ specification (`lastro export --tla`), with its invariants as\nTLA+ invariants, so a team that already runs the TLC model checker can check the same model there. Lastro's verdicts\nnever depend on TLC.\n\n## Driving the application\n\nA driver is a process named in `.lastro/config.json` under `drivers`, written in any language, that Lastro starts\nand talks to over JSON lines: Lastro sends a surface and a list of actions (open, click, type, press, wait for, or a\nrequest with its body for an api surface), and the driver answers with the observed state (named values the model\ndeclares as outputs) and the snapshots it took. Lastro ships no browser of its own; the docs show a Playwright\ndriver for web and Electron apps, an HTTP driver for APIs and a process driver for CLIs.\n\nA scenario may name a surface and a list of actions instead of a concrete input. It then runs through the driver:\nthe expectation is checked against the observed state, the result is empirical evidence, and a driver that fails to\nstart or times out fails the scenario with the driver's error, never passes it.\n\n## Properties over action sequences\n\nA property-based check names a surface, the actions a user or client can take there and an invariant over the\nobserved state. Lastro generates action sequences with a fixed seed, runs each through the driver and checks the\ninvariant after every action. A property that holds on every sequence is evidenced, with the number of sequences and\nactions run and the rule-of-three failure bound; it is never proved. A failing sequence is shortened to the shortest\nprefix that still fails and then replayed once: if the replay does not fail, the check is reported as\nnondeterministic instead of violated.\n\n## Before and after snapshots\n\nWhen a proposal is extracted, every intent gets a before snapshot of each feature it touches, taken on the current\ncode; when the proposal is proved, the same snapshot is taken on the new code and is the after. A snapshot has one\nof four kinds, chosen by the feature's surfaces and models:\n\n- screen: for a screen or route surface, the images the driver captured while running that surface's scenarios;\n- contract: for an api or command surface, the contract the driver reports (the endpoint's or command's request and\n  response shapes, as JSON Schema) and, for every feature, the model's inputs and outputs with their domains;\n- data: the structure of the data the feature reads or writes, as the driver reports it (tables and columns, or a\n  JSON Schema of a stored document);\n- examples: a table of example inputs, the scenarios' inputs plus a fixed-seed sample of the model's inputs, each\n  run on the before and the after code with both outputs side by side.\n\nEach pair gets a deterministic comparison: for screens, the share of pixels changed; for contracts and data, a\nstructural diff that lists every field or column added, removed or changed in type, and marks a removal or a type\nchange as breaking; for examples, the rows whose output changed. An example whose output changed although no\napproved intent's clause applies to its input is flagged as an unexpected change, and the proposal is not proved\nwhile an unexpected change is not accepted by a reviewer.\n\nSnapshots live in `.lastro/snapshots/<proposal>/<feature>/before|after/` and are never committed to git; the\nproposal records the SHA-256 of each one, so anyone can take it again and see whether the result still matches.\n\nAn intent whose promise is a matter of human judgment (the layout looks right, the message is clear, the new error\nresponse is helpful) stays beyond proof, but after the proof run it waits for a sign-off: a reviewer looks at its\nbefore and after snapshots and signs it off or requests changes. A proposal is not proved while such an intent waits\nfor its sign-off.\n\n## Reviewing the evidence\n\nThe review app shows, for each intent: the feature's place in the feature map (its surfaces, what it depends on and\nwhat it affects), the statechart drawn from its state-machine model when it has one, its before snapshots during the\nreview and its before and after snapshots with their comparison after the proof run (images side by side for\nscreens, a diff for contracts and data, the changed rows for examples), and the verdict of every proof and property\nwith its counterexample. The receipt adds a Feature map section with the affected features, a state diagram in\nMermaid for every state-machine model, the formal coverage counts, the snapshots with their hashes and comparisons,\nthe unexpected changes and who accepted them, and the sign-offs with who gave them.\n\nThe CLI, the TypeScript, Go and .NET SDKs, the docs and the plugin's skills cover all of this, and the plugin's\nreview shows the snapshots' paths, the unexpected changes and the sign-offs still due.",
   "baseline": "sha256:e1df572be471d7f3a5c74a900afa64c438ffb7d13755a66229196de4ecbc7c07",
   "intents": [
     {
       "id": "P-006.I-01",
-      "slug": "use-cases-carry-surfaces",
-      "name": "Use cases carry surfaces and dependencies",
-      "description": "A use case file may carry surfaces (kind screen, route, command or api; a name in the user's words; a locator the driver understands) and dependsOn, the ids of other use cases it needs to work. Both are optional, so existing files stay valid.",
+      "slug": "features-carry-surfaces",
+      "name": "Features carry surfaces and dependencies",
+      "description": "A feature file may carry surfaces (kind screen, route, command or api; a name in the user's words; a locator the driver understands, such as a URL path, a CLI command, an HTTP method and path or a selector) and dependsOn, the ids of the features it needs to work. Both are optional, so existing files stay valid.",
       "change": "modify",
       "useCase": "UC-046",
       "provability": "formal",
       "source": {
-        "quote": "A use case may carry surfaces and dependencies.",
-        "start": 511,
-        "end": 558
+        "quote": "A feature may carry surfaces and dependencies.",
+        "start": 777,
+        "end": 823
       },
       "replaces": [],
       "status": "proposed",
@@ -30,14 +30,14 @@
       "id": "P-006.I-02",
       "slug": "extraction-proposes-surfaces",
       "name": "Extraction proposes surfaces and dependencies",
-      "description": "For every use case an intent adds or modifies, the extract step also proposes its surfaces and dependencies, which are stored with the use case's after and reviewed with the intent.",
+      "description": "For every feature an intent adds or modifies, the extract step also proposes its surfaces and dependencies, stored with the after and reviewed with the intent.",
       "change": "modify",
       "useCase": "UC-001",
       "provability": "empirical",
       "source": {
-        "quote": "The extraction step proposes surfaces and dependencies\nfor every use case an intent adds or modifies",
-        "start": 916,
-        "end": 1016
+        "quote": "The extraction step proposes surfaces and\ndependencies for every feature an intent adds or modifies",
+        "start": 1186,
+        "end": 1285
       },
       "replaces": [],
       "status": "proposed",
@@ -46,15 +46,15 @@
     {
       "id": "P-006.I-03",
       "slug": "print-feature-map",
-      "name": "lastro features prints the feature map",
-      "description": "lastro features prints every use case with its surfaces, the use cases it depends on and the use cases that depend on it, deterministically; a use case with no surface is listed as not reachable by the driver.",
+      "name": "lastro map prints the feature map",
+      "description": "lastro map prints, deterministically, every feature with its surfaces, the features it depends on and the features that depend on it; a feature with no surface is listed as not reachable by the driver.",
       "change": "add",
       "useCase": "UC-055",
       "provability": "formal",
       "source": {
-        "quote": "`lastro features` prints the feature map: every use case with its surfaces, what it depends on and what depends on\nit. It is deterministic.",
-        "start": 1170,
-        "end": 1309
+        "quote": "`lastro map` prints the feature map: every feature with its surfaces, what it depends on and what depends on it. It\nis deterministic.",
+        "start": 1438,
+        "end": 1571
       },
       "replaces": [],
       "status": "proposed",
@@ -64,14 +64,14 @@
       "id": "P-006.I-04",
       "slug": "reject-bad-dependencies",
       "name": "Unknown, removed and cyclic dependencies are rejected",
-      "description": "The feature map rejects a dependency on a use case that does not exist or was removed, and a dependency cycle, naming the use cases in the cycle.",
+      "description": "The feature map rejects a dependency on a feature that does not exist or was removed, and a dependency cycle, naming the features in the cycle.",
       "change": "add",
       "useCase": "UC-055",
       "provability": "formal",
       "source": {
-        "quote": "It rejects a dependency on a use case that does not exist or that was removed, and a\ndependency cycle, naming the use cases in it.",
-        "start": 1310,
-        "end": 1440
+        "quote": "It rejects a dependency on a feature that does not exist or that was removed, and a dependency\ncycle, naming the features in it.",
+        "start": 1572,
+        "end": 1700
       },
       "replaces": [],
       "status": "proposed",
@@ -80,15 +80,15 @@
     {
       "id": "P-006.I-05",
       "slug": "affected-dependents-rerun",
-      "name": "Dependents of a changed use case are affected",
-      "description": "When a proposal changes a use case, the map lists every use case that depends on it directly or transitively as affected, and their proofs and captures run again with the proposal's own.",
+      "name": "Dependents of a changed feature are affected",
+      "description": "When a proposal changes a feature, every feature that depends on it directly or transitively is listed as affected, and their proofs and snapshots run again with the proposal's own.",
       "change": "add",
       "useCase": "UC-055",
       "provability": "formal",
       "source": {
-        "quote": "When a proposal changes a use case, the map lists the use cases that\ndepend on it, directly or not, as affected: their proofs and captures run again with the proposal's own.",
-        "start": 1441,
-        "end": 1614
+        "quote": "When a proposal changes a feature, the map lists the features that depend on it,\ndirectly or not, as affected: their proofs and snapshots run again with the proposal's own.",
+        "start": 1701,
+        "end": 1873
       },
       "replaces": [],
       "status": "proposed",
@@ -96,16 +96,16 @@
     },
     {
       "id": "P-006.I-06",
-      "slug": "bootstrap-features",
-      "name": "Bootstrap surfaces for existing use cases",
-      "description": "lastro bootstrap --features has the survey step read the code and write a bootstrap proposal for use cases with no surfaces; its intents only add surfaces and dependencies and never change a description, and it is reviewed like any other proposal.",
+      "slug": "bootstrap-surfaces",
+      "name": "Bootstrap surfaces for existing features",
+      "description": "lastro bootstrap --surfaces has the survey step read the code and write a bootstrap proposal for features with no surfaces; its intents only add surfaces and dependencies and never change a description, and it is reviewed like any other proposal.",
       "change": "add",
       "useCase": "UC-056",
       "provability": "formal",
       "source": {
-        "quote": "`lastro bootstrap --features` asks the survey step to read the\ncode and propose surfaces and dependencies for them.",
-        "start": 1671,
-        "end": 1786
+        "quote": "`lastro bootstrap --surfaces` asks the survey step to read the\ncode and propose surfaces and dependencies for them.",
+        "start": 1929,
+        "end": 2044
       },
       "replaces": [],
       "status": "proposed",
@@ -113,16 +113,16 @@
     },
     {
       "id": "P-006.I-07",
-      "slug": "driver-protocol",
-      "name": "Drivers speak JSON lines",
-      "description": "A driver is a process named under drivers in .lastro/config.json, in any language; Lastro sends it a surface and a list of user actions (open, click, type, press, wait for) and it answers with the observed state (named values the model declares as outputs) and the paths of the captures it took.",
-      "change": "add",
-      "useCase": "UC-057",
+      "slug": "formal-first-derivation",
+      "name": "Derivation proves formally whenever it can",
+      "description": "For each approved intent the derive step first tries a finite model the code can be checked against exhaustively (an input space of at most 100,000 points, or a state machine with at most 100,000 reachable states), and falls back to sampling, traces or scenarios only when no such model can express the intent, recording why as a reason where proof stops or as a domain too large to enumerate.",
+      "change": "modify",
+      "useCase": "UC-013",
       "provability": "empirical",
       "source": {
-        "quote": "A driver is a process named in `.lastro/config.json` under `drivers`, written in any language, that Lastro starts\nand talks to over JSON lines",
-        "start": 1971,
-        "end": 2113
+        "quote": "The derive step must prove formally whenever it can.",
+        "start": 2230,
+        "end": 2282
       },
       "replaces": [],
       "status": "proposed",
@@ -130,16 +130,16 @@
     },
     {
       "id": "P-006.I-08",
-      "slug": "driver-examples-in-docs",
-      "name": "The docs show a Playwright driver and a process driver",
-      "description": "Lastro ships no browser; the docs show a Playwright driver for web and Electron apps and a process driver for CLIs.",
-      "change": "add",
-      "useCase": "UC-057",
-      "provability": "empirical",
+      "slug": "formal-coverage-in-receipt",
+      "name": "The receipt counts formal coverage",
+      "description": "The receipt counts how many intents are proved formally, evidenced and beyond proof, with the reason for each one that is not formal.",
+      "change": "modify",
+      "useCase": "UC-026",
+      "provability": "formal",
       "source": {
-        "quote": "Lastro ships no browser of its own; the docs show a Playwright driver for web and Electron apps\nand a process driver for CLIs.",
-        "start": 2334,
-        "end": 2460
+        "quote": "The receipt counts how many intents are proved formally, evidenced, and beyond proof, with the\nreason for each one that is not formal.",
+        "start": 2695,
+        "end": 2829
       },
       "replaces": [],
       "status": "proposed",
@@ -147,16 +147,16 @@
     },
     {
       "id": "P-006.I-09",
-      "slug": "scenarios-through-driver",
-      "name": "Scenarios can run through a driver",
-      "description": "A scenario may name a surface and a list of actions instead of a concrete input; it then runs through the driver and its expectation is checked against the observed state, as empirical evidence.",
+      "slug": "machine-models",
+      "name": "Models can be state machines with actors",
+      "description": "A model may be a state machine: state variables with finite domains, an initial state and events each with finite inputs, optionally with actors (several copies of one process sharing part of the state); the code under proof is a step function from a state and an event, with the actor that raised it, to the next state.",
       "change": "modify",
-      "useCase": "UC-021",
-      "provability": "empirical",
+      "useCase": "UC-011",
+      "provability": "formal",
       "source": {
-        "quote": "A scenario may name a surface and a list of actions instead of a concrete input. It then runs through the driver",
-        "start": 2462,
-        "end": 2574
+        "quote": "A model may be a state machine: state variables with finite domains, an initial state, and events, each with finite\ninputs.",
+        "start": 2856,
+        "end": 2979
       },
       "replaces": [],
       "status": "proposed",
@@ -164,16 +164,16 @@
     },
     {
       "id": "P-006.I-10",
-      "slug": "driver-failure-fails",
-      "name": "A driver failure fails the scenario",
-      "description": "A driver that fails to start or times out fails the scenario with the driver's error and never passes it.",
-      "change": "modify",
-      "useCase": "UC-021",
+      "slug": "actors-interleave",
+      "name": "Actors' events interleave in every order",
+      "description": "The events of a state machine's actors are explored in every possible interleaving, so races between them are found.",
+      "change": "add",
+      "useCase": "UC-057",
       "provability": "formal",
       "source": {
-        "quote": "a driver that fails to\nstart or times out fails the scenario with the driver's error, never passes it.",
-        "start": 2669,
-        "end": 2771
+        "quote": "their events interleave in every possible order, which is how races between them are found.",
+        "start": 3097,
+        "end": 3188
       },
       "replaces": [],
       "status": "proposed",
@@ -181,16 +181,16 @@
     },
     {
       "id": "P-006.I-11",
-      "slug": "machine-models",
-      "name": "Models can be state machines",
-      "description": "A model may be a state machine: state variables with finite domains, an initial state and events each with finite inputs; the code under proof is a step function from a state and an event to the next state.",
-      "change": "modify",
-      "useCase": "UC-011",
+      "slug": "machine-clause-kinds",
+      "name": "Invariant, step and reachability clauses",
+      "description": "State-machine clauses are invariants (hold in every reachable state), step clauses (relate a state, an event and the next state) and reachability clauses (a state satisfying a condition can be reached), which guard the others against proving nothing.",
+      "change": "add",
+      "useCase": "UC-057",
       "provability": "formal",
       "source": {
-        "quote": "A model may be a state machine: state variables with finite domains, an initial state, and events, each with finite\ninputs.",
-        "start": 2798,
-        "end": 2921
+        "quote": "Clauses are of three kinds: an invariant must hold in every reachable state; a step clause relates a state, an\nevent and the next state;",
+        "start": 3307,
+        "end": 3443
       },
       "replaces": [],
       "status": "proposed",
@@ -198,16 +198,16 @@
     },
     {
       "id": "P-006.I-12",
-      "slug": "machine-clause-kinds",
-      "name": "Invariant, step and reachability clauses",
-      "description": "State-machine clauses are invariants (hold in every reachable state), step clauses (relate a state, an event and the next state) and reachability clauses (a state satisfying a condition can be reached), which guard the others against proving nothing.",
+      "slug": "machine-exhaustive",
+      "name": "Small machines are proved exhaustively",
+      "description": "When the reachable state space across every interleaving has at most 100,000 states it is visited breadth first, and a clause that holds everywhere it applies is proved, with formal evidence and the number of states visited.",
       "change": "add",
-      "useCase": "UC-058",
+      "useCase": "UC-057",
       "provability": "formal",
       "source": {
-        "quote": "Clauses are of three\nkinds: an invariant must hold in every reachable state; a step clause relates a state, an event and the next state;",
-        "start": 3007,
-        "end": 3143
+        "quote": "When the reachable state space, across every interleaving, has at most\n100,000 states, Lastro visits all of it breadth first",
+        "start": 3578,
+        "end": 3702
       },
       "replaces": [],
       "status": "proposed",
@@ -215,16 +215,16 @@
     },
     {
       "id": "P-006.I-13",
-      "slug": "machine-exhaustive",
-      "name": "Small machines are proved exhaustively",
-      "description": "When the reachable state space has at most 100,000 states it is visited breadth first, and a clause that holds everywhere it applies is proved, with formal evidence and the number of states visited.",
+      "slug": "machine-random-walks",
+      "name": "Large machines are only evidenced",
+      "description": "A larger or unbounded state space is explored by random walks from the initial state with a fixed seed; a clause that holds is evidenced, never proved.",
       "change": "add",
-      "useCase": "UC-058",
+      "useCase": "UC-057",
       "provability": "formal",
       "source": {
-        "quote": "When the reachable state space has at most 100,000 states, Lastro visits all of it breadth first",
-        "start": 3279,
-        "end": 3375
+        "quote": "A larger or unbounded space is explored by random walks from the\ninitial state with a fixed seed, and a clause that holds is evidenced, never proved.",
+        "start": 3816,
+        "end": 3965
       },
       "replaces": [],
       "status": "proposed",
@@ -232,16 +232,16 @@
     },
     {
       "id": "P-006.I-14",
-      "slug": "machine-random-walks",
-      "name": "Large machines are only evidenced",
-      "description": "A larger or unbounded state space is explored by random walks from the initial state with a fixed seed; a clause that holds is evidenced, never proved.",
+      "slug": "machine-shortest-counterexample",
+      "name": "Violations come back as the shortest event sequence",
+      "description": "A violated state-machine clause comes back with the shortest sequence of events, each with its actor, from the initial state that reaches the violation.",
       "change": "add",
-      "useCase": "UC-058",
+      "useCase": "UC-057",
       "provability": "formal",
       "source": {
-        "quote": "A larger or unbounded\nspace is explored by random walks from the initial state with a fixed seed, and a clause that holds is evidenced,\nnever proved.",
-        "start": 3489,
-        "end": 3638
+        "quote": "A violation comes back as the\nshortest sequence of events, each with its actor, from the initial state that reaches it.",
+        "start": 3966,
+        "end": 4085
       },
       "replaces": [],
       "status": "proposed",
@@ -249,16 +249,16 @@
     },
     {
       "id": "P-006.I-15",
-      "slug": "machine-shortest-counterexample",
-      "name": "Violations come back as the shortest event sequence",
-      "description": "A violated state-machine clause comes back with the shortest sequence of events from the initial state that reaches the violation.",
+      "slug": "export-tla",
+      "name": "Export state machines as TLA+",
+      "description": "lastro export --tla writes every state-machine model as a TLA+ specification with its invariants as TLA+ invariants, for teams that run TLC; Lastro's verdicts never depend on TLC.",
       "change": "add",
-      "useCase": "UC-058",
+      "useCase": "UC-057",
       "provability": "formal",
       "source": {
-        "quote": "A violation comes back as the shortest sequence of events from the initial state that reaches it.",
-        "start": 3639,
-        "end": 3736
+        "quote": "Every state-machine model can be exported as a TLA+ specification (`lastro export --tla`), with its invariants as\nTLA+ invariants",
+        "start": 4238,
+        "end": 4367
       },
       "replaces": [],
       "status": "proposed",
@@ -273,9 +273,9 @@
       "useCase": "UC-025",
       "provability": "formal",
       "source": {
-        "quote": "The\nTypeScript engine, the Rust prover, the Go SDK and the .NET SDK visit the states in the same order and give the same\nverdicts and counterexamples.",
-        "start": 3737,
-        "end": 3887
+        "quote": "The TypeScript engine, the\nRust prover, the Go SDK and the .NET SDK visit the states in the same order and give the same verdicts and\ncounterexamples.",
+        "start": 4086,
+        "end": 4236
       },
       "replaces": [],
       "status": "proposed",
@@ -283,16 +283,16 @@
     },
     {
       "id": "P-006.I-17",
-      "slug": "action-sequence-properties",
-      "name": "Properties over generated action sequences",
-      "description": "A property-based check names a surface, the actions available there and an invariant over the observed state; Lastro generates action sequences with a fixed seed, runs each through the driver and checks the invariant after every action.",
+      "slug": "driver-protocol",
+      "name": "Drivers speak JSON lines",
+      "description": "A driver is a process named under drivers in .lastro/config.json, in any language; Lastro sends it a surface and a list of actions (open, click, type, press, wait for, or a request with its body for an api surface) and it answers with the observed state and the snapshots it took.",
       "change": "add",
-      "useCase": "UC-059",
+      "useCase": "UC-058",
       "provability": "empirical",
       "source": {
-        "quote": "A property-based check names a surface, the actions a user can take there and an invariant over the observed state.",
-        "start": 3931,
-        "end": 4046
+        "quote": "A driver is a process named in `.lastro/config.json` under `drivers`, written in any language, that Lastro starts\nand talks to over JSON lines",
+        "start": 4519,
+        "end": 4661
       },
       "replaces": [],
       "status": "proposed",
@@ -300,16 +300,16 @@
     },
     {
       "id": "P-006.I-18",
-      "slug": "properties-are-evidenced",
-      "name": "Properties are evidenced, never proved",
-      "description": "A property that holds on every sequence is evidenced, with the number of sequences and actions run and the rule-of-three failure bound; it is never proved.",
+      "slug": "driver-examples-in-docs",
+      "name": "The docs show Playwright, HTTP and process drivers",
+      "description": "Lastro ships no browser; the docs show a Playwright driver for web and Electron apps, an HTTP driver for APIs and a process driver for CLIs.",
       "change": "add",
-      "useCase": "UC-059",
-      "provability": "formal",
+      "useCase": "UC-058",
+      "provability": "empirical",
       "source": {
-        "quote": "A property that holds on every sequence is evidenced, with the number of sequences and actions run and\nthe rule-of-three failure bound; it is never proved.",
-        "start": 4174,
-        "end": 4329
+        "quote": "Lastro ships no browser of its own; the docs show a Playwright\ndriver for web and Electron apps, an HTTP driver for APIs and a process driver for CLIs.",
+        "start": 4912,
+        "end": 5063
       },
       "replaces": [],
       "status": "proposed",
@@ -317,16 +317,16 @@
     },
     {
       "id": "P-006.I-19",
-      "slug": "shrink-and-replay",
-      "name": "Failing sequences are shrunk and replayed",
-      "description": "A failing sequence is shortened to its shortest failing prefix and replayed once; if the replay does not fail, the check is reported as nondeterministic instead of violated.",
-      "change": "add",
-      "useCase": "UC-059",
-      "provability": "formal",
+      "slug": "scenarios-through-driver",
+      "name": "Scenarios can run through a driver",
+      "description": "A scenario may name a surface and a list of actions instead of a concrete input; it then runs through the driver and its expectation is checked against the observed state, as empirical evidence.",
+      "change": "modify",
+      "useCase": "UC-021",
+      "provability": "empirical",
       "source": {
-        "quote": "A failing sequence is shortened to the shortest prefix that\nstill fails and then replayed once",
-        "start": 4330,
-        "end": 4424
+        "quote": "A scenario may name a surface and a list of actions instead of a concrete input. It then runs through the driver",
+        "start": 5065,
+        "end": 5177
       },
       "replaces": [],
       "status": "proposed",
@@ -334,16 +334,16 @@
     },
     {
       "id": "P-006.I-20",
-      "slug": "before-capture",
-      "name": "Before captures at extraction",
-      "description": "When a proposal is extracted, every intent touching a use case with a screen or route surface gets a before capture: that surface's scenarios run through the driver on the current code.",
-      "change": "add",
-      "useCase": "UC-060",
-      "provability": "empirical",
+      "slug": "driver-failure-fails",
+      "name": "A driver failure fails the scenario",
+      "description": "A driver that fails to start or times out fails the scenario with the driver's error and never passes it.",
+      "change": "modify",
+      "useCase": "UC-021",
+      "provability": "formal",
       "source": {
-        "quote": "every intent that touches a use case with a screen or route surface gets a before\ncapture",
-        "start": 4579,
-        "end": 4668
+        "quote": "a driver that fails to\nstart or times out fails the scenario with the driver's error, never passes it.",
+        "start": 5272,
+        "end": 5374
       },
       "replaces": [],
       "status": "proposed",
@@ -351,16 +351,16 @@
     },
     {
       "id": "P-006.I-21",
-      "slug": "after-capture",
-      "name": "After captures at the proof run",
-      "description": "When the proposal is proved, the same scenarios run on the new code and give the after capture.",
+      "slug": "action-sequence-properties",
+      "name": "Properties over generated action sequences",
+      "description": "A property-based check names a surface, the actions available there and an invariant over the observed state; Lastro generates action sequences with a fixed seed, runs each through the driver and checks the invariant after every action.",
       "change": "add",
-      "useCase": "UC-060",
+      "useCase": "UC-059",
       "provability": "empirical",
       "source": {
-        "quote": "When the proposal is proved, the same scenarios run on the new code and give the after capture.",
-        "start": 4783,
-        "end": 4878
+        "quote": "A property-based check names a surface, the actions a user or client can take there and an invariant over the\nobserved state.",
+        "start": 5413,
+        "end": 5538
       },
       "replaces": [],
       "status": "proposed",
@@ -368,16 +368,16 @@
     },
     {
       "id": "P-006.I-22",
-      "slug": "captures-out-of-git",
-      "name": "Captures stay out of git, hashes stay in the proposal",
-      "description": "Captures live in .lastro/captures/<proposal>/<use case>/before|after/, are never committed to git, and the proposal records the SHA-256 of each so anyone can capture again and compare.",
+      "slug": "properties-are-evidenced",
+      "name": "Properties are evidenced, never proved",
+      "description": "A property that holds on every sequence is evidenced, with the number of sequences and actions run and the rule-of-three failure bound; it is never proved.",
       "change": "add",
-      "useCase": "UC-060",
+      "useCase": "UC-059",
       "provability": "formal",
       "source": {
-        "quote": "Captures\nlive in `.lastro/captures/<proposal>/<use case>/before|after/` and are never committed to git",
-        "start": 4879,
-        "end": 4981
+        "quote": "A property that holds on every sequence is evidenced, with the number of sequences and\nactions run and the rule-of-three failure bound; it is never proved.",
+        "start": 5666,
+        "end": 5821
       },
       "replaces": [],
       "status": "proposed",
@@ -385,16 +385,16 @@
     },
     {
       "id": "P-006.I-23",
-      "slug": "pixel-comparison",
-      "name": "Deterministic pixel comparison",
-      "description": "Each before and after pair gets a deterministic pixel comparison, reported as the share of pixels changed.",
+      "slug": "shrink-and-replay",
+      "name": "Failing sequences are shrunk and replayed",
+      "description": "A failing sequence is shortened to its shortest failing prefix and replayed once; if the replay does not fail, the check is reported as nondeterministic instead of violated.",
       "change": "add",
-      "useCase": "UC-060",
+      "useCase": "UC-059",
       "provability": "formal",
       "source": {
-        "quote": "A pixel\ncomparison of each before and after pair is computed deterministically and reported as the share of pixels changed.",
-        "start": 5103,
-        "end": 5226
+        "quote": "A failing sequence is shortened to the shortest\nprefix that still fails and then replayed once",
+        "start": 5822,
+        "end": 5916
       },
       "replaces": [],
       "status": "proposed",
@@ -402,17 +402,16 @@
     },
     {
       "id": "P-006.I-24",
-      "slug": "human-judgment-signoff",
-      "name": "Human-judgment intents wait for a sign-off",
-      "description": "An intent beyond proof for human judgment, after the proof run, waits for a reviewer to look at its before and after captures and sign it off or request changes.",
-      "change": "modify",
-      "useCase": "UC-023",
-      "provability": "beyond-proof",
-      "beyondProofReason": "human-judgment",
+      "slug": "before-after-snapshots",
+      "name": "Before and after snapshots of every touched feature",
+      "description": "Every intent gets a before snapshot of each feature it touches on the current code at extraction, and the same snapshot on the new code when the proposal is proved.",
+      "change": "add",
+      "useCase": "UC-060",
+      "provability": "empirical",
       "source": {
-        "quote": "An intent whose promise is a matter of human judgment (the layout looks right, the message is clear) stays beyond\nproof, but after the proof run it waits for a sign-off",
-        "start": 5228,
-        "end": 5396
+        "quote": "When a proposal is extracted, every intent gets a before snapshot of each feature it touches, taken on the current\ncode",
+        "start": 6042,
+        "end": 6161
       },
       "replaces": [],
       "status": "proposed",
@@ -420,38 +419,33 @@
     },
     {
       "id": "P-006.I-25",
-      "slug": "signoff-blocks-proved",
-      "name": "No proved status while a sign-off is due",
-      "description": "A proposal is not proved while an intent waits for its sign-off; it stays proving.",
-      "change": "modify",
-      "useCase": "UC-048",
-      "provability": "formal",
+      "slug": "screen-snapshots",
+      "name": "Screen snapshots for the frontend",
+      "description": "For a screen or route surface the snapshot is the images the driver captured while running that surface's scenarios, compared as the share of pixels changed.",
+      "change": "add",
+      "useCase": "UC-060",
+      "provability": "empirical",
       "source": {
-        "quote": "A proposal is not proved while such an intent waits for its sign-off.",
-        "start": 5486,
-        "end": 5555
+        "quote": "screen: for a screen or route surface, the images the driver captured while running that surface's scenarios;",
+        "start": 6335,
+        "end": 6444
       },
-      "replaces": [
-        {
-          "proof": "P-001.PF-15",
-          "reason": "The lifecycle says proved as soon as the run is ok and every proof passed; a pending sign-off now keeps the proposal in proving."
-        }
-      ],
+      "replaces": [],
       "status": "proposed",
       "approvals": []
     },
     {
       "id": "P-006.I-26",
-      "slug": "review-app-evidence",
-      "name": "The review app shows the evidence per intent",
-      "description": "For each intent the review app shows the use case's place in the feature map (surfaces, dependencies, affected use cases), the statechart drawn from its state-machine model, the before capture during review, before and after captures with the pixel comparison after the proof run, and every proof and property verdict with its counterexample.",
+      "slug": "contract-snapshots",
+      "name": "Contract snapshots for the backend",
+      "description": "For an api or command surface the snapshot is the contract the driver reports (request and response shapes as JSON Schema), and for every feature the model's inputs and outputs with their domains.",
       "change": "add",
-      "useCase": "UC-061",
+      "useCase": "UC-060",
       "provability": "empirical",
       "source": {
-        "quote": "The review app shows, for each intent: the use case's place in the feature map",
-        "start": 5584,
-        "end": 5662
+        "quote": "contract: for an api or command surface, the contract the driver reports",
+        "start": 6447,
+        "end": 6519
       },
       "replaces": [],
       "status": "proposed",
@@ -459,16 +453,16 @@
     },
     {
       "id": "P-006.I-27",
-      "slug": "receipt-evidence-sections",
-      "name": "The receipt shows the map, diagrams, captures and sign-offs",
-      "description": "The receipt adds a Feature map section with the affected use cases, a Mermaid state diagram for every state-machine model, the captures with their hashes and pixel comparison, and the sign-offs with who gave them.",
-      "change": "modify",
-      "useCase": "UC-026",
-      "provability": "formal",
+      "slug": "data-snapshots",
+      "name": "Data structure snapshots",
+      "description": "The data snapshot is the structure of the data the feature reads or writes as the driver reports it: tables and columns, or a JSON Schema of a stored document.",
+      "change": "add",
+      "useCase": "UC-060",
+      "provability": "empirical",
       "source": {
-        "quote": "The receipt adds a Feature map section with the affected use cases, a\nstate diagram in Mermaid for every state-machine model",
-        "start": 5973,
-        "end": 6097
+        "quote": "data: the structure of the data the feature reads or writes, as the driver reports it",
+        "start": 6673,
+        "end": 6758
       },
       "replaces": [],
       "status": "proposed",
@@ -476,16 +470,16 @@
     },
     {
       "id": "P-006.I-28",
-      "slug": "sdks-cover-it",
-      "name": "The three SDKs and the CLI cover it",
-      "description": "The CLI and the TypeScript, Go and .NET SDKs implement surfaces, the feature map, drivers, state-machine proofs, action-sequence properties, captures and sign-offs with the same files, hashes and verdicts, and the docs describe them.",
-      "change": "modify",
-      "useCase": "UC-035",
-      "provability": "empirical",
+      "slug": "structural-diff",
+      "name": "Structural diff marks breaking changes",
+      "description": "Contracts and data are compared by a deterministic structural diff listing every field or column added, removed or changed in type; a removal or a type change is marked breaking.",
+      "change": "add",
+      "useCase": "UC-060",
+      "provability": "formal",
       "source": {
-        "quote": "The CLI, the TypeScript, Go and .NET SDKs, the docs and the plugin's skills cover all of this",
-        "start": 6191,
-        "end": 6284
+        "quote": "for contracts and data, a\nstructural diff that lists every field or column added, removed or changed in type, and marks a removal or a type\nchange as breaking",
+        "start": 7093,
+        "end": 7251
       },
       "replaces": [],
       "status": "proposed",
@@ -493,16 +487,158 @@
     },
     {
       "id": "P-006.I-29",
-      "slug": "plugin-shows-captures",
-      "name": "The plugin's review shows captures and due sign-offs",
-      "description": "The plugin's review lists the captures' paths and the sign-offs still due.",
+      "slug": "example-snapshots",
+      "name": "Examples of behavior before and after",
+      "description": "The examples snapshot is a table of the scenarios' inputs plus a fixed-seed sample of the model's inputs, each run on the before and the after code with both outputs side by side; the comparison lists the rows whose output changed.",
+      "change": "add",
+      "useCase": "UC-060",
+      "provability": "formal",
+      "source": {
+        "quote": "examples: a table of example inputs, the scenarios' inputs plus a fixed-seed sample of the model's inputs",
+        "start": 6824,
+        "end": 6929
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-006.I-30",
+      "slug": "unexpected-changes",
+      "name": "Unexpected changes are flagged",
+      "description": "An example whose output changed although no approved intent's clause applies to its input is flagged as an unexpected change, and the proposal is not proved while an unexpected change is not accepted by a reviewer.",
+      "change": "add",
+      "useCase": "UC-060",
+      "provability": "formal",
+      "source": {
+        "quote": "An example whose output changed although no\napproved intent's clause applies to its input is flagged as an unexpected change",
+        "start": 7298,
+        "end": 7422
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-006.I-31",
+      "slug": "snapshots-out-of-git",
+      "name": "Snapshots stay out of git, hashes stay in the proposal",
+      "description": "Snapshots live in .lastro/snapshots/<proposal>/<feature>/before|after/, are never committed to git, and the proposal records the SHA-256 of each so anyone can take it again and compare.",
+      "change": "add",
+      "useCase": "UC-060",
+      "provability": "formal",
+      "source": {
+        "quote": "Snapshots live in `.lastro/snapshots/<proposal>/<feature>/before|after/` and are never committed to git",
+        "start": 7514,
+        "end": 7617
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-006.I-32",
+      "slug": "human-judgment-signoff",
+      "name": "Human-judgment intents wait for a sign-off",
+      "description": "An intent beyond proof for human judgment, after the proof run, waits for a reviewer to look at its before and after snapshots and sign it off or request changes.",
+      "change": "modify",
+      "useCase": "UC-023",
+      "provability": "beyond-proof",
+      "beyondProofReason": "human-judgment",
+      "source": {
+        "quote": "An intent whose promise is a matter of human judgment (the layout looks right, the message is clear, the new error\nresponse is helpful) stays beyond proof",
+        "start": 7736,
+        "end": 7890
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-006.I-33",
+      "slug": "signoff-blocks-proved",
+      "name": "No proved status while a sign-off or an unexpected change is due",
+      "description": "A proposal is not proved while an intent waits for its sign-off or an unexpected change waits to be accepted; it stays proving.",
+      "change": "modify",
+      "useCase": "UC-048",
+      "provability": "formal",
+      "source": {
+        "quote": "A proposal is not proved while such an intent waits\nfor its sign-off.",
+        "start": 8030,
+        "end": 8099
+      },
+      "replaces": [
+        {
+          "proof": "P-001.PF-15",
+          "reason": "The lifecycle says proved as soon as the run is ok and every proof passed; a pending sign-off or an unaccepted unexpected change now keeps the proposal in proving."
+        }
+      ],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-006.I-34",
+      "slug": "review-app-evidence",
+      "name": "The review app shows the evidence per intent",
+      "description": "For each intent the review app shows the feature's place in the feature map, the statechart drawn from its state-machine model, its before snapshots during review, before and after snapshots with their comparison after the proof run (images side by side, a diff for contracts and data, the changed rows for examples), and every proof and property verdict with its counterexample.",
+      "change": "add",
+      "useCase": "UC-061",
+      "provability": "empirical",
+      "source": {
+        "quote": "The review app shows, for each intent: the feature's place in the feature map",
+        "start": 8128,
+        "end": 8205
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-006.I-35",
+      "slug": "receipt-evidence-sections",
+      "name": "The receipt shows the map, diagrams, snapshots and sign-offs",
+      "description": "The receipt adds a Feature map section with the affected features, a Mermaid state diagram for every state-machine model, the snapshots with their hashes and comparisons, the unexpected changes and who accepted them, and the sign-offs with who gave them.",
+      "change": "modify",
+      "useCase": "UC-026",
+      "provability": "formal",
+      "source": {
+        "quote": "The receipt adds a Feature map section with the affected features, a state diagram in\nMermaid for every state-machine model",
+        "start": 8611,
+        "end": 8734
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-006.I-36",
+      "slug": "sdks-cover-it",
+      "name": "The three SDKs and the CLI cover it",
+      "description": "The CLI and the TypeScript, Go and .NET SDKs implement surfaces, the feature map, formal-first derivation, drivers, state-machine proofs with actors, TLA+ export, action-sequence properties, snapshots, unexpected changes and sign-offs with the same files, hashes and verdicts, and the docs describe them.",
+      "change": "modify",
+      "useCase": "UC-035",
+      "provability": "empirical",
+      "source": {
+        "quote": "The CLI, the TypeScript, Go and .NET SDKs, the docs and the plugin's skills cover all of this",
+        "start": 8898,
+        "end": 8991
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-006.I-37",
+      "slug": "plugin-shows-snapshots",
+      "name": "The plugin's review shows snapshots, unexpected changes and due sign-offs",
+      "description": "The plugin's review lists the snapshots' paths, the unexpected changes and the sign-offs still due.",
       "change": "modify",
       "useCase": "UC-040",
       "provability": "formal",
       "source": {
-        "quote": "the plugin's\nreview shows the captures' paths and the sign-offs still due.",
-        "start": 6290,
-        "end": 6364
+        "quote": "the plugin's\nreview shows the snapshots' paths, the unexpected changes and the sign-offs still due.",
+        "start": 8997,
+        "end": 9096
       },
       "replaces": [],
       "status": "proposed",
@@ -537,7 +673,7 @@
       "slug": "map-features",
       "change": "add",
       "name": "Print the feature map",
-      "after": "lastro features prints the feature map deterministically: every use case with its surfaces, the use cases it depends on and the use cases that depend on it; a use case with no surface is listed as not reachable by the driver. It rejects a dependency on a use case that does not exist or was removed, and a dependency cycle, naming the use cases in it. When a proposal changes a use case, every use case that depends on it directly or transitively is listed as affected, and their proofs and captures run again with the proposal's own.",
+      "after": "lastro map prints the feature map deterministically: every feature with its surfaces, the features it depends on and the features that depend on it; a feature with no surface is listed as not reachable by the driver. It rejects a dependency on a feature that does not exist or was removed, and a dependency cycle, naming the features in it. When a proposal changes a feature, every feature that depends on it directly or transitively is listed as affected, and their proofs and snapshots run again with the proposal's own.",
       "intents": [
         "P-006.I-03",
         "P-006.I-04",
@@ -549,32 +685,32 @@
       "slug": "bootstrap-feature-map",
       "change": "add",
       "name": "Bootstrap the feature map",
-      "after": "lastro bootstrap --features has the survey step read the code and propose surfaces and dependencies for the use cases that have none. It writes a bootstrap proposal whose intents only add surfaces and dependencies and never change a description, reviewed like any other proposal.",
+      "after": "lastro bootstrap --surfaces has the survey step read the code and propose surfaces and dependencies for the features that have none. It writes a bootstrap proposal whose intents only add surfaces and dependencies and never change a description, reviewed like any other proposal.",
       "intents": [
         "P-006.I-06"
       ]
     },
     {
-      "useCase": "UC-057",
-      "slug": "drive-application",
-      "change": "add",
-      "name": "Drive the application",
-      "after": "A driver is a process named under drivers in .lastro/config.json, in any language. Lastro starts it and talks to it over JSON lines: it sends a surface and a list of user actions (open, click, type, press, wait for), and the driver answers with the observed state, named values the model declares as outputs, and the paths of the captures it took. Lastro ships no browser; the docs show a Playwright driver for web and Electron apps and a process driver for CLIs.",
+      "useCase": "UC-013",
+      "slug": "derive-proof-plan",
+      "change": "modify",
+      "name": "Derive the proof plan",
+      "before": "derive(proposal) requires an approved proposal and asks the LLM (step \"derive\") with the models declared in .lastro/config.json, each touched use case's before and after with its approved and amended intents, the existing proofs of those use cases, each decision's question and answer (the chosen or else the recommended option) and notPromised. It writes pending proofs into the proposal, numbered P-n.PF-nn: each has a slug, name and description, the intent and use case it checks, the model and subject it runs against, and a check that is either a clause (requires and ensures in LSL, assumptions used) or a scenario (concrete input and an LSL expect); plus assumptions and beyondProof items. Every remove intent gets a proof, written from the use case's before, that the old behavior no longer happens; when the model cannot express it, derivation returns a decision for the reviewer and the proposal cannot be applied while it is open. Derivation never retires a proof: the proposal's supersedes is the union of replaces over the approved and amended intents, each new proof that takes the place of one lists it, and an existing proof the approved behavior breaks that no approved intent replaces comes back as a decision that sends the intent back to review with the proof added to its replaces. Every expression is parsed and validated. The proposal moves to proving. Without an LLM transport or a custom deriver, derive() throws.",
+      "after": "derive(proposal) requires an approved proposal and asks the LLM (step \"derive\") with the models declared in .lastro/config.json, each touched use case's before and after with its approved and amended intents, the existing proofs of those use cases, each decision's question and answer (the chosen or else the recommended option) and notPromised. It writes pending proofs into the proposal, numbered P-n.PF-nn: each has a slug, name and description, the intent and use case it checks, the model and subject it runs against, and a check that is either a clause (requires and ensures in LSL, assumptions used) or a scenario (concrete input and an LSL expect); plus assumptions and beyondProof items. Every remove intent gets a proof, written from the use case's before, that the old behavior no longer happens; when the model cannot express it, derivation returns a decision for the reviewer and the proposal cannot be applied while it is open. Derivation never retires a proof: the proposal's supersedes is the union of replaces over the approved and amended intents, each new proof that takes the place of one lists it, and an existing proof the approved behavior breaks that no approved intent replaces comes back as a decision that sends the intent back to review with the proof added to its replaces. For each approved intent the derive step first tries a finite model the code can be checked against exhaustively (an input space of at most 100,000 points, or a state machine with at most 100,000 reachable states), and falls back to sampling, traces or scenarios only when no such model can express the intent, recording why as a reason where proof stops or as a domain too large to enumerate. Every expression is parsed and validated. The proposal moves to proving. Without an LLM transport or a custom deriver, derive() throws.",
       "intents": [
-        "P-006.I-07",
-        "P-006.I-08"
+        "P-006.I-07"
       ]
     },
     {
-      "useCase": "UC-021",
-      "slug": "run-scenarios",
+      "useCase": "UC-026",
+      "slug": "render-receipt",
       "change": "modify",
-      "name": "Run Given/When/Then scenarios",
-      "before": "Each scenario runs the code on its concrete input and checks its LSL expectation over input and output. It passes or fails, with the output or the error; with no subject every scenario fails. Scenarios are empirical evidence, and assumptions list the scenarios that check them.",
-      "after": "Each scenario runs the code on its concrete input, or names a surface and a list of user actions and runs through that surface's driver, and checks its LSL expectation over input and output (the observed state for a driven scenario). It passes or fails, with the output or the error; with no subject every scenario fails, and a driver that fails to start or times out fails the scenario with the driver's error. Scenarios are empirical evidence, and assumptions list the scenarios that check them.",
+      "name": "Render a receipt",
+      "before": "The receipt is Markdown for a pull request, written next to the proposal: the overall result and counts per verdict; the proposal and plan hashes; the Rust check with coverage, table digest and whether verdicts agree; the use-case diff, with each use case added, modified (before and after) or removed with the intents behind it, each replaced proof next to the proofs that take its place, each superseded proof that still passes, each regression and, after apply, the new baseline hash; a table of intents with verdict, evidence, confidence and what backs each; notes; each proof with verdict, evidence, method (exhaustive, samples with failure bound, traces), mutants killed, formal statement, counterexample, violating trace and notes; trusted pieces; where proof stops; not promised; and pending contradictions.",
+      "after": "The receipt is Markdown for a pull request, written next to the proposal: the overall result and counts per verdict; the proposal and plan hashes; the Rust check with coverage, table digest and whether verdicts agree; the use-case diff, with each use case added, modified (before and after) or removed with the intents behind it, each replaced proof next to the proofs that take its place, each superseded proof that still passes, each regression and, after apply, the new baseline hash; a table of intents with verdict, evidence, confidence and what backs each; notes; each proof with verdict, evidence, method (exhaustive, samples with failure bound, traces), mutants killed, formal statement, counterexample, violating trace and notes; trusted pieces; where proof stops; not promised; pending contradictions; the count of intents proved formally, evidenced and beyond proof, with the reason for each one that is not formal; a Feature map section with the affected features; a Mermaid state diagram for every state-machine model; the snapshots with their hashes and comparisons; the unexpected changes and who accepted them; and the sign-offs with who gave them.",
       "intents": [
-        "P-006.I-09",
-        "P-006.I-10"
+        "P-006.I-08",
+        "P-006.I-35"
       ]
     },
     {
@@ -583,18 +719,20 @@
       "change": "modify",
       "name": "Declare the proof vocabulary",
       "before": "A model has a name, inputs and outputs, each a domain: bool, enum of strings or numbers, int with optional min and max, or string with optional examples; plus named defs (parameters and an LSL body). Bool, enum and bounded int domains are finite and enumerable in a fixed, sorted-key order; unbounded ints and strings are not. Facts supplied by trusted external pieces enter as inputs. A model with no outputs is rejected by plan validation.",
-      "after": "A model has a name, inputs and outputs, each a domain: bool, enum of strings or numbers, int with optional min and max, or string with optional examples; plus named defs (parameters and an LSL body). Bool, enum and bounded int domains are finite and enumerable in a fixed, sorted-key order; unbounded ints and strings are not. Facts supplied by trusted external pieces enter as inputs. A model with no outputs is rejected by plan validation. A model may instead be a state machine: state variables with finite domains, an initial state and events, each with finite inputs; its subject is a step function from a state and an event to the next state.",
+      "after": "A model has a name, inputs and outputs, each a domain: bool, enum of strings or numbers, int with optional min and max, or string with optional examples; plus named defs (parameters and an LSL body). Bool, enum and bounded int domains are finite and enumerable in a fixed, sorted-key order; unbounded ints and strings are not. Facts supplied by trusted external pieces enter as inputs. A model with no outputs is rejected by plan validation. A model may instead be a state machine: state variables with finite domains, an initial state and events, each with finite inputs, and optionally actors, several copies of one process that share part of the state; its subject is a step function from a state and an event, with the actor that raised it, to the next state.",
       "intents": [
-        "P-006.I-11"
+        "P-006.I-09"
       ]
     },
     {
-      "useCase": "UC-058",
+      "useCase": "UC-057",
       "slug": "prove-state-machines",
       "change": "add",
       "name": "Prove state machines",
-      "after": "A state-machine model's clauses are invariants, which hold in every reachable state; step clauses, which relate a state, an event and the next state; and reachability clauses, which say a state satisfying a condition can be reached and guard the others against proving nothing. When the reachable state space has at most 100,000 states it is visited breadth first, and a clause that holds everywhere it applies is proved, with formal evidence and the number of states visited. A larger or unbounded space is explored by random walks from the initial state with a fixed seed, and a clause that holds is evidenced, never proved. A violation comes back as the shortest sequence of events from the initial state that reaches it.",
+      "after": "A state-machine model's clauses are invariants, which hold in every reachable state; step clauses, which relate a state, an event and the next state; and reachability clauses, which say a state satisfying a condition can be reached and guard the others against proving nothing. The events of its actors are explored in every possible interleaving. When the reachable state space across every interleaving has at most 100,000 states it is visited breadth first, and a clause that holds everywhere it applies is proved, with formal evidence and the number of states visited. A larger or unbounded space is explored by random walks from the initial state with a fixed seed, and a clause that holds is evidenced, never proved. A violation comes back as the shortest sequence of events, each with its actor, from the initial state that reaches it. lastro export --tla writes every state-machine model as a TLA+ specification with its invariants as TLA+ invariants; verdicts never depend on TLC.",
       "intents": [
+        "P-006.I-10",
+        "P-006.I-11",
         "P-006.I-12",
         "P-006.I-13",
         "P-006.I-14",
@@ -613,28 +751,55 @@
       ]
     },
     {
+      "useCase": "UC-058",
+      "slug": "drive-application",
+      "change": "add",
+      "name": "Drive the application",
+      "after": "A driver is a process named under drivers in .lastro/config.json, in any language. Lastro starts it and talks to it over JSON lines: it sends a surface and a list of actions (open, click, type, press, wait for, or a request with its body for an api surface), and the driver answers with the observed state, named values the model declares as outputs, and the snapshots it took. Lastro ships no browser; the docs show a Playwright driver for web and Electron apps, an HTTP driver for APIs and a process driver for CLIs.",
+      "intents": [
+        "P-006.I-17",
+        "P-006.I-18"
+      ]
+    },
+    {
+      "useCase": "UC-021",
+      "slug": "run-scenarios",
+      "change": "modify",
+      "name": "Run Given/When/Then scenarios",
+      "before": "Each scenario runs the code on its concrete input and checks its LSL expectation over input and output. It passes or fails, with the output or the error; with no subject every scenario fails. Scenarios are empirical evidence, and assumptions list the scenarios that check them.",
+      "after": "Each scenario runs the code on its concrete input, or names a surface and a list of actions and runs through that surface's driver, and checks its LSL expectation over input and output (the observed state for a driven scenario). It passes or fails, with the output or the error; with no subject every scenario fails, and a driver that fails to start or times out fails the scenario with the driver's error. Scenarios are empirical evidence, and assumptions list the scenarios that check them.",
+      "intents": [
+        "P-006.I-19",
+        "P-006.I-20"
+      ]
+    },
+    {
       "useCase": "UC-059",
       "slug": "check-action-sequence-properties",
       "change": "add",
-      "name": "Check properties over user action sequences",
-      "after": "A property-based check names a surface, the actions a user can take there and an invariant over the observed state. Lastro generates action sequences with a fixed seed, runs each through the driver and checks the invariant after every action. A property that holds on every sequence is evidenced, with the number of sequences and actions run and the rule-of-three failure bound, never proved. A failing sequence is shortened to its shortest failing prefix and replayed once; if the replay does not fail, the check is reported as nondeterministic instead of violated.",
+      "name": "Check properties over action sequences",
+      "after": "A property-based check names a surface, the actions a user or client can take there and an invariant over the observed state. Lastro generates action sequences with a fixed seed, runs each through the driver and checks the invariant after every action. A property that holds on every sequence is evidenced, with the number of sequences and actions run and the rule-of-three failure bound, never proved. A failing sequence is shortened to its shortest failing prefix and replayed once; if the replay does not fail, the check is reported as nondeterministic instead of violated.",
       "intents": [
-        "P-006.I-17",
-        "P-006.I-18",
-        "P-006.I-19"
+        "P-006.I-21",
+        "P-006.I-22",
+        "P-006.I-23"
       ]
     },
     {
       "useCase": "UC-060",
-      "slug": "capture-before-and-after",
+      "slug": "snapshot-before-and-after",
       "change": "add",
-      "name": "Capture before and after",
-      "after": "When a proposal is extracted, every intent that touches a use case with a screen or route surface gets a before capture: that surface's scenarios run through the driver on the current code. When the proposal is proved, the same scenarios run on the new code and give the after capture. Captures live in .lastro/captures/<proposal>/<use case>/before|after/ and are never committed to git; the proposal records the SHA-256 of each capture so anyone can capture again and compare. Each before and after pair gets a deterministic pixel comparison, reported as the share of pixels changed.",
+      "name": "Snapshot before and after",
+      "after": "At extraction every intent gets a before snapshot of each feature it touches, taken on the current code; when the proposal is proved the same snapshot is taken on the new code as the after. A screen snapshot (screen or route surface) is the images the driver captured while running the surface's scenarios, compared as the share of pixels changed. A contract snapshot is the request and response shapes an api or command surface's driver reports as JSON Schema, plus every feature's model inputs and outputs with their domains. A data snapshot is the structure of the data the feature reads or writes (tables and columns, or a JSON Schema of a stored document). Contracts and data are compared by a deterministic structural diff listing every field or column added, removed or changed in type, a removal or type change marked breaking. An examples snapshot is a table of the scenarios' inputs plus a fixed-seed sample of the model's inputs, run on the before and after code with both outputs side by side; the comparison lists the rows whose output changed, and a changed row where no approved intent's clause applies is an unexpected change that must be accepted by a reviewer. Snapshots live in .lastro/snapshots/<proposal>/<feature>/before|after/, are never committed to git, and the proposal records each one's SHA-256.",
       "intents": [
-        "P-006.I-20",
-        "P-006.I-21",
-        "P-006.I-22",
-        "P-006.I-23"
+        "P-006.I-24",
+        "P-006.I-25",
+        "P-006.I-26",
+        "P-006.I-27",
+        "P-006.I-28",
+        "P-006.I-29",
+        "P-006.I-30",
+        "P-006.I-31"
       ]
     },
     {
@@ -643,9 +808,9 @@
       "change": "modify",
       "name": "Mark where proof stops",
       "before": "Beyond-proof items tie an intent to one of five reasons (external-code, world-facts, termination-timing, human-judgment, unstated) with a note. An intent with beyond-proof items and no useful clause gets the verdict beyond-proof, with notes and any passing scenarios as partial evidence. The receipt lists them under Where proof stops.",
-      "after": "Beyond-proof items tie an intent to one of five reasons (external-code, world-facts, termination-timing, human-judgment, unstated) with a note. An intent with beyond-proof items and no useful clause gets the verdict beyond-proof, with notes and any passing scenarios as partial evidence. The receipt lists them under Where proof stops. After the proof run, an intent beyond proof for human judgment waits for a sign-off: a reviewer looks at its before and after captures and signs it off or requests changes.",
+      "after": "Beyond-proof items tie an intent to one of five reasons (external-code, world-facts, termination-timing, human-judgment, unstated) with a note. An intent with beyond-proof items and no useful clause gets the verdict beyond-proof, with notes and any passing scenarios as partial evidence. The receipt lists them under Where proof stops. After the proof run, an intent beyond proof for human judgment waits for a sign-off: a reviewer looks at its before and after snapshots and signs it off or requests changes.",
       "intents": [
-        "P-006.I-24"
+        "P-006.I-32"
       ]
     },
     {
@@ -654,9 +819,9 @@
       "change": "modify",
       "name": "Track a proposal's status",
       "before": "A proposal has one status: open while its review is pending; changes-requested while a reviewer has an open thread; approved once approval succeeds; proving once its proofs are derived; proved when every proof, new and regression, passes; applied once apply has synced the use cases; closed when it is abandoned. status lists the proposals with their status, and status <proposal> its pending items.",
-      "after": "A proposal has one status: open while its review is pending; changes-requested while a reviewer has an open thread; approved once approval succeeds; proving once its proofs are derived; proved when every proof, new and regression, passes and no intent waits for a sign-off (until then it stays proving); applied once apply has synced the use cases; closed when it is abandoned. status lists the proposals with their status, and status <proposal> its pending items.",
+      "after": "A proposal has one status: open while its review is pending; changes-requested while a reviewer has an open thread; approved once approval succeeds; proving once its proofs are derived; proved when every proof, new and regression, passes, no intent waits for a sign-off and every unexpected change is accepted (until then it stays proving); applied once apply has synced the use cases; closed when it is abandoned. status lists the proposals with their status, and status <proposal> its pending items.",
       "intents": [
-        "P-006.I-25"
+        "P-006.I-33"
       ]
     },
     {
@@ -664,20 +829,9 @@
       "slug": "review-evidence",
       "change": "add",
       "name": "Review the evidence per intent",
-      "after": "For each intent the review app shows the use case's place in the feature map (its surfaces, what it depends on and what it affects), the statechart drawn from its state-machine model when it has one, its before capture during the review, its before and after captures with the pixel comparison after the proof run, and the verdict of every proof and property with its counterexample.",
+      "after": "For each intent the review app shows the feature's place in the feature map (its surfaces, what it depends on and what it affects), the statechart drawn from its state-machine model when it has one, its before snapshots during the review, its before and after snapshots with their comparison after the proof run (images side by side for screens, a diff for contracts and data, the changed rows for examples), and the verdict of every proof and property with its counterexample.",
       "intents": [
-        "P-006.I-26"
-      ]
-    },
-    {
-      "useCase": "UC-026",
-      "slug": "render-receipt",
-      "change": "modify",
-      "name": "Render a receipt",
-      "before": "The receipt is Markdown for a pull request, written next to the proposal: the overall result and counts per verdict; the proposal and plan hashes; the Rust check with coverage, table digest and whether verdicts agree; the use-case diff, with each use case added, modified (before and after) or removed with the intents behind it, each replaced proof next to the proofs that take its place, each superseded proof that still passes, each regression and, after apply, the new baseline hash; a table of intents with verdict, evidence, confidence and what backs each; notes; each proof with verdict, evidence, method (exhaustive, samples with failure bound, traces), mutants killed, formal statement, counterexample, violating trace and notes; trusted pieces; where proof stops; not promised; and pending contradictions.",
-      "after": "The receipt is Markdown for a pull request, written next to the proposal: the overall result and counts per verdict; the proposal and plan hashes; the Rust check with coverage, table digest and whether verdicts agree; the use-case diff, with each use case added, modified (before and after) or removed with the intents behind it, each replaced proof next to the proofs that take its place, each superseded proof that still passes, each regression and, after apply, the new baseline hash; a table of intents with verdict, evidence, confidence and what backs each; notes; each proof with verdict, evidence, method (exhaustive, samples with failure bound, traces), mutants killed, formal statement, counterexample, violating trace and notes; trusted pieces; where proof stops; not promised; pending contradictions; a Feature map section with the affected use cases; a Mermaid state diagram for every state-machine model; the captures with their hashes and pixel comparison; and the sign-offs with who gave them.",
-      "intents": [
-        "P-006.I-27"
+        "P-006.I-34"
       ]
     },
     {
@@ -686,9 +840,9 @@
       "change": "modify",
       "name": "Use Lastro from TypeScript, .NET or Go",
       "before": "Three SDKs expose the same pipeline (propose against the use cases, review with threads, pending, derive, returnDecisions, prove with the regression run, apply, gap review) with the same entities (use case, proposal, intent, proof), wire format, canonical hashes, seeded sampling, verdicts, receipts and prompts. Cross-check tests compare the .NET and Go reports and hashes with the TypeScript SDK, and all three with the Rust prover, on the reference login and its planted bugs.",
-      "after": "Three SDKs expose the same pipeline (propose against the use cases, review with threads, pending, derive, returnDecisions, prove with the regression run, apply, gap review) with the same entities (use case, proposal, intent, proof), wire format, canonical hashes, seeded sampling, verdicts, receipts and prompts. Cross-check tests compare the .NET and Go reports and hashes with the TypeScript SDK, and all three with the Rust prover, on the reference login and its planted bugs. Surfaces, the feature map, drivers, state-machine proofs, action-sequence properties, captures and sign-offs are in all three SDKs and the CLI, with the same files, hashes and verdicts, and the docs describe them.",
+      "after": "Three SDKs expose the same pipeline (propose against the use cases, review with threads, pending, derive, returnDecisions, prove with the regression run, apply, gap review) with the same entities (use case, proposal, intent, proof), wire format, canonical hashes, seeded sampling, verdicts, receipts and prompts. Cross-check tests compare the .NET and Go reports and hashes with the TypeScript SDK, and all three with the Rust prover, on the reference login and its planted bugs. Surfaces, the feature map, formal-first derivation, drivers, state-machine proofs with actors, TLA+ export, action-sequence properties, snapshots, unexpected changes and sign-offs are in all three SDKs and the CLI, with the same files, hashes and verdicts, and the docs describe them.",
       "intents": [
-        "P-006.I-28"
+        "P-006.I-36"
       ]
     },
     {
@@ -697,15 +851,37 @@
       "change": "modify",
       "name": "Review an agent's proposal like a pull request",
       "before": "The plugin's propose skill has the agent write the change as prose in .lastro/proposals/<id>-<slug>.md, run lastro propose (answering handoffs itself), show the user the review the plugin renders as Markdown (the PostToolUse hook adds it to the agent's context after the first lastro command that shows a new or re-extracted proposal in a session, and a one-line summary after later ones; lastro-plugin.mjs review prints it), then ask the user every open decision and, per intent, shown with the existing proofs it replaces, approve, request changes (amend) or reject, recording only the user's answers with lastro review --as <user>, until lastro status is ready; then lastro derive writes the proposal's proofs. The PreToolUse hook makes every lastro review command that approves, answers, amends or rejects show a Claude Code permission prompt, and denies it in both harnesses when --as names an agent (claude, codex, agent, assistant, ai, bot). With a policy above one approval the board shows each intent's approvals out of the required number and the proposal waits for the other reviewers.",
-      "after": "The plugin's propose skill has the agent write the change as prose in .lastro/proposals/<id>-<slug>.md, run lastro propose (answering handoffs itself), show the user the review the plugin renders as Markdown (the PostToolUse hook adds it to the agent's context after the first lastro command that shows a new or re-extracted proposal in a session, and a one-line summary after later ones; lastro-plugin.mjs review prints it), then ask the user every open decision and, per intent, shown with the existing proofs it replaces, approve, request changes (amend) or reject, recording only the user's answers with lastro review --as <user>, until lastro status is ready; then lastro derive writes the proposal's proofs. The PreToolUse hook makes every lastro review command that approves, answers, amends or rejects show a Claude Code permission prompt, and denies it in both harnesses when --as names an agent (claude, codex, agent, assistant, ai, bot). With a policy above one approval the board shows each intent's approvals out of the required number and the proposal waits for the other reviewers. The review also lists the captures' paths and the sign-offs still due.",
+      "after": "The plugin's propose skill has the agent write the change as prose in .lastro/proposals/<id>-<slug>.md, run lastro propose (answering handoffs itself), show the user the review the plugin renders as Markdown (the PostToolUse hook adds it to the agent's context after the first lastro command that shows a new or re-extracted proposal in a session, and a one-line summary after later ones; lastro-plugin.mjs review prints it), then ask the user every open decision and, per intent, shown with the existing proofs it replaces, approve, request changes (amend) or reject, recording only the user's answers with lastro review --as <user>, until lastro status is ready; then lastro derive writes the proposal's proofs. The PreToolUse hook makes every lastro review command that approves, answers, amends or rejects show a Claude Code permission prompt, and denies it in both harnesses when --as names an agent (claude, codex, agent, assistant, ai, bot). With a policy above one approval the board shows each intent's approvals out of the required number and the proposal waits for the other reviewers. The review also lists the snapshots' paths, the unexpected changes and the sign-offs still due.",
       "intents": [
-        "P-006.I-29"
+        "P-006.I-37"
       ]
     }
   ],
   "decisions": [
     {
       "id": "D1",
+      "slug": "example-sample-size",
+      "name": "How many examples",
+      "origin": "extraction",
+      "question": "How many fixed-seed model inputs go into the examples snapshot, besides the scenarios?",
+      "options": [
+        {
+          "label": "200, configurable",
+          "consequence": "Enough to catch most unexpected changes, small enough to read in review."
+        },
+        {
+          "label": "The whole space when it has at most 1,000 points",
+          "consequence": "Small models show every row; larger ones fall back to 200."
+        }
+      ],
+      "recommended": 1,
+      "intents": [
+        "P-006.I-29",
+        "P-006.I-30"
+      ]
+    },
+    {
+      "id": "D2",
       "slug": "driver-timeout",
       "name": "Driver timeout",
       "origin": "extraction",
@@ -722,16 +898,16 @@
       ],
       "recommended": 0,
       "intents": [
-        "P-006.I-10",
-        "P-006.I-07"
+        "P-006.I-20",
+        "P-006.I-17"
       ]
     },
     {
-      "id": "D2",
+      "id": "D3",
       "slug": "signoff-quorum",
       "name": "How many sign-offs",
       "origin": "extraction",
-      "question": "How many reviewers must sign off a human-judgment intent after the proof run?",
+      "question": "How many reviewers must sign off a human-judgment intent or accept an unexpected change?",
       "options": [
         {
           "label": "The review policy's approvals",
@@ -739,21 +915,22 @@
         },
         {
           "label": "Always one",
-          "consequence": "Faster, but a single reviewer can accept a visual change a policy of two would not."
+          "consequence": "Faster, but a single reviewer can accept a change a policy of two would not."
         }
       ],
       "recommended": 0,
       "intents": [
-        "P-006.I-24",
-        "P-006.I-25"
+        "P-006.I-32",
+        "P-006.I-30",
+        "P-006.I-33"
       ]
     },
     {
-      "id": "D3",
-      "slug": "where-captures-live",
-      "name": "Where captures live",
+      "id": "D4",
+      "slug": "where-snapshots-live",
+      "name": "Where snapshots live",
       "origin": "extraction",
-      "question": "Captures stay out of git, so a reviewer on another machine sees them only after capturing again. Is that acceptable?",
+      "question": "Snapshots stay out of git, so a reviewer on another machine sees them only after taking them again. Is that acceptable?",
       "options": [
         {
           "label": "Out of git, hashes only",
@@ -764,23 +941,23 @@
           "consequence": "Reviewers anywhere see them, but Lastro needs a storage backend and stops being file-only."
         },
         {
-          "label": "Commit with Git LFS",
-          "consequence": "Everyone sees them in the PR, but it breaks the no-screenshots-in-git rule."
+          "label": "Commit only text snapshots",
+          "consequence": "Contracts, data and examples (JSON) go to git and show in the PR; screen images stay out."
         }
       ],
-      "recommended": 0,
+      "recommended": 2,
       "intents": [
-        "P-006.I-22",
-        "P-006.I-26"
+        "P-006.I-31",
+        "P-006.I-34"
       ]
     }
   ],
   "threads": [],
   "notPromised": [
     "Lastro does not ship a browser or a Playwright dependency in the SDKs.",
-    "TLA+ and Lean specifications are not read or run by Lastro.",
-    "A pixel change does not fail a proof by itself; it is only reported.",
-    "Captures are not compared across machines or operating systems for equality.",
+    "Lastro does not run TLC or Lean; TLA+ is an export only.",
+    "Liveness properties (something eventually happens) are not checked.",
+    "A pixel or contract change does not fail a proof by itself; only unexpected example changes block until accepted.",
     "Lastro does not generate the driver for an application."
   ],
   "policy": {

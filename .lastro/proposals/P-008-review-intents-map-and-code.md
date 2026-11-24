@@ -76,9 +76,10 @@ by text.
 ## The code before and after
 
 Two more snapshot kinds, taken like the other snapshots of a proposal (before when it is extracted, on the current
-code; after when it is proved, on the new code) but for the repository's code rather than one feature, so they live
-in `.lastro/snapshots/<proposal>/code/before|after/`. They are never committed to git and the proposal records the
-SHA-256 of each one.
+code; after when it is proved, on the new code) but for the repository's code rather than one intent's feature, so they
+live with the proposal's repository-wide snapshots, in `.lastro/docs/<proposal>/repository/before|after/`
+(`complexity.json` and `imports.json`). They are committed with the proposal and the proposal records the SHA-256 of
+each one.
 
 - complexity: the cyclomatic complexity of every function in the repository's source files: one plus its decision
   points (each if, loop, case, catch, conditional expression and short-circuit operator). TypeScript and JavaScript

@@ -340,7 +340,8 @@ export async function runDrivenScenario(s: DrivenScenario, drivers: DriverConfig
       const screen = s.kind === "screen" || s.kind === "route" ? await session.screenshot() : undefined;
       const r: StepResult = { observed, passed: matches(step.expect, observed), ...(screen ? { screenshot: screen } : {}) };
       if (!r.passed) r.problem = `expected ${canonicalJson(step.expect)}, observed ${canonicalJson(observed)}`;
-      if (step.reference) {
+      // A reference screenshot is compared on screens only; an api or command step has no screen.
+      if (step.reference && (s.kind === "screen" || s.kind === "route")) {
         r.pixelShare = screen ? pixelShare(step.reference, screen) : 1;
         if (r.pixelShare > (s.tolerance ?? 0)) {
           r.passed = false;

@@ -619,7 +619,7 @@ export function withStatus(p: Proposal): Proposal {
   if (isProposalApproved(p)) {
     const passed = !!p.lastRun?.ok && p.proofs.every((x) => x.status === "passed");
     const due = dueOf(p);
-    p.status = due.changesRequested.length ? "changes-requested" : !p.proofs.length && !p.lastRun ? "approved" : passed && !due.signoffs.length && !due.unexpected.length ? "proved" : "proving";
+    p.status = due.changesRequested.length ? "changes-requested" : !p.proofs.length ? "approved" : passed && !due.signoffs.length && !due.unexpected.length ? "proved" : "proving";
   } else {
     delete p.hash;
     const stale = p.useCases.some((c) => c.stale);
@@ -1187,9 +1187,13 @@ export async function runProofs(proofs: { proof: ProofEntry; role: ProofOutcome[
     const report = await verify(artifact, plan, { ...o.verify, subject });
     let rust: ReturnType<RustProver["prove"]> | undefined;
     if (o.rust && plan.clauses.length) {
-      rust = o.rust.prove(plan, await tabulate(plan.model, subject));
-      const same = report.clauses.every((c) => rust!.clauses.find((r) => r.clauseId === c.clauseId)?.verdict === c.verdict);
-      agree = (agree ?? true) && same;
+      // A subject that throws has no table to give the Rust prover: the engines agree only if the TS engine ran nothing either.
+      const table = await tabulate(plan.model, subject).catch(() => undefined);
+      if (table) {
+        rust = o.rust.prove(plan, table);
+        const same = report.clauses.every((c) => rust!.clauses.find((r) => r.clauseId === c.clauseId)?.verdict === c.verdict);
+        agree = (agree ?? true) && same;
+      } else agree = (agree ?? true) && report.clauses.every((c) => c.verdict === "not-run");
     }
     for (const r of report.clauses) {
       const pr = runnable.find((x) => x.id === r.clauseId)!;

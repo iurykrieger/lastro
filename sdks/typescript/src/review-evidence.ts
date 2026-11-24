@@ -16,9 +16,9 @@ export interface IntentEvidence {
   /** Mermaid statecharts of the state-machine models the intent's proofs use. */
   statecharts: { model: string; mermaid: string }[];
   before: SnapshotRecord[];
-  /** Empty until the proof run. */
+  /** Empty until the proof run takes them. */
   after: SnapshotRecord[];
-  /** After the proof run: images side by side for screens, a diff for contracts and data, the changed rows for examples. */
+  /** Once the after snapshots are taken: images side by side for screens, a diff for contracts and data, the changed rows for examples. */
   comparisons: (Comparison & { view: "images" | "diff" | "rows" })[];
   verdicts: { proof: string; verdict: string; passed: boolean; counterexample?: { input: unknown; output: unknown } }[];
 }
@@ -56,8 +56,8 @@ export function intentEvidence(p: Proposal, intentId: string, useCases: UseCase[
     ...(mapError ? { mapError } : {}),
     statecharts: models.filter((m) => p.statecharts?.[m]).map((m) => ({ model: m, mermaid: p.statecharts![m]! })),
     before: (p.snapshots ?? []).filter((s) => mine(s) && s.side === "before"),
-    after: run ? (p.snapshots ?? []).filter((s) => mine(s) && s.side === "after") : [],
-    comparisons: run ? (p.comparisons ?? []).filter((c) => c.intent === it.id).map((c) => ({ ...c, view: comparisonView(c.kind) })) : [],
+    after: (p.snapshots ?? []).filter((s) => mine(s) && s.side === "after"),
+    comparisons: (p.comparisons ?? []).filter((c) => c.intent === it.id).map((c) => ({ ...c, view: comparisonView(c.kind) })),
     verdicts: run
       ? run.outcomes
           .filter((o) => o.role === "proposal" && o.intent === it.id)

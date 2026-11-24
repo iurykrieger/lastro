@@ -145,11 +145,13 @@ const counterStep = (atomic) => (x) => {
   if (x.event === "write" && x.pc === "read") return { n: x.t + 1, pc: "done" };
   return null;
 };
-const allDone = (actors) => ({ op: "and", args: Array.from({ length: actors }, (_, k) => ({ op: "eq", args: [{ var: `in.pc_${k + 1}` }, { const: "done" }] })) });
+/** How many actors have finished: the counter must equal it in every state. */
+const doneCount = (actors) =>
+  Array.from({ length: actors }, (_, k) => ({ op: "ite", args: [{ op: "eq", args: [{ var: `in.pc_${k + 1}` }, { const: "done" }] }, { const: 1 }, { const: 0 }] })).reduce((a, b) => ({ op: "add", args: [a, b] }));
 
 // I-10: the actors' events interleave in every order, so the lost update between two of them is found.
 export async function smInterleave({ actors, atomic }) {
-  const inv = { id: "C1", kind: "invariant", holds: { op: "implies", args: [allDone(actors), { op: "eq", args: [{ var: "in.n" }, { const: actors }] }] } };
+  const inv = { id: "C1", kind: "invariant", holds: { op: "eq", args: [{ var: "in.n" }, doneCount(actors)] } };
   const r = (await Lastro.exploreMachine(COUNTER(actors), counterStep(atomic), [inv])).clauses[0];
   return { violated: r.verdict === "violated", cexActors: new Set((r.path ?? []).map((e) => e.actor)).size };
 }
@@ -389,7 +391,9 @@ export async function snapshotFiles({ scope, side, file }) {
     const q = await takeSnapshots(p, side, { ws, models: {}, subjects: {}, useCases: [u], open, ...(drivers ? { drivers } : {}) });
     const ext = file === "png" ? ".png" : ".json";
     const recs = (q.snapshots ?? []).filter((s) => s.side === side && s.path.endsWith(ext) && (scope === "repository" ? s.intent === "repository" : s.intent !== "repository"));
-    if (!recs.length) return { layoutOk: false, ignored: true, hashRecorded: false, hashMatches: false };
+    // The repository has no screen, so it has no PNG: nothing there can break the layout or the hashes.
+    const expected = !(scope === "repository" && file === "png");
+    if (!recs.length) return expected ? { layoutOk: false, ignored: true, hashRecorded: false, hashMatches: false } : { layoutOk: true, ignored: false, hashRecorded: true, hashMatches: true };
     const pattern = scope === "repository" ? new RegExp(`^docs/P-001/repository/${side}/[^/]+$`) : new RegExp(`^docs/P-001/UC-001/I-01/${side}/[^/]+$`);
     let ignored = false;
     for (const s of recs) {
@@ -449,9 +453,10 @@ export function reviewEvidence({ phase, kind, machine, violated }) {
       { intent: "P-001.I-01", feature: "UC-001", kind, side: "before", path: `docs/P-001/UC-001/I-01/before/x`, sha256: "a" },
       ...(phase === "proved" ? [{ intent: "P-001.I-01", feature: "UC-001", kind, side: "after", path: `docs/P-001/UC-001/I-01/after/x`, sha256: "b" }] : []),
     ],
-    ...(phase === "proved"
+    ...(phase === "proved" ? { comparisons: [{ intent: "P-001.I-01", feature: "UC-001", kind, name: "x" }] } : {}),
+    // During review a run may already exist (a failed one, before the after snapshots are taken again).
+    ...(phase === "proved" || violated
       ? {
-          comparisons: [{ intent: "P-001.I-01", feature: "UC-001", kind, name: "x" }],
           lastRun: { ok: !violated, outcomes: [{ proof: "P-001.PF-01", useCase: "UC-001", intent: "P-001.I-01", role: "proposal", verdict: violated ? "violated" : "proved", passed: !violated, ...(violated ? { counterexample: { input: { x: 1 }, output: { y: 2 } } } : {}) }], regressions: [], replacedStillPass: [], unproved: [] },
         }
       : {}),
@@ -491,7 +496,7 @@ export function receiptEvidence({ affected, machine, snapshots, unexpected, sign
   return {
     mapSection: /## Feature map[\s\S]*Affected: UC-002/.test(text),
     mermaid: /```mermaid\nstateDiagram-v2/.test(text),
-    hashes: /sha256:[0-9a-f]{64}/.test(text),
+    hashes: /`docs\/[^`]+` sha256:[0-9a-f]{64}/.test(text),
     acceptedBy: /accepted by bruno/.test(text),
     signedBy: /signed-off by bruno/.test(text),
   };

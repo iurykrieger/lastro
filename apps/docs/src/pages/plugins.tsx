@@ -84,6 +84,10 @@ export function PluginAgents() {
           </P>
           <Code lang="text" title="the board, a proof failed" code={BOARDS.failed} />
           <P>
+            When the run took <A to="runtime/evidence">before and after snapshots</A>, the review also lists their paths, the unexpected changes to accept and the
+            sign-offs still due; the user gives them with <C>lastro review</C>, and the proposal is not proved until they are in.
+          </P>
+          <P>
             Once every proof passes, <C>lastro apply</C> adds the proofs to their use cases and the change is done: the next source edit is a new proposal,
             and the flow starts again with its own intents.
           </P>
@@ -215,6 +219,15 @@ $ LASTRO_DIR=../shop/.lastro npm run review   # any other workspace`} />
         <C>assistant</C>, <C>ai</C>, <C>bot</C>) as reviewers, and the policy in <C>.lastro/config.json</C> decides how many approvals an intent needs and
         whether the submitter counts.
       </Callout>
+
+      <H2>Evidence for each intent</H2>
+      <P>
+        Each intent card shows the feature's place in the <A to="runtime/feature-map">feature map</A> (its surfaces, what it depends on, what depends on it and
+        what the change affects), the statechart of its <A to="runtime/state-machines">state-machine model</A> with the counterexample path, and its{" "}
+        <A to="runtime/evidence">snapshots</A>: the before ones during review, then after the proof run the before and after side by side for screens, a
+        structural diff for contracts and data, the changed rows for examples, and every proof's verdict with its counterexample. Unexpected changes are
+        accepted there, and an intent beyond proof is signed off (its after screenshots become the references) or sent back with a request for changes.
+      </P>
 
       <H2>Following the implementation</H2>
       <P>

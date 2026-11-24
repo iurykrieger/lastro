@@ -1,0 +1,51 @@
+{
+  "name": "formal_first",
+  "inputs": {
+    "space": {
+      "type": "enum",
+      "values": [
+        "small",
+        "large"
+      ]
+    },
+    "smt": {
+      "type": "enum",
+      "values": [
+        "proves",
+        "refutes",
+        "unknown",
+        "inexpressible"
+      ]
+    },
+    "holds": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "method": {
+      "type": "enum",
+      "values": [
+        "exhaustive",
+        "smt",
+        "sampled"
+      ]
+    },
+    "verdict": {
+      "type": "enum",
+      "values": [
+        "proved",
+        "violated",
+        "evidenced"
+      ]
+    },
+    "reason": {
+      "type": "enum",
+      "values": [
+        "none",
+        "too-large",
+        "solver-unknown",
+        "not-expressible"
+      ]
+    }
+  }
+}

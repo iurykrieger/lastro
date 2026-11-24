@@ -1,0 +1,111 @@
+{
+  "model": "snapshot_files",
+  "subject": "snapshot_files",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "file": "png",
+        "scope": "feature",
+        "side": "before"
+      },
+      "after": {
+        "layoutOk": true,
+        "ignored": false,
+        "hashRecorded": true,
+        "hashMatches": true
+      }
+    },
+    {
+      "input": {
+        "file": "png",
+        "scope": "feature",
+        "side": "after"
+      },
+      "after": {
+        "layoutOk": true,
+        "ignored": false,
+        "hashRecorded": true,
+        "hashMatches": true
+      }
+    },
+    {
+      "input": {
+        "file": "png",
+        "scope": "repository",
+        "side": "before"
+      },
+      "after": {
+        "layoutOk": true,
+        "ignored": false,
+        "hashRecorded": true,
+        "hashMatches": true
+      }
+    },
+    {
+      "input": {
+        "file": "png",
+        "scope": "repository",
+        "side": "after"
+      },
+      "after": {
+        "layoutOk": true,
+        "ignored": false,
+        "hashRecorded": true,
+        "hashMatches": true
+      }
+    },
+    {
+      "input": {
+        "file": "json",
+        "scope": "feature",
+        "side": "before"
+      },
+      "after": {
+        "layoutOk": true,
+        "ignored": false,
+        "hashRecorded": true,
+        "hashMatches": true
+      }
+    },
+    {
+      "input": {
+        "file": "json",
+        "scope": "feature",
+        "side": "after"
+      },
+      "after": {
+        "layoutOk": true,
+        "ignored": false,
+        "hashRecorded": true,
+        "hashMatches": true
+      }
+    },
+    {
+      "input": {
+        "file": "json",
+        "scope": "repository",
+        "side": "before"
+      },
+      "after": {
+        "layoutOk": true,
+        "ignored": false,
+        "hashRecorded": true,
+        "hashMatches": true
+      }
+    },
+    {
+      "input": {
+        "file": "json",
+        "scope": "repository",
+        "side": "after"
+      },
+      "after": {
+        "layoutOk": true,
+        "ignored": false,
+        "hashRecorded": true,
+        "hashMatches": true
+      }
+    }
+  ]
+}

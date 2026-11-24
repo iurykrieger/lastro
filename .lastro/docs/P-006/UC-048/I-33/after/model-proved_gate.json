@@ -1,0 +1,14 @@
+{
+  "model": "proved_gate",
+  "fields": {
+    "in.acceptances": "int[0..3]",
+    "in.allPassed": "bool",
+    "in.changesRequested": "bool",
+    "in.judgment": "bool",
+    "in.required": "int[1..3]",
+    "in.runOk": "bool",
+    "in.signoffs": "int[0..3]",
+    "in.unexpected": "bool",
+    "out.status": "enum[\"proving\",\"proved\",\"changes-requested\"]"
+  }
+}

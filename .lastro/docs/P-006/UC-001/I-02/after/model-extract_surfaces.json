@@ -1,0 +1,12 @@
+{
+  "model": "extract_surfaces",
+  "fields": {
+    "in.adds": "int[0..2]",
+    "in.change": "enum[\"add\",\"modify\"]",
+    "in.existing": "int[0..2]",
+    "in.proposedOnAdd": "int[0..2]",
+    "in.removes": "int[0..2]",
+    "out.accepted": "bool",
+    "out.after": "int[0..4]"
+  }
+}

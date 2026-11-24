@@ -1,0 +1,22 @@
+{
+  "name": "shrink_sequence",
+  "inputs": {
+    "length": {
+      "type": "int",
+      "min": 1,
+      "max": 5
+    },
+    "failAt": {
+      "type": "int",
+      "min": 1,
+      "max": 5
+    }
+  },
+  "outputs": {
+    "prefix": {
+      "type": "int",
+      "min": 0,
+      "max": 5
+    }
+  }
+}

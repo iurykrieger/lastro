@@ -1,0 +1,263 @@
+{
+  "model": "receipt_sections",
+  "subject": "receipt_sections",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "notPromised": false,
+        "regression": false,
+        "stillPass": false,
+        "violated": false
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": false,
+        "showsStillPass": false,
+        "showsCounterexample": false,
+        "showsNotPromised": false
+      }
+    },
+    {
+      "input": {
+        "notPromised": false,
+        "regression": false,
+        "stillPass": false,
+        "violated": true
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": false,
+        "showsStillPass": false,
+        "showsCounterexample": true,
+        "showsNotPromised": false
+      }
+    },
+    {
+      "input": {
+        "notPromised": false,
+        "regression": false,
+        "stillPass": true,
+        "violated": false
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": false,
+        "showsStillPass": true,
+        "showsCounterexample": false,
+        "showsNotPromised": false
+      }
+    },
+    {
+      "input": {
+        "notPromised": false,
+        "regression": false,
+        "stillPass": true,
+        "violated": true
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": false,
+        "showsStillPass": true,
+        "showsCounterexample": true,
+        "showsNotPromised": false
+      }
+    },
+    {
+      "input": {
+        "notPromised": false,
+        "regression": true,
+        "stillPass": false,
+        "violated": false
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": true,
+        "showsStillPass": false,
+        "showsCounterexample": true,
+        "showsNotPromised": false
+      }
+    },
+    {
+      "input": {
+        "notPromised": false,
+        "regression": true,
+        "stillPass": false,
+        "violated": true
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": true,
+        "showsStillPass": false,
+        "showsCounterexample": true,
+        "showsNotPromised": false
+      }
+    },
+    {
+      "input": {
+        "notPromised": false,
+        "regression": true,
+        "stillPass": true,
+        "violated": false
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": true,
+        "showsStillPass": true,
+        "showsCounterexample": true,
+        "showsNotPromised": false
+      }
+    },
+    {
+      "input": {
+        "notPromised": false,
+        "regression": true,
+        "stillPass": true,
+        "violated": true
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": true,
+        "showsStillPass": true,
+        "showsCounterexample": true,
+        "showsNotPromised": false
+      }
+    },
+    {
+      "input": {
+        "notPromised": true,
+        "regression": false,
+        "stillPass": false,
+        "violated": false
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": false,
+        "showsStillPass": false,
+        "showsCounterexample": false,
+        "showsNotPromised": true
+      }
+    },
+    {
+      "input": {
+        "notPromised": true,
+        "regression": false,
+        "stillPass": false,
+        "violated": true
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": false,
+        "showsStillPass": false,
+        "showsCounterexample": true,
+        "showsNotPromised": true
+      }
+    },
+    {
+      "input": {
+        "notPromised": true,
+        "regression": false,
+        "stillPass": true,
+        "violated": false
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": false,
+        "showsStillPass": true,
+        "showsCounterexample": false,
+        "showsNotPromised": true
+      }
+    },
+    {
+      "input": {
+        "notPromised": true,
+        "regression": false,
+        "stillPass": true,
+        "violated": true
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": false,
+        "showsStillPass": true,
+        "showsCounterexample": true,
+        "showsNotPromised": true
+      }
+    },
+    {
+      "input": {
+        "notPromised": true,
+        "regression": true,
+        "stillPass": false,
+        "violated": false
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": true,
+        "showsStillPass": false,
+        "showsCounterexample": true,
+        "showsNotPromised": true
+      }
+    },
+    {
+      "input": {
+        "notPromised": true,
+        "regression": true,
+        "stillPass": false,
+        "violated": true
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": true,
+        "showsStillPass": false,
+        "showsCounterexample": true,
+        "showsNotPromised": true
+      }
+    },
+    {
+      "input": {
+        "notPromised": true,
+        "regression": true,
+        "stillPass": true,
+        "violated": false
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": true,
+        "showsStillPass": true,
+        "showsCounterexample": true,
+        "showsNotPromised": true
+      }
+    },
+    {
+      "input": {
+        "notPromised": true,
+        "regression": true,
+        "stillPass": true,
+        "violated": true
+      },
+      "after": {
+        "showsDiff": true,
+        "showsReplaced": true,
+        "showsRegression": true,
+        "showsStillPass": true,
+        "showsCounterexample": true,
+        "showsNotPromised": true
+      }
+    }
+  ]
+}

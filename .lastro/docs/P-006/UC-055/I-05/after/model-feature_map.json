@@ -1,0 +1,20 @@
+{
+  "model": "feature_map",
+  "fields": {
+    "in.aSurface": "bool",
+    "in.aUnknown": "bool",
+    "in.ab": "bool",
+    "in.bRemoved": "bool",
+    "in.bc": "bool",
+    "in.ca": "bool",
+    "in.changed": "enum[\"none\",\"a\",\"b\",\"c\"]",
+    "out.aReachable": "bool",
+    "out.affectedA": "bool",
+    "out.affectedB": "bool",
+    "out.affectedC": "bool",
+    "out.cycle": "bool",
+    "out.named": "int[0..3]",
+    "out.ok": "bool",
+    "out.same": "bool"
+  }
+}

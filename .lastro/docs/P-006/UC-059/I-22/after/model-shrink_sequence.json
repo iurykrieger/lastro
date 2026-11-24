@@ -1,0 +1,8 @@
+{
+  "model": "shrink_sequence",
+  "fields": {
+    "in.failAt": "int[1..5]",
+    "in.length": "int[1..5]",
+    "out.prefix": "int[0..5]"
+  }
+}

@@ -21,7 +21,7 @@ import {
 } from "../src/index.js";
 import { sha256Hex } from "../src/sha256.js";
 import { existsSync, readFileSync } from "node:fs";
-import { loadRustProver, tabulate } from "../src/index.js";
+import { exploreMachine, loadRustProver, machinesAgree, tabulate, type Env, type Expr, type MachineClause, type MachineModel, type StepRow } from "../src/index.js";
 import { BUGS, FIXED_I5, LOGIN_SOURCE, MODEL, compileLogin, deriveLoginPlan, extractLogin, makeLogin, plantBug } from "../examples/login/login.js";
 
 function reviewed(opts: { d1?: number; fixI5?: boolean } = {}): IntentArtifact {
@@ -421,4 +421,42 @@ test(".lastro/usecases, .lastro/proof and .lastro/proposals: Lastro's own use ca
       if (p.status !== "applied") assert.equal(ids.has(i.useCase), i.change !== "add", `${f}: ${i.id} ${i.change} must ${i.change === "add" ? "reserve a new" : "name an existing"} use case`);
     }
   }
+});
+
+test("Rust prover explores state machines like the TypeScript engine", { skip: !existsSync(WASM) && "run `npm run wasm` first" }, async () => {
+  const prover = await loadRustProver(readFileSync(WASM));
+  const v = (n: string): Expr => ({ var: n });
+  const k = (x: string | number): Expr => ({ const: x });
+  const op = (o: string, ...args: Expr[]): Expr => ({ op: o, args }) as Expr;
+  const done = (a: number) => op("ite", op("eq", v(`in.pc_${a}`), k("done")), k(1), k(0));
+  const model: MachineModel = {
+    name: "counter",
+    kind: "machine",
+    actors: 2,
+    state: { n: { type: "int", min: 0, max: 9 } },
+    local: { pc: { type: "enum", values: ["idle", "read", "done"] }, t: { type: "int", min: 0, max: 9 } },
+    initial: { n: 0, pc: "idle", t: 0 },
+    events: { read: {}, write: {} },
+  };
+  const clauses: MachineClause[] = [
+    { id: "C1", kind: "invariant", holds: op("eq", v("in.n"), op("add", done(1), done(2))) },
+    { id: "C2", kind: "step", requires: op("eq", v("in.event"), k("write")), ensures: op("eq", v("out.pc"), k("done")) },
+    { id: "C3", kind: "reach", condition: op("eq", v("in.n"), k(2)) },
+  ];
+  for (const atomic of [true, false]) {
+    const steps: StepRow[] = [];
+    const step = (x: Env): Env | null => {
+      const out: Env | null = x.event === "read" && x.pc === "idle" ? (atomic ? { n: (x.n as number) + 1, pc: "done" } : { t: x.n!, pc: "read" }) : !atomic && x.event === "write" && x.pc === "read" ? { n: (x.t as number) + 1, pc: "done" } : null;
+      steps.push({ input: { ...x }, output: out });
+      return out;
+    };
+    const ts = await exploreMachine(model, step, clauses);
+    const rust = prover.proveMachine!({ machine: model, clauses, table: steps });
+    assert.equal(rust.states, ts.states);
+    assert.ok(machinesAgree(ts, rust), JSON.stringify({ ts: ts.clauses, rust: rust.clauses }));
+    assert.equal(ts.clauses[0]!.verdict, atomic ? "proved" : "violated");
+  }
+  // A table that misses a step the exploration needs never agrees.
+  const ts = await exploreMachine(model, () => null, clauses);
+  assert.equal(machinesAgree(ts, prover.proveMachine!({ machine: model, clauses, table: [] })), false);
 });

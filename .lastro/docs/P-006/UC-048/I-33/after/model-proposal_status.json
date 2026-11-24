@@ -1,0 +1,13 @@
+{
+  "model": "proposal_status",
+  "fields": {
+    "in.allPassed": "bool",
+    "in.approved": "bool",
+    "in.proofs": "bool",
+    "in.raised": "bool",
+    "in.run": "enum[\"none\",\"ok\",\"failed\"]",
+    "in.stale": "bool",
+    "in.terminal": "enum[\"none\",\"applied\",\"closed\"]",
+    "out.status": "enum[\"open\",\"changes-requested\",\"approved\",\"proving\",\"proved\",\"applied\",\"closed\"]"
+  }
+}

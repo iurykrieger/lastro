@@ -1,0 +1,33 @@
+{
+  "name": "sm_crosscheck",
+  "inputs": {
+    "bug": {
+      "type": "enum",
+      "values": [
+        "none",
+        "invariant",
+        "race",
+        "step"
+      ]
+    },
+    "engine": {
+      "type": "enum",
+      "values": [
+        "rust",
+        "go",
+        "dotnet"
+      ]
+    }
+  },
+  "outputs": {
+    "sameVerdict": {
+      "type": "bool"
+    },
+    "sameCounterexample": {
+      "type": "bool"
+    },
+    "sameStates": {
+      "type": "bool"
+    }
+  }
+}

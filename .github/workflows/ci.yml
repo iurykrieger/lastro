@@ -23,8 +23,12 @@ jobs:
         run: npm install
       - name: Build WASM prover
         run: npm run wasm
+      - name: SMT solver (z3) for the SDK's SMT proofs
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq z3
       - name: SDK tests
         run: npm test -w lastro
+        env:
+          LASTRO_REQUIRE_SMT: 1
       - name: Lastro's own use-case proofs (regression run on the real SDK and plugin)
         run: npm run build -w lastro && node sdks/typescript/dist/src/cli.js regress
       - name: Plugin tests (Claude Code and Codex hooks, through the real CLI)

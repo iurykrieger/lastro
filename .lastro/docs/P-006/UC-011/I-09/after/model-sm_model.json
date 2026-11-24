@@ -1,0 +1,10 @@
+{
+  "model": "sm_model",
+  "fields": {
+    "in.actors": "int[0..3]",
+    "in.eventsFinite": "bool",
+    "in.initialInDomain": "bool",
+    "in.stateFinite": "bool",
+    "out.accepted": "bool"
+  }
+}

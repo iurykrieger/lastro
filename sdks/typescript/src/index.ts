@@ -46,7 +46,7 @@ export { createLastro, failuresOf, specGapsOf, agentFeedback } from "./lastro.js
 export type { Lastro, LastroOptions, Spec, Proof, ProofFailure } from "./lastro.js";
 export type { IntentExtractor, ProofDeriver } from "./llm/interfaces.js";
 export { loadRustProver, tabulate } from "./rust.js";
-export type { RustProver, RustProofReport, RustClauseProof, Row } from "./rust.js";
+export type { RustProver, RustProofReport, RustClauseProof, Row, RustMachineReport, StepRow } from "./rust.js";
 export {
   CHANGE_KINDS,
   DEFAULT_POLICY,
@@ -76,6 +76,7 @@ export {
   renderProposalReceipt,
   reviewProposal,
   runProofs,
+  machinesAgree,
   supersedesOf,
   withStatus,
 } from "./proposal.js";
@@ -129,3 +130,23 @@ export { proposalFromSurvey, renderSurveyReport, modelProblems, digestHash, isBo
 export type { RepoDigest, RepoFile, RepoTest, RepoCommit, RepoManifest, RepoArea, ProposalOrigin, Grounds, ProposalSetup, SubjectDecl, SurveyOut, SurveyInput } from "./bootstrap.js";
 export { SURVEY_SYSTEM, SURVEY_SCHEMA, surveyUserPrompt, surveyProposal } from "./llm/bootstrap.js";
 export type { Excerpt } from "./llm/bootstrap.js";
+// The feature map: surfaces and dependencies.
+export { featureMap, affectedBy, renderFeatureMap, surfaceProblems, mergeLinks, FeatureMapError, SURFACE_KINDS } from "./features.js";
+export type { Surface, SurfaceKind, FeatureLinks, FeatureMap, MapEntry } from "./features.js";
+// State-machine proofs and statecharts.
+export { exploreMachine, statechart, mermaidStatechart, tableStep, machineProblems, machineClauseProblems, stepModel, stateModel, isMachine, MachineError, modelStep, conformance } from "./machine.js";
+export type { MachineModel, MachineClause, MachineStep, MachineEvent, MachineReport, MachineClauseResult, MachineOptions, Statechart, StatechartRegion, Conformance } from "./machine.js";
+// SMT over LSL models (the solver itself runs from "lastro/solver", Node only).
+export { definedClauseScript, inductionScript, boundedScript, boundedPath, canonicalBounded, stepClauseScript, machineChoices, parseValues, smtTerm, SmtUnsupported } from "./smt.js";
+export type { SmtSolver, SmtAnswer, DefinedModel, SmtMachine } from "./smt.js";
+// Before and after snapshots, unexpected changes and sign-offs. Driving the application is Node-only: "lastro/drive".
+export { snapshotKinds, sideOf, snapshotPath, flattenSchema, flattenTables, structuralDiff, inferSchema, modelContract, exampleInputs, changedRows, unexpectedChanges, reviewDue, EXAMPLES_LIMIT } from "./snapshots.js";
+export type { SnapshotKind, SnapshotSide, SnapshotRecord, Comparison, FieldChange, ExampleRow, UnexpectedChange, SignOff } from "./snapshots.js";
+export { judgmentIntents, dueOf, formalCoverage } from "./proposal.js";
+export type { LinksOut } from "./proposal.js";
+export { intentEvidence, comparisonView } from "./review-evidence.js";
+export type { IntentEvidence } from "./review-evidence.js";
+export { proposalFromSurfaces, featuresWithoutSurfaces, SURFACES_SYSTEM, SURFACES_SCHEMA, surfacesUserPrompt } from "./surfaces.js";
+export type { SurfacesOut, SurfacesInput } from "./surfaces.js";
+export { formalOf, machineClauseOf } from "./proposal.js";
+export type { DrivenStep, DriveRunner, DrivenOutcome } from "./proposal.js";

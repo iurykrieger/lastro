@@ -1,0 +1,15 @@
+{
+  "model": "review_evidence",
+  "fields": {
+    "in.kind": "enum[\"screen\",\"contract\",\"data\",\"examples\"]",
+    "in.machine": "bool",
+    "in.phase": "enum[\"review\",\"proved\"]",
+    "in.violated": "bool",
+    "out.after": "bool",
+    "out.before": "bool",
+    "out.comparison": "enum[\"none\",\"images\",\"diff\",\"rows\"]",
+    "out.counterexample": "bool",
+    "out.mapShown": "bool",
+    "out.statechart": "bool"
+  }
+}

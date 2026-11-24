@@ -1,0 +1,11 @@
+{
+  "model": "plugin_review_evidence",
+  "fields": {
+    "in.signoffDue": "bool",
+    "in.snapshots": "bool",
+    "in.unexpected": "bool",
+    "out.listsPaths": "bool",
+    "out.listsSignoffs": "bool",
+    "out.listsUnexpected": "bool"
+  }
+}

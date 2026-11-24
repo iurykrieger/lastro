@@ -123,9 +123,11 @@ function passingSince(states: State[]): number | undefined {
 
 function formalOf(pf: ProofEntry): string {
   try {
-    return pf.check.kind === "clause"
-      ? `${pf.check.requires ? `${show(pf.check.requires)}  ⇒  ` : ""}${show(pf.check.ensures)}`
-      : `${JSON.stringify(pf.check.input)}  ⇒  ${show(pf.check.expect)}`;
+    const c = pf.check;
+    if (c.kind === "clause" || c.kind === "machine") return `${c.requires ? `${show(c.requires)}  ⇒  ` : ""}${show(c.ensures)}`;
+    if (c.kind === "scenario") return `${JSON.stringify(c.input)}  ⇒  ${show(c.expect)}`;
+    if (c.kind === "property") return `${c.surface.kind} ${c.surface.locator}: always ${show(c.invariant)}`;
+    return `${c.surface.kind} ${c.surface.locator}: ${c.steps.length} step(s)`;
   } catch {
     return JSON.stringify(pf.check);
   }

@@ -13,8 +13,8 @@ const K = new Uint32Array([
   0xc67178f2,
 ]);
 
-export function sha256Hex(text: string): string {
-  const bytes = new TextEncoder().encode(text);
+export function sha256Hex(text: string | Uint8Array): string {
+  const bytes = typeof text === "string" ? new TextEncoder().encode(text) : text;
   const bitLen = bytes.length * 8;
   const padded = new Uint8Array(((bytes.length + 9 + 63) >> 6) << 6);
   padded.set(bytes);

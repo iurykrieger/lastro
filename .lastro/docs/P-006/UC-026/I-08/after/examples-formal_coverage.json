@@ -1,0 +1,839 @@
+{
+  "model": "formal_coverage",
+  "subject": "formal_coverage",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 0,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 0,
+        "countBeyond": 0,
+        "reasons": 0
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 0,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 0,
+        "countBeyond": 0,
+        "reasons": 0
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 0,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 0,
+        "countBeyond": 0,
+        "reasons": 0
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 0,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 0,
+        "countBeyond": 0,
+        "reasons": 0
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 1,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 1,
+        "countBeyond": 0,
+        "reasons": 1
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 1,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 1,
+        "countBeyond": 0,
+        "reasons": 1
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 1,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 1,
+        "countBeyond": 0,
+        "reasons": 1
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 1,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 1,
+        "countBeyond": 0,
+        "reasons": 1
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 2,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 2,
+        "countBeyond": 0,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 2,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 2,
+        "countBeyond": 0,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 2,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 2,
+        "countBeyond": 0,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 2,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 2,
+        "countBeyond": 0,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 3,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 3,
+        "countBeyond": 0,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 3,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 3,
+        "countBeyond": 0,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 3,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 3,
+        "countBeyond": 0,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 0,
+        "evidenced": 3,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 3,
+        "countBeyond": 0,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 0,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 0,
+        "countBeyond": 1,
+        "reasons": 1
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 0,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 0,
+        "countBeyond": 1,
+        "reasons": 1
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 0,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 0,
+        "countBeyond": 1,
+        "reasons": 1
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 0,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 0,
+        "countBeyond": 1,
+        "reasons": 1
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 1,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 1,
+        "countBeyond": 1,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 1,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 1,
+        "countBeyond": 1,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 1,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 1,
+        "countBeyond": 1,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 1,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 1,
+        "countBeyond": 1,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 2,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 2,
+        "countBeyond": 1,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 2,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 2,
+        "countBeyond": 1,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 2,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 2,
+        "countBeyond": 1,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 2,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 2,
+        "countBeyond": 1,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 3,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 3,
+        "countBeyond": 1,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 3,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 3,
+        "countBeyond": 1,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 3,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 3,
+        "countBeyond": 1,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 1,
+        "evidenced": 3,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 3,
+        "countBeyond": 1,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 0,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 0,
+        "countBeyond": 2,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 0,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 0,
+        "countBeyond": 2,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 0,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 0,
+        "countBeyond": 2,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 0,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 0,
+        "countBeyond": 2,
+        "reasons": 2
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 1,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 1,
+        "countBeyond": 2,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 1,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 1,
+        "countBeyond": 2,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 1,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 1,
+        "countBeyond": 2,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 1,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 1,
+        "countBeyond": 2,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 2,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 2,
+        "countBeyond": 2,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 2,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 2,
+        "countBeyond": 2,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 2,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 2,
+        "countBeyond": 2,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 2,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 2,
+        "countBeyond": 2,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 3,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 3,
+        "countBeyond": 2,
+        "reasons": 5
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 3,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 3,
+        "countBeyond": 2,
+        "reasons": 5
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 3,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 3,
+        "countBeyond": 2,
+        "reasons": 5
+      }
+    },
+    {
+      "input": {
+        "beyond": 2,
+        "evidenced": 3,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 3,
+        "countBeyond": 2,
+        "reasons": 5
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 0,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 0,
+        "countBeyond": 3,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 0,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 0,
+        "countBeyond": 3,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 0,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 0,
+        "countBeyond": 3,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 0,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 0,
+        "countBeyond": 3,
+        "reasons": 3
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 1,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 1,
+        "countBeyond": 3,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 1,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 1,
+        "countBeyond": 3,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 1,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 1,
+        "countBeyond": 3,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 1,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 1,
+        "countBeyond": 3,
+        "reasons": 4
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 2,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 2,
+        "countBeyond": 3,
+        "reasons": 5
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 2,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 2,
+        "countBeyond": 3,
+        "reasons": 5
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 2,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 2,
+        "countBeyond": 3,
+        "reasons": 5
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 2,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 2,
+        "countBeyond": 3,
+        "reasons": 5
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 3,
+        "formal": 0
+      },
+      "after": {
+        "countFormal": 0,
+        "countEvidenced": 3,
+        "countBeyond": 3,
+        "reasons": 6
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 3,
+        "formal": 1
+      },
+      "after": {
+        "countFormal": 1,
+        "countEvidenced": 3,
+        "countBeyond": 3,
+        "reasons": 6
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 3,
+        "formal": 2
+      },
+      "after": {
+        "countFormal": 2,
+        "countEvidenced": 3,
+        "countBeyond": 3,
+        "reasons": 6
+      }
+    },
+    {
+      "input": {
+        "beyond": 3,
+        "evidenced": 3,
+        "formal": 3
+      },
+      "after": {
+        "countFormal": 3,
+        "countEvidenced": 3,
+        "countBeyond": 3,
+        "reasons": 6
+      }
+    }
+  ]
+}

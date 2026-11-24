@@ -1,0 +1,42 @@
+{
+  "name": "extract_surfaces",
+  "inputs": {
+    "change": {
+      "type": "enum",
+      "values": [
+        "add",
+        "modify"
+      ]
+    },
+    "existing": {
+      "type": "int",
+      "min": 0,
+      "max": 2
+    },
+    "adds": {
+      "type": "int",
+      "min": 0,
+      "max": 2
+    },
+    "removes": {
+      "type": "int",
+      "min": 0,
+      "max": 2
+    },
+    "proposedOnAdd": {
+      "type": "int",
+      "min": 0,
+      "max": 2
+    }
+  },
+  "outputs": {
+    "accepted": {
+      "type": "bool"
+    },
+    "after": {
+      "type": "int",
+      "min": 0,
+      "max": 4
+    }
+  }
+}

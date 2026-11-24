@@ -1,0 +1,51 @@
+{
+  "model": "scenario_run",
+  "subject": "scenario_run",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "subject": "none"
+      },
+      "after": {
+        "status": "failed",
+        "output": false,
+        "error": true,
+        "empirical": true
+      }
+    },
+    {
+      "input": {
+        "subject": "right"
+      },
+      "after": {
+        "status": "passed",
+        "output": true,
+        "error": false,
+        "empirical": true
+      }
+    },
+    {
+      "input": {
+        "subject": "wrong"
+      },
+      "after": {
+        "status": "failed",
+        "output": true,
+        "error": false,
+        "empirical": true
+      }
+    },
+    {
+      "input": {
+        "subject": "throws"
+      },
+      "after": {
+        "status": "failed",
+        "output": false,
+        "error": true,
+        "empirical": true
+      }
+    }
+  ]
+}

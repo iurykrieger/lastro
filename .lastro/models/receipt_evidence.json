@@ -1,0 +1,42 @@
+{
+  "name": "receipt_evidence",
+  "inputs": {
+    "affected": {
+      "type": "bool"
+    },
+    "machine": {
+      "type": "bool"
+    },
+    "snapshots": {
+      "type": "bool"
+    },
+    "unexpected": {
+      "type": "enum",
+      "values": [
+        "none",
+        "open",
+        "accepted"
+      ]
+    },
+    "signoff": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "mapSection": {
+      "type": "bool"
+    },
+    "mermaid": {
+      "type": "bool"
+    },
+    "hashes": {
+      "type": "bool"
+    },
+    "acceptedBy": {
+      "type": "bool"
+    },
+    "signedBy": {
+      "type": "bool"
+    }
+  }
+}

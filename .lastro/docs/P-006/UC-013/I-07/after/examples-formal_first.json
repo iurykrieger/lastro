@@ -1,0 +1,199 @@
+{
+  "model": "formal_first",
+  "subject": "formal_first",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "holds": false,
+        "smt": "proves",
+        "space": "small"
+      },
+      "after": {
+        "method": "exhaustive",
+        "verdict": "violated",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": false,
+        "smt": "proves",
+        "space": "large"
+      },
+      "after": {
+        "method": "smt",
+        "verdict": "violated",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": false,
+        "smt": "refutes",
+        "space": "small"
+      },
+      "after": {
+        "method": "exhaustive",
+        "verdict": "violated",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": false,
+        "smt": "refutes",
+        "space": "large"
+      },
+      "after": {
+        "method": "smt",
+        "verdict": "violated",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": false,
+        "smt": "unknown",
+        "space": "small"
+      },
+      "after": {
+        "method": "exhaustive",
+        "verdict": "violated",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": false,
+        "smt": "unknown",
+        "space": "large"
+      },
+      "after": {
+        "method": "sampled",
+        "verdict": "evidenced",
+        "reason": "solver-unknown"
+      }
+    },
+    {
+      "input": {
+        "holds": false,
+        "smt": "inexpressible",
+        "space": "small"
+      },
+      "after": {
+        "method": "exhaustive",
+        "verdict": "violated",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": false,
+        "smt": "inexpressible",
+        "space": "large"
+      },
+      "after": {
+        "method": "sampled",
+        "verdict": "evidenced",
+        "reason": "not-expressible"
+      }
+    },
+    {
+      "input": {
+        "holds": true,
+        "smt": "proves",
+        "space": "small"
+      },
+      "after": {
+        "method": "exhaustive",
+        "verdict": "proved",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": true,
+        "smt": "proves",
+        "space": "large"
+      },
+      "after": {
+        "method": "smt",
+        "verdict": "evidenced",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": true,
+        "smt": "refutes",
+        "space": "small"
+      },
+      "after": {
+        "method": "exhaustive",
+        "verdict": "proved",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": true,
+        "smt": "refutes",
+        "space": "large"
+      },
+      "after": {
+        "method": "smt",
+        "verdict": "evidenced",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": true,
+        "smt": "unknown",
+        "space": "small"
+      },
+      "after": {
+        "method": "exhaustive",
+        "verdict": "proved",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": true,
+        "smt": "unknown",
+        "space": "large"
+      },
+      "after": {
+        "method": "sampled",
+        "verdict": "evidenced",
+        "reason": "solver-unknown"
+      }
+    },
+    {
+      "input": {
+        "holds": true,
+        "smt": "inexpressible",
+        "space": "small"
+      },
+      "after": {
+        "method": "exhaustive",
+        "verdict": "proved",
+        "reason": "none"
+      }
+    },
+    {
+      "input": {
+        "holds": true,
+        "smt": "inexpressible",
+        "space": "large"
+      },
+      "after": {
+        "method": "sampled",
+        "verdict": "evidenced",
+        "reason": "not-expressible"
+      }
+    }
+  ]
+}

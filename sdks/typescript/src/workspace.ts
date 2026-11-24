@@ -15,6 +15,8 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, unlin
 import { dirname, join } from "node:path";
 import { fileNameOf, nextId, readPolicy, type ProofEntry, type Proposal, type ProposalPolicy, type ProposalRun, type UseCase } from "./proposal.js";
 import type { Model } from "./types.js";
+import type { MachineModel } from "./machine.js";
+import type { DriverConfig } from "./drive.js";
 
 export interface SubjectRef {
   /** Module path, relative to the folder that holds the workspace. */
@@ -24,9 +26,13 @@ export interface SubjectRef {
 }
 
 export interface WorkspaceConfig {
-  models: Record<string, Model>;
+  models: Record<string, Model | MachineModel>;
   subjects: Record<string, SubjectRef>;
   review: ProposalPolicy;
+  /** How the application is driven through its surfaces (see drive.ts). */
+  drivers?: DriverConfig;
+  /** The SMT solver for spaces too large to enumerate (see solver.ts): a command reading SMT-LIB 2 on stdin. */
+  smt?: { command?: string; timeoutMs?: number };
 }
 
 /** Files of the intent-artifact/v0 workspace, which proposal/v1 refuses. */
@@ -77,10 +83,10 @@ export function openWorkspace(dir: string) {
 
     config(): WorkspaceConfig {
       if (!existsSync(file("config.json"))) throw new WorkspaceError(`no workspace at ${dir}: run \`lastro init --model model.json\``);
-      const raw = readJson<{ models?: Record<string, Model>; model?: Model; subjects?: Record<string, SubjectRef>; review?: Partial<ProposalPolicy>; requiredApprovals?: number }>(file("config.json"));
+      const raw = readJson<{ models?: Record<string, Model | MachineModel>; model?: Model; subjects?: Record<string, SubjectRef>; review?: Partial<ProposalPolicy>; requiredApprovals?: number; drivers?: DriverConfig; smt?: WorkspaceConfig["smt"] }>(file("config.json"));
       const models = { ...(raw.models ?? {}) };
       if (raw.model && !models[raw.model.name]) models[raw.model.name] = raw.model; // the v0 `model` key is still read
-      return { models, subjects: raw.subjects ?? {}, review: readPolicy(raw) };
+      return { models, subjects: raw.subjects ?? {}, review: readPolicy(raw), ...(raw.drivers ? { drivers: raw.drivers } : {}), ...(raw.smt ? { smt: raw.smt } : {}) };
     },
 
     writeConfig(c: WorkspaceConfig) {

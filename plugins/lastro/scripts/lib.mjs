@@ -163,8 +163,12 @@ export function nextStep(s) {
       return s.proposal?.origin?.kind === "bootstrap"
         ? "This bootstrap's proofs describe the code as it is: do not change the code. Show the user each failing proof; on their word amend the intent (the reading was wrong) or reject it (the code has a bug to fix in a later proposal), then derive and prove again."
         : "Fix the code until every proof passes, without breaking the use cases' proofs.";
-    case "passed":
+    case "passed": {
+      const due = evidenceDue(s.proposal);
+      if (due.signoffs.length || due.unexpected.length || due.changesRequested.length)
+        return `Every proof passes, and the reviewers still owe the evidence review: show the user the snapshots, the unexpected changes and the sign-offs due (\`${cli} review ${id} --as <user> signoff <I> | request-changes <I> <note> | accept <U>\`, recording only the user's own answers). Then the user applies it with \`${cli} apply ${id}\`.`;
       return `Every proof passes. The user applies it with \`${cli} apply ${id}\`.`;
+    }
   }
 }
 
@@ -184,6 +188,21 @@ function approvalsOf(p, i) {
 }
 const requiredOf = (p) => Math.max(1, Number(p?.policy?.approvals ?? 1));
 const isApproved = (p, i) => approvalsOf(p, i) >= requiredOf(p);
+
+/**
+ * What the reviewers still owe after the proof run (the SDK's dueOf): sign-offs of the intents beyond proof for human
+ * judgment, unexpected changes not accepted, and intents a reviewer requested changes on.
+ */
+export function evidenceDue(p) {
+  if (!p?.lastRun) return { signoffs: [], unexpected: [], changesRequested: [] };
+  const need = requiredOf(p);
+  const judgment = (p.intents ?? []).filter((i) => i.status !== "rejected" && i.provability === "beyond-proof" && i.beyondProofReason === "human-judgment").map((i) => i.id);
+  const signoffs = p.signoffs ?? [];
+  const changesRequested = judgment.filter((i) => signoffs.some((x) => x.intent === i && x.verdict === "changes-requested"));
+  const due = judgment.filter((i) => !changesRequested.includes(i) && new Set(signoffs.filter((x) => x.intent === i && x.verdict === "signed-off").map((x) => x.by)).size < need);
+  const unexpected = (p.unexpected ?? []).filter((u) => new Set(u.acceptedBy ?? []).size < need).map((u) => u.id);
+  return { signoffs: due, unexpected, changesRequested };
+}
 
 /** Counts for the one-line view and for tests. */
 export function tally(s) {
@@ -318,7 +337,35 @@ export function renderReview(s) {
     out.push("", "**Open threads**", "");
     for (const x of threads) out.push(`- **${x.id}** on ${short(s, x.on)}, ${x.by}: ${x.comments.at(-1)?.text ?? ""}`);
   }
+  out.push(...evidenceLines(s));
   return out.join("\n");
+}
+
+/** The before and after evidence: the snapshots' paths, the unexpected changes and the sign-offs still due. */
+export function evidenceLines(s) {
+  const p = s.proposal;
+  if (!p) return [];
+  const out = [];
+  const snaps = p.snapshots ?? [];
+  if (snaps.length) {
+    out.push("", `**Snapshots** (in \`.lastro/\`; open them to compare before and after)`, "");
+    for (const x of snaps) out.push(`- \`${x.path}\` (${x.kind}, ${x.side}${x.intent !== "repository" ? `, ${short(s, x.intent)}` : ""})`);
+    for (const c of (p.comparisons ?? []).filter((c) => c.diff?.length || c.changedRows?.length || c.pixelShare))
+      out.push(`  - ${short(s, c.intent)} ${c.name}: ${c.pixelShare !== undefined ? `${(c.pixelShare * 100).toFixed(2)}% of pixels changed` : c.diff ? `${c.diff.length} field change(s)${c.breaking ? ", breaking" : ""}` : `${c.changedRows.length} example(s) changed`}`);
+  }
+  const due = evidenceDue(p);
+  const unexpected = p.unexpected ?? [];
+  if (unexpected.length) {
+    out.push("", "**Unexpected changes** (an output changed where no approved intent applies)", "");
+    for (const u of unexpected)
+      out.push(`- **${u.id}** ${short(s, u.intent)} ${JSON.stringify(u.input)}: ${JSON.stringify(u.before)} → ${JSON.stringify(u.after)} _(${due.unexpected.includes(u.id) ? "to accept" : `accepted by ${u.acceptedBy.join(", ")}`})_`);
+  }
+  if (due.signoffs.length || due.changesRequested.length) {
+    out.push("", "**Sign-offs due** (intents beyond proof: look at their before and after snapshots)", "");
+    for (const i of due.signoffs) out.push(`- **${short(s, i)}** waits for a sign-off or a request for changes`);
+    for (const i of due.changesRequested) out.push(`- **${short(s, i)}** changes requested: ${(p.signoffs ?? []).filter((x) => x.intent === i && x.verdict === "changes-requested").map((x) => `${x.by}: ${x.note ?? ""}`).join("; ")}`);
+  }
+  return out;
 }
 
 /** The full board: stages, the review while it is open, and one line per proof. */
@@ -430,7 +477,7 @@ export function classify(ws, cwd, p) {
 
 /** A `lastro review` command that records the user's approval or answer. */
 export function isReviewCommand(cmd) {
-  return /\blastro(?:-go)?\b[^\n;&|]*\breview\b[^\n;&|]*\b(?:approve|approve-all|answer|amend|reject|resolve|rewrite|recombine)\b/.test(cmd) || /cli\.js\b[^\n;&|]*\breview\b/.test(cmd);
+  return /\blastro(?:-go)?\b[^\n;&|]*\breview\b[^\n;&|]*\b(?:approve|approve-all|answer|amend|reject|resolve|rewrite|recombine|signoff|request-changes|accept|reference)\b/.test(cmd) || /cli\.js\b[^\n;&|]*\breview\b/.test(cmd);
 }
 
 export const isLastroCommand = (cmd) => /\blastro(?:-go)?\b|lastro[/\\].*cli\.js/.test(cmd);

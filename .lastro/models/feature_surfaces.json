@@ -1,0 +1,37 @@
+{
+  "name": "feature_surfaces",
+  "inputs": {
+    "kind": {
+      "type": "enum",
+      "values": [
+        "screen",
+        "route",
+        "command",
+        "api",
+        "other"
+      ]
+    },
+    "hasName": {
+      "type": "bool"
+    },
+    "hasLocator": {
+      "type": "bool"
+    },
+    "surfaces": {
+      "type": "int",
+      "min": 0,
+      "max": 2
+    },
+    "hasDependsOn": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "accepted": {
+      "type": "bool"
+    },
+    "reachable": {
+      "type": "bool"
+    }
+  }
+}

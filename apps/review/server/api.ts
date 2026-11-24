@@ -3,6 +3,7 @@
  *
  *   GET  /api/workspace                  use cases, proposals, the default reviewer and the LLM mode
  *   POST /api/proposals/:id/review       { as, action } → the proposal after the action
+ *   GET  /api/files?path=docs/...        a snapshot file (screenshots, contracts, data, examples) under .lastro/docs/
  *   GET  /api/events                     server-sent "change" events when a file in .lastro/ changes
  *
  * Every write goes through the TypeScript SDK (ProposalReview, approveProposal, recombineAfter): the app
@@ -11,9 +12,9 @@
  * reviewers on other machines share the files through git, like any other change to the repository.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import type { Connect, Plugin } from "vite";
 import {
   approveProposal,
@@ -161,11 +162,27 @@ export function createApi(dir: string) {
           r.rewriteAfter(action.useCase, out.after, out.name);
           break;
         }
+        case "signoff":
+          r.signOff(action.intent, action.references ?? []);
+          break;
+        case "request-changes":
+          r.requestChanges(action.intent, action.note.trim() || "changes requested");
+          break;
+        case "accept":
+          r.accept(action.change);
+          break;
         default:
           throw new ApiError(400, `unknown action ${(action as { type: string }).type}`);
       }
       let p = r.done();
       let note: string | undefined;
+      // A signed-off after screenshot is copied to the intent's reference/ folder (as `lastro review signoff` does).
+      if (action.type === "signoff")
+        for (const ref of action.references ?? []) {
+          const to = join(dir, ref.replace("/after/", "/reference/"));
+          mkdirSync(dirname(to), { recursive: true });
+          copyFileSync(join(dir, ref), to);
+        }
       // Fully reviewed: approve it, bound to the current use cases (as `lastro review` does).
       if (!pendingProposal(p).length && !p.hash) {
         const useCases = ws.useCases();
@@ -177,7 +194,16 @@ export function createApi(dir: string) {
     });
   }
 
-  return { dir, snapshot, review };
+  /** A snapshot file under docs/, never anything else in the workspace. */
+  function file(path: string): { body: Buffer; type: string } {
+    const docs = resolve(dir, "docs");
+    const full = resolve(dir, path);
+    if (!full.startsWith(docs + sep) || !existsSync(full)) throw new ApiError(404, `no snapshot ${path}`);
+    const ext = full.slice(full.lastIndexOf(".") + 1).toLowerCase();
+    return { body: readFileSync(full), type: ext === "png" ? "image/png" : ext === "json" ? "application/json; charset=utf-8" : "text/plain; charset=utf-8" };
+  }
+
+  return { dir, snapshot, review, file };
 }
 
 const readBody = (req: IncomingMessage) =>
@@ -235,6 +261,11 @@ export function lastroReviewApi(opts: { dir?: string } = {}): Plugin {
     if (!url.pathname.startsWith("/api/")) return next();
     try {
       if (req.method === "GET" && url.pathname === "/api/workspace") return send(res, 200, api.snapshot());
+      if (req.method === "GET" && url.pathname === "/api/files") {
+        const f = api.file(url.searchParams.get("path") ?? "");
+        res.writeHead(200, { "content-type": f.type, "cache-control": "no-store" });
+        return res.end(f.body);
+      }
       if (req.method === "GET" && url.pathname === "/api/events") {
         startWatching();
         res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store", connection: "keep-alive" });

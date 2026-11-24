@@ -1,0 +1,103 @@
+{
+  "model": "plugin_review_evidence",
+  "subject": "plugin_review_evidence",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "signoffDue": false,
+        "snapshots": false,
+        "unexpected": false
+      },
+      "after": {
+        "listsPaths": false,
+        "listsUnexpected": false,
+        "listsSignoffs": false
+      }
+    },
+    {
+      "input": {
+        "signoffDue": false,
+        "snapshots": false,
+        "unexpected": true
+      },
+      "after": {
+        "listsPaths": false,
+        "listsUnexpected": true,
+        "listsSignoffs": false
+      }
+    },
+    {
+      "input": {
+        "signoffDue": false,
+        "snapshots": true,
+        "unexpected": false
+      },
+      "after": {
+        "listsPaths": true,
+        "listsUnexpected": false,
+        "listsSignoffs": false
+      }
+    },
+    {
+      "input": {
+        "signoffDue": false,
+        "snapshots": true,
+        "unexpected": true
+      },
+      "after": {
+        "listsPaths": true,
+        "listsUnexpected": true,
+        "listsSignoffs": false
+      }
+    },
+    {
+      "input": {
+        "signoffDue": true,
+        "snapshots": false,
+        "unexpected": false
+      },
+      "after": {
+        "listsPaths": false,
+        "listsUnexpected": false,
+        "listsSignoffs": true
+      }
+    },
+    {
+      "input": {
+        "signoffDue": true,
+        "snapshots": false,
+        "unexpected": true
+      },
+      "after": {
+        "listsPaths": false,
+        "listsUnexpected": true,
+        "listsSignoffs": true
+      }
+    },
+    {
+      "input": {
+        "signoffDue": true,
+        "snapshots": true,
+        "unexpected": false
+      },
+      "after": {
+        "listsPaths": true,
+        "listsUnexpected": false,
+        "listsSignoffs": true
+      }
+    },
+    {
+      "input": {
+        "signoffDue": true,
+        "snapshots": true,
+        "unexpected": true
+      },
+      "after": {
+        "listsPaths": true,
+        "listsUnexpected": true,
+        "listsSignoffs": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "review_evidence",
+  "inputs": {
+    "phase": {
+      "type": "enum",
+      "values": [
+        "review",
+        "proved"
+      ]
+    },
+    "kind": {
+      "type": "enum",
+      "values": [
+        "screen",
+        "contract",
+        "data",
+        "examples"
+      ]
+    },
+    "machine": {
+      "type": "bool"
+    },
+    "violated": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "mapShown": {
+      "type": "bool"
+    },
+    "statechart": {
+      "type": "bool"
+    },
+    "before": {
+      "type": "bool"
+    },
+    "after": {
+      "type": "bool"
+    },
+    "comparison": {
+      "type": "enum",
+      "values": [
+        "none",
+        "images",
+        "diff",
+        "rows"
+      ]
+    },
+    "counterexample": {
+      "type": "bool"
+    }
+  }
+}

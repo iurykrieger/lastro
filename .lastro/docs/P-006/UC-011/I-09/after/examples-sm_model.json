@@ -1,0 +1,359 @@
+{
+  "model": "sm_model",
+  "subject": "sm_model",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "actors": 0,
+        "eventsFinite": false,
+        "initialInDomain": false,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 0,
+        "eventsFinite": false,
+        "initialInDomain": false,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 0,
+        "eventsFinite": false,
+        "initialInDomain": true,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 0,
+        "eventsFinite": false,
+        "initialInDomain": true,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 0,
+        "eventsFinite": true,
+        "initialInDomain": false,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 0,
+        "eventsFinite": true,
+        "initialInDomain": false,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 0,
+        "eventsFinite": true,
+        "initialInDomain": true,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 0,
+        "eventsFinite": true,
+        "initialInDomain": true,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": true
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "eventsFinite": false,
+        "initialInDomain": false,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "eventsFinite": false,
+        "initialInDomain": false,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "eventsFinite": false,
+        "initialInDomain": true,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "eventsFinite": false,
+        "initialInDomain": true,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "eventsFinite": true,
+        "initialInDomain": false,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "eventsFinite": true,
+        "initialInDomain": false,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "eventsFinite": true,
+        "initialInDomain": true,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "eventsFinite": true,
+        "initialInDomain": true,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": true
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "eventsFinite": false,
+        "initialInDomain": false,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "eventsFinite": false,
+        "initialInDomain": false,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "eventsFinite": false,
+        "initialInDomain": true,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "eventsFinite": false,
+        "initialInDomain": true,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "eventsFinite": true,
+        "initialInDomain": false,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "eventsFinite": true,
+        "initialInDomain": false,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "eventsFinite": true,
+        "initialInDomain": true,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "eventsFinite": true,
+        "initialInDomain": true,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": true
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "eventsFinite": false,
+        "initialInDomain": false,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "eventsFinite": false,
+        "initialInDomain": false,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "eventsFinite": false,
+        "initialInDomain": true,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "eventsFinite": false,
+        "initialInDomain": true,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "eventsFinite": true,
+        "initialInDomain": false,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "eventsFinite": true,
+        "initialInDomain": false,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "eventsFinite": true,
+        "initialInDomain": true,
+        "stateFinite": false
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "eventsFinite": true,
+        "initialInDomain": true,
+        "stateFinite": true
+      },
+      "after": {
+        "accepted": true
+      }
+    }
+  ]
+}

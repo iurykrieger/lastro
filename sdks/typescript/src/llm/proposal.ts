@@ -9,8 +9,10 @@
  */
 import { show } from "../spec/expr.js";
 import { BEYOND_PROOF_REASONS, type Model } from "../types.js";
+import type { MachineModel } from "../machine.js";
 import { proofsFromUseCases, useCaseTargets, type UseCaseDerivation, type UseCaseDeriveOut } from "../usecase-proofs.js";
 import {
+  formalOf,
   forwardIntents,
   passedProofs,
   proofsFromDerivation,
@@ -48,9 +50,24 @@ Rules:
 - provability: "formal" for a pure input-to-output fact about the program's decisions, "empirical" when only running tests can check it, "beyond-proof" where proof stops. beyondProofReason is "none" unless beyond-proof: external-code, world-facts, termination-timing, human-judgment or unstated.
 - replaces: for a modify, list each existing proof of that use case whose guarantee the new behavior contradicts, with the reason in plain words. List only proofs of the same use case; leave it empty when nothing breaks. For an add or a remove, leave it empty (the SDK fills it for a remove).
 - useCases: exactly one entry per touched use case, with the same change as its intents, its name, and "after": the complete new description with every intent combined (empty for a remove). Write the whole behavior, not a diff.
+- links, on every useCases entry: the surfaces (how a user or client reaches the use case: kind screen, route, command or api; a name in the user's words; a locator the driver understands, such as a URL path, a CLI command, an HTTP method and path, or a selector) and the dependencies (slugs of the use cases it needs to work). For an add, put every surface and dependency it has in addSurfaces and addDependsOn. For a modify, the use case keeps the ones it has: list only those the change adds, and in removeSurfaces (by locator) and removeDependsOn (by slug) only those it removes. For a remove, leave every list empty.
 - When the prose is ambiguous, or two intents on one use case contradict each other, do not guess: add a decision (one question, 2-4 options each with its consequence, the recommended index, and the slugs of the intents it concerns).
 - notPromised: what a reader might assume but the prose does not promise.
 - name, slug and description at the top level describe the whole proposal.`;
+
+const SURFACE = {
+  type: "object",
+  additionalProperties: false,
+  required: ["kind", "name", "locator"],
+  properties: { kind: { type: "string", enum: ["screen", "route", "command", "api"] }, name: STR, locator: STR },
+};
+
+const LINKS = {
+  type: "object",
+  additionalProperties: false,
+  required: ["addSurfaces", "removeSurfaces", "addDependsOn", "removeDependsOn"],
+  properties: { addSurfaces: { type: "array", items: SURFACE }, removeSurfaces: STR_ARR, addDependsOn: STR_ARR, removeDependsOn: STR_ARR },
+};
 
 export const PROPOSE_SCHEMA = {
   type: "object",
@@ -87,8 +104,8 @@ export const PROPOSE_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["slug", "change", "name", "after"],
-        properties: { slug: STR, change: { type: "string", enum: ["add", "modify", "remove"] }, name: STR, after: STR },
+        required: ["slug", "change", "name", "after", "links"],
+        properties: { slug: STR, change: { type: "string", enum: ["add", "modify", "remove"] }, name: STR, after: STR, links: LINKS },
       },
     },
     decisions: {
@@ -109,12 +126,20 @@ function proofView(u: UseCase) {
     id: p.id,
     name: p.name,
     description: p.description,
-    formal: p.check.kind === "clause" ? `${p.check.requires ? `${show(p.check.requires)} => ` : ""}${show(p.check.ensures)}` : `${JSON.stringify(p.check.input)} => ${show(p.check.expect)}`,
+    formal: p.check.kind === "clause" ? `${p.check.requires ? `${show(p.check.requires)} => ` : ""}${show(p.check.ensures)}` : p.check.kind === "scenario" ? `${JSON.stringify(p.check.input)} => ${show(p.check.expect)}` : formalOf(p),
   }));
 }
 
 export function proposeUserPrompt(prose: string, useCases: UseCase[]): string {
-  const cases = useCases.map((u) => ({ slug: u.slug, name: u.name, description: u.description, ...(u.proofs.length ? { proofs: proofView(u) } : {}) }));
+  const slugOf = (id: string) => useCases.find((u) => u.id === id)?.slug ?? id;
+  const cases = useCases.map((u) => ({
+    slug: u.slug,
+    name: u.name,
+    description: u.description,
+    ...(u.surfaces?.length ? { surfaces: u.surfaces } : {}),
+    ...(u.dependsOn?.length ? { dependsOn: u.dependsOn.map(slugOf) } : {}),
+    ...(u.proofs.length ? { proofs: proofView(u) } : {}),
+  }));
   return `<use-cases>\n${JSON.stringify(cases, null, 2)}\n</use-cases>\n\n<prose>\n${prose}\n</prose>`;
 }
 
@@ -163,6 +188,10 @@ Only use the variables and defs of the model the proof names. Each expression is
 Each proof checks one intent and names its model and subject (from the ones declared):
 - kind "clause": a formal if-then promise "for every input: requires => ensures" (requires is "" when there is no if-part). Prefer both directions (the right password ALWAYS gets a token AND a wrong one NEVER does). inputJson and expect are "".
 - kind "scenario": a concrete input (inputJson, a JSON object with every model input) and an LSL "expect" over in.* and out.*. requires and ensures are "".
+- kind "machine", for a state-machine model ("kind": "machine"): clauseKind "invariant" (ensures holds in every reachable state; in.<shared> and in.<local>_<actor>), "step" (for every transition: requires => ensures, over the state before as in.<var>, in.actor, in.event and the event inputs, and the state after as out.<var>) or "reach" (ensures describes a state that must be reachable; add one so the other clauses cannot prove nothing). Prefer a machine proof whenever a state-machine model can express the intent: it is proved over every interleaving of the actors.
+- kind "driven", for behavior only the running application shows: surfaceJson {"kind": screen|route|command|api, "locator": ...} names one of the use case's surfaces, stepsJson is a list of {"input": action, "expect": observed fields}, and tolerance is the share of pixels a screenshot may change (0 unless a reference screenshot is meant). It is evidence, never proof: use it only when no model can express the intent.
+- kind "property": surfaceJson as for driven, actionsJson the actions a user or client can take there, and ensures an LSL invariant over the observed state (out.<field>) that must hold after every action of fixed-seed sequences.
+- Fields a kind does not use are "" (tolerance 0). Prefer the most formal kind that can express the intent: clause or machine over a finite model, then scenario, then driven or property.
 - Never weaken a proof to make it pass. An intent that is beyond proof needs no proof.
 - A "remove" intent always gets a proof that the old behavior (the use case's "before") no longer happens. When the model cannot express it, return a decision instead.
 - When a new proof takes the place of a proof its intent replaces, list that proof in "replaces". Never list a proof the intent does not replace.
@@ -179,7 +208,7 @@ export const DERIVE_PROOFS_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["intent", "slug", "name", "description", "model", "subject", "kind", "requires", "ensures", "assumptions", "inputJson", "expect", "replaces"],
+        required: ["intent", "slug", "name", "description", "model", "subject", "kind", "requires", "ensures", "assumptions", "inputJson", "expect", "replaces", "clauseKind", "surfaceJson", "stepsJson", "actionsJson", "tolerance"],
         properties: {
           intent: STR,
           slug: STR,
@@ -187,13 +216,18 @@ export const DERIVE_PROOFS_SCHEMA = {
           description: STR,
           model: STR,
           subject: STR,
-          kind: { type: "string", enum: ["clause", "scenario"] },
+          kind: { type: "string", enum: ["clause", "scenario", "machine", "driven", "property"] },
           requires: STR,
           ensures: STR,
           assumptions: STR_ARR,
           inputJson: STR,
           expect: STR,
           replaces: STR_ARR,
+          clauseKind: { type: "string", enum: ["", "invariant", "step", "reach"] },
+          surfaceJson: STR,
+          stepsJson: STR,
+          actionsJson: STR,
+          tolerance: { type: "number" },
         },
       },
     },
@@ -209,7 +243,7 @@ export const DERIVE_PROOFS_SCHEMA = {
   },
 };
 
-export function deriveProofsUserPrompt(p: Proposal, useCases: UseCase[], models: Record<string, Model>, subjects: string[]): string {
+export function deriveProofsUserPrompt(p: Proposal, useCases: UseCase[], models: Record<string, Model | MachineModel>, subjects: string[]): string {
   const touched = new Set(forwardIntents(p).map((i) => i.useCase));
   return JSON.stringify(
     {
@@ -288,7 +322,7 @@ export const DERIVE_USECASE_PROOFS_SCHEMA = {
   },
 };
 
-export function deriveUseCaseProofsUserPrompt(targets: UseCase[], useCases: UseCase[], models: Record<string, Model>, subjects: string[]): string {
+export function deriveUseCaseProofsUserPrompt(targets: UseCase[], useCases: UseCase[], models: Record<string, Model | MachineModel>, subjects: string[]): string {
   const wanted = new Set(targets.map((u) => u.id));
   return JSON.stringify(
     {

@@ -1,0 +1,14 @@
+{
+  "model": "intent_rollup",
+  "fields": {
+    "in.assumption": "bool",
+    "in.beyond": "bool",
+    "in.coverage": "enum[\"none\",\"proved\",\"evidenced\",\"violated\",\"vacuous\"]",
+    "in.scenario": "enum[\"none\",\"passed\",\"failed\"]",
+    "out.confidence": "enum[\"zero\",\"one\",\"partial\"]",
+    "out.notes": "bool",
+    "out.reportOk": "bool",
+    "out.trusted": "bool",
+    "out.verdict": "enum[\"proved\",\"proved-under-assumptions\",\"evidenced\",\"violated\",\"beyond-proof\",\"gap\"]"
+  }
+}

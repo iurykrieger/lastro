@@ -1,0 +1,231 @@
+{
+  "model": "action_property",
+  "subject": "action_property",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "hasModel": false,
+        "modelHolds": false,
+        "sequencesHold": true,
+        "replayFails": false
+      },
+      "after": {
+        "verdict": "evidenced",
+        "evidence": "empirical",
+        "bound": true,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": false,
+        "modelHolds": false,
+        "replayFails": false,
+        "sequencesHold": false
+      },
+      "after": {
+        "verdict": "nondeterministic",
+        "evidence": "none",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": false,
+        "modelHolds": false,
+        "replayFails": true,
+        "sequencesHold": false
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": false,
+        "modelHolds": false,
+        "replayFails": true,
+        "sequencesHold": true
+      },
+      "after": {
+        "verdict": "evidenced",
+        "evidence": "empirical",
+        "bound": true,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": false,
+        "modelHolds": true,
+        "replayFails": false,
+        "sequencesHold": false
+      },
+      "after": {
+        "verdict": "nondeterministic",
+        "evidence": "none",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": false,
+        "modelHolds": true,
+        "replayFails": false,
+        "sequencesHold": true
+      },
+      "after": {
+        "verdict": "evidenced",
+        "evidence": "empirical",
+        "bound": true,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": false,
+        "modelHolds": true,
+        "replayFails": true,
+        "sequencesHold": false
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": false,
+        "modelHolds": true,
+        "replayFails": true,
+        "sequencesHold": true
+      },
+      "after": {
+        "verdict": "evidenced",
+        "evidence": "empirical",
+        "bound": true,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": true,
+        "modelHolds": false,
+        "replayFails": false,
+        "sequencesHold": false
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": true,
+        "modelHolds": false,
+        "replayFails": false,
+        "sequencesHold": true
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": true,
+        "modelHolds": false,
+        "replayFails": true,
+        "sequencesHold": false
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": true,
+        "modelHolds": false,
+        "replayFails": true,
+        "sequencesHold": true
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": true,
+        "modelHolds": true,
+        "replayFails": false,
+        "sequencesHold": false
+      },
+      "after": {
+        "verdict": "nondeterministic",
+        "evidence": "none",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": true,
+        "modelHolds": true,
+        "replayFails": false,
+        "sequencesHold": true
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "bound": true,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": true,
+        "modelHolds": true,
+        "replayFails": true,
+        "sequencesHold": false
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "bound": false,
+        "sameSequences": true
+      }
+    },
+    {
+      "input": {
+        "hasModel": true,
+        "modelHolds": true,
+        "replayFails": true,
+        "sequencesHold": true
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "bound": true,
+        "sameSequences": true
+      }
+    }
+  ]
+}

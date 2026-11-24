@@ -1,0 +1,2113 @@
+{
+  "model": "extract_surfaces",
+  "subject": "extract_surfaces",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 0,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 3
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 3
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 3
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 1,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 1
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "add",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 0,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 3
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 3
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 3
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 1,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": false,
+        "after": 0
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 4
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 3
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 0,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 4
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 3
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 1,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 0
+      },
+      "after": {
+        "accepted": true,
+        "after": 4
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 1
+      },
+      "after": {
+        "accepted": true,
+        "after": 3
+      }
+    },
+    {
+      "input": {
+        "adds": 2,
+        "change": "modify",
+        "existing": 2,
+        "proposedOnAdd": 2,
+        "removes": 2
+      },
+      "after": {
+        "accepted": true,
+        "after": 2
+      }
+    }
+  ]
+}

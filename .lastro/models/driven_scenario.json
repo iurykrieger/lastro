@@ -1,0 +1,52 @@
+{
+  "name": "driven_scenario",
+  "inputs": {
+    "step": {
+      "type": "enum",
+      "values": [
+        "screen",
+        "api",
+        "function"
+      ]
+    },
+    "matches": {
+      "type": "bool"
+    },
+    "pixelShare": {
+      "type": "int",
+      "min": 0,
+      "max": 4
+    },
+    "tolerance": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "hasReference": {
+      "type": "bool"
+    },
+    "driver": {
+      "type": "enum",
+      "values": [
+        "ok",
+        "fails-to-start",
+        "timeout"
+      ]
+    }
+  },
+  "outputs": {
+    "passed": {
+      "type": "bool"
+    },
+    "driverError": {
+      "type": "bool"
+    },
+    "evidence": {
+      "type": "enum",
+      "values": [
+        "empirical",
+        "none"
+      ]
+    }
+  }
+}

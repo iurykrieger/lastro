@@ -1,0 +1,23 @@
+{
+  "name": "sm_interleave",
+  "inputs": {
+    "actors": {
+      "type": "int",
+      "min": 1,
+      "max": 3
+    },
+    "atomic": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "violated": {
+      "type": "bool"
+    },
+    "cexActors": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    }
+  }
+}

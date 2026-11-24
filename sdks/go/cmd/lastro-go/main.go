@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -51,6 +52,12 @@ const usage = `lastro-go <command> [options]
   review <P> --as <name> <action> ...           approve <I..> | approve-all | amend <I> <text> | reject <I> <note>
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
                                                 resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
+                                                after the proof run: signoff <I> | request-changes <I> <note>
+                                                accept <U>
+  explore [<request.json>]                      explore a state machine over a recorded step table (stdin without a
+                                                file), as the Rust prover does: the engines' cross-check
+  map [<P>]                                     the feature map (surfaces and dependencies); with a proposal, the
+                                                features it changes and the ones affected
   derive <P>                                    derive the pending proofs of the approved intents
   derive --usecases [UC-003,UC-016]             derive proofs straight from the established use cases (default:
                                                 every use case with no passed proof) into .lastro/proof/
@@ -176,8 +183,14 @@ func writeJSON(path string, v any) error {
 var legacyFiles = []string{"intents.json", "spec.json", "proof.json"}
 
 type config struct {
-	models     map[string]lastro.Model
+	models map[string]lastro.Model
+	// machines are the state-machine models; machineRaw keeps every model as written, for writing the config back.
+	machines   map[string]lastro.MachineModel
+	modelRaw   map[string]json.RawMessage
 	modelOrder []string
+	drivers    *lastro.DriverConfig
+	// rest keeps the config's other keys (drivers, smt...) as written.
+	rest obj
 	// subjects keeps the TS CLI's {module, export} entries as written.
 	subjects     json.RawMessage
 	subjectNames []string
@@ -222,12 +235,39 @@ func (w workspace) config() (config, error) {
 	if err := readJSON(w.file("config.json"), &raw); err != nil {
 		return config{}, err
 	}
-	c := config{models: map[string]lastro.Model{}, subjects: raw.Subjects, review: lastro.ReadPolicy(raw.Review, raw.RequiredApprovals)}
+	c := config{models: map[string]lastro.Model{}, machines: map[string]lastro.MachineModel{}, modelRaw: map[string]json.RawMessage{}, subjects: raw.Subjects, review: lastro.ReadPolicy(raw.Review, raw.RequiredApprovals)}
 	if len(raw.Models) > 0 {
-		if err := json.Unmarshal(raw.Models, &c.models); err != nil {
+		if err := json.Unmarshal(raw.Models, &c.modelRaw); err != nil {
 			return config{}, err
 		}
+		for name, m := range c.modelRaw {
+			if lastro.IsMachine(m) {
+				var mm lastro.MachineModel
+				if err := json.Unmarshal(m, &mm); err != nil {
+					return config{}, err
+				}
+				c.machines[name] = mm
+				continue
+			}
+			var mo lastro.Model
+			if err := json.Unmarshal(m, &mo); err != nil {
+				return config{}, err
+			}
+			c.models[name] = mo
+		}
 		c.modelOrder = lastro.ObjectKeys(raw.Models)
+	}
+	var all map[string]json.RawMessage
+	if readJSON(w.file("config.json"), &all) == nil {
+		if d, ok := all["drivers"]; ok {
+			c.drivers = &lastro.DriverConfig{}
+			_ = json.Unmarshal(d, c.drivers)
+		}
+		for _, k := range lastro.ObjectKeys(mustRaw(w.file("config.json"))) {
+			if k != "models" && k != "model" && k != "subjects" && k != "review" && k != "requiredApprovals" {
+				c.rest = append(c.rest, kv{k, all[k]})
+			}
+		}
 	}
 	if raw.Model != nil && c.models[raw.Model.Name].Name == "" {
 		c.models[raw.Model.Name] = *raw.Model // the v0 `model` key is still read
@@ -243,9 +283,25 @@ func (w workspace) config() (config, error) {
 func (w workspace) writeConfig(c config) error {
 	models := obj{}
 	for _, n := range c.modelOrder {
-		models = append(models, kv{n, c.models[n]})
+		if m, ok := c.models[n]; ok {
+			models = append(models, kv{n, m})
+		} else {
+			models = append(models, kv{n, c.modelRaw[n]})
+		}
 	}
-	return writeJSON(w.file("config.json"), obj{{"models", models}, {"subjects", c.subjects}, {"review", c.review}})
+	return writeJSON(w.file("config.json"), append(obj{{"models", models}, {"subjects", c.subjects}, {"review", c.review}}, c.rest...))
+}
+
+// drivers runs driven scenarios and properties through the configured drivers, from the folder that holds .lastro/.
+func (w workspace) drivers(c config) lastro.DriveRunner {
+	abs, _ := filepath.Abs(w.dir)
+	return lastro.Drivers{Config: c.drivers, Dir: w.dir, Root: filepath.Dir(abs)}
+}
+
+// mustRaw reads a JSON file as raw bytes (nil when it cannot be read).
+func mustRaw(path string) json.RawMessage {
+	b, _ := os.ReadFile(path)
+	return b
 }
 
 func listJSON(dir string) []string {
@@ -580,11 +636,35 @@ func summary(p lastro.Proposal, useCases []lastro.UseCase) []kv {
 		}
 		proofs = append(proofs, o)
 	}
-	return []kv{
+	return append([]kv{
 		{"proposal", obj{{"id", p.ID}, {"slug", p.Slug}, {"name", p.Name}, {"status", p.Status}, {"submittedBy", p.SubmittedBy}, {"policy", p.Policy}, {"approved", p.Hash != ""}}},
 		{"useCases", changes}, {"intents", intents}, {"decisions", decisions}, {"threads", threads}, {"supersedes", nonNil(p.Supersedes)},
 		{"proofs", proofs}, {"pending", nonNil(pending)}, {"ready", len(pending) == 0},
+	}, evidenceOf(p)...)
+}
+
+// evidenceOf is what a proof run leaves to review: the snapshots taken, the sign-offs due and the unexpected changes.
+func evidenceOf(p lastro.Proposal) []kv {
+	if len(p.Snapshots) == 0 && p.LastRun == nil {
+		return nil
 	}
+	due := lastro.DueOf(p)
+	paths := []string{}
+	for _, x := range p.Snapshots {
+		paths = append(paths, x.Path)
+	}
+	unexpected := []obj{}
+	for _, u := range p.Unexpected {
+		unexpected = append(unexpected, obj{{"id", u.ID}, {"intent", u.Intent}, {"input", u.Input}, {"before", orNull(u.Before)}, {"after", orNull(u.After)}, {"acceptedBy", nonNil(u.AcceptedBy)}})
+	}
+	return []kv{{"evidence", obj{{"snapshots", paths}, {"signoffsDue", due.Signoffs}, {"unexpected", unexpected}, {"changesRequested", due.ChangesRequested}, {"judgment", lastro.JudgmentIntents(p)}}}}
+}
+
+func orNull(r json.RawMessage) any {
+	if len(r) == 0 {
+		return nil
+	}
+	return r
 }
 
 func runBody(run lastro.ProposalRun) []kv {
@@ -683,7 +763,7 @@ func setup(cfg config) lastro.ProofSetup {
 	if len(subjects) == 0 {
 		subjects = cfg.modelOrder
 	}
-	return lastro.ProofSetup{Models: cfg.models, ModelOrder: cfg.modelOrder, Subjects: subjects}
+	return lastro.ProofSetup{Models: cfg.models, Machines: cfg.machines, ModelOrder: cfg.modelOrder, Subjects: subjects}
 }
 
 func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
@@ -725,7 +805,7 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 				return 0, nil, err
 			}
 		}
-		cfg := config{models: map[string]lastro.Model{}, subjects: json.RawMessage("{}"), review: lastro.DefaultPolicy}
+		cfg := config{models: map[string]lastro.Model{}, machines: map[string]lastro.MachineModel{}, modelRaw: map[string]json.RawMessage{}, subjects: json.RawMessage("{}"), review: lastro.DefaultPolicy}
 		if ws.exists() {
 			var err error
 			if cfg, err = ws.config(); err != nil {
@@ -733,10 +813,20 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 			}
 		}
 		if hasModel {
-			if _, ok := cfg.models[model.Name]; !ok {
+			_, known := cfg.models[model.Name]
+			_, knownMachine := cfg.machines[model.Name]
+			if !known && !knownMachine {
 				cfg.modelOrder = append(cfg.modelOrder, model.Name)
 			}
-			cfg.models[model.Name] = model
+			if raw := mustRaw(a.flags["model"]); lastro.IsMachine(raw) {
+				// A state machine is kept as written.
+				var m lastro.MachineModel
+				_ = json.Unmarshal(raw, &m)
+				delete(cfg.models, model.Name)
+				cfg.machines[model.Name], cfg.modelRaw[model.Name] = m, raw
+			} else {
+				cfg.models[model.Name] = model
+			}
 		}
 		if s := a.flags["subject"]; hasModel && s != "" && s != "true" {
 			module, exp, _ := strings.Cut(s, "#")
@@ -882,6 +972,92 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 		}
 		return code, append(obj{{"status", "proposed"}, {"file", ws.proposalPath(p, ".json")}}, s...), nil
 
+	case "explore":
+		// A state machine over a recorded step table, as the Rust prover takes it: the cross-check of the engines.
+		var req struct {
+			Machine lastro.MachineModel    `json:"machine"`
+			Clauses []lastro.MachineClause `json:"clauses"`
+			Table   []lastro.StepRow       `json:"table"`
+			Limit   int                    `json:"limit"`
+			Path    []lastro.MachineEvent  `json:"path"`
+		}
+		var data []byte
+		var err error
+		if f := arg(rest, 0); f != "" {
+			data, err = os.ReadFile(f)
+		} else {
+			data, err = io.ReadAll(os.Stdin)
+		}
+		if err != nil {
+			return 0, nil, err
+		}
+		if err := json.Unmarshal(data, &req); err != nil {
+			return 2, obj{{"error", "explore needs {machine, clauses, table}: " + err.Error()}}, nil
+		}
+		step := lastro.TableStep(req.Table)
+		report := lastro.ExploreMachine(req.Machine, step, req.Clauses, lastro.MachineOptions{Limit: req.Limit})
+		chart := lastro.MachineStatechart(req.Machine, step, req.Clauses, req.Path, req.Limit)
+		return 0, obj{{"status", "explored"}, {"report", report}, {"statechart", chart}, {"mermaid", lastro.MermaidStatechart(chart)}}, nil
+
+	case "map":
+		useCases, err := ws.useCases()
+		if err != nil {
+			return 0, nil, err
+		}
+		var p *lastro.Proposal
+		if ref := arg(rest, 0); ref != "" {
+			x, err := ws.proposal(ref)
+			if err != nil {
+				return 0, nil, err
+			}
+			p = &x
+		}
+		features := lastro.LinkedOf(useCases)
+		removed, changed := []string{}, []string{}
+		if p != nil {
+			for k := range features {
+				for _, c := range p.UseCases {
+					if c.UseCase == features[k].ID && c.Change == "modify" {
+						features[k].Surfaces, features[k].DependsOn = c.Surfaces, c.DependsOn
+					}
+				}
+			}
+			for _, c := range p.UseCases {
+				changed = append(changed, c.UseCase)
+				if c.Change == "add" {
+					features = append(features, lastro.Linked{ID: c.UseCase, Slug: c.Slug, Name: c.Name, Surfaces: c.Surfaces, DependsOn: c.DependsOn})
+				}
+				if c.Change == "remove" {
+					removed = append(removed, c.UseCase)
+				}
+			}
+		}
+		m, err := lastro.BuildFeatureMap(features, removed)
+		if err != nil {
+			var fe *lastro.FeatureMapError
+			if errors.As(err, &fe) {
+				return 1, obj{{"status", "invalid-map"}, {"error", fe.Msg}, {"cycle", nonNil(fe.Cycle)}}, nil
+			}
+			return 0, nil, err
+		}
+		affected := []string{}
+		body := obj{{"status", "map"}}
+		if p != nil {
+			affected = lastro.AffectedBy(m, changed)
+			body = append(body, kv{"proposal", p.ID}, kv{"changed", changed}, kv{"affected", affected})
+		}
+		unreachable := []string{}
+		for _, f := range m.Features {
+			if !f.Reachable {
+				unreachable = append(unreachable, f.ID)
+			}
+		}
+		features2 := []obj{}
+		for _, f := range m.Features {
+			features2 = append(features2, obj{{"id", f.ID}, {"slug", f.Slug}, {"name", f.Name}, {"surfaces", nonNil(f.Surfaces)}, {"reachable", f.Reachable}, {"dependsOn", nonNil(f.DependsOn)}, {"dependents", nonNil(f.Dependents)}})
+		}
+		return 0, append(body, kv{"features", features2}, kv{"unreachable", unreachable}, kv{"text", lastro.RenderFeatureMap(m, affected)}), nil
+
 	case "status":
 		useCases, err := ws.useCases()
 		if err != nil {
@@ -986,6 +1162,17 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 			r.Resolve(arg(xs, 0))
 		case "rewrite":
 			r.RewriteAfter(arg(xs, 0), tail, "")
+		case "signoff":
+			r.SignOff(arg(xs, 0), xs[min(1, len(xs)):]...)
+		case "request-changes":
+			if tail == "" {
+				tail = "changes requested"
+			}
+			r.RequestChanges(arg(xs, 0), tail)
+		case "accept":
+			r.Accept(arg(xs, 0))
+		case "reference":
+			r.Reference(arg(xs, 0))
 		case "recombine":
 			current, err := r.Done()
 			if err != nil {
@@ -1108,7 +1295,7 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 				return 0, nil, err
 			}
 			defer stop()
-			changed, run, err := lastro.ProveUseCases(ctx, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Rust: rustProver(a)})
+			changed, run, err := lastro.ProveUseCases(ctx, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Machines: cfg.machines, Drive: ws.drivers(cfg), Rust: rustProver(a)})
 			if err != nil {
 				return 0, nil, err
 			}
@@ -1160,7 +1347,7 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 			}
 			stream(obj{{"event", "start"}, {"proposal", p.ID}, {"proofs", ids}})
 		}
-		proposal, run, err := lastro.ProveProposal(ctx, p, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Rust: rustProver(a)})
+		proposal, run, err := lastro.ProveProposal(ctx, p, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Machines: cfg.machines, Drive: ws.drivers(cfg), Rust: rustProver(a)})
 		if err != nil {
 			return 0, nil, err
 		}
@@ -1176,6 +1363,12 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 				stream(obj{{"event", "crosscheck"}, {"enginesAgree", *run.EnginesAgree}})
 			}
 		}
+		if len(cfg.subjectNames) > 0 {
+			// As in the TS CLI, a failure to take snapshots never fails the run; the receipt shows what was taken.
+			if next, err := lastro.TakeSnapshots(proposal, "after", lastro.SnapshotContext{Dir: ws.dir, Models: cfg.models, Subjects: subs, UseCases: useCases}); err == nil {
+				proposal = lastro.WithStatus(next)
+			}
+		}
 		if err := ws.writeProposal(proposal); err != nil {
 			return 0, nil, err
 		}
@@ -1189,8 +1382,28 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 		status, code := "proved", 0
 		if !run.OK {
 			status, code = "not-proved", 1
+		} else if proposal.Status != "proved" {
+			status = "waiting-for-review"
 		}
 		body := append(obj{{"status", status}, {"proposal", proposal.ID}}, runBody(run)...)
+		due := lastro.DueOf(proposal)
+		if len(due.Signoffs) > 0 {
+			body = append(body, kv{"signoffsDue", due.Signoffs})
+		}
+		if len(due.Unexpected) > 0 {
+			open := []lastro.UnexpectedChange{}
+			for _, u := range proposal.Unexpected {
+				for _, id := range due.Unexpected {
+					if u.ID == id {
+						open = append(open, u)
+					}
+				}
+			}
+			body = append(body, kv{"unexpected", open})
+		}
+		if len(due.ChangesRequested) > 0 {
+			body = append(body, kv{"changesRequested", due.ChangesRequested})
+		}
 		return code, append(body, kv{"receipt", receipt}, kv{"feedback", lastro.ProposalFeedback(proposal, useCases)}), nil
 
 	case "feedback":
@@ -1265,7 +1478,7 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 			return 0, nil, err
 		}
 		defer stop()
-		run, err := lastro.Regress(ctx, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Rust: rustProver(a)})
+		run, err := lastro.Regress(ctx, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Machines: cfg.machines, Drive: ws.drivers(cfg), Rust: rustProver(a)})
 		if err != nil {
 			return 0, nil, err
 		}

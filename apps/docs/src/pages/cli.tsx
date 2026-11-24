@@ -37,10 +37,19 @@ export function CliOverview() {
                                                 for an existing repository: survey the code and its history into
                                                 a bootstrap proposal of the use cases it implements today, to
                                                 review, derive, prove against the code as it is, and apply
+  bootstrap --surfaces [--as <name>]            survey how each feature without surfaces is reached (screens, routes,
+                                                commands, apis) and what it depends on, into a bootstrap proposal
+  map [<P>]                                     the feature map: surfaces, dependencies and dependents; with a
+                                                proposal, as it would be after it, with the affected features
+  snapshot <P> [before|after]                   take the before (or after) snapshots of the intents' features
+  explore [<request.json>]                      explore a state machine over a recorded step table (stdin without a
+                                                file), as the Rust prover does: the engines' cross-check
   status [<P>]                                  proposals, or one proposal's intents and pending items
   review <P> --as <name> <action> ...           approve <I..> | approve-all | amend <I> <text> | reject <I> <note>
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
                                                 resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
+                                                after the proof run: signoff <I> [<screenshot>..] | request-changes <I> <note>
+                                                accept <U> | reference <screenshot>
   derive <P>                                    derive the pending proofs of the approved intents
   derive --usecases [UC-003,UC-016]             derive proofs straight from the established use cases (default:
                                                 every use case with no passed proof) into .lastro/proof/
@@ -116,6 +125,11 @@ $ lastro review P-001 --as bob comment I-02 "Gold members only?"
 $ lastro review P-001 --as bob resolve T1
 $ lastro review P-001 --as ana recombine UC-001 "keep the wording short"`}
       />
+      <P>
+        After the proof run, four more actions settle the <A to="runtime/evidence">before and after evidence</A>: <C>signoff</C> an intent beyond proof (naming
+        the after screenshots that become references), <C>request-changes</C> on it, <C>accept</C> an unexpected change (<C>U1</C>...), and make one screenshot
+        a <C>reference</C>. Until every sign-off and acceptance is in, the proposal is not proved.
+      </P>
 
       <H2>derive</H2>
       <P>
@@ -191,6 +205,20 @@ $ lastro-go prove P-001 --cmd "python3 decide.py" --prover ./target/release/last
       </P>
       <Code lang="json" title="lastro prove P-001 ./shipping-buggy.mjs --stream" code={STREAM} />
 
+      <P>
+        When a proposal's intents touch features with surfaces or models, <C>prove</C> also takes the after snapshots and compares them with the before ones.
+        If a sign-off or an unexpected change is due, the status is <C>waiting-for-review</C> (exit 1) with <C>signoffsDue</C> and <C>unexpected</C> in the
+        output.
+      </P>
+
+      <H2>map, snapshot and explore</H2>
+      <P>
+        <C>map</C> prints the <A to="runtime/feature-map">feature map</A>, or with a proposal the map it would leave and the features it affects (exit 1 with{" "}
+        <C>invalid-map</C> on a missing dependency or a cycle). <C>snapshot P-006 before|after</C> takes one side of the{" "}
+        <A to="runtime/evidence">snapshots</A> again. <C>explore</C> reads <C>{`{machine, clauses, table, limit?, path?}`}</C> from a file or stdin and prints the
+        report, the statechart and its Mermaid text for a <A to="runtime/state-machines">state machine</A>, exactly as every engine computes it.
+      </P>
+
       <H2>feedback</H2>
       <P>Prints the failures of the proposal's last run (its proofs and the regressions) as a brief for whoever writes the code. Exit 1 while there are failures.</P>
       <Code lang="json" title="stdout" code={OUT.feedback} />
@@ -238,7 +266,7 @@ export function CliWorkspace() {
         lang="text"
         title=".lastro/"
         code={`.lastro/
-├── config.json                         models, subjects and the review policy (init)
+├── config.json                         models, subjects, review policy, drivers and SMT solver (init)
 ├── usecases/
 │   └── UC-001-charge-shipping.json     one use case: its description and its history (apply)
 ├── proof/
@@ -249,6 +277,8 @@ export function CliWorkspace() {
 │   ├── P-001-shipping-fee.json         the proposal: intents, review, proofs, last run (propose … prove)
 │   ├── P-001-shipping-fee.receipt.md   the receipt for the pull request (prove, apply)
 │   └── P-001-shipping-fee.runs.jsonl   every prove run, one JSON line each (prove)
+├── docs/
+│   └── P-001/UC-001/I-01/before/…      the before and after snapshots of each intent (propose, prove, snapshot)
 └── llm/
     ├── extract-<id>.request.json       what an AI step needs (handoff)
     ├── extract-<id>.answer.json        the answer the calling agent wrote
@@ -258,13 +288,14 @@ export function CliWorkspace() {
       <DataTable
         head={["File", "Written by", "Contents"]}
         rows={[
-          [<C>config.json</C>, <C>init</C>, <><C>{`{ models, subjects, review: { approvals, submitterCanApprove } }`}</C> (the older <C>model</C> and <C>requiredApprovals</C> keys are still read)</>],
+          [<C>config.json</C>, <C>init</C>, <><C>{`{ models, subjects, review: { approvals, submitterCanApprove }, drivers?, smt?: { command, timeoutMs } }`}</C>; see <A to="runtime/drivers">drivers</A> (the older <C>model</C> and <C>requiredApprovals</C> keys are still read)</>],
           [<C>usecases/&lt;id&gt;-&lt;slug&gt;.json</C>, <C>apply</C>, <><C>{`{ id, slug, name, description, history }`}</C>: the application, one use case per file. An older file that still has a <C>proofs</C> list is read as before, and its proofs move to <C>proof/</C> the next time the use case is written</>],
           [<C>proof/&lt;proof-id&gt;-&lt;slug&gt;.json</C>, <><C>apply</C>, <C>derive --usecases</C>, <C>prove --usecases</C></>, <><C>{`{ id, slug, name, description, intent?, useCase, model, subject, check, replaces?, status, verdict?, evidence? }`}</C>: one proof of a use case. Passed ones are its regression tests</>],
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.json</C>, <><C>propose</C>, <C>review</C>, <C>derive</C>, <C>prove</C>, <C>apply</C></>, <>a <A to="concepts/proposals">proposal</A>: prose, intents, use-case changes, decisions, threads, policy, proofs, last run</>],
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.md</C>, <><C>propose</C>, or you</>, "the prose; edit it and run propose on it again"],
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.receipt.md</C>, <><C>prove</C>, <C>apply</C></>, "the Markdown receipt"],
           [<C>proposals/&lt;id&gt;-&lt;slug&gt;.runs.jsonl</C>, <C>prove</C>, <>one line per run: <C>{`{ run, at, commit?, dirty?, ok, outcomes, regressions, replacedStillPass, unproved, enginesAgree? }`}</C>. The only file with timestamps; nothing hashes it</>],
+          [<C>docs/&lt;P&gt;/&lt;feature&gt;/&lt;intent&gt;/before|after/</C>, <><C>propose</C>, <C>prove</C>, <C>snapshot</C></>, <>screenshots, contracts, data structure and examples, hashed in the proposal; committed with it (see <A to="runtime/evidence">evidence</A>)</>],
           [<C>llm/*.json</C>, <>handoff, and the calling agent</>, "AI requests and their answers"],
         ]}
       />

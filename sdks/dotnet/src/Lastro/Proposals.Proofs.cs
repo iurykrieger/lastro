@@ -27,9 +27,70 @@ public static partial class Proposals
     private sealed record Raised(ProposalDecision Card, string? Breaks);
 
     /// <summary>The check of one derived proof (clause or scenario), parsed and validated against its model; problems are added.</summary>
-    internal static ProofCheck? CheckFromAnswer(string pid, JsonNode? d, Model model, List<string> problems)
+    internal static ProofCheck? CheckFromAnswer(string pid, JsonNode? d, Model model, List<string> problems, MachineModel? machine = null)
     {
         var kind = S(d?["kind"]);
+        JsonNode? Json(string where, JsonNode? raw)
+        {
+            var (text, node) = ExprText(raw);
+            if (node is null) problems.Add($"{pid}.{where}: not valid JSON: {text}");
+            return node;
+        }
+        if (kind == "machine")
+        {
+            if (machine is null)
+            {
+                problems.Add($"{pid}: a machine proof needs a state-machine model");
+                return null;
+            }
+            var clause = S(d?["clauseKind"]);
+            if (clause is not ("invariant" or "step" or "reach"))
+            {
+                problems.Add($"{pid}: clauseKind must be invariant, step or reach");
+                return null;
+            }
+            var req = clause == "step" && !Blank(d?["requires"]) && Json("requires", d?["requires"]) is { } rq ? Lsl.Parse(rq.ToJsonString()) : null;
+            if (Json("ensures", d?["ensures"]) is not { } en) return null;
+            var mc = new ProofCheck { Kind = "machine", Clause = clause, Requires = req, Ensures = Lsl.Parse(en.ToJsonString()) };
+            var errs = Machines.ClauseProblems(machine, Machines.ClauseOf(new ProofEntry { Id = pid, Check = mc })).Select(e => $"{pid}: {e}").ToList();
+            if (errs.Count > 0)
+            {
+                problems.AddRange(errs);
+                return null;
+            }
+            return mc;
+        }
+        if (kind is "driven" or "property")
+        {
+            var surface = Json("surface", d?["surfaceJson"]) as JsonObject;
+            if (surface is null || S(surface["kind"]) is not ("screen" or "route" or "command" or "api") || string.IsNullOrEmpty(S(surface["locator"])))
+            {
+                problems.Add($"{pid}.surface: needs a kind (screen, route, command or api) and a locator");
+                return null;
+            }
+            if (kind == "driven")
+            {
+                var steps = Json("steps", d?["stepsJson"]) as JsonArray;
+                if (steps is null || steps.Count == 0 || steps.Any(x => x?["input"] is not JsonObject || x["expect"] is not JsonObject))
+                {
+                    problems.Add($"{pid}.steps: a list of {{input, expect}} objects");
+                    return null;
+                }
+                var tol = d?["tolerance"] is JsonValue tv && tv.TryGetValue<double>(out var t) ? t : 0;
+                if (!(tol >= 0 && tol <= 1)) problems.Add($"{pid}.tolerance: a share between 0 and 1");
+                return new ProofCheck { Kind = "driven", Surface = surface.DeepClone(), Steps = steps.DeepClone(), Tolerance = tol != 0 ? tol : null };
+            }
+            var actions = Json("actions", d?["actionsJson"]) as JsonArray;
+            if (actions is null || actions.Count == 0) problems.Add($"{pid}.actions: a non-empty list of actions");
+            var invariant = Json("ensures", d?["ensures"]);
+            if (actions is null || actions.Count == 0 || invariant is null) return null;
+            return new ProofCheck { Kind = "property", Surface = surface.DeepClone(), Actions = actions.DeepClone(), Invariant = Lsl.Parse(invariant.ToJsonString()) };
+        }
+        if (machine is not null)
+        {
+            problems.Add($"{pid}: a {kind} proof needs an input/output model");
+            return null;
+        }
         Expr? Parse(string where, JsonNode? raw)
         {
             var (text, node) = ExprText(raw);
@@ -95,13 +156,15 @@ public static partial class Proposals
             if (!Slug.IsMatch(slug)) problems.Add($"{pid}: slug \"{slug}\" is not kebab-case");
             if (!slugs.Add(slug)) problems.Add($"{pid}: duplicate proof slug \"{slug}\"");
             var hasModel = setup.Models.TryGetValue(modelName, out var model);
+            MachineModel? machine = null;
+            if (setup.Machines?.TryGetValue(modelName, out machine) == true) (hasModel, model) = (true, model ?? new Model { Name = modelName });
             if (!hasModel) problems.Add($"{pid}: unknown model \"{modelName}\" (declared: {Declared(setup.Models.Keys)})");
             if (!setup.Subjects.Contains(subject)) problems.Add($"{pid}: unknown subject \"{subject}\" (declared: {Declared(setup.Subjects)})");
             var replaces = A(d?["replaces"]).Select(S).ToList();
             foreach (var r in replaces)
                 if (!(hasIt && it!.Replaces.Any(x => x.Proof == r))) problems.Add($"{pid}: replaces {r}, which its intent does not list");
             if (!hasModel) continue;
-            var check = CheckFromAnswer(pid, d, model!, problems);
+            var check = CheckFromAnswer(pid, d, model!, problems, machine);
             if (check is null || !hasIt) continue;
             proofs.Add(new ProofEntry
             {
@@ -234,13 +297,65 @@ public static partial class Proposals
         var role = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var (pr, r) in proofs) role[pr.Id] = r;
         var runnable = new List<ProofEntry>();
+        var machines = new Dictionary<string, List<ProofEntry>>(StringComparer.Ordinal);
+        var machineKeys = new List<string>();
+        ProofOutcome NotRun(ProofEntry pr, string note) => new() { Proof = pr.Id, UseCase = pr.UseCase, Intent = pr.Intent, Role = role[pr.Id], Verdict = "not-run", Note = note };
         foreach (var (pr, _) in proofs)
         {
-            if (!o.Models.ContainsKey(pr.Model))
-                outcomes.Add(new ProofOutcome { Proof = pr.Id, UseCase = pr.UseCase, Intent = pr.Intent, Role = role[pr.Id], Verdict = "not-run", Note = $"model {pr.Model} is not declared" });
-            else if (!o.Subjects.ContainsKey(pr.Subject))
-                outcomes.Add(new ProofOutcome { Proof = pr.Id, UseCase = pr.UseCase, Intent = pr.Intent, Role = role[pr.Id], Verdict = "not-run", Note = $"subject {pr.Subject} is not available" });
+            var isMachine = o.Machines?.ContainsKey(pr.Model) == true;
+            var hasModel = o.Models.ContainsKey(pr.Model) || isMachine;
+            if (pr.Check.Kind is "driven" or "property")
+            {
+                if (o.Drive is null) outcomes.Add(NotRun(pr, "no driver runner: driven scenarios and properties run from the CLI or with lastro/drive"));
+                else
+                {
+                    try
+                    {
+                        var r = await o.Drive.RunAsync(pr).ConfigureAwait(false);
+                        outcomes.Add(new ProofOutcome { Proof = pr.Id, UseCase = pr.UseCase, Intent = pr.Intent, Role = role[pr.Id], Verdict = r.Verdict, Passed = r.Passed, Counterexample = r.Counterexample, Note = r.Note });
+                    }
+                    catch (Exception e)
+                    {
+                        outcomes.Add(new ProofOutcome { Proof = pr.Id, UseCase = pr.UseCase, Intent = pr.Intent, Role = role[pr.Id], Verdict = "violated", Note = e.Message });
+                    }
+                }
+            }
+            else if (!hasModel) outcomes.Add(NotRun(pr, $"model {pr.Model} is not declared"));
+            else if (!o.Subjects.ContainsKey(pr.Subject)) outcomes.Add(NotRun(pr, $"subject {pr.Subject} is not available"));
+            else if (pr.Check.Kind == "machine")
+            {
+                var k = pr.Model + "\0" + pr.Subject;
+                if (!machines.TryGetValue(k, out var list)) { machines[k] = list = []; machineKeys.Add(k); }
+                list.Add(pr);
+            }
+            else if (isMachine) outcomes.Add(NotRun(pr, $"model {pr.Model} is a state machine: its proofs are machine clauses"));
             else runnable.Add(pr);
+        }
+        // State-machine clauses: every interleaving of the actors, breadth first.
+        foreach (var k in machineKeys)
+        {
+            var prs = machines[k];
+            var cut = k.IndexOf('\0');
+            var (modelName, subjectName) = (k[..cut], k[(cut + 1)..]);
+            if (o.Machines?.TryGetValue(modelName, out var m) != true || m is null)
+            {
+                outcomes.AddRange(prs.Select(pr => NotRun(pr, $"model {modelName} is not a state machine")));
+                continue;
+            }
+            var report = await Machines.ExploreAsync(m, StepOf(o.Subjects[subjectName]), prs.Select(Machines.ClauseOf).ToList()).ConfigureAwait(false);
+            foreach (var r in report.Clauses)
+            {
+                var pr = prs.Last(x => x.Id == r.ClauseId);
+                var oc = new ProofOutcome { Proof = pr.Id, UseCase = pr.UseCase, Intent = pr.Intent, Role = role[pr.Id], Verdict = r.Verdict, Passed = r.Verdict is "proved" or "evidenced" };
+                if (r.Path is not null && r.Verdict == "violated")
+                    oc.Counterexample = new ProofCounterexample { Input = new JsonObject { ["path"] = Machines.PathText(r.Path) }, Output = ProofCounterexample.Of(r.State is null ? null : Ordered(r.State, Machines.StateOrder(m))) };
+                var unit = r.Method == "random-walk" ? "steps" : r.Kind == "step" ? "steps checked" : "states";
+                var notes = new List<string> { $"{r.Method}: {r.Checked} {unit}" };
+                if (!string.IsNullOrEmpty(r.Note)) notes.Add(r.Note);
+                if (report.Errors.Count > 0) notes.Add(report.Errors[0]);
+                oc.Note = string.Join("; ", notes);
+                outcomes.Add(oc);
+            }
         }
         foreach (var (key, plan) in PlansByGroup(runnable, o.Models, x => x.Model + "\0" + x.Subject))
         {
@@ -263,7 +378,7 @@ public static partial class Proposals
                 {
                     Proof = pr.Id, UseCase = pr.UseCase, Intent = pr.Intent, Role = role[pr.Id], Verdict = VerdictOf(r.Verdict),
                     Passed = r.Verdict is ClauseVerdict.Proved or ClauseVerdict.Evidenced, Note = r.Note,
-                    Counterexample = r.Counterexample is { } cx ? new ProofCounterexample { Input = Ordered(cx.Input, []), Output = Ordered(cx.Output, outputs) } : null,
+                    Counterexample = r.Counterexample is { } cx ? new ProofCounterexample { Input = ProofCounterexample.Of(Ordered(cx.Input, []))!, Output = ProofCounterexample.Of(Ordered(cx.Output, outputs)) } : null,
                 });
             }
             foreach (var r in report.Scenarios)
@@ -273,7 +388,7 @@ public static partial class Proposals
                 outcomes.Add(new ProofOutcome
                 {
                     Proof = pr.Id, UseCase = pr.UseCase, Intent = pr.Intent, Role = role[pr.Id], Verdict = passed ? "evidenced" : "violated", Passed = passed, Note = r.Error,
-                    Counterexample = passed ? null : new ProofCounterexample { Input = pr.Check.Input ?? new Env(), Output = r.Output is { } ro ? Ordered(ro, outputs) : null },
+                    Counterexample = passed ? null : new ProofCounterexample { Input = ProofCounterexample.Of(pr.Check.Input ?? new Env())!, Output = r.Output is { } ro ? ProofCounterexample.Of(Ordered(ro, outputs)) : null },
                 });
             }
         }
@@ -331,7 +446,28 @@ public static partial class Proposals
             pr.Evidence = r.Verdict switch { "proved" => "formal", "not-run" => "none", _ => "empirical" };
         }
         next.LastRun = run;
+        next.Statecharts = await StatechartsOfAsync(p, run, o).ConfigureAwait(false);
         return (WithStatus(next), run);
+    }
+
+    private static MachineStep StepOf(Subject subject) => async input => await subject(input).ConfigureAwait(false);
+
+    /// <summary>Draws each state-machine model the proposal's proofs use, with the first counterexample path.</summary>
+    private static async Task<Dictionary<string, string>?> StatechartsOfAsync(Proposal p, ProposalRun run, RunOptions o)
+    {
+        var charts = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var pr in p.Proofs)
+        {
+            if (pr.Check.Kind != "machine" || o.Machines?.TryGetValue(pr.Model, out var m) != true || m is null
+                || !o.Subjects.TryGetValue(pr.Subject, out var step) || charts.ContainsKey(pr.Model)) continue;
+            var clauses = p.Proofs.Where(x => x.Model == pr.Model && x.Check.Kind == "machine").Select(Machines.ClauseOf).ToList();
+            var ids = clauses.Select(c => c.Id).ToHashSet(StringComparer.Ordinal);
+            var path = new List<MachineEvent>();
+            var cx = run.Outcomes.FirstOrDefault(oc => ids.Contains(oc.Proof) && oc.Verdict == "violated" && oc.Counterexample is not null);
+            if (cx?.Counterexample?.Input?["path"] is JsonValue pv && pv.TryGetValue<string>(out var ps)) path = Machines.ParsePath(ps);
+            charts[pr.Model] = Machines.Mermaid(await Machines.StatechartAsync(m, StepOf(step), clauses, path).ConfigureAwait(false));
+        }
+        return charts.Count == 0 ? null : charts;
     }
 
     /// <summary>Runs every use case's passed proofs alone (<c>regress</c>).</summary>
@@ -366,6 +502,10 @@ public static partial class Proposals
             problems.Add($"{p.Id}'s last run failed: {string.Join(", ", p.LastRun.Outcomes.Where(x => x.Role == "proposal" && !x.Passed).Select(x => x.Proof).Concat(p.LastRun.Regressions))}");
         foreach (var pr in p.Proofs)
             if (pr.Status != "passed") problems.Add($"{pr.Id} is {pr.Status}");
+        var due = DueOf(p);
+        foreach (var i in due.ChangesRequested) problems.Add($"{i}: a reviewer requested changes after looking at its snapshots");
+        foreach (var i in due.Signoffs) problems.Add($"{i} waits for its sign-off");
+        foreach (var u in due.Unexpected) problems.Add($"unexpected change {u} is not accepted");
         if (problems.Count > 0) throw new ProposalException(problems);
         var sup = p.Supersedes.ToHashSet(StringComparer.Ordinal);
         var o = LastroJson.Clone(useCases.ToList());
@@ -387,18 +527,28 @@ public static partial class Proposals
                     removed.Add(c.UseCase);
                     break;
                 case "add":
-                    var nu = new UseCase { Id = c.UseCase, Slug = c.Slug, Name = c.Name, Description = c.After ?? "" };
+                    var nu = new UseCase { Id = c.UseCase, Slug = c.Slug, Name = c.Name, Description = c.After ?? "", Surfaces = LinksCopy(c.Surfaces), DependsOn = LinksCopy(c.DependsOn) };
                     Attach(nu);
                     o.Add(nu);
                     break;
                 default:
                     u!.Name = c.Name;
                     u.Description = c.After ?? "";
+                    u.Surfaces = LinksCopy(c.Surfaces);
+                    u.DependsOn = LinksCopy(c.DependsOn);
                     Attach(u);
                     break;
             }
         }
         o = o.OrderBy(x => x.Id, StringComparer.Ordinal).ToList();
+        try
+        {
+            Features.Build(Features.LinkedOf(o));
+        }
+        catch (FeatureMapException e)
+        {
+            throw new ProposalException([$"the feature map after {p.Id} is invalid: {e.Message}"]);
+        }
         var next = LastroJson.Clone(p);
         next.Status = "applied";
         return new Applied(next, o, written, removed, BaselineOf(o));
@@ -408,7 +558,10 @@ public static partial class Proposals
     // Feedback and receipt
     // -----------------------------------------------------------------------
 
+    private static List<T>? LinksCopy<T>(List<T>? xs) => xs is { Count: > 0 } ? LastroJson.Clone(xs) : null;
+
     private static string Js(Env? e) => e is null ? "null" : e.ToString();
+    private static string Js(JsonNode? e) => e is null ? "null" : JsJson.Stringify(e);
 
     private static string FormalOf(ProofEntry pr) => pr.Check.Kind == "clause"
         ? (pr.Check.Requires is { } r ? $"requires {Lsl.Show(r)}; " : "") + $"ensures {Lsl.Show(pr.Check.Ensures!)}"
@@ -504,6 +657,9 @@ public static partial class Proposals
             if (run.Unproved.Count > 0) L.Add($"- Unproved use cases (no proofs yet): {string.Join(", ", run.Unproved)}");
             L.Add("");
         }
+        if (run is { Ok: true }) L.AddRange(CoverageSection(p, run)); // a failing run has no coverage to report yet
+        L.AddRange(Snapshots.FeatureMapSection(p, useCases));
+        L.AddRange(Snapshots.EvidenceSections(p));
         if (p.Decisions.Count > 0)
         {
             L.AddRange(["## Decisions", ""]);
@@ -620,4 +776,43 @@ public static partial class Proposals
     /// <summary>Asks the LLM for the proofs of the approved intents and checks its answer.</summary>
     public static async Task<Proposal> DeriveAsync(AskJson ask, Proposal p, IReadOnlyList<UseCase> useCases, ProofSetup setup, VerifyOptions? opts = null, CancellationToken cancellationToken = default) =>
         FromDerivation(p, useCases, setup, await ask(DeriveProofsRequest(p, useCases, setup), cancellationToken).ConfigureAwait(false), opts);
+
+    /// <summary>The forward intents sorted by how their proofs came out in a run: formal, evidenced (with why), beyond proof.</summary>
+    public static (List<string> Formal, List<(string Intent, string Reason)> Evidenced, List<(string Intent, string Reason)> Beyond) FormalCoverage(Proposal p, ProposalRun run)
+    {
+        var formal = new List<string>();
+        var evidenced = new List<(string, string)>();
+        var beyond = new List<(string, string)>();
+        foreach (var it in ForwardIntents(p))
+        {
+            var proofs = p.Proofs.Where(x => x.Intent == it.Id).ToList();
+            if (proofs.Count == 0)
+            {
+                beyond.Add((it.Id, it.BeyondProofReason ?? (it.Provability == "beyond-proof" ? "unstated" : "no proof derived")));
+                continue;
+            }
+            var outcomes = run.Outcomes.Where(x => x.Role == "proposal" && x.Intent == it.Id).ToList();
+            var informal = outcomes.Where(x => x.Verdict != "proved").ToList();
+            if (informal.Count == 0 && outcomes.Count == proofs.Count) { formal.Add(it.Id); continue; }
+            var reason = string.Join("; ", informal.Select(x => $"{x.Proof}: {(string.IsNullOrEmpty(x.Note) ? InformalReason(proofs.FirstOrDefault(pr => pr.Id == x.Proof)?.Check.Kind, x.Verdict) : x.Note)}"));
+            evidenced.Add((it.Id, reason.Length > 0 ? reason : "not every proof ran"));
+        }
+        return (formal, evidenced, beyond);
+    }
+
+    static string InformalReason(string? kind, string verdict) =>
+        verdict != "evidenced" ? verdict
+        : kind is "scenario" or "driven" ? "a scenario: empirical evidence"
+        : kind == "property" ? "a property with no model: action sequences only"
+        : "sampled: the domain is too large to enumerate";
+
+    static List<string> CoverageSection(Proposal p, ProposalRun run)
+    {
+        var c = FormalCoverage(p, run);
+        var L = new List<string> { "## Formal coverage", "", $"{c.Formal.Count} intent(s) proved formally, {c.Evidenced.Count} evidenced, {c.Beyond.Count} beyond proof.", "" };
+        foreach (var e in c.Evidenced) L.Add($"- {e.Intent} evidenced: {e.Reason}");
+        foreach (var b in c.Beyond) L.Add($"- {b.Intent} beyond proof: {b.Reason}");
+        if (c.Evidenced.Count > 0 || c.Beyond.Count > 0) L.Add("");
+        return L;
+    }
 }

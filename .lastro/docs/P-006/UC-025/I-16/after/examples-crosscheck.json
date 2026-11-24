@@ -1,0 +1,157 @@
+{
+  "model": "crosscheck",
+  "subject": "crosscheck",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "bug": false,
+        "table": "complete"
+      },
+      "after": {
+        "complete": true,
+        "proved": true,
+        "rustOk": true,
+        "digest": true,
+        "agree": true,
+        "ok": true,
+        "sdkOk": true
+      }
+    },
+    {
+      "input": {
+        "bug": false,
+        "table": "missing-row"
+      },
+      "after": {
+        "complete": false,
+        "proved": false,
+        "rustOk": false,
+        "digest": true,
+        "agree": false,
+        "ok": false,
+        "sdkOk": true
+      }
+    },
+    {
+      "input": {
+        "bug": false,
+        "table": "repeated-row"
+      },
+      "after": {
+        "complete": true,
+        "proved": true,
+        "rustOk": true,
+        "digest": true,
+        "agree": true,
+        "ok": true,
+        "sdkOk": true
+      }
+    },
+    {
+      "input": {
+        "bug": false,
+        "table": "conflicting-row"
+      },
+      "after": {
+        "complete": false,
+        "proved": false,
+        "rustOk": false,
+        "digest": true,
+        "agree": false,
+        "ok": false,
+        "sdkOk": true
+      }
+    },
+    {
+      "input": {
+        "bug": false,
+        "table": "out-of-domain-row"
+      },
+      "after": {
+        "complete": false,
+        "proved": false,
+        "rustOk": false,
+        "digest": true,
+        "agree": false,
+        "ok": false,
+        "sdkOk": true
+      }
+    },
+    {
+      "input": {
+        "bug": true,
+        "table": "complete"
+      },
+      "after": {
+        "complete": true,
+        "proved": false,
+        "rustOk": false,
+        "digest": true,
+        "agree": true,
+        "ok": false,
+        "sdkOk": false
+      }
+    },
+    {
+      "input": {
+        "bug": true,
+        "table": "missing-row"
+      },
+      "after": {
+        "complete": false,
+        "proved": false,
+        "rustOk": false,
+        "digest": true,
+        "agree": true,
+        "ok": false,
+        "sdkOk": false
+      }
+    },
+    {
+      "input": {
+        "bug": true,
+        "table": "repeated-row"
+      },
+      "after": {
+        "complete": true,
+        "proved": false,
+        "rustOk": false,
+        "digest": true,
+        "agree": true,
+        "ok": false,
+        "sdkOk": false
+      }
+    },
+    {
+      "input": {
+        "bug": true,
+        "table": "conflicting-row"
+      },
+      "after": {
+        "complete": false,
+        "proved": false,
+        "rustOk": false,
+        "digest": true,
+        "agree": true,
+        "ok": false,
+        "sdkOk": false
+      }
+    },
+    {
+      "input": {
+        "bug": true,
+        "table": "out-of-domain-row"
+      },
+      "after": {
+        "complete": false,
+        "proved": false,
+        "rustOk": false,
+        "digest": true,
+        "agree": true,
+        "ok": false,
+        "sdkOk": false
+      }
+    }
+  ]
+}

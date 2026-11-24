@@ -1,0 +1,907 @@
+{
+  "model": "intent_rollup",
+  "subject": "intent_rollup",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "none",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "gap",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "none",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "none",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "proved",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "proved",
+        "confidence": "one",
+        "trusted": false,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "proved",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "proved",
+        "confidence": "one",
+        "trusted": false,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "proved",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "evidenced",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "partial",
+        "trusted": false,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "evidenced",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "partial",
+        "trusted": false,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "evidenced",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "violated",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "violated",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "violated",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "vacuous",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "gap",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "vacuous",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": false,
+        "coverage": "vacuous",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "none",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "beyond-proof",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "none",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "beyond-proof",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "none",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "proved",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "proved",
+        "confidence": "one",
+        "trusted": false,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "proved",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "proved",
+        "confidence": "one",
+        "trusted": false,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "proved",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "evidenced",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "partial",
+        "trusted": false,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "evidenced",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "partial",
+        "trusted": false,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "evidenced",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "violated",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "violated",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "violated",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "vacuous",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "beyond-proof",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "vacuous",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "beyond-proof",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": false,
+        "beyond": true,
+        "coverage": "vacuous",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": false,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "none",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "none",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "none",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "proved",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "proved-under-assumptions",
+        "confidence": "one",
+        "trusted": true,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "proved",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "proved-under-assumptions",
+        "confidence": "one",
+        "trusted": true,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "proved",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "evidenced",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "partial",
+        "trusted": true,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "evidenced",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "partial",
+        "trusted": true,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "evidenced",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "violated",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "violated",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "violated",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "vacuous",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "vacuous",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": false,
+        "coverage": "vacuous",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "none",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "beyond-proof",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "none",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "beyond-proof",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "none",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "proved",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "proved-under-assumptions",
+        "confidence": "one",
+        "trusted": true,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "proved",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "proved-under-assumptions",
+        "confidence": "one",
+        "trusted": true,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "proved",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "evidenced",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "partial",
+        "trusted": true,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "evidenced",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "confidence": "partial",
+        "trusted": true,
+        "notes": false,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "evidenced",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "violated",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "violated",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "violated",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "vacuous",
+        "scenario": "none"
+      },
+      "after": {
+        "verdict": "beyond-proof",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "vacuous",
+        "scenario": "passed"
+      },
+      "after": {
+        "verdict": "beyond-proof",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": true
+      }
+    },
+    {
+      "input": {
+        "assumption": true,
+        "beyond": true,
+        "coverage": "vacuous",
+        "scenario": "failed"
+      },
+      "after": {
+        "verdict": "violated",
+        "confidence": "zero",
+        "trusted": true,
+        "notes": true,
+        "reportOk": false
+      }
+    }
+  ]
+}

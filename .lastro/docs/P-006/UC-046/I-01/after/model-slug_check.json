@@ -1,0 +1,7 @@
+{
+  "model": "slug_check",
+  "fields": {
+    "in.slug": "enum[\"a\",\"rule\",\"free-shipping\",\"a1-b2\",\"A\",\"Free-Shipping\",\"free_shipping\",\"free--shipping\",\"-free\",\"free-\",\"free shipping\",\"\"]",
+    "out.accepted": "bool"
+  }
+}

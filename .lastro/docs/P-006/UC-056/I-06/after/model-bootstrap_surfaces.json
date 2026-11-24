@@ -1,0 +1,12 @@
+{
+  "model": "bootstrap_surfaces",
+  "fields": {
+    "in.addsSurface": "bool",
+    "in.hasSurfaces": "bool",
+    "in.touchesDescription": "bool",
+    "out.accepted": "bool",
+    "out.descriptionKept": "bool",
+    "out.proposed": "bool",
+    "out.reviewed": "bool"
+  }
+}

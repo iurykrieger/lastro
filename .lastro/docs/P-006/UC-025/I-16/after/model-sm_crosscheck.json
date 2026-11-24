@@ -1,0 +1,10 @@
+{
+  "model": "sm_crosscheck",
+  "fields": {
+    "in.bug": "enum[\"none\",\"invariant\",\"race\",\"step\"]",
+    "in.engine": "enum[\"rust\",\"go\",\"dotnet\"]",
+    "out.sameCounterexample": "bool",
+    "out.sameStates": "bool",
+    "out.sameVerdict": "bool"
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "model": "driver_protocol",
+  "subject": "driver_protocol",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "config": "standard",
+        "target": "web"
+      },
+      "after": {
+        "protocol": "webdriver"
+      }
+    },
+    {
+      "input": {
+        "config": "standard",
+        "target": "electron"
+      },
+      "after": {
+        "protocol": "webdriver"
+      }
+    },
+    {
+      "input": {
+        "config": "standard",
+        "target": "android"
+      },
+      "after": {
+        "protocol": "appium"
+      }
+    },
+    {
+      "input": {
+        "config": "standard",
+        "target": "ios"
+      },
+      "after": {
+        "protocol": "appium"
+      }
+    },
+    {
+      "input": {
+        "config": "standard",
+        "target": "api"
+      },
+      "after": {
+        "protocol": "http"
+      }
+    },
+    {
+      "input": {
+        "config": "standard",
+        "target": "command"
+      },
+      "after": {
+        "protocol": "process"
+      }
+    },
+    {
+      "input": {
+        "config": "jsonlines",
+        "target": "web"
+      },
+      "after": {
+        "protocol": "jsonlines"
+      }
+    },
+    {
+      "input": {
+        "config": "jsonlines",
+        "target": "electron"
+      },
+      "after": {
+        "protocol": "jsonlines"
+      }
+    },
+    {
+      "input": {
+        "config": "jsonlines",
+        "target": "android"
+      },
+      "after": {
+        "protocol": "jsonlines"
+      }
+    },
+    {
+      "input": {
+        "config": "jsonlines",
+        "target": "ios"
+      },
+      "after": {
+        "protocol": "jsonlines"
+      }
+    },
+    {
+      "input": {
+        "config": "jsonlines",
+        "target": "api"
+      },
+      "after": {
+        "protocol": "jsonlines"
+      }
+    },
+    {
+      "input": {
+        "config": "jsonlines",
+        "target": "command"
+      },
+      "after": {
+        "protocol": "jsonlines"
+      }
+    },
+    {
+      "input": {
+        "config": "none",
+        "target": "web"
+      },
+      "after": {
+        "protocol": "none"
+      }
+    },
+    {
+      "input": {
+        "config": "none",
+        "target": "electron"
+      },
+      "after": {
+        "protocol": "none"
+      }
+    },
+    {
+      "input": {
+        "config": "none",
+        "target": "android"
+      },
+      "after": {
+        "protocol": "none"
+      }
+    },
+    {
+      "input": {
+        "config": "none",
+        "target": "ios"
+      },
+      "after": {
+        "protocol": "none"
+      }
+    },
+    {
+      "input": {
+        "config": "none",
+        "target": "api"
+      },
+      "after": {
+        "protocol": "none"
+      }
+    },
+    {
+      "input": {
+        "config": "none",
+        "target": "command"
+      },
+      "after": {
+        "protocol": "none"
+      }
+    }
+  ]
+}

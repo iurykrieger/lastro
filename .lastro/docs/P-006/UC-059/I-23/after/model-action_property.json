@@ -1,0 +1,13 @@
+{
+  "model": "action_property",
+  "fields": {
+    "in.hasModel": "bool",
+    "in.modelHolds": "bool",
+    "in.replayFails": "bool",
+    "in.sequencesHold": "bool",
+    "out.bound": "bool",
+    "out.evidence": "enum[\"formal\",\"empirical\",\"counterexample\",\"none\"]",
+    "out.sameSequences": "bool",
+    "out.verdict": "enum[\"proved\",\"evidenced\",\"violated\",\"nondeterministic\"]"
+  }
+}

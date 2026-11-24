@@ -1,0 +1,11 @@
+{
+  "model": "proof_files",
+  "fields": {
+    "in.legacy": "bool",
+    "in.rewrite": "bool",
+    "out.embedded": "bool",
+    "out.fileComplete": "bool",
+    "out.loaded": "int[0..2]",
+    "out.proofFiles": "int[0..2]"
+  }
+}

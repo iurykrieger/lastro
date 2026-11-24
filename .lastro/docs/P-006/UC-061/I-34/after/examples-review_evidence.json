@@ -1,0 +1,519 @@
+{
+  "model": "review_evidence",
+  "subject": "review_evidence",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "kind": "screen",
+        "machine": false,
+        "phase": "review",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "screen",
+        "machine": false,
+        "phase": "review",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "screen",
+        "machine": false,
+        "phase": "proved",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": true,
+        "comparison": "images",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "screen",
+        "machine": false,
+        "phase": "proved",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": true,
+        "comparison": "images",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "screen",
+        "machine": true,
+        "phase": "review",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "screen",
+        "machine": true,
+        "phase": "review",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "screen",
+        "machine": true,
+        "phase": "proved",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": true,
+        "comparison": "images",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "screen",
+        "machine": true,
+        "phase": "proved",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": true,
+        "comparison": "images",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "contract",
+        "machine": false,
+        "phase": "review",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "contract",
+        "machine": false,
+        "phase": "review",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "contract",
+        "machine": false,
+        "phase": "proved",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": true,
+        "comparison": "diff",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "contract",
+        "machine": false,
+        "phase": "proved",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": true,
+        "comparison": "diff",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "contract",
+        "machine": true,
+        "phase": "review",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "contract",
+        "machine": true,
+        "phase": "review",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "contract",
+        "machine": true,
+        "phase": "proved",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": true,
+        "comparison": "diff",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "contract",
+        "machine": true,
+        "phase": "proved",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": true,
+        "comparison": "diff",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "data",
+        "machine": false,
+        "phase": "review",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "data",
+        "machine": false,
+        "phase": "review",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "data",
+        "machine": false,
+        "phase": "proved",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": true,
+        "comparison": "diff",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "data",
+        "machine": false,
+        "phase": "proved",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": true,
+        "comparison": "diff",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "data",
+        "machine": true,
+        "phase": "review",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "data",
+        "machine": true,
+        "phase": "review",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "data",
+        "machine": true,
+        "phase": "proved",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": true,
+        "comparison": "diff",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "data",
+        "machine": true,
+        "phase": "proved",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": true,
+        "comparison": "diff",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "examples",
+        "machine": false,
+        "phase": "review",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "examples",
+        "machine": false,
+        "phase": "review",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "examples",
+        "machine": false,
+        "phase": "proved",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": true,
+        "comparison": "rows",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "examples",
+        "machine": false,
+        "phase": "proved",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": false,
+        "before": true,
+        "after": true,
+        "comparison": "rows",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "examples",
+        "machine": true,
+        "phase": "review",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "examples",
+        "machine": true,
+        "phase": "review",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": false,
+        "comparison": "none",
+        "counterexample": true
+      }
+    },
+    {
+      "input": {
+        "kind": "examples",
+        "machine": true,
+        "phase": "proved",
+        "violated": false
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": true,
+        "comparison": "rows",
+        "counterexample": false
+      }
+    },
+    {
+      "input": {
+        "kind": "examples",
+        "machine": true,
+        "phase": "proved",
+        "violated": true
+      },
+      "after": {
+        "mapShown": true,
+        "statechart": true,
+        "before": true,
+        "after": true,
+        "comparison": "rows",
+        "counterexample": true
+      }
+    }
+  ]
+}

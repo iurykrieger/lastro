@@ -257,6 +257,9 @@ for await (const line of createInterface({ input: process.stdin })) process.stdo
 	_, a := ts("status", "P-001")
 	_, b := goCLI(t, ws, "status", "P-001")
 	same("status of a TS proposal", a, b)
+	_, a = ts("map", "P-001")
+	_, b = goCLI(t, ws, "map", "P-001")
+	same("the feature map", a, b)
 
 	// Go reviews what the TS CLI proposed; the TS CLI sees the approval as valid (same hash).
 	goCLI(t, ws, "review", "P-001", "--as", "ana", "answer", "D1", "1")
@@ -293,6 +296,10 @@ for await (const line of createInterface({ input: process.stdin })) process.stdo
 		if engines.ReplaceAllString(tsReceipt, "") != engines.ReplaceAllString(read(), "") {
 			t.Fatalf("receipts differ:\nTS\n%s\nGo\n%s", tsReceipt, read())
 		}
+	}
+	// Both took the same after snapshots: same files, same SHA-256.
+	if !strings.Contains(read(), "## Snapshots") || !strings.Contains(read(), "after examples `docs/P-001/") {
+		t.Fatalf("the Go receipt has no after snapshots:\n%s", read())
 	}
 	_, a = ts("feedback", "P-001")
 	_, b = goCLI(t, ws, "feedback", "P-001")

@@ -1,0 +1,9 @@
+{
+  "model": "structural_diff",
+  "fields": {
+    "in.after": "enum[\"absent\",\"string\",\"int\"]",
+    "in.before": "enum[\"absent\",\"string\",\"int\"]",
+    "out.breaking": "bool",
+    "out.change": "enum[\"none\",\"added\",\"removed\",\"type\"]"
+  }
+}

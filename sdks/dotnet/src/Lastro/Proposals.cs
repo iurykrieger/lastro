@@ -24,13 +24,26 @@ public sealed class ProposalPolicy
 /// <summary>A clause ("requires ⇒ ensures" for every input) or a scenario (one input and an expectation).</summary>
 public sealed class ProofCheck
 {
-    /// <summary><c>clause</c> or <c>scenario</c>.</summary>
+    /// <summary><c>clause</c>, <c>scenario</c>, <c>machine</c>, <c>driven</c> or <c>property</c>.</summary>
     public string Kind { get; set; } = "clause";
+    /// <summary>A machine clause: <c>invariant</c>, <c>step</c> or <c>reach</c>.</summary>
+    public string? Clause { get; set; }
     public Expr? Requires { get; set; }
     public Expr? Ensures { get; set; }
     public List<string>? Assumptions { get; set; }
     public Env? Input { get; set; }
     public Expr? Expect { get; set; }
+    /// <summary>Driven and property: <c>{kind, locator}</c>, kept as written.</summary>
+    public JsonNode? Surface { get; set; }
+    /// <summary>Driven: <c>[{input, expect, reference?}]</c>, kept as written.</summary>
+    public JsonNode? Steps { get; set; }
+    /// <summary>Driven: the share of pixels a screenshot may change (absent when 0).</summary>
+    public double? Tolerance { get; set; }
+    /// <summary>Property: the actions to sequence, kept as written.</summary>
+    public JsonNode? Actions { get; set; }
+    public Expr? Invariant { get; set; }
+    public string? Machine { get; set; }
+    public List<string>? Events { get; set; }
 }
 
 /// <summary>A deterministic check of one intent. Once it passes and its proposal is applied, it belongs to its use case.</summary>
@@ -64,6 +77,10 @@ public sealed class UseCase
     public List<ProofEntry> Proofs { get; set; } = [];
     /// <summary>Applied proposals that added or changed it.</summary>
     public List<string> History { get; set; } = [];
+    /// <summary>How a user or client reaches it (see Features.cs); optional, so older files stay valid.</summary>
+    public List<Surface>? Surfaces { get; set; }
+    /// <summary>The ids of the use cases it needs to work.</summary>
+    public List<string>? DependsOn { get; set; }
 }
 
 public sealed class ProofReplacement
@@ -109,6 +126,9 @@ public sealed class UseCaseChange
     public List<string> Intents { get; set; } = [];
     /// <summary>Set when an intent of this use case was amended or rejected: After must be rewritten.</summary>
     public bool? Stale { get; set; }
+    /// <summary>add/modify: the surfaces and dependencies after the change (a modify keeps those it does not remove).</summary>
+    public List<Surface>? Surfaces { get; set; }
+    public List<string>? DependsOn { get; set; }
 }
 
 public sealed class ProposalDecision
@@ -146,9 +166,12 @@ public sealed class ReviewThread
 /// <summary>The input that breaks a proof and what the code returned.</summary>
 public sealed class ProofCounterexample
 {
-    public Env Input { get; set; } = new();
+    /// <summary>JSON as the run wrote it: a driven step's input and output can nest objects.</summary>
+    public JsonNode Input { get; set; } = new JsonObject();
     [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
-    public Env? Output { get; set; }
+    public JsonNode? Output { get; set; }
+
+    public static JsonNode? Of(Env? e) => e is null ? null : LastroJson.ToNode(e);
 }
 
 /// <summary>One proof's result in a run.</summary>
@@ -205,6 +228,16 @@ public sealed class Proposal
     /// <summary>Kept as written (the TS SDK's bootstrap sets them); approval binds them when present.</summary>
     public JsonNode? Origin { get; set; }
     public JsonNode? Setup { get; set; }
+    /// <summary>The before and after snapshots kept under .lastro/docs/, with their SHA-256 (see Snapshots.cs).</summary>
+    public List<SnapshotRecord>? Snapshots { get; set; }
+    /// <summary>Each after snapshot paired with its before.</summary>
+    public List<Comparison>? Comparisons { get; set; }
+    /// <summary>Example changes no approved clause explains; each waits for the policy's acceptances.</summary>
+    public List<UnexpectedChange>? Unexpected { get; set; }
+    /// <summary>Reviewers' looks at intents beyond proof for human judgment, after the proof run.</summary>
+    public List<SignOff>? Signoffs { get; set; }
+    /// <summary>The Mermaid drawings of the state-machine models the proofs use, by model name.</summary>
+    public Dictionary<string, string>? Statecharts { get; set; }
 }
 
 /// <summary>Every problem found in an LLM answer or a refused step.</summary>
@@ -217,10 +250,11 @@ public sealed class ProposalException(IReadOnlyList<string> problems) : Exceptio
 public sealed record ProposeInput(string Id, string Prose, string SubmittedBy, IReadOnlyList<UseCase> UseCases, ProposalPolicy Policy, IReadOnlyList<string>? Reserved = null);
 
 /// <summary>What proofs may name: the declared models (in config order) and subjects.</summary>
-public sealed record ProofSetup(IReadOnlyDictionary<string, Model> Models, IReadOnlyList<string> Subjects);
+public sealed record ProofSetup(IReadOnlyDictionary<string, Model> Models, IReadOnlyList<string> Subjects, IReadOnlyDictionary<string, MachineModel>? Machines = null);
 
 /// <summary>The code under proof by subject name, the models, and optionally the Rust prover.</summary>
-public sealed record RunOptions(IReadOnlyDictionary<string, Subject> Subjects, IReadOnlyDictionary<string, Model> Models, IRustProver? Rust = null, VerifyOptions? Verify = null);
+public sealed record RunOptions(IReadOnlyDictionary<string, Subject> Subjects, IReadOnlyDictionary<string, Model> Models, IRustProver? Rust = null, VerifyOptions? Verify = null,
+    IReadOnlyDictionary<string, MachineModel>? Machines = null, IDriveRunner? Drive = null);
 
 /// <summary>The result of <c>Proposals.Apply</c>.</summary>
 public sealed record Applied(Proposal Proposal, List<UseCase> UseCases, List<string> Written, List<string> Removed, string Baseline);
@@ -372,12 +406,18 @@ public static partial class Proposals
             var after = S(entry?["after"]);
             if (entryChange != "remove" && string.IsNullOrWhiteSpace(after)) problems.Add($"{uc} ({slug}): {entryChange} needs the complete after description");
             var name = S(entry?["name"]);
+            var linksNode = entry?["links"];
+            var links = linksNode is JsonObject ? LastroJson.FromNode<LinksChange>(linksNode) : null;
+            var (surfaces, dependsOn) = Features.LinksOf(entryChange, links, existing,
+                s => reserved.FirstOrDefault(x => x.Slug == s).Id ?? BySlug(s)?.Id, problems, $"{uc} ({slug})");
             changes.Add(new UseCaseChange
             {
                 UseCase = uc, Slug = slug, Change = entryChange, Name = name != "" ? name : existing?.Name is { Length: > 0 } en ? en : slug,
                 Before = existing is not null && entryChange != "add" ? existing.Description : null,
                 After = entryChange != "remove" ? after : null,
                 Intents = its.Select(i => i.Id).ToList(),
+                Surfaces = surfaces,
+                DependsOn = dependsOn,
             });
         }
         foreach (var c in outUseCases)
@@ -527,7 +567,13 @@ public static partial class Proposals
     {
         if (p.Status is "applied" or "closed") return p;
         if (IsApproved(p))
-            p.Status = p.Proofs.Count == 0 ? "approved" : p.LastRun is { Ok: true } && p.Proofs.All(x => x.Status == "passed") ? "proved" : "proving";
+        {
+            var due = DueOf(p);
+            p.Status = due.ChangesRequested.Count > 0 ? "changes-requested"
+                : p.Proofs.Count == 0 ? "approved"
+                : p.LastRun is { Ok: true } && p.Proofs.All(x => x.Status == "passed") && due.Signoffs.Count == 0 && due.Unexpected.Count == 0 ? "proved"
+                : "proving";
+        }
         else
         {
             p.Hash = null;
@@ -678,6 +724,56 @@ public sealed class ProposalReview
         if (_reviewer != t.By && _reviewer != _p.SubmittedBy) throw new InvalidOperationException($"{t.Id} can be resolved by {t.By} or {_p.SubmittedBy}");
         t.Resolved = true;
         t.ResolvedBy = _reviewer;
+        return this;
+    }
+
+    private ProposalIntent Judgment(string id)
+    {
+        var it = Intent(id);
+        if (_p.LastRun is null) throw new InvalidOperationException($"{_p.Id} has not been proved yet: sign-offs come after the proof run");
+        if (!Proposals.JudgmentIntents(_p).Contains(it.Id)) throw new InvalidOperationException($"{it.Id} is not beyond proof for human judgment; it needs no sign-off");
+        return it;
+    }
+
+    private void SetSignOff(SignOff s)
+    {
+        var list = (_p.Signoffs ?? []).Where(x => !(x.Intent == s.Intent && x.By == s.By)).ToList();
+        list.Add(s);
+        _p.Signoffs = list;
+    }
+
+    /// <summary>
+    /// After the proof run, signs off an intent beyond proof for human judgment, having looked at its before and after
+    /// snapshots. Reference screenshots come from driven scenarios, which only the TS SDK runs.
+    /// </summary>
+    public ProposalReview SignOff(string intentId, params string[] references)
+    {
+        var it = Judgment(intentId);
+        foreach (var r in references) Reference(r);
+        SetSignOff(new SignOff { Intent = it.Id, By = _reviewer, Verdict = "signed-off" });
+        return this;
+    }
+
+    /// <summary>Makes an after screenshot the reference of its driven scenario step; in this port no after snapshot is one.</summary>
+    public ProposalReview Reference(string reference)
+    {
+        if (_p.LastRun is null) throw new InvalidOperationException($"{_p.Id} has not been proved yet: screenshots are signed off after the proof run");
+        throw new InvalidOperationException($"{reference} is not an after screenshot of a driven scenario step of {_p.Id}");
+    }
+
+    /// <summary>After the proof run, requests changes on an intent beyond proof for human judgment.</summary>
+    public ProposalReview RequestChanges(string intentId, string note)
+    {
+        var it = Judgment(intentId);
+        SetSignOff(new SignOff { Intent = it.Id, By = _reviewer, Verdict = "changes-requested", Note = note });
+        return this;
+    }
+
+    /// <summary>Accepts an unexpected change (U1, U2...): its new output is intended.</summary>
+    public ProposalReview Accept(string changeId)
+    {
+        var u = (_p.Unexpected ?? []).FirstOrDefault(x => x.Id == changeId) ?? throw new InvalidOperationException($"Unknown unexpected change {changeId}");
+        if (!u.AcceptedBy.Contains(_reviewer)) u.AcceptedBy.Add(_reviewer);
         return this;
     }
 

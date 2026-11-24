@@ -29,6 +29,12 @@ public static class Cli
           review <P> --as <name> <action> ...           approve <I..> | approve-all | amend <I> <text> | reject <I> <note>
                                                         answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
                                                         resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
+                                                        after the proof run: signoff <I> | request-changes <I> <note>
+                                                        accept <U>
+          explore [<request.json>]                      explore a state machine over a recorded step table (stdin without a
+                                                        file), as the Rust prover does: the engines' cross-check
+          map [<P>]                                     the feature map (surfaces and dependencies); with a proposal, the
+                                                        features it changes and the ones affected
           derive <P>                                    derive the pending proofs of the approved intents
           derive --usecases [UC-003,UC-016]             derive proofs straight from the established use cases (default:
                                                         every use case with no passed proof) into .lastro/proof/
@@ -103,6 +109,8 @@ public static class Cli
         return o;
     }
 
+    private static string? S(JsonNode? n) => n is JsonValue v && v.TryGetValue<string>(out var x) ? x : null;
+
     private static JsonArray Strings(IEnumerable<string> xs) => new([.. xs.Select(x => (JsonNode)JsonValue.Create(x)!)]);
 
     private static JsonObject With(JsonObject head, JsonObject tail)
@@ -119,6 +127,14 @@ public static class Cli
     {
         /// <summary>Models in config order.</summary>
         public Dictionary<string, Model> Models { get; } = new(StringComparer.Ordinal);
+        /// <summary>The state-machine models (<c>"kind": "machine"</c>), kept as written in <see cref="Raw"/>.</summary>
+        public Dictionary<string, MachineModel> Machines { get; } = new(StringComparer.Ordinal);
+        /// <summary>Every model name in config order, with the raw JSON of state machines.</summary>
+        public List<string> Order { get; } = [];
+        public Dictionary<string, JsonNode> Raw { get; } = new(StringComparer.Ordinal);
+        /// <summary>The config's other keys (drivers, smt...) as written.</summary>
+        public JsonObject Rest { get; } = [];
+        public JsonObject? Drivers => Rest["drivers"] as JsonObject;
         /// <summary>The TS CLI's <c>{module, export}</c> entries, as written.</summary>
         public JsonObject Subjects { get; set; } = [];
         public ProposalPolicy Review { get; set; } = new();
@@ -140,12 +156,23 @@ public static class Cli
             var raw = JsonNode.Parse(System.IO.File.ReadAllText(File("config.json"))) as JsonObject ?? [];
             var c = new Config();
             if (raw["models"] is JsonObject models)
-                foreach (var (name, m) in models) c.Models[name] = LastroJson.FromNode<Model>(m);
+                foreach (var (name, m) in models)
+                {
+                    c.Order.Add(name);
+                    if (S(m?["kind"]) == "machine")
+                    {
+                        c.Machines[name] = LastroJson.FromNode<MachineModel>(m);
+                        c.Raw[name] = m!.DeepClone();
+                    }
+                    else c.Models[name] = LastroJson.FromNode<Model>(m);
+                }
             if (raw["model"] is JsonObject legacyModel)
             {
                 var m = LastroJson.FromNode<Model>(legacyModel); // the v0 `model` key is still read
-                c.Models.TryAdd(m.Name, m);
+                if (c.Models.TryAdd(m.Name, m)) c.Order.Add(m.Name);
             }
+            foreach (var (k, v) in raw)
+                if (k is not ("models" or "model" or "subjects" or "review" or "requiredApprovals")) c.Rest[k] = v?.DeepClone();
             if (raw["subjects"] is JsonObject subjects) c.Subjects = (JsonObject)subjects.DeepClone();
             var review = raw["review"] as JsonObject;
             var approvals = review?["approvals"] is JsonValue a ? a.GetValue<int>() : raw["requiredApprovals"] is JsonValue r ? r.GetValue<int>() : 1;
@@ -157,11 +184,15 @@ public static class Cli
             return c;
         }
 
+        /// <summary>Runs driven scenarios and properties through the configured drivers, from the folder that holds .lastro/.</summary>
+        public IDriveRunner Drive(Config c) => new Drivers(c.Drivers, Dir, Path.GetDirectoryName(Path.GetFullPath(Dir))!);
+
         public void WriteConfig(Config c)
         {
             var models = new JsonObject();
-            foreach (var (name, m) in c.Models) models[name] = LastroJson.ToNode(m);
-            WriteJson(File("config.json"), Obj(("models", models), ("subjects", c.Subjects.DeepClone()), ("review", LastroJson.ToNode(c.Review))));
+            foreach (var name in c.Order)
+                models[name] = c.Models.TryGetValue(name, out var m) ? LastroJson.ToNode(m) : c.Raw[name].DeepClone();
+            WriteJson(File("config.json"), With(Obj(("models", models), ("subjects", c.Subjects.DeepClone()), ("review", LastroJson.ToNode(c.Review))), c.Rest));
         }
 
         private static IEnumerable<string> JsonFiles(string dir) =>
@@ -352,10 +383,22 @@ public static class Cli
             if (x.Replaces is { Count: > 0 }) o["replaces"] = Strings(x.Replaces);
             proofs.Add(o);
         }
-        return Obj(
+        return With(Obj(
             ("proposal", Obj(("id", p.Id), ("slug", p.Slug), ("name", p.Name), ("status", p.Status), ("submittedBy", p.SubmittedBy), ("policy", LastroJson.ToNode(p.Policy)), ("approved", p.Hash is not null))),
             ("useCases", changes), ("intents", intents), ("decisions", decisions), ("threads", threads), ("supersedes", Strings(p.Supersedes)),
-            ("proofs", proofs), ("pending", Strings(pending)), ("ready", pending.Count == 0));
+            ("proofs", proofs), ("pending", Strings(pending)), ("ready", pending.Count == 0)), EvidenceOf(p));
+    }
+
+    /// <summary>After a proof run: the snapshots taken, the sign-offs still due and the unexpected changes to accept.</summary>
+    private static JsonObject EvidenceOf(Proposal p)
+    {
+        if (p.Snapshots is not { Count: > 0 } && p.LastRun is null) return [];
+        var due = Proposals.DueOf(p);
+        var unexpected = new JsonArray();
+        foreach (var u in p.Unexpected ?? [])
+            unexpected.Add(Obj(("id", u.Id), ("intent", u.Intent), ("input", u.Input?.DeepClone()), ("before", u.Before?.DeepClone()), ("after", u.After?.DeepClone()), ("acceptedBy", Strings(u.AcceptedBy))));
+        return Obj(("evidence", Obj(("snapshots", Strings((p.Snapshots ?? []).Select(x => x.Path))), ("signoffsDue", Strings(due.Signoffs)), ("unexpected", unexpected),
+            ("changesRequested", Strings(due.ChangesRequested)), ("judgment", Strings(Proposals.JudgmentIntents(p))))));
     }
 
     private static JsonObject RunBody(ProposalRun run) => Obj(
@@ -366,7 +409,7 @@ public static class Cli
     private static ProofSetup Setup(Config cfg)
     {
         var subjects = cfg.Subjects.Select(kv => kv.Key).ToList();
-        return new ProofSetup(cfg.Models, subjects.Count > 0 ? subjects : [.. cfg.Models.Keys]);
+        return new ProofSetup(cfg.Models, subjects.Count > 0 ? subjects : [.. cfg.Order], cfg.Machines);
     }
 
     private static string WriteReceipt(Workspace ws, Proposal p, IReadOnlyList<UseCase> useCases)
@@ -433,10 +476,22 @@ public static class Cli
                 case "init":
                 {
                     // Without --model the workspace starts empty: proposals can be written and reviewed, and a bootstrap brings models later.
-                    var model = args.Flags.TryGetValue("model", out var modelPath) && modelPath != "true" ? ReadJson<Model>(Path.GetFullPath(modelPath)) : null;
+                    var modelRaw = args.Flags.TryGetValue("model", out var modelPath) && modelPath != "true" ? JsonNode.Parse(File.ReadAllText(Path.GetFullPath(modelPath))) : null;
+                    var model = modelRaw is null ? null : LastroJson.FromNode<Model>(modelRaw);
                     if (model is null && args.Flags.TryGetValue("subject", out var subj) && subj != "true") throw new ExitException(2, Obj(("error", "--subject needs --model <model.json>")));
                     var cfg = ws.Exists ? ws.Config() : new Config();
-                    if (model is not null) cfg.Models[model.Name] = model;
+                    if (model is not null)
+                    {
+                        if (!cfg.Models.ContainsKey(model.Name) && !cfg.Machines.ContainsKey(model.Name)) cfg.Order.Add(model.Name);
+                        if (S(modelRaw?["kind"]) == "machine")
+                        {
+                            // A state machine is kept as written.
+                            cfg.Models.Remove(model.Name);
+                            cfg.Machines[model.Name] = LastroJson.FromNode<MachineModel>(modelRaw);
+                            cfg.Raw[model.Name] = modelRaw!.DeepClone();
+                        }
+                        else cfg.Models[model.Name] = model;
+                    }
                     if (model is not null && args.Flags.TryGetValue("subject", out var s) && s != "true")
                     {
                         var hash = s.IndexOf('#');
@@ -451,7 +506,7 @@ public static class Cli
                     }
                     if (args.Flags.ContainsKey("submitter-cannot-approve")) cfg.Review.SubmitterCanApprove = false;
                     ws.WriteConfig(cfg);
-                    return (0, Obj(("status", "initialized"), ("dir", ws.Dir), ("models", Strings(cfg.Models.Keys)), ("subjects", Strings(cfg.Subjects.Select(kv => kv.Key))),
+                    return (0, Obj(("status", "initialized"), ("dir", ws.Dir), ("models", Strings(cfg.Order)), ("subjects", Strings(cfg.Subjects.Select(kv => kv.Key))),
                         ("review", LastroJson.ToNode(cfg.Review))));
                 }
                 case "propose":
@@ -488,6 +543,42 @@ public static class Cli
                         if (inProposals && !named.Success) File.Delete(proseFile); // a draft in .lastro/proposals/ becomes <id>-<slug>.md
                     }
                     return (Proposals.Pending(p).Count == 0 ? 0 : 1, With(Obj(("status", "proposed"), ("file", ws.ProposalPath(p, ".json"))), Summary(p, useCases)));
+                }
+                case "explore":
+                {
+                    // A state machine over a recorded step table, as the Rust prover takes it: the cross-check of the engines.
+                    var text = rest.Count > 0 ? File.ReadAllText(rest[0]) : await Console.In.ReadToEndAsync().ConfigureAwait(false);
+                    var req = JsonNode.Parse(text) as JsonObject ?? throw new ExitException(2, Obj(("error", "explore needs {machine, clauses, table}")));
+                    var m = LastroJson.FromNode<MachineModel>(req["machine"]);
+                    var clauses = LastroJson.FromNode<List<MachineClause>>(req["clauses"]);
+                    var step = Machines.TableStep(LastroJson.FromNode<List<StepRow>>(req["table"]));
+                    var limit = req["limit"]?.GetValue<int>() ?? 0;
+                    var report = await Machines.ExploreAsync(m, step, clauses, limit).ConfigureAwait(false);
+                    var chart = await Machines.StatechartAsync(m, step, clauses, req["path"] is { } path ? LastroJson.FromNode<List<MachineEvent>>(path) : [], limit).ConfigureAwait(false);
+                    return (0, Obj(("status", "explored"), ("report", LastroJson.ToNode(report)), ("statechart", LastroJson.ToNode(chart)), ("mermaid", Machines.Mermaid(chart))));
+                }
+                case "map":
+                {
+                    var useCases = ws.UseCases();
+                    var p = rest.Count > 0 ? ws.Proposal(rest[0]) : null;
+                    var live = p?.UseCases ?? [];
+                    var features = useCases.Select(u => live.FirstOrDefault(x => x.UseCase == u.Id && x.Change == "modify") is { } c
+                            ? new Linked(u.Id, u.Slug, u.Name, c.Surfaces, c.DependsOn) : new Linked(u.Id, u.Slug, u.Name, u.Surfaces, u.DependsOn))
+                        .Concat(live.Where(c => c.Change == "add").Select(c => new Linked(c.UseCase, c.Slug, c.Name, c.Surfaces, c.DependsOn))).ToList();
+                    try
+                    {
+                        var map = Features.Build(features, live.Where(c => c.Change == "remove").Select(c => c.UseCase).ToList());
+                        var changed = live.Select(c => c.UseCase).ToList();
+                        var affected = p is not null ? Features.AffectedBy(map, changed) : [];
+                        var body = Obj(("status", "map"));
+                        if (p is not null) With(body, Obj(("proposal", p.Id), ("changed", Strings(changed)), ("affected", Strings(affected))));
+                        return (0, With(body, Obj(("features", LastroJson.ToNode(map.Features)), ("unreachable", Strings(map.Features.Where(f => !f.Reachable).Select(f => f.Id))),
+                            ("text", Features.Render(map, affected)))));
+                    }
+                    catch (FeatureMapException e)
+                    {
+                        return (1, Obj(("status", "invalid-map"), ("error", e.Message), ("cycle", Strings(e.Cycle))));
+                    }
                 }
                 case "status":
                 {
@@ -531,6 +622,10 @@ public static class Cli
                         case "reply": r.Reply(Arg(xs, 0), tail); break;
                         case "resolve": r.Resolve(Arg(xs, 0)); break;
                         case "rewrite": r.RewriteAfter(Arg(xs, 0), tail); break;
+                        case "signoff": r.SignOff(Arg(xs, 0), [.. xs.Skip(1)]); break;
+                        case "request-changes": r.RequestChanges(Arg(xs, 0), tail == "" ? "changes requested" : tail); break;
+                        case "accept": r.Accept(Arg(xs, 0)); break;
+                        case "reference": r.Reference(Arg(xs, 0)); break;
                         case "recombine":
                             var (name, after) = await Proposals.RecombineAsync(PickAsk(args, ws.Dir), r.Done(), Arg(xs, 0), tail).ConfigureAwait(false);
                             r.RewriteAfter(Arg(xs, 0), after, name);
@@ -573,7 +668,7 @@ public static class Cli
                 {
                     var cfg = ws.Config();
                     var files = ucFlag.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) ? [ucFlag, .. rest] : rest;
-                    var (changed, run) = await Proposals.ProveUseCasesAsync(ws.UseCases(), new RunOptions(SubjectsOf(args, files, cfg, ws, null), cfg.Models, RustProver.Locate())).ConfigureAwait(false);
+                    var (changed, run) = await Proposals.ProveUseCasesAsync(ws.UseCases(), new RunOptions(SubjectsOf(args, files, cfg, ws, null), cfg.Models, RustProver.Locate(), Machines: cfg.Machines, Drive: ws.Drive(cfg))).ConfigureAwait(false);
                     foreach (var u in changed) ws.WriteUseCase(u);
                     var body = Obj(("status", run.Ok ? "passed" : "failed"), ("ok", run.Ok), ("enginesAgree", run.EnginesAgree is { } ea ? JsonValue.Create(ea) : null),
                         ("passed", Strings(run.Outcomes.Where(x => x.Role == "usecase" && x.Passed).Select(x => x.Proof))),
@@ -604,7 +699,7 @@ public static class Cli
                     var stream = args.Flags.ContainsKey("stream") ? emit : null;
                     var subjects = SubjectsOf(args, rest, cfg, ws, stream);
                     stream?.Invoke(Obj(("event", "start"), ("proposal", p.Id), ("proofs", Strings(p.Proofs.Select(x => x.Id)))));
-                    var (proposal, run) = await Proposals.ProveAsync(p, useCases, new RunOptions(subjects, cfg.Models, RustProver.Locate())).ConfigureAwait(false);
+                    var (proposal, run) = await Proposals.ProveAsync(p, useCases, new RunOptions(subjects, cfg.Models, RustProver.Locate(), Machines: cfg.Machines, Drive: ws.Drive(cfg))).ConfigureAwait(false);
                     if (stream is not null)
                     {
                         foreach (var o in run.Outcomes)
@@ -615,10 +710,25 @@ public static class Cli
                         }
                         if (run.EnginesAgree is { } agree) stream(Obj(("event", "crosscheck"), ("enginesAgree", agree)));
                     }
+                    if (cfg.Subjects.Count > 0)
+                    {
+                        // As in the TS CLI, a failure to take snapshots never fails the run; the receipt shows what was taken.
+                        try
+                        {
+                            proposal = Proposals.WithStatus(await Snapshots.Take(proposal, "after", new SnapshotContext(ws.Dir, cfg.Models, subjects, useCases)).ConfigureAwait(false));
+                        }
+                        catch (Exception e) when (e is IOException or InvalidOperationException or System.Text.Json.JsonException or ProposalException) { }
+                    }
                     ws.WriteProposal(proposal);
                     ws.AppendRun(proposal, run);
                     var receipt = WriteReceipt(ws, proposal, useCases);
-                    return (run.Ok ? 0 : 1, With(With(Obj(("status", run.Ok ? "proved" : "not-proved"), ("proposal", proposal.Id)), RunBody(run)),
+                    var due = Proposals.DueOf(proposal);
+                    var waiting = new JsonObject();
+                    if (due.Signoffs.Count > 0) waiting["signoffsDue"] = Strings(due.Signoffs);
+                    if (due.Unexpected.Count > 0) waiting["unexpected"] = LastroJson.ToNode((proposal.Unexpected ?? []).Where(u => due.Unexpected.Contains(u.Id)).ToList());
+                    if (due.ChangesRequested.Count > 0) waiting["changesRequested"] = Strings(due.ChangesRequested);
+                    var status = !run.Ok ? "not-proved" : proposal.Status == "proved" ? "proved" : "waiting-for-review";
+                    return (run.Ok ? 0 : 1, With(With(With(Obj(("status", status), ("proposal", proposal.Id)), RunBody(run)), waiting),
                         Obj(("receipt", receipt), ("feedback", Proposals.Feedback(proposal, useCases)))));
                 }
                 case "feedback":
@@ -643,7 +753,7 @@ public static class Cli
                 {
                     var cfg = ws.Config();
                     var useCases = ws.UseCases();
-                    var run = await Proposals.RegressAsync(useCases, new RunOptions(SubjectsOf(args, rest, cfg, ws, null), cfg.Models, RustProver.Locate())).ConfigureAwait(false);
+                    var run = await Proposals.RegressAsync(useCases, new RunOptions(SubjectsOf(args, rest, cfg, ws, null), cfg.Models, RustProver.Locate(), Machines: cfg.Machines, Drive: ws.Drive(cfg))).ConfigureAwait(false);
                     return (run.Ok ? 0 : 1, With(Obj(("status", run.Ok ? "no-regressions" : "regressions")), RunBody(run)));
                 }
                 default:

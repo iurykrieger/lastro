@@ -98,6 +98,7 @@ type UseCaseDeriveOut struct {
 		Assumptions []string        `json:"assumptions"`
 		InputJSON   json.RawMessage `json:"inputJson"`
 		Expect      json.RawMessage `json:"expect"`
+		ProofExtras
 	} `json:"proofs"`
 	Unprovable []Unprovable `json:"unprovable"`
 }
@@ -179,6 +180,9 @@ func ProofsFromUseCases(useCases []UseCase, targets []string, setup ProofSetup, 
 		}
 		slugs[u.ID][d.Slug] = true
 		model, hasModel := setup.Models[d.Model]
+		if _, isMachine := setup.Machines[d.Model]; isMachine {
+			hasModel = true
+		}
 		if !hasModel {
 			declared := strings.Join(setup.ModelOrder, ", ")
 			if declared == "" {
@@ -196,7 +200,7 @@ func ProofsFromUseCases(useCases []UseCase, targets []string, setup ProofSetup, 
 		if !hasModel {
 			continue
 		}
-		if check := checkFromAnswer(pid, d.Kind, d.Requires, d.Ensures, d.Assumptions, d.InputJSON, d.Expect, model, &problems); check != nil {
+		if check := checkFromAnswer(pid, d.Kind, d.Requires, d.Ensures, d.Assumptions, d.InputJSON, d.Expect, model, &problems, checkMore{d.ProofExtras, machineOf(setup, d.Model)}); check != nil {
 			derived = append(derived, ProofEntry{ID: pid, Slug: d.Slug, Name: d.Name, Description: d.Description, UseCase: u.ID, Model: d.Model, Subject: d.Subject, Check: *check, Status: "pending"})
 		}
 	}

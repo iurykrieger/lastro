@@ -1,0 +1,9 @@
+{
+  "model": "sm_interleave",
+  "fields": {
+    "in.actors": "int[1..3]",
+    "in.atomic": "bool",
+    "out.cexActors": "int[0..3]",
+    "out.violated": "bool"
+  }
+}

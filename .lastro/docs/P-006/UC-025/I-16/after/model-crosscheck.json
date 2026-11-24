@@ -1,0 +1,14 @@
+{
+  "model": "crosscheck",
+  "fields": {
+    "in.bug": "bool",
+    "in.table": "enum[\"complete\",\"missing-row\",\"repeated-row\",\"conflicting-row\",\"out-of-domain-row\"]",
+    "out.agree": "bool",
+    "out.complete": "bool",
+    "out.digest": "bool",
+    "out.ok": "bool",
+    "out.proved": "bool",
+    "out.rustOk": "bool",
+    "out.sdkOk": "bool"
+  }
+}

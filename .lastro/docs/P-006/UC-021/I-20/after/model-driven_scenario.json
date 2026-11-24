@@ -1,0 +1,14 @@
+{
+  "model": "driven_scenario",
+  "fields": {
+    "in.driver": "enum[\"ok\",\"fails-to-start\",\"timeout\"]",
+    "in.hasReference": "bool",
+    "in.matches": "bool",
+    "in.pixelShare": "int[0..4]",
+    "in.step": "enum[\"screen\",\"api\",\"function\"]",
+    "in.tolerance": "int[0..3]",
+    "out.driverError": "bool",
+    "out.evidence": "enum[\"empirical\",\"none\"]",
+    "out.passed": "bool"
+  }
+}

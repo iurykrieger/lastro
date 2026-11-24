@@ -1,0 +1,9 @@
+{
+  "model": "shipped_drivers",
+  "fields": {
+    "in.sdk": "enum[\"typescript\",\"go\",\"dotnet\"]",
+    "in.setup": "enum[\"web\",\"appium\",\"http\",\"jsonlines\"]",
+    "out.bundlesBrowser": "bool",
+    "out.documented": "bool"
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "model": "statechart",
+  "subject": "statechart",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "actors": 1,
+        "cex": false,
+        "forbids": false
+      },
+      "after": {
+        "regions": 1,
+        "marked": false,
+        "pathDrawn": false,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "cex": false,
+        "forbids": true
+      },
+      "after": {
+        "regions": 1,
+        "marked": true,
+        "pathDrawn": false,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "cex": true,
+        "forbids": false
+      },
+      "after": {
+        "regions": 1,
+        "marked": false,
+        "pathDrawn": true,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "cex": true,
+        "forbids": true
+      },
+      "after": {
+        "regions": 1,
+        "marked": true,
+        "pathDrawn": true,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "cex": false,
+        "forbids": false
+      },
+      "after": {
+        "regions": 2,
+        "marked": false,
+        "pathDrawn": false,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "cex": false,
+        "forbids": true
+      },
+      "after": {
+        "regions": 2,
+        "marked": true,
+        "pathDrawn": false,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "cex": true,
+        "forbids": false
+      },
+      "after": {
+        "regions": 2,
+        "marked": false,
+        "pathDrawn": true,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "cex": true,
+        "forbids": true
+      },
+      "after": {
+        "regions": 2,
+        "marked": true,
+        "pathDrawn": true,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "cex": false,
+        "forbids": false
+      },
+      "after": {
+        "regions": 3,
+        "marked": false,
+        "pathDrawn": false,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "cex": false,
+        "forbids": true
+      },
+      "after": {
+        "regions": 3,
+        "marked": true,
+        "pathDrawn": false,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "cex": true,
+        "forbids": false
+      },
+      "after": {
+        "regions": 3,
+        "marked": false,
+        "pathDrawn": true,
+        "labelled": true
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "cex": true,
+        "forbids": true
+      },
+      "after": {
+        "regions": 3,
+        "marked": true,
+        "pathDrawn": true,
+        "labelled": true
+      }
+    }
+  ]
+}

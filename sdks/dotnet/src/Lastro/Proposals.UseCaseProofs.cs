@@ -106,10 +106,12 @@ public static partial class Proposals
             if (!slugs.TryGetValue(u.Id, out var seen)) slugs[u.Id] = seen = new HashSet<string>(StringComparer.Ordinal);
             if (!seen.Add(slug)) problems.Add($"{pid}: duplicate proof slug \"{slug}\"");
             var hasModel = setup.Models.TryGetValue(modelName, out var model);
+            MachineModel? machine = null;
+            if (setup.Machines?.TryGetValue(modelName, out machine) == true) (hasModel, model) = (true, model ?? new Model { Name = modelName });
             if (!hasModel) problems.Add($"{pid}: unknown model \"{modelName}\" (declared: {Declared(setup.Models.Keys)})");
             if (!setup.Subjects.Contains(subject)) problems.Add($"{pid}: unknown subject \"{subject}\" (declared: {Declared(setup.Subjects)})");
             if (!hasModel) continue;
-            if (CheckFromAnswer(pid, d, model!, problems) is { } check)
+            if (CheckFromAnswer(pid, d, model!, problems, machine) is { } check)
                 derived.Add(new ProofEntry { Id = pid, Slug = slug, Name = S(d?["name"]), Description = S(d?["description"]), UseCase = u.Id, Model = modelName, Subject = subject, Check = check, Status = "pending" });
         }
         var unprovable = new List<Unprovable>();

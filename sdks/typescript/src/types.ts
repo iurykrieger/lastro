@@ -194,7 +194,8 @@ export interface ClauseResult {
   clauseId: string;
   verdict: ClauseVerdict;
   evidence: Evidence;
-  method: "exhaustive" | "sampling" | "traces" | "none";
+  /** "smt": the model's LSL definition was proved by an SMT solver and the code checked against it (see smt.ts). */
+  method: "exhaustive" | "sampling" | "smt" | "traces" | "none";
   checked: number;
   /** For sampling: upper bound of failure rate at 95% (rule of three). */
   failureRateUpperBound95?: number;

@@ -45,6 +45,11 @@ import {
   type UseCase,
 } from "./proposal.js";
 import { LEGACY_FILES, WorkspaceError, openWorkspace, writeJson, type Workspace, type WorkspaceConfig } from "./workspace.js";
+import { affectedBy, featureMap, renderFeatureMap, FeatureMapError } from "./features.js";
+import { driveRunner, takeSnapshots } from "./evidence.js";
+import { proposalFromSurfaces, SURFACES_SCHEMA, SURFACES_SYSTEM, surfacesUserPrompt, featuresWithoutSurfaces, type SurfacesOut } from "./surfaces.js";
+import { copyFileSync, mkdirSync } from "node:fs";
+import { dueOf, judgmentIntents, withStatus } from "./proposal.js";
 import type { Model, Subject } from "./types.js";
 
 class Exit extends Error {
@@ -70,10 +75,17 @@ const USAGE = `lastro <command> [options]
                                                 for an existing repository: survey the code and its history into
                                                 a bootstrap proposal of the use cases it implements today, to
                                                 review, derive, prove against the code as it is, and apply
+  bootstrap --surfaces [--as <name>]            survey how each feature without surfaces is reached (screens, routes,
+                                                commands, apis) and what it depends on, into a bootstrap proposal
+  map [<P>]                                     the feature map: surfaces, dependencies and dependents; with a
+                                                proposal, as it would be after it, with the affected features
+  snapshot <P> [before|after]                   take the before (or after) snapshots of the intents' features
   status [<P>]                                  proposals, or one proposal's intents and pending items
   review <P> --as <name> <action> ...           approve <I..> | approve-all | amend <I> <text> | reject <I> <note>
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
                                                 resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
+                                                after the proof run: signoff <I> [<screenshot>..] | request-changes <I> <note>
+                                                accept <U> | reference <screenshot>
   derive <P>                                    derive the pending proofs of the approved intents
   derive --usecases [UC-003,UC-016]             derive proofs straight from the established use cases (default:
                                                 every use case with no passed proof) into .lastro/proof/
@@ -97,7 +109,7 @@ interface Args {
 }
 
 /** Flags that never take a value. */
-const BOOLEAN_FLAGS = new Set(["stream", "submitter-cannot-approve"]);
+const BOOLEAN_FLAGS = new Set(["stream", "submitter-cannot-approve", "surfaces"]);
 
 function parse(argv: string[]): Args {
   const out: Args = { _: [], flags: {} };
@@ -206,6 +218,22 @@ export function summary(p: Proposal, useCases: UseCase[]) {
     proofs: p.proofs.map((x) => ({ id: x.id, intent: x.intent, useCase: x.useCase, kind: x.check.kind, description: x.description, status: x.status, ...(x.replaces ? { replaces: x.replaces } : {}) })),
     pending,
     ready: pending.length === 0,
+    ...evidenceOf(p),
+  };
+}
+
+/** After a proof run: the snapshots taken, the sign-offs still due and the unexpected changes to accept. */
+function evidenceOf(p: Proposal) {
+  if (!p.snapshots?.length && !p.lastRun) return {};
+  const due = dueOf(p);
+  return {
+    evidence: {
+      snapshots: (p.snapshots ?? []).map((x) => x.path),
+      signoffsDue: due.signoffs,
+      unexpected: (p.unexpected ?? []).map((u) => ({ id: u.id, intent: u.intent, input: u.input, before: u.before ?? null, after: u.after ?? null, acceptedBy: u.acceptedBy })),
+      changesRequested: due.changesRequested,
+      judgment: judgmentIntents(p),
+    },
   };
 }
 
@@ -290,6 +318,21 @@ function feedbackOf(p: Proposal, useCases: UseCase[]): string {
   return isBootstrap(p) && p.lastRun && !p.lastRun.ok ? `${BOOTSTRAP_FEEDBACK_NOTE}\n\n${text}` : text;
 }
 
+/**
+ * Take one side's snapshots. At extraction and at the proof run they are taken whenever the workspace has models or
+ * drivers; a failure to take them never fails the command (the receipt shows what was taken). `strict` reports it.
+ */
+async function snapshotSide(ws: Workspace, cfg: WorkspaceConfig, args: Args, p: Proposal, useCases: UseCase[], side: "before" | "after", strict = false, loaded?: Record<string, Subject>): Promise<Proposal> {
+  if (!strict && !cfg.drivers && !Object.keys(cfg.subjects).length) return p;
+  try {
+    const subjects = loaded ?? (Object.keys(cfg.subjects).length ? await loadSubjects(ws, cfg, args, undefined) : {});
+    return withStatus(await takeSnapshots(p, side, { ws, models: cfg.models, subjects, ...(cfg.drivers ? { drivers: cfg.drivers } : {}), useCases }));
+  } catch (e) {
+    if (strict) throw e;
+    return p;
+  }
+}
+
 function writeReceipt(ws: Workspace, p: Proposal, useCases: UseCase[]): string {
   const path = ws.proposalPath(p, ".receipt.md");
   writeFileSync(path, renderProposalReceipt(p, useCases) + "\n");
@@ -349,8 +392,39 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
           writeFileSync(md, prose + "\n");
           if (inProposals && !named) unlinkSync(proseFile); // a draft in .lastro/proposals/ becomes <id>-<slug>.md
         }
+        p = await snapshotSide(ws, cfg, args, p, useCases, "before");
+        ws.writeProposal(p);
         const s = summary(p, useCases);
-        return { code: s.ready ? 0 : 1, body: { status: "proposed", file: ws.proposalPath(p), ...s } };
+        return { code: s.ready ? 0 : 1, body: { status: "proposed", file: ws.proposalPath(p), ...s, ...(p.snapshots?.length ? { snapshots: p.snapshots.length } : {}) } };
+      }
+      case "map": {
+        const useCases = ws.useCases();
+        const p = rest[0] ? ws.proposal(rest[0]) : undefined;
+        const live = p ? p.useCases : [];
+        const features = [
+          ...useCases.map((u) => {
+            const c = live.find((x) => x.useCase === u.id && x.change === "modify");
+            return c ? { ...u, surfaces: c.surfaces, dependsOn: c.dependsOn } : u;
+          }),
+          ...live.filter((c) => c.change === "add").map((c) => ({ id: c.useCase, slug: c.slug, name: c.name, surfaces: c.surfaces, dependsOn: c.dependsOn })),
+        ];
+        try {
+          const map = featureMap(features, live.filter((c) => c.change === "remove").map((c) => c.useCase));
+          const affected = p ? affectedBy(map, live.map((c) => c.useCase)) : [];
+          return { code: 0, body: { status: "map", ...(p ? { proposal: p.id, changed: live.map((c) => c.useCase), affected } : {}), features: map.features, unreachable: map.features.filter((f) => !f.reachable).map((f) => f.id), text: renderFeatureMap(map, affected) } };
+        } catch (e) {
+          if (e instanceof FeatureMapError) return { code: 1, body: { status: "invalid-map", error: e.message, features: e.features } };
+          throw e;
+        }
+      }
+      case "snapshot": {
+        const cfg = ws.config();
+        const useCases = ws.useCases();
+        const p0 = ws.proposal(rest[0]);
+        const side = rest[1] === "after" ? "after" : "before";
+        const p = await snapshotSide(ws, withSetup(cfg, p0), args, p0, useCases, side, true);
+        ws.writeProposal(p);
+        return { code: 0, body: { status: "snapshots", proposal: p.id, side, snapshots: (p.snapshots ?? []).filter((x) => x.side === side), ...(side === "after" ? { comparisons: p.comparisons ?? [], unexpected: p.unexpected ?? [] } : {}) } };
       }
       case "scan": {
         const digest = scanRepo(ws.root, scanOptions(args));
@@ -372,6 +446,21 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         };
       }
       case "bootstrap": {
+        if (args.flags.surfaces !== undefined) {
+          const cfg = ws.config();
+          const useCases = ws.useCases();
+          if (!featuresWithoutSurfaces(useCases).length) return { code: 0, body: { status: "nothing-to-bootstrap", note: "every feature has surfaces" } };
+          const digest = scanRepo(ws.root, scanOptions(args));
+          const excerpts = excerptsOf(ws.root, digest, args.flags.budget ? Number(args.flags.budget) : undefined);
+          const ask = await pickAsk(args, ws.dir);
+          const out = (await ask({ step: "survey", system: SURFACES_SYSTEM, user: surfacesUserPrompt(digest, excerpts, useCases), schema: SURFACES_SCHEMA })) as SurfacesOut;
+          const id = ws.nextProposalId();
+          const p = proposalFromSurfaces({ id, submittedBy: args.flags.as ?? process.env.LASTRO_USER ?? "submitter", useCases, policy: cfg.review, digest }, out);
+          ws.writeProposal(p);
+          writeFileSync(ws.proposalPath(p, ".md"), `# ${p.name}\n\n${p.prose}\n`);
+          const s = summary(p, useCases);
+          return { code: s.ready ? 0 : 1, body: { status: "proposed", file: ws.proposalPath(p), ...s } };
+        }
         const cfg = configOrEmpty(ws);
         if (!ws.exists()) ws.writeConfig(cfg);
         const useCases = ws.useCases();
@@ -432,11 +521,22 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         else if (action === "reply") r.reply(xs[0]!, xs.slice(1).join(" "));
         else if (action === "resolve") r.resolve(xs[0]!);
         else if (action === "rewrite") r.rewriteAfter(xs[0]!, xs.slice(1).join(" "));
+        else if (action === "signoff") r.signOff(xs[0]!, xs.slice(1));
+        else if (action === "request-changes") r.requestChanges(xs[0]!, xs.slice(1).join(" ") || "changes requested");
+        else if (action === "accept") r.accept(xs[0]!);
+        else if (action === "reference") r.reference(xs[0]!);
         else if (action === "recombine") {
           const out = await recombineAfter(await pickAsk(args, ws.dir), r.done(), xs[0]!, xs.slice(1).join(" ") || undefined);
           r.rewriteAfter(xs[0]!, out.after, out.name);
         } else throw new Exit(2, { error: `unknown review action ${action}`, usage: USAGE });
         let p = r.done();
+        // A signed-off after screenshot is copied to the intent's reference/ folder: the step's reference from now on.
+        if (action === "reference" || action === "signoff")
+          for (const ref of action === "reference" ? xs.slice(0, 1) : xs.slice(1)) {
+            const to = ref.replace("/after/", "/reference/");
+            mkdirSync(dirname(ws.file(to)), { recursive: true });
+            copyFileSync(ws.file(ref), ws.file(to));
+          }
         // Fully reviewed: approve it, bound to the current use cases.
         if (!pendingProposal(p).length && !p.hash) {
           if (baselineOf(useCases) !== p.baseline) {
@@ -508,7 +608,9 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         const stream = args.flags.stream === "true" && emit ? emit : undefined;
         const subjects = counting(await loadSubjects(ws, cfg, args, module), stream);
         stream?.({ event: "start", proposal: p.id, proofs: p.proofs.map((x) => x.id) });
-        const { proposal, run } = await proveProposal(p, useCases, { subjects, models: cfg.models, rust: await rustProver() });
+        const proved = await proveProposal(p, useCases, { subjects, models: cfg.models, rust: await rustProver(), drive: driveRunner(ws, cfg.drivers) });
+        const run = proved.run;
+        const proposal = await snapshotSide(ws, cfg, args, proved.proposal, useCases, "after", false, subjects);
         if (stream) {
           for (const o of run.outcomes) stream({ event: "proof", proof: o.proof, role: o.role, verdict: o.verdict, passed: o.passed, ...(o.counterexample ? { counterexample: o.counterexample } : {}) });
           if (run.enginesAgree !== undefined) stream({ event: "crosscheck", enginesAgree: run.enginesAgree });
@@ -516,7 +618,9 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         ws.writeProposal(proposal);
         ws.appendRun(proposal, run);
         const receipt = writeReceipt(ws, proposal, useCases);
-        return { code: run.ok ? 0 : 1, body: { status: run.ok ? "proved" : "not-proved", proposal: proposal.id, ...runBody(run), receipt, feedback: feedbackOf(proposal, useCases) } };
+        const due = dueOf(proposal);
+        const waiting = { ...(due.signoffs.length ? { signoffsDue: due.signoffs } : {}), ...(due.unexpected.length ? { unexpected: (proposal.unexpected ?? []).filter((u) => due.unexpected.includes(u.id)) } : {}), ...(due.changesRequested.length ? { changesRequested: due.changesRequested } : {}) };
+        return { code: run.ok ? 0 : 1, body: { status: run.ok ? (proposal.status === "proved" ? "proved" : "waiting-for-review") : "not-proved", proposal: proposal.id, ...runBody(run), ...waiting, receipt, feedback: feedbackOf(proposal, useCases) } };
       }
       case "feedback": {
         const p = ws.proposal(rest[0]);

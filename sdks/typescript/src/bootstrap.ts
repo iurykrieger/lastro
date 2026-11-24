@@ -19,6 +19,7 @@ import { proposalFromExtraction, ProposalError, SLUG, type ChangeKind, type Prop
 import { sha256Hex } from "./sha256.js";
 import type { Domain } from "./spec/domain.js";
 import { type DecisionOption, type Model, type Provability } from "./types.js";
+import type { MachineModel } from "./machine.js";
 
 // ---------------------------------------------------------------------------
 // The digest (written by bootstrap/scan.ts)
@@ -99,6 +100,8 @@ export interface ProposalOrigin {
   digest?: string;
   /** bootstrap: the folders it covers (empty: the whole repository). */
   scope?: string[];
+  /** bootstrap --surfaces: the proposal only adds surfaces and dependencies. */
+  surfaces?: boolean;
 }
 
 /** Where in the repository a bootstrap intent was read: the reviewer checks these. */
@@ -119,7 +122,7 @@ export interface SubjectDecl {
 
 /** Models and subjects a proposal adds to `.lastro/config.json` when it is applied. Reviewed with the intents. */
 export interface ProposalSetup {
-  models: Record<string, Model>;
+  models: Record<string, Model | MachineModel>;
   subjects: Record<string, SubjectDecl>;
 }
 
@@ -164,7 +167,7 @@ export interface SurveyInput {
   /** Use-case ids other open proposals reserved (see reservedUseCaseIds). */
   reserved?: string[];
   /** Models and subjects already declared in `.lastro/config.json`. */
-  config: { models: Record<string, Model>; subjects: Record<string, SubjectDecl> };
+  config: { models: Record<string, Model | MachineModel>; subjects: Record<string, SubjectDecl> };
 }
 
 const short = (sha: string) => sha.slice(0, 12);
@@ -339,7 +342,7 @@ export function proposalFromSurvey(input: SurveyInput, out: SurveyOut): Proposal
 export const isBootstrap = (p: Proposal) => p.origin?.kind === "bootstrap";
 
 /** Models and subjects for derive and prove: the config's plus the ones the proposal brings. */
-export function setupOf(p: Proposal, config: { models: Record<string, Model>; subjects: Record<string, SubjectDecl> }): { models: Record<string, Model>; subjects: Record<string, SubjectDecl> } {
+export function setupOf(p: Proposal, config: { models: Record<string, Model | MachineModel>; subjects: Record<string, SubjectDecl> }): { models: Record<string, Model | MachineModel>; subjects: Record<string, SubjectDecl> } {
   return { models: { ...config.models, ...(p.setup?.models ?? {}) }, subjects: { ...config.subjects, ...(p.setup?.subjects ?? {}) } };
 }
 

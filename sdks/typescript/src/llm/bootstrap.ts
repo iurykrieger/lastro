@@ -4,6 +4,7 @@
  * use cases the code implements today, each behavior grounded in files, tests and
  * commits. The answer is checked by proposalFromSurvey (../bootstrap.ts).
  */
+import type { MachineModel } from "../machine.js";
 import { BEYOND_PROOF_REASONS, type Model } from "../types.js";
 import { proposalFromSurvey, type RepoDigest, type SurveyInput, type SurveyOut } from "../bootstrap.js";
 import type { Proposal, UseCase } from "../proposal.js";
@@ -119,7 +120,7 @@ export interface Excerpt {
   truncated: boolean;
 }
 
-export function surveyUserPrompt(digest: RepoDigest, excerpts: Excerpt[], useCases: UseCase[], models: Record<string, Model> = {}): string {
+export function surveyUserPrompt(digest: RepoDigest, excerpts: Excerpt[], useCases: UseCase[], models: Record<string, Model | MachineModel> = {}): string {
   const recorded = useCases.map((u) => ({ slug: u.slug, name: u.name, description: u.description, proofs: u.proofs.length }));
   const source = excerpts.map((e) => `<file path="${e.path}"${e.truncated ? ' truncated="true"' : ""}>\n${e.text}\n</file>`).join("\n");
   return [

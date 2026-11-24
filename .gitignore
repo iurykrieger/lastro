@@ -11,6 +11,8 @@ obj/
 test-results/
 playwright-report/
 *.png
+# Before and after snapshots are committed with their proposal (P-006)
+!.lastro/docs/**
 
 # Local state of the Lastro plugin (hooks)
 .lastro/plugin/

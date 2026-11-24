@@ -18,7 +18,8 @@ import { tabulate } from "./rust.js";
 import { checkConsistency, verify, type VerifyOptions } from "./verify/engine.js";
 import type { Grounds, ProposalOrigin, ProposalSetup } from "./bootstrap.js";
 import { reviewDue, type Comparison, type SignOff, type SnapshotRecord, type UnexpectedChange } from "./snapshots.js";
-import { affectedBy, featureMap, mergeLinks, surfaceProblems, type Surface } from "./features.js";
+import { affectedBy, featureMap, mergeLinks, surfaceProblems, SURFACE_KINDS, type Surface, type SurfaceKind } from "./features.js";
+import { exploreMachine, isMachine, machineClauseProblems, mermaidStatechart, statechart, type MachineClause, type MachineModel, type MachineStep } from "./machine.js";
 import {
   BEYOND_PROOF_REASONS,
   type BeyondProofReason,
@@ -54,7 +55,20 @@ export const DEFAULT_POLICY: ProposalPolicy = { approvals: 1, submitterCanApprov
 
 export type ProofCheck =
   | { kind: "clause"; requires?: Expr; ensures: Expr; assumptions: string[] }
-  | { kind: "scenario"; input: Record<string, Value>; expect: Expr };
+  | { kind: "scenario"; input: Record<string, Value>; expect: Expr }
+  /** A clause over a state-machine model (see machine.ts), checked across every interleaving of its actors. */
+  | { kind: "machine"; clause: "invariant" | "step" | "reach"; requires?: Expr; ensures: Expr }
+  /** A scenario driven through a surface: each step an input and the output expected from it. */
+  | { kind: "driven"; surface: { kind: SurfaceKind; locator: string }; steps: DrivenStep[]; tolerance?: number }
+  /** A property over fixed-seed action sequences on a surface; `invariant` reads the observed state as out.*. */
+  | { kind: "property"; surface: { kind: SurfaceKind; locator: string }; actions: Record<string, unknown>[]; invariant: Expr; machine?: string; events?: string[] };
+
+/** One step of a driven scenario. `reference` is a snapshot path (under .lastro/) the screen must match. */
+export interface DrivenStep {
+  input: Record<string, unknown>;
+  expect: Record<string, unknown>;
+  reference?: string;
+}
 
 /** A deterministic check of one intent. After it passes, it belongs to its use case as a regression test. */
 export interface ProofEntry {
@@ -741,9 +755,25 @@ export class ProposalReview {
    */
   signOff(intentId: string, references: string[] = []): this {
     const it = this.judgment(intentId);
+    for (const ref of references) this.reference(ref);
     const list = (this.p.signoffs ??= []).filter((s) => !(s.intent === it.id && s.by === this.reviewer));
     list.push({ intent: it.id, by: this.reviewer, verdict: "signed-off", ...(references.length ? { references } : {}) });
     this.p.signoffs = list;
+    return this;
+  }
+
+  /**
+   * Sign off an after screenshot (`docs/<P>/<feature>/<intent>/after/<proof-slug>-<step>.png`): it becomes the reference
+   * screenshot of that step, kept in the intent's reference/ folder, for the regressions that follow.
+   */
+  reference(ref: string): this {
+    if (!this.p.lastRun) throw new Error(`${this.p.id} has not been proved yet: screenshots are signed off after the proof run`);
+    const m = ref.match(/^(.*)\/after\/([a-z0-9]+(?:-[a-z0-9]+)*)-(\d+)\.png$/);
+    const pr = m && this.p.proofs.find((x) => x.slug === m[2] && x.check.kind === "driven");
+    const step = pr && (pr.check as Extract<ProofCheck, { kind: "driven" }>).steps[Number(m![3]) - 1];
+    if (!m || !step) throw new Error(`${ref} is not an after screenshot of a driven scenario step of ${this.p.id}`);
+    if (!(this.p.snapshots ?? []).some((x) => x.path === ref && x.side === "after")) throw new Error(`${ref} is not one of ${this.p.id}'s after snapshots`);
+    step.reference = `${m[1]}/reference/${m[2]}-${m[3]}.png`;
     return this;
   }
 
@@ -823,19 +853,29 @@ export interface DeriveV1Out {
     description: string;
     model: string;
     subject: string;
-    kind: "clause" | "scenario";
-    requires: string; // LSL JSON string, "" for none (clause)
-    ensures: string; // LSL JSON string (clause)
+    kind: "clause" | "scenario" | "machine" | "driven" | "property";
+    requires: string; // LSL JSON string, "" for none (clause, machine step)
+    ensures: string; // LSL JSON string (clause; machine: the invariant, the step's then-part or the reach condition; property: the invariant)
     assumptions: string[];
     inputJson: string; // scenario
     expect: string; // scenario
     replaces: string[];
+    /** machine: "invariant", "step" or "reach"; "" otherwise. Absent in answers written before state machines. */
+    clauseKind?: string;
+    /** driven and property: {"kind": "screen" | "route" | "command" | "api", "locator": "..."}. */
+    surfaceJson?: string;
+    /** driven: [{"input": {...}, "expect": {...}}]. */
+    stepsJson?: string;
+    /** property: the actions to sequence, [{...}]. */
+    actionsJson?: string;
+    /** driven: the share of pixels a screenshot may change, 0..1. */
+    tolerance?: number;
   }[];
   decisions: { slug: string; name: string; question: string; options: DecisionOption[]; recommended: number; intents: string[]; breaks: string }[];
 }
 
 export interface ProofSetup {
-  models: Record<string, Model>;
+  models: Record<string, Model | MachineModel>;
   /** Subject names declared in `.lastro/config.json`. */
   subjects: string[];
 }
@@ -843,10 +883,65 @@ export interface ProofSetup {
 /** The check of one derived proof (clause or scenario), parsed and validated against its model; problems are pushed. */
 export function checkFromAnswer(
   pid: string,
-  d: Pick<DeriveV1Out["proofs"][number], "kind" | "requires" | "ensures" | "assumptions" | "inputJson" | "expect">,
-  model: Model,
+  d: Pick<DeriveV1Out["proofs"][number], "kind" | "requires" | "ensures" | "assumptions" | "inputJson" | "expect" | "clauseKind" | "surfaceJson" | "stepsJson" | "actionsJson" | "tolerance">,
+  model: Model | MachineModel | undefined,
   problems: string[],
 ): ProofCheck | undefined {
+  const json = <T>(where: string, s: string | undefined): T | undefined => {
+    try {
+      return (typeof s === "string" ? JSON.parse(s) : s) as T;
+    } catch {
+      problems.push(`${pid}.${where}: not valid JSON: ${s}`);
+      return undefined;
+    }
+  };
+  if (d.kind === "machine") {
+    if (!model || !isMachine(model)) {
+      problems.push(`${pid}: a machine proof needs a state-machine model`);
+      return undefined;
+    }
+    const clause = d.clauseKind as "invariant" | "step" | "reach";
+    if (!["invariant", "step", "reach"].includes(clause)) {
+      problems.push(`${pid}: clauseKind must be invariant, step or reach`);
+      return undefined;
+    }
+    const requires = clause === "step" && d.requires && String(d.requires).trim() ? json<Expr>("requires", d.requires) : undefined;
+    const ensures = json<Expr>("ensures", d.ensures);
+    if (!ensures) return undefined;
+    const mc: MachineClause = clause === "invariant" ? { id: pid, kind: clause, holds: ensures } : clause === "reach" ? { id: pid, kind: clause, condition: ensures } : { id: pid, kind: clause, ...(requires ? { requires } : {}), ensures };
+    const errs = machineClauseProblems(model, mc).map((e) => `${pid}: ${e}`);
+    if (errs.length) {
+      problems.push(...errs);
+      return undefined;
+    }
+    return { kind: "machine", clause, ...(requires ? { requires } : {}), ensures };
+  }
+  if (d.kind === "driven" || d.kind === "property") {
+    const surface = json<{ kind: SurfaceKind; locator: string }>("surface", d.surfaceJson);
+    if (!surface || !SURFACE_KINDS.includes(surface.kind) || typeof surface.locator !== "string" || !surface.locator) {
+      problems.push(`${pid}.surface: needs a kind (screen, route, command or api) and a locator`);
+      return undefined;
+    }
+    if (d.kind === "driven") {
+      const steps = json<DrivenStep[]>("steps", d.stepsJson);
+      if (!Array.isArray(steps) || !steps.length || steps.some((x) => typeof x?.input !== "object" || typeof x?.expect !== "object")) {
+        problems.push(`${pid}.steps: a list of {input, expect} objects`);
+        return undefined;
+      }
+      const tolerance = Number(d.tolerance ?? 0);
+      if (!(tolerance >= 0 && tolerance <= 1)) problems.push(`${pid}.tolerance: a share between 0 and 1`);
+      return { kind: "driven", surface, steps, ...(tolerance ? { tolerance } : {}) };
+    }
+    const actions = json<Record<string, unknown>[]>("actions", d.actionsJson);
+    const invariant = json<Expr>("ensures", d.ensures);
+    if (!Array.isArray(actions) || !actions.length) problems.push(`${pid}.actions: a non-empty list of actions`);
+    if (!actions?.length || !invariant) return undefined;
+    return { kind: "property", surface, actions, invariant };
+  }
+  if (!model || isMachine(model)) {
+    problems.push(`${pid}: a ${d.kind} proof needs an input/output model`);
+    return undefined;
+  }
   const parse = (where: string, s: string): Expr | undefined => {
     let e: unknown;
     try {
@@ -902,11 +997,12 @@ export function proofsFromDerivation(p: Proposal, useCases: UseCase[], setup: Pr
     if (!SLUG.test(d.slug ?? "")) problems.push(`${pid}: slug "${d.slug}" is not kebab-case`);
     if (slugs.has(d.slug)) problems.push(`${pid}: duplicate proof slug "${d.slug}"`);
     slugs.add(d.slug);
+    const driven = d.kind === "driven" || d.kind === "property";
     const model = setup.models[d.model];
-    if (!model) problems.push(`${pid}: unknown model "${d.model}" (declared: ${Object.keys(setup.models).join(", ") || "none"})`);
-    if (!setup.subjects.includes(d.subject)) problems.push(`${pid}: unknown subject "${d.subject}" (declared: ${setup.subjects.join(", ") || "none"})`);
+    if (!model && !driven) problems.push(`${pid}: unknown model "${d.model}" (declared: ${Object.keys(setup.models).join(", ") || "none"})`);
+    if (!driven && !setup.subjects.includes(d.subject)) problems.push(`${pid}: unknown subject "${d.subject}" (declared: ${setup.subjects.join(", ") || "none"})`);
     for (const r of d.replaces ?? []) if (!it?.replaces.some((x) => x.proof === r)) problems.push(`${pid}: replaces ${r}, which its intent does not list`);
-    if (!model) return;
+    if (!model && !driven) return;
     const check = checkFromAnswer(pid, d, model, problems);
     if (!check || !it) return;
     proofs.push({
@@ -982,12 +1078,12 @@ export function proofsFromDerivation(p: Proposal, useCases: UseCase[], setup: Pr
 // Proving: the proposal's proofs plus every use case's (regression)
 // ---------------------------------------------------------------------------
 
-function plansByGroup(proofs: ProofEntry[], models: Record<string, Model>, key: (p: ProofEntry) => string): Map<string, ProofPlan> {
+function plansByGroup(proofs: ProofEntry[], models: Record<string, Model | MachineModel>, key: (p: ProofEntry) => string): Map<string, ProofPlan> {
   const out = new Map<string, ProofPlan>();
   for (const pr of proofs) {
     const k = key(pr);
     const model = models[pr.model];
-    if (!model) continue;
+    if (!model || isMachine(model) || (pr.check.kind !== "clause" && pr.check.kind !== "scenario")) continue;
     let plan = out.get(k);
     if (!plan) out.set(k, (plan = { lastro: "proof-plan/v0", artifactHash: "", model, clauses: [], assumptions: [], scenarios: [], beyondProof: [] }));
     if (pr.check.kind === "clause")
@@ -1013,9 +1109,29 @@ function artifactFor(plan: ProofPlan): IntentArtifact {
 export interface RunOptions {
   /** The code under proof, by subject name. */
   subjects: Record<string, Subject>;
-  models: Record<string, Model>;
+  models: Record<string, Model | MachineModel>;
   rust?: RustProver;
   verify?: Omit<VerifyOptions, "subject" | "traces">;
+  /** Runs driven scenarios and properties through the application's surfaces (see drive.ts; Node only). */
+  drive?: DriveRunner;
+}
+
+/** What a driven scenario or a property check came to. */
+export interface DrivenOutcome {
+  verdict: ClauseVerdict;
+  passed: boolean;
+  note?: string;
+  counterexample?: { input: Env; output: Env | null };
+}
+
+export interface DriveRunner {
+  run(proof: ProofEntry & { check: Extract<ProofCheck, { kind: "driven" | "property" }> }): Promise<DrivenOutcome>;
+}
+
+/** The machine clause a machine proof checks, named by the proof's id. */
+export function machineClauseOf(pr: ProofEntry): MachineClause {
+  const c = pr.check as Extract<ProofCheck, { kind: "machine" }>;
+  return c.clause === "invariant" ? { id: pr.id, kind: "invariant", holds: c.ensures } : c.clause === "reach" ? { id: pr.id, kind: "reach", condition: c.ensures } : { id: pr.id, kind: "step", ...(c.requires ? { requires: c.requires } : {}), ensures: c.ensures };
 }
 
 /** Run proofs grouped by (model, subject) on the engine (and the Rust prover, if given). */
@@ -1025,11 +1141,45 @@ export async function runProofs(proofs: { proof: ProofEntry; role: ProofOutcome[
   const role = new Map(proofs.map((x) => [x.proof.id, x.role]));
   const all = proofs.map((x) => x.proof);
   const missing = (pr: ProofEntry, note: string): ProofOutcome => ({ proof: pr.id, useCase: pr.useCase, ...(pr.intent ? { intent: pr.intent } : {}), role: role.get(pr.id)!, verdict: "not-run", passed: false, note });
+  const outcome = (pr: ProofEntry, r: DrivenOutcome): ProofOutcome => ({ proof: pr.id, useCase: pr.useCase, ...(pr.intent ? { intent: pr.intent } : {}), role: role.get(pr.id)!, verdict: r.verdict, passed: r.passed, ...(r.counterexample ? { counterexample: r.counterexample } : {}), ...(r.note ? { note: r.note } : {}) });
+  const drivenKind = (pr: ProofEntry) => pr.check.kind === "driven" || pr.check.kind === "property";
   for (const pr of all) {
-    if (!o.models[pr.model]) outcomes.push(missing(pr, `model ${pr.model} is not declared`));
+    if (drivenKind(pr)) {
+      if (!o.drive) outcomes.push(missing(pr, "no driver runner: driven scenarios and properties run from the CLI or with lastro/drive"));
+      else {
+        try {
+          outcomes.push(outcome(pr, await o.drive.run(pr as ProofEntry & { check: Extract<ProofCheck, { kind: "driven" | "property" }> })));
+        } catch (e) {
+          outcomes.push({ ...missing(pr, (e as Error).message), verdict: "violated" });
+        }
+      }
+    } else if (!o.models[pr.model]) outcomes.push(missing(pr, `model ${pr.model} is not declared`));
     else if (!o.subjects[pr.subject]) outcomes.push(missing(pr, `subject ${pr.subject} is not available`));
   }
-  const runnable = all.filter((pr) => o.models[pr.model] && o.subjects[pr.subject]);
+  // State-machine clauses: every interleaving of the actors, breadth first.
+  const machines = new Map<string, ProofEntry[]>();
+  for (const pr of all) if (pr.check.kind === "machine" && o.models[pr.model] && o.subjects[pr.subject]) machines.set(`${pr.model}\u0000${pr.subject}`, [...(machines.get(`${pr.model}\u0000${pr.subject}`) ?? []), pr]);
+  for (const [k, prs] of machines) {
+    const [mname, sname] = k.split("\u0000") as [string, string];
+    const model = o.models[mname]!;
+    if (!isMachine(model)) {
+      for (const pr of prs) outcomes.push(missing(pr, `model ${mname} is not a state machine`));
+      continue;
+    }
+    const report = await exploreMachine(model, o.subjects[sname]! as MachineStep, prs.map((pr) => machineClauseOf(pr)));
+    for (const r of report.clauses) {
+      const pr = prs.find((x) => x.id === r.clauseId)!;
+      outcomes.push(
+        outcome(pr, {
+          verdict: r.verdict,
+          passed: r.verdict === "proved" || r.verdict === "evidenced",
+          ...(r.path && r.verdict === "violated" ? { counterexample: { input: { path: r.path.map((e) => `${e.event}${Object.keys(e.input).length ? canonicalJson(e.input) : ""}@${e.actor}`).join(" ") }, output: r.state ?? null } } : {}),
+          note: [`${r.method}: ${r.checked} ${r.method === "random-walk" ? "steps" : r.kind === "step" ? "steps checked" : "states"}`, r.note, report.errors[0]].filter(Boolean).join("; "),
+        }),
+      );
+    }
+  }
+  const runnable = all.filter((pr) => !drivenKind(pr) && pr.check.kind !== "machine" && o.models[pr.model] && o.subjects[pr.subject] && !isMachine(o.models[pr.model]));
   for (const [key, plan] of plansByGroup(runnable, o.models, (x) => `${x.model}\u0000${x.subject}`)) {
     const subject = o.subjects[key.split("\u0000")[1]!]!;
     const artifact = artifactFor(plan);
@@ -1121,7 +1271,32 @@ export async function proveProposal(p: Proposal, useCases: UseCase[], o: RunOpti
     pr.evidence = r.verdict === "proved" ? "formal" : r.verdict === "not-run" ? "none" : "empirical";
   }
   next.lastRun = run;
+  const charts: Record<string, string> = {};
+  for (const pr of p.proofs.filter((x) => x.check.kind === "machine")) {
+    const model = o.models[pr.model];
+    const step = o.subjects[pr.subject];
+    if (!model || !isMachine(model) || !step || charts[pr.model]) continue;
+    const clauses = p.proofs.filter((x) => x.model === pr.model && x.check.kind === "machine").map(machineClauseOf);
+    const bad = outcomes.find((x) => x.proof !== undefined && clauses.some((c) => c.id === x.proof) && x.verdict === "violated" && x.counterexample);
+    const path = bad ? parsePath(String(bad.counterexample!.input.path ?? "")) : [];
+    charts[pr.model] = mermaidStatechart(await statechart(model, step as MachineStep, clauses, path));
+  }
+  if (Object.keys(charts).length) next.statecharts = charts;
+  else delete next.statecharts;
   return { proposal: withStatus(next), run };
+}
+
+/** "read@1 write{\"v\":1}@2" back into events. */
+function parsePath(s: string): { actor: number; event: string; input: Env }[] {
+  return s
+    .split(" ")
+    .filter(Boolean)
+    .map((t) => {
+      const at = t.lastIndexOf("@");
+      const head = t.slice(0, at);
+      const brace = head.indexOf("{");
+      return { actor: Number(t.slice(at + 1)), event: brace < 0 ? head : head.slice(0, brace), input: brace < 0 ? {} : (JSON.parse(head.slice(brace)) as Env) };
+    });
 }
 
 /** Run every use case's proofs alone (`lastro regress`). */
@@ -1212,8 +1387,20 @@ export function applyProposal(p: Proposal, useCases: UseCase[]): Applied {
 // Feedback and receipt
 // ---------------------------------------------------------------------------
 
-function formalOf(pr: ProofEntry): string {
-  return pr.check.kind === "clause" ? `${pr.check.requires ? `requires ${show(pr.check.requires)}; ` : ""}ensures ${show(pr.check.ensures)}` : `input ${JSON.stringify(pr.check.input)}; expect ${show(pr.check.expect)}`;
+export function formalOf(pr: Pick<ProofEntry, "check">): string {
+  const c = pr.check;
+  switch (c.kind) {
+    case "clause":
+      return `${c.requires ? `requires ${show(c.requires)}; ` : ""}ensures ${show(c.ensures)}`;
+    case "scenario":
+      return `input ${JSON.stringify(c.input)}; expect ${show(c.expect)}`;
+    case "machine":
+      return `${c.clause} ${c.requires ? `requires ${show(c.requires)}; ` : ""}${c.clause === "reach" ? "reaches" : "ensures"} ${show(c.ensures)}`;
+    case "driven":
+      return `${c.surface.kind} ${c.surface.locator}: ${c.steps.map((s) => `${canonicalJson(s.input)} -> ${canonicalJson(s.expect)}${s.reference ? ` ~ ${s.reference}` : ""}`).join("; ")}${c.tolerance ? ` (tolerance ${c.tolerance})` : ""}`;
+    case "property":
+      return `${c.surface.kind} ${c.surface.locator}: after every action of ${c.actions.map((a) => canonicalJson(a)).join(" | ")}, ${show(c.invariant)}${c.machine ? ` (model ${c.machine})` : ""}`;
+  }
 }
 
 /** The last run's failures as a brief for whoever writes the code. */

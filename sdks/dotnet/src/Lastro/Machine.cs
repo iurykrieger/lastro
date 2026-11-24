@@ -122,6 +122,76 @@ public static class Machines
     private static Dictionary<string, Domain> LocalOf(MachineModel m) => m.Local ?? new(StringComparer.Ordinal);
     private static string Key(Env s) => JsJson.Canonical(LastroJson.ToNode(s));
 
+    /// <summary>The model a step clause is written against: in.* the state, the actor's locals, the actor, the event and its inputs.</summary>
+    public static Model StepModel(MachineModel m)
+    {
+        var inputs = new Dictionary<string, Domain>(StringComparer.Ordinal);
+        foreach (var (k, d) in m.State) inputs[k] = d;
+        foreach (var (k, d) in LocalOf(m)) inputs[k] = d;
+        inputs["actor"] = D.Int(1, ActorsOf(m));
+        inputs["event"] = D.Enum([.. Sorted(m.Events.Keys).Select(e => (Value)e)]);
+        foreach (var ev in m.Events.Values)
+            foreach (var (k, d) in ev) inputs[k] = d;
+        var outputs = new Dictionary<string, Domain>(StringComparer.Ordinal);
+        foreach (var (k, d) in m.State) outputs[k] = d;
+        foreach (var (k, d) in LocalOf(m)) outputs[k] = d;
+        return new Model { Name = m.Name, Inputs = inputs, Outputs = outputs };
+    }
+
+    /// <summary>The model an invariant or a reachability condition is written against (in.* = the whole state).</summary>
+    public static Model StateModel(MachineModel m)
+    {
+        var inputs = new Dictionary<string, Domain>(StringComparer.Ordinal);
+        foreach (var (k, d) in m.State) inputs[k] = d;
+        for (var a = 1; a <= ActorsOf(m); a++)
+            foreach (var (k, d) in LocalOf(m)) inputs[$"{k}_{a}"] = d;
+        return new Model { Name = m.Name, Inputs = inputs };
+    }
+
+    /// <summary>A clause's expressions, validated against the machine.</summary>
+    public static List<string> ClauseProblems(MachineModel m, MachineClause c)
+    {
+        if (c.Kind == "step")
+            return [.. (c.Requires is { } r ? Lsl.Validate(r, StepModel(m)) : []), .. (c.Ensures is { } e ? Lsl.Validate(e, StepModel(m)) : [])];
+        var x = c.Kind == "invariant" ? c.Holds : c.Condition;
+        return x is null ? [] : Lsl.Validate(x, StateModel(m));
+    }
+
+    /// <summary>The machine clause a machine proof checks, named by the proof's id.</summary>
+    public static MachineClause ClauseOf(ProofEntry pr) => pr.Check.Clause switch
+    {
+        "invariant" => new MachineClause { Id = pr.Id, Kind = "invariant", Holds = pr.Check.Ensures },
+        "reach" => new MachineClause { Id = pr.Id, Kind = "reach", Condition = pr.Check.Ensures },
+        _ => new MachineClause { Id = pr.Id, Kind = "step", Requires = pr.Check.Requires, Ensures = pr.Check.Ensures },
+    };
+
+    /// <summary>The key order of a whole state, as the TS engine builds it.</summary>
+    public static List<string> StateOrder(MachineModel m)
+    {
+        var o = Sorted(m.State.Keys).ToList();
+        for (var a = 1; a <= ActorsOf(m); a++) o.AddRange(Sorted(LocalOf(m).Keys).Select(k => $"{k}_{a}"));
+        return o;
+    }
+
+    /// <summary>A counterexample path as "read@1 write{\"v\":1}@2", as the TS engine writes it.</summary>
+    public static string PathText(IEnumerable<MachineEvent> path) =>
+        string.Join(" ", path.Select(e => $"{e.Event}{(e.Input.Count > 0 ? JsJson.Canonical(LastroJson.ToNode(e.Input)) : "")}@{e.Actor}"));
+
+    /// <summary>A path written by <see cref="PathText"/>, read back into events.</summary>
+    public static List<MachineEvent> ParsePath(string s) =>
+        s.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(t =>
+        {
+            var at = t.LastIndexOf('@');
+            var head = t[..at];
+            var brace = head.IndexOf('{');
+            return new MachineEvent
+            {
+                Actor = int.Parse(t[(at + 1)..], System.Globalization.CultureInfo.InvariantCulture),
+                Event = brace < 0 ? head : head[..brace],
+                Input = brace < 0 ? new Env() : LastroJson.Deserialize<Env>(head[brace..]),
+            };
+        }).ToList();
+
     /// <summary>What is wrong with a model: infinite domains, no events, an initial value out of its domain.</summary>
     public static List<string> Problems(MachineModel m)
     {

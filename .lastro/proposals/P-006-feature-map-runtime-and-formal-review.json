@@ -135,8 +135,10 @@
         "end": 2487
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-006.I-08",
@@ -247,8 +249,10 @@
         "end": 4253
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-006.I-14",
@@ -674,8 +678,10 @@
         "end": 11391
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-006.I-37",
@@ -710,8 +716,10 @@
         "end": 7168
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     }
   ],
   "useCases": [
@@ -1017,7 +1025,8 @@
           "text": "Changed: for a feature an intent modifies, extraction keeps its surfaces and dependencies and only adds or removes the ones the change calls for (I-02)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T2",
@@ -1033,7 +1042,8 @@
           "text": "Changed: TLA+ export removed. Every state machine is drawn as a statechart from the user's point of view (states, events, actors as parallel regions, forbidden states marked, counterexample path drawn), shown next to the proofs; request changes on the intent when it does not match (I-15)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T3",
@@ -1053,7 +1063,8 @@
           "text": "Iury chose to keep the three SDKs. The TypeScript engine is the one in the TypeScript SDK (sdks/typescript); the Go and .NET SDKs are ports with the same verdicts, and the Rust prover is the independent second engine. The intent stays as written."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T4",
@@ -1069,7 +1080,8 @@
           "text": "Changed: market protocols. W3C WebDriver (BiDi where supported) for web and Electron, Appium for Android and iOS, HTTP for APIs, processes for CLIs; Lastro's JSON lines only where no standard fits (I-17)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T5",
@@ -1085,7 +1097,8 @@
           "text": "Changed: Android and iOS are driven through Appium over the same WebDriver protocol; the docs show that setup (I-18)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T6",
@@ -1101,7 +1114,8 @@
           "text": "Changed: a scenario is a list of steps, each an input with its expected output: user action + expected state + optional reference screenshot for screens, request + expected status and body for APIs (I-19). A signed-off after screenshot becomes the reference for later regressions (I-38)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T7",
@@ -1117,7 +1131,8 @@
           "text": "Changed: when the surface has a state-machine model, the property is proved over the model first (exhaustive or SMT induction), and sequences check the app follows the model; only properties with no model are evidenced (I-22). Large state machines also try SMT induction before random walks (I-13), and derivation tries SMT before sampling (I-07)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T8",
@@ -1133,7 +1148,8 @@
           "text": "Changed: .lastro/docs/<proposal>/<feature>/<intent>/before|after/ (I-31)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     }
   ],
   "notPromised": [

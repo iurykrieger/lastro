@@ -23,8 +23,10 @@
         "end": 1876
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-02",
@@ -57,8 +59,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-04",
@@ -91,8 +95,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-06",
@@ -108,8 +114,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-07",
@@ -125,8 +133,10 @@
         "end": 1876
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-08",
@@ -142,8 +152,10 @@
         "end": 2077
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-09",
@@ -159,8 +171,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-10",
@@ -176,8 +190,10 @@
         "end": 1745
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-11",
@@ -193,8 +209,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-12",
@@ -210,8 +228,10 @@
         "end": 2142
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-13",
@@ -227,8 +247,10 @@
         "end": 2077
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-14",
@@ -244,8 +266,10 @@
         "end": 2077
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-15",
@@ -261,8 +285,10 @@
         "end": 2077
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-16",
@@ -278,8 +304,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-17",
@@ -295,8 +323,10 @@
         "end": 2077
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-18",
@@ -312,8 +342,10 @@
         "end": 654
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-19",
@@ -329,8 +361,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-20",
@@ -346,8 +380,10 @@
         "end": 841
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-21",
@@ -363,8 +399,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-22",
@@ -380,8 +418,10 @@
         "end": 1554
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-23",
@@ -703,7 +743,9 @@
       "intents": [
         "P-007.I-24",
         "P-007.I-25"
-      ]
+      ],
+      "chosen": 1,
+      "answeredBy": "iury"
     },
     {
       "id": "D2",
@@ -730,7 +772,68 @@
       "answeredBy": "iury"
     }
   ],
-  "threads": [],
+  "threads": [
+    {
+      "id": "T1",
+      "on": "P-007.I-02",
+      "by": "iury",
+      "comments": [
+        {
+          "by": "iury",
+          "text": "Feature é algo um pouco mais abrangente e com escrita orientada a funcionalidade em si"
+        }
+      ],
+      "resolved": false
+    },
+    {
+      "id": "T2",
+      "on": "P-007.I-04",
+      "by": "iury",
+      "comments": [
+        {
+          "by": "iury",
+          "text": "Os intents são intenções de modificação de uma ou mais features, ou a adição ou remoção de uma nova"
+        }
+      ],
+      "resolved": false
+    },
+    {
+      "id": "T3",
+      "on": "P-007.I-23",
+      "by": "iury",
+      "comments": [
+        {
+          "by": "iury",
+          "text": "Migre cada usecase para uma feature e remova a pasta antiga"
+        }
+      ],
+      "resolved": false
+    },
+    {
+      "id": "T4",
+      "on": "P-007.I-24",
+      "by": "iury",
+      "comments": [
+        {
+          "by": "iury",
+          "text": "Sem usecases ou funcionamento antigo retrocompativel. Mude tudo para features e remova menções a usecases"
+        }
+      ],
+      "resolved": false
+    },
+    {
+      "id": "T5",
+      "on": "P-007.I-25",
+      "by": "iury",
+      "comments": [
+        {
+          "by": "iury",
+          "text": "No deprecated aliases, framework is not being used yet, just change que values"
+        }
+      ],
+      "resolved": false
+    }
+  ],
   "notPromised": [
     "No behavior of any feature changes.",
     "Feature slugs do not change; only names and ids do.",

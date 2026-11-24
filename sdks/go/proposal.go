@@ -2168,6 +2168,10 @@ func RenderProposalReceipt(p Proposal, useCases []UseCase) string {
 		}
 		L = append(L, "")
 	}
+	if run != nil && run.OK {
+		// Counted on a passing run: a failing one has no coverage to report yet.
+		L = append(L, coverageSection(p, *run)...)
+	}
 	if len(p.Decisions) > 0 {
 		L = append(L, "## Decisions", "")
 		for _, d := range p.Decisions {
@@ -2190,4 +2194,102 @@ func RenderProposalReceipt(p Proposal, useCases []UseCase) string {
 		L = append(L, "")
 	}
 	return strings.Join(L, "\n")
+}
+
+// CoverageEntry is an intent that is not proved formally, with the reason.
+type CoverageEntry struct {
+	Intent string `json:"intent"`
+	Reason string `json:"reason"`
+}
+
+// Coverage counts the intents proved formally, evidenced and beyond proof.
+type Coverage struct {
+	Formal    []string        `json:"formal"`
+	Evidenced []CoverageEntry `json:"evidenced"`
+	Beyond    []CoverageEntry `json:"beyond"`
+}
+
+// FormalCoverage sorts a proposal's forward intents by how their proofs came out in a run.
+func FormalCoverage(p Proposal, run ProposalRun) Coverage {
+	out := Coverage{Formal: []string{}, Evidenced: []CoverageEntry{}, Beyond: []CoverageEntry{}}
+	for _, it := range ForwardIntents(p) {
+		var proofs []ProofEntry
+		for _, x := range p.Proofs {
+			if x.Intent == it.ID {
+				proofs = append(proofs, x)
+			}
+		}
+		if len(proofs) == 0 {
+			reason := it.BeyondProofReason
+			if reason == "" {
+				reason = "no proof derived"
+				if it.Provability == "beyond-proof" {
+					reason = "unstated"
+				}
+			}
+			out.Beyond = append(out.Beyond, CoverageEntry{it.ID, reason})
+			continue
+		}
+		var outcomes, informal []ProofOutcome
+		for _, x := range run.Outcomes {
+			if x.Role == "proposal" && x.Intent == it.ID {
+				outcomes = append(outcomes, x)
+				if x.Verdict != "proved" {
+					informal = append(informal, x)
+				}
+			}
+		}
+		if len(informal) == 0 && len(outcomes) == len(proofs) {
+			out.Formal = append(out.Formal, it.ID)
+			continue
+		}
+		var reasons []string
+		for _, x := range informal {
+			why := x.Note
+			if why == "" {
+				kind := ""
+				for _, pr := range proofs {
+					if pr.ID == x.Proof {
+						kind = pr.Check.Kind
+					}
+				}
+				why = informalReason(kind, x.Verdict)
+			}
+			reasons = append(reasons, x.Proof+": "+why)
+		}
+		reason := strings.Join(reasons, "; ")
+		if reason == "" {
+			reason = "not every proof ran"
+		}
+		out.Evidenced = append(out.Evidenced, CoverageEntry{it.ID, reason})
+	}
+	return out
+}
+
+func informalReason(kind, verdict string) string {
+	if verdict != "evidenced" {
+		return verdict
+	}
+	switch kind {
+	case "scenario", "driven":
+		return "a scenario: empirical evidence"
+	case "property":
+		return "a property with no model: action sequences only"
+	}
+	return "sampled: the domain is too large to enumerate"
+}
+
+func coverageSection(p Proposal, run ProposalRun) []string {
+	c := FormalCoverage(p, run)
+	L := []string{"## Formal coverage", "", fmt.Sprintf("%d intent(s) proved formally, %d evidenced, %d beyond proof.", len(c.Formal), len(c.Evidenced), len(c.Beyond)), ""}
+	for _, e := range c.Evidenced {
+		L = append(L, fmt.Sprintf("- %s evidenced: %s", e.Intent, e.Reason))
+	}
+	for _, b := range c.Beyond {
+		L = append(L, fmt.Sprintf("- %s beyond proof: %s", b.Intent, b.Reason))
+	}
+	if len(c.Evidenced) > 0 || len(c.Beyond) > 0 {
+		L = append(L, "")
+	}
+	return L
 }

@@ -1435,9 +1435,17 @@ export function formalCoverage(p: Proposal, run: ProposalRun): { formal: string[
     }
     const informal = outcomes.filter((x) => x.verdict !== "proved");
     if (!informal.length && outcomes.length === proofs.length) out.formal.push(it.id);
-    else out.evidenced.push({ intent: it.id, reason: informal.map((x) => `${x.proof}: ${x.note ?? (x.verdict === "evidenced" ? "sampled: the domain is too large to enumerate" : x.verdict)}`).join("; ") || "not every proof ran" });
+    else out.evidenced.push({ intent: it.id, reason: informal.map((x) => `${x.proof}: ${x.note ?? informalReason(proofs.find((pr) => pr.id === x.proof)?.check.kind, x.verdict)}`).join("; ") || "not every proof ran" });
   }
   return out;
+}
+
+/** Why a proof that passed is not formal, when its outcome carries no note of its own. */
+function informalReason(kind: ProofCheck["kind"] | undefined, verdict: string): string {
+  if (verdict !== "evidenced") return verdict;
+  if (kind === "scenario" || kind === "driven") return "a scenario: empirical evidence";
+  if (kind === "property") return "a property with no model: action sequences only";
+  return "sampled: the domain is too large to enumerate";
 }
 
 function coverageSection(p: Proposal, run: ProposalRun): string[] {
@@ -1545,7 +1553,8 @@ export function renderProposalReceipt(p: Proposal, useCases: UseCase[]): string 
     if (run.unproved.length) L.push(`- Unproved use cases (no proofs yet): ${run.unproved.join(", ")}`);
     L.push("");
   }
-  if (run) L.push(...coverageSection(p, run));
+  // Counted on a passing run: a failing one has no coverage to report yet.
+  if (run?.ok) L.push(...coverageSection(p, run));
   L.push(...featureMapSection(p, useCases));
   L.push(...evidenceSections(p));
   if (p.decisions.length) {

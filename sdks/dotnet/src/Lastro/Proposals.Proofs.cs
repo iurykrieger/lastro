@@ -504,6 +504,7 @@ public static partial class Proposals
             if (run.Unproved.Count > 0) L.Add($"- Unproved use cases (no proofs yet): {string.Join(", ", run.Unproved)}");
             L.Add("");
         }
+        if (run is { Ok: true }) L.AddRange(CoverageSection(p, run)); // a failing run has no coverage to report yet
         if (p.Decisions.Count > 0)
         {
             L.AddRange(["## Decisions", ""]);
@@ -620,4 +621,43 @@ public static partial class Proposals
     /// <summary>Asks the LLM for the proofs of the approved intents and checks its answer.</summary>
     public static async Task<Proposal> DeriveAsync(AskJson ask, Proposal p, IReadOnlyList<UseCase> useCases, ProofSetup setup, VerifyOptions? opts = null, CancellationToken cancellationToken = default) =>
         FromDerivation(p, useCases, setup, await ask(DeriveProofsRequest(p, useCases, setup), cancellationToken).ConfigureAwait(false), opts);
+
+    /// <summary>The forward intents sorted by how their proofs came out in a run: formal, evidenced (with why), beyond proof.</summary>
+    public static (List<string> Formal, List<(string Intent, string Reason)> Evidenced, List<(string Intent, string Reason)> Beyond) FormalCoverage(Proposal p, ProposalRun run)
+    {
+        var formal = new List<string>();
+        var evidenced = new List<(string, string)>();
+        var beyond = new List<(string, string)>();
+        foreach (var it in ForwardIntents(p))
+        {
+            var proofs = p.Proofs.Where(x => x.Intent == it.Id).ToList();
+            if (proofs.Count == 0)
+            {
+                beyond.Add((it.Id, it.BeyondProofReason ?? (it.Provability == "beyond-proof" ? "unstated" : "no proof derived")));
+                continue;
+            }
+            var outcomes = run.Outcomes.Where(x => x.Role == "proposal" && x.Intent == it.Id).ToList();
+            var informal = outcomes.Where(x => x.Verdict != "proved").ToList();
+            if (informal.Count == 0 && outcomes.Count == proofs.Count) { formal.Add(it.Id); continue; }
+            var reason = string.Join("; ", informal.Select(x => $"{x.Proof}: {(string.IsNullOrEmpty(x.Note) ? InformalReason(proofs.FirstOrDefault(pr => pr.Id == x.Proof)?.Check.Kind, x.Verdict) : x.Note)}"));
+            evidenced.Add((it.Id, reason.Length > 0 ? reason : "not every proof ran"));
+        }
+        return (formal, evidenced, beyond);
+    }
+
+    static string InformalReason(string? kind, string verdict) =>
+        verdict != "evidenced" ? verdict
+        : kind is "scenario" or "driven" ? "a scenario: empirical evidence"
+        : kind == "property" ? "a property with no model: action sequences only"
+        : "sampled: the domain is too large to enumerate";
+
+    static List<string> CoverageSection(Proposal p, ProposalRun run)
+    {
+        var c = FormalCoverage(p, run);
+        var L = new List<string> { "## Formal coverage", "", $"{c.Formal.Count} intent(s) proved formally, {c.Evidenced.Count} evidenced, {c.Beyond.Count} beyond proof.", "" };
+        foreach (var e in c.Evidenced) L.Add($"- {e.Intent} evidenced: {e.Reason}");
+        foreach (var b in c.Beyond) L.Add($"- {b.Intent} beyond proof: {b.Reason}");
+        if (c.Evidenced.Count > 0 || c.Beyond.Count > 0) L.Add("");
+        return L;
+    }
 }

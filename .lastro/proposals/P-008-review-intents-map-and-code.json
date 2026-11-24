@@ -1,0 +1,901 @@
+{
+  "lastro": "proposal/v1",
+  "id": "P-008",
+  "slug": "review-intents-map-and-code",
+  "name": "Review intents where the agent works, understand every screen, and see the feature map and the code before and after",
+  "description": "The Lastro pane in Claude Code opens by itself whenever intents wait and records the review; it and the web app explain everything they show. The web app opens proposals on an Intents tab with keyboard review, an inbox and confirmed bulk approval; a Map page draws the feature map; complexity and imports snapshots of the code, before and after, are compared and shown in a Code view without ever blocking a proposal.",
+  "status": "open",
+  "submittedBy": "Iury",
+  "prose": "# Review intents where the agent works, understand every screen, and see the feature map and the code before and after\n\nIntents are reviewed before any code exists, so the review has to come to the reviewer the moment there is\nsomething to review, and every part of it has to say what it is. The review therefore opens inside Claude Code, in\nthe Lastro pane, by itself whenever a proposal has intents waiting; the web app stays the place where a team reviews\ntogether. Both explain each thing they show, and both add a map of the features and how they depend on each other,\nand what the implementation did to the code: the cyclomatic complexity of its functions and the dependencies between\nits modules, before and after. None of this judges the code: proofs stay the only verdicts, and the new views are\nevidence for the reviewer.\n\n## Reviewing in the Lastro pane\n\nThe Lastro pane in Claude Code (the board mod) opens by itself, with the keyboard on it, whenever the current\nproposal has intents or decisions waiting for the reviewer, before the agent writes any code: right after the\nintents are extracted, and again whenever a re-extraction or a derivation sends intents back to review. The reviewer\ncan close it; it opens again only when something new waits for them.\n\nThe pane shows the proposal's open decisions first, each with its options and the recommended one, then its\nintents one at a time, each with the feature it changes, the feature's description before and after, the quote it\ncame from and the proofs approving it would replace. Buttons with keys answer a decision, approve an intent, amend\nit (with a field for the new wording) or reject it (with a field for the reason), and after an amend or a reject\nthey rewrite the feature's description or ask for it to be recombined. Each press runs the same `lastro review`\ncommand the chat review uses, as the reviewer, whose name comes from `LASTRO_REVIEWER` or git and is never an\nagent's; the press is the reviewer's own act, so no permission prompt follows. The pane then moves to the next\nitem that waits, and says when nothing does.\n\nWhile the pane is installed, the agent is told that the review happens there: it points the reviewer to the pane\ninstead of asking each decision and intent in the chat, and waits. Without the pane (in Codex, or with the mod not\ninstalled) the chat review works as today.\n\nThe pane also has a Map view and a Code view that show, as text, the same feature map and code comparisons as the\nweb app below, for the current proposal.\n\n## Understanding what is on the screen\n\nEvery part of the pane and of the web app says what it is. Each section starts with one sentence on what it shows\nand what the reviewer does there (a decision is a question the extraction could not settle; an intent is one promise\nof the change, on one feature; approving an intent that replaces proofs accepts that they stop guarding the old\nbehavior). Every badge and mark has an explanation on hover in the web app and in a legend the pane shows with `?`:\nadd, modify and remove; formal, empirical and beyond proof (and why proof stops there); the approvals count against\nthe policy; each proof verdict; and each state on the map and in the code views. A glossary page in the web app,\nand the same text in the pane's legend, define proposal, intent, feature, decision, proof, regression, snapshot and\nverdict in one sentence each. An empty view says why it is empty and what makes it fill.\n\n## Reviewing intents in the web app\n\nEvery open proposal has an Intents tab, the one the app opens first while the proposal has intents to review. It\nlists the proposal's intents in order, each with the feature it adds, modifies or removes, the feature's\ndescription before and after as a word diff, the quote it came from, the proofs it replaces and its threads, and\nthe reviewer approves, amends or rejects each one there, as in the feature view. It filters to the intents that are\nnot settled or that wait for the reviewer, and the keyboard moves between intents (j and k) and opens approve,\namend and reject on the selected one (a, m and r).\n\nA reviewer can approve every intent that waits for them at once; the app first says how many intents that is and\nwhich proofs they replace, and approves only after the reviewer confirms. An amended or rejected intent is never\napproved that way.\n\nThe header shows how many intents wait for the reviewer across every open proposal, and links to an inbox that\nlists them grouped by proposal, oldest proposal first.\n\n## The feature map\n\nA Map page draws every feature as a node and every dependency as an arrow from the feature to the one it depends\non, from the features' surfaces and dependencies (proposal P-006). Features are laid out in columns by how deep\ntheir dependencies go, in a deterministic order, so the same workspace always draws the same map. Each node shows\nthe feature's name, its surfaces and the state of its proofs: every proof passed, some only evidenced, one failing,\nor no proofs. A feature with no surface is drawn as not reachable by a driver. A dependency on a feature that does\nnot exist or was removed, and every dependency cycle, are drawn in red and listed above the map with the features\nthey involve.\n\nThe map can show one proposal: the features it adds, modifies and removes are colored by change, the features that\ndepend on them, directly or not, are marked as affected, and the others fade. A proposal's page links to its map.\nClicking a feature opens its page, which lists what it depends on and what depends on it. The map can be filtered\nby text.\n\n## The code before and after\n\nTwo more snapshot kinds, taken like the other snapshots of a proposal (before when it is extracted, on the current\ncode; after when it is proved, on the new code) but for the repository's code rather than one intent's feature, so they\nlive with the proposal's repository-wide snapshots, in `.lastro/docs/<proposal>/repository/before|after/`\n(`complexity.json` and `imports.json`). They are committed with the proposal and the proposal records the SHA-256 of\neach one.\n\n- complexity: the cyclomatic complexity of every function in the repository's source files: one plus its decision\n  points (each if, loop, case, catch, conditional expression and short-circuit operator). TypeScript and JavaScript\n  are read with a parser; Rust, Go and C# with a scanner that skips comments and strings. Files in other languages\n  are listed as not measured.\n- imports: the dependency graph between the repository's source files: an arrow for every import that resolves to\n  another file of the repository (relative and workspace imports in TypeScript and JavaScript, `mod` and `use crate`\n  in Rust, packages of the same module in Go). Files whose imports cannot be resolved are listed as not mapped.\n\nWhich files count follows `.gitignore` and the `code` section of `.lastro/config.json` (paths to include and to\nexclude), and the same files give the same snapshot on every machine.\n\nThe comparison of a complexity pair lists every function added, removed or whose complexity changed, with its\nfile, before, after and difference, and each file's total and highest complexity before and after. A function above\nthe threshold (`code.complexityThreshold`, 10 by default) is marked, and one that crossed it in this proposal is\nflagged. The comparison of an imports pair lists the arrows added and removed, the files added and removed, how\nmany files each changed file imports and is imported by, before and after, and every import cycle the change\nintroduced, by its files. Neither comparison blocks a proposal. The TypeScript, Go and .NET SDKs take and compare\nthese snapshots with identical results, like the other snapshot kinds.\n\n## Seeing it in the app\n\nA proposal has a Code tab. It shows the complexity comparison as a table of changed files that opens into their\nfunctions, sortable by difference, and the imports comparison as a graph of the changed files and the files next to\nthem, with added arrows in green, removed ones dashed in red and new cycles highlighted. Until the proposal is\nproved, the after side is taken from the working tree each time the page loads and is labeled as not yet\nsnapshotted, so reviewers can follow the implementation while it is written.",
+  "baseline": "sha256:e1df572be471d7f3a5c74a900afa64c438ffb7d13755a66229196de4ecbc7c07",
+  "intents": [
+    {
+      "id": "P-008.I-01",
+      "slug": "pane-opens-when-review-waits",
+      "name": "The pane opens by itself when something waits",
+      "description": "The Lastro pane opens with the keyboard on it whenever the current proposal has intents or decisions waiting for the reviewer: after extraction and whenever a re-extraction or derivation sends intents back to review, before any code is written.",
+      "change": "modify",
+      "useCase": "UC-045",
+      "provability": "empirical",
+      "source": {
+        "quote": "opens by itself, with the keyboard on it, whenever the current\nproposal has intents or decisions waiting for the reviewer",
+        "start": 913,
+        "end": 1034
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-02",
+      "slug": "pane-reopens-only-on-new",
+      "name": "A closed pane reopens only for something new",
+      "description": "After the reviewer closes the pane, it opens again only when a decision or intent waits that did not wait when it was closed.",
+      "change": "modify",
+      "useCase": "UC-045",
+      "provability": "formal",
+      "source": {
+        "quote": "The reviewer\ncan close it; it opens again only when something new waits for them.",
+        "start": 1190,
+        "end": 1271
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-03",
+      "slug": "pane-shows-items-in-order",
+      "name": "Decisions first, then one intent at a time",
+      "description": "The pane shows open decisions first with their options and the recommended one, then intents one at a time with the feature, its description before and after, the quote and the proofs it would replace.",
+      "change": "modify",
+      "useCase": "UC-045",
+      "provability": "empirical",
+      "source": {
+        "quote": "The pane shows the proposal's open decisions first, each with its options and the recommended one, then its\nintents one at a time",
+        "start": 1273,
+        "end": 1402
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-04",
+      "slug": "pane-records-review",
+      "name": "Review from the pane",
+      "description": "Buttons with keys in the pane answer decisions and approve, amend (with new wording) or reject (with a reason) intents, and rewrite or recombine a feature after an amend or reject, each by running the same lastro review command as the reviewer.",
+      "change": "modify",
+      "useCase": "UC-045",
+      "provability": "empirical",
+      "source": {
+        "quote": "Buttons with keys answer a decision, approve an intent, amend\nit (with a field for the new wording) or reject it (with a field for the reason)",
+        "start": 1548,
+        "end": 1690
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-05",
+      "slug": "pane-reviewer-never-agent",
+      "name": "The pane reviews as a person, never an agent",
+      "description": "The pane's reviewer name comes from LASTRO_REVIEWER or git; an agent name (claude, codex, agent, assistant, ai, bot) is refused and nothing is recorded.",
+      "change": "modify",
+      "useCase": "UC-045",
+      "provability": "formal",
+      "source": {
+        "quote": "as the reviewer, whose name comes from `LASTRO_REVIEWER` or git and is never an\nagent's",
+        "start": 1865,
+        "end": 1952
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-06",
+      "slug": "pane-advances",
+      "name": "The pane moves to the next waiting item",
+      "description": "After each recorded action the pane shows the next item that waits, and says so when nothing waits.",
+      "change": "modify",
+      "useCase": "UC-045",
+      "provability": "empirical",
+      "source": {
+        "quote": "The pane then moves to the next\nitem that waits, and says when nothing does.",
+        "start": 2024,
+        "end": 2100
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-07",
+      "slug": "pane-map-and-code-views",
+      "name": "Map and Code views in the pane",
+      "description": "The pane has Map and Code views showing as text the feature map and the code comparisons of the current proposal.",
+      "change": "modify",
+      "useCase": "UC-045",
+      "provability": "empirical",
+      "source": {
+        "quote": "The pane also has a Map view and a Code view",
+        "start": 2374,
+        "end": 2418
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-08",
+      "slug": "agent-points-to-pane",
+      "name": "The agent points to the pane instead of asking in chat",
+      "description": "While the pane is installed, the agent is told the review happens there: it points the reviewer to the pane instead of asking each decision and intent in the chat, and waits; without the pane the chat review is unchanged.",
+      "change": "modify",
+      "useCase": "UC-040",
+      "provability": "empirical",
+      "source": {
+        "quote": "While the pane is installed, the agent is told that the review happens there",
+        "start": 2102,
+        "end": 2178
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-09",
+      "slug": "sections-say-what-they-are",
+      "name": "Every section says what it is",
+      "description": "Every section of the pane and the web app starts with one sentence on what it shows and what the reviewer does there.",
+      "change": "add",
+      "useCase": "UC-062",
+      "provability": "beyond-proof",
+      "beyondProofReason": "human-judgment",
+      "source": {
+        "quote": "Each section starts with one sentence on what it shows\nand what the reviewer does there",
+        "start": 2629,
+        "end": 2716
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-10",
+      "slug": "badges-explained",
+      "name": "Every badge and mark is explained",
+      "description": "Every badge and mark (change kind, provability and why proof stops, approvals against the policy, proof verdicts, map and code states) has an explanation on hover in the web app and in the pane's legend opened with ?.",
+      "change": "add",
+      "useCase": "UC-062",
+      "provability": "empirical",
+      "source": {
+        "quote": "Every badge and mark has an explanation on hover in the web app and in a legend the pane shows with `?`",
+        "start": 2924,
+        "end": 3027
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-11",
+      "slug": "glossary",
+      "name": "A glossary of Lastro's terms",
+      "description": "A glossary page in the web app, and the same text in the pane's legend, define proposal, intent, feature, decision, proof, regression, snapshot and verdict in one sentence each.",
+      "change": "add",
+      "useCase": "UC-062",
+      "provability": "empirical",
+      "source": {
+        "quote": "A glossary page in the web app,\nand the same text in the pane's legend",
+        "start": 3226,
+        "end": 3296
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-12",
+      "slug": "empty-views-explain",
+      "name": "Empty views say why",
+      "description": "An empty view says why it is empty and what makes it fill.",
+      "change": "add",
+      "useCase": "UC-062",
+      "provability": "empirical",
+      "source": {
+        "quote": "An empty view says why it is empty and what makes it fill.",
+        "start": 3404,
+        "end": 3462
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-13",
+      "slug": "intents-tab-opens-first",
+      "name": "The Intents tab opens first while intents wait",
+      "description": "Every open proposal has an Intents tab, and the app opens a proposal on it while the proposal has intents not yet settled; otherwise it opens on the conversation as today.",
+      "change": "add",
+      "useCase": "UC-063",
+      "provability": "empirical",
+      "source": {
+        "quote": "Every open proposal has an Intents tab, the one the app opens first while the proposal has intents to review.",
+        "start": 3501,
+        "end": 3610
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-14",
+      "slug": "intents-tab-lists-in-order",
+      "name": "The Intents tab lists every intent with its context",
+      "description": "The Intents tab lists the proposal's intents in id order, each with the use case it adds, modifies or removes, that use case's description before and after as a word diff, the quote, the proofs it replaces and its threads.",
+      "change": "add",
+      "useCase": "UC-063",
+      "provability": "empirical",
+      "source": {
+        "quote": "lists the proposal's intents in order, each with the feature it adds, modifies or removes",
+        "start": 3614,
+        "end": 3703
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-15",
+      "slug": "review-from-intents-tab",
+      "name": "Approve, amend and reject from the Intents tab",
+      "description": "From the Intents tab a reviewer approves, amends or rejects each intent, with the same rules and the same SDK review actions as in the use-case view.",
+      "change": "add",
+      "useCase": "UC-063",
+      "provability": "empirical",
+      "source": {
+        "quote": "the reviewer approves, amends or rejects each one there, as in the feature view",
+        "start": 3832,
+        "end": 3911
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-16",
+      "slug": "intents-tab-filters",
+      "name": "Filter the Intents tab",
+      "description": "The Intents tab filters to the intents not settled, or to those waiting for the current reviewer.",
+      "change": "add",
+      "useCase": "UC-063",
+      "provability": "empirical",
+      "source": {
+        "quote": "It filters to the intents that are\nnot settled or that wait for the reviewer",
+        "start": 3913,
+        "end": 3989
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-17",
+      "slug": "intents-tab-keyboard",
+      "name": "Review from the keyboard",
+      "description": "j and k select the next and previous intent; a, m and r open approve, amend and reject on the selected one. Keys typed in a text field are not shortcuts.",
+      "change": "add",
+      "useCase": "UC-063",
+      "provability": "empirical",
+      "source": {
+        "quote": "the keyboard moves between intents (j and k) and opens approve,\namend and reject on the selected one (a, m and r)",
+        "start": 3995,
+        "end": 4108
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-18",
+      "slug": "approve-waiting-at-once",
+      "name": "Approve every intent waiting for me, after confirming",
+      "description": "One action approves every intent that waits for the reviewer; it first states how many intents and which proofs they replace, and approves only after the reviewer confirms.",
+      "change": "add",
+      "useCase": "UC-063",
+      "provability": "empirical",
+      "source": {
+        "quote": "A reviewer can approve every intent that waits for them at once; the app first says how many intents that is and\nwhich proofs they replace, and approves only after the reviewer confirms.",
+        "start": 4111,
+        "end": 4297
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-19",
+      "slug": "bulk-approve-skips-amended-rejected",
+      "name": "Bulk approval never approves amended or rejected intents",
+      "description": "The approve-at-once action leaves rejected intents and intents amended since the reviewer last saw them out of the batch.",
+      "change": "add",
+      "useCase": "UC-063",
+      "provability": "formal",
+      "source": {
+        "quote": "An amended or rejected intent is never\napproved that way.",
+        "start": 4298,
+        "end": 4355
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-20",
+      "slug": "waiting-count-in-header",
+      "name": "The header counts intents waiting for me",
+      "description": "The header shows how many intents wait for the current reviewer across every open proposal.",
+      "change": "add",
+      "useCase": "UC-064",
+      "provability": "empirical",
+      "source": {
+        "quote": "The header shows how many intents wait for the reviewer across every open proposal",
+        "start": 4357,
+        "end": 4439
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-21",
+      "slug": "inbox-grouped-by-proposal",
+      "name": "An inbox of intents waiting for me",
+      "description": "An inbox page lists the intents waiting for the current reviewer, grouped by proposal, oldest proposal first, each linking to the intent.",
+      "change": "add",
+      "useCase": "UC-064",
+      "provability": "empirical",
+      "source": {
+        "quote": "links to an inbox that\nlists them grouped by proposal, oldest proposal first",
+        "start": 4445,
+        "end": 4521
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-22",
+      "slug": "map-nodes-and-arrows",
+      "name": "A Map page draws features and dependencies",
+      "description": "A Map page draws every use case as a node and every dependency as an arrow to the use case it depends on, from the surfaces and dependsOn of P-006.",
+      "change": "add",
+      "useCase": "UC-065",
+      "provability": "empirical",
+      "source": {
+        "quote": "A Map page draws every feature as a node and every dependency as an arrow from the feature to the one it depends\non",
+        "start": 4544,
+        "end": 4659
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-23",
+      "slug": "map-deterministic-layout",
+      "name": "The map's layout is deterministic",
+      "description": "Use cases are placed in columns by dependency depth, in a deterministic order inside each column: the same workspace always gives the same layout.",
+      "change": "add",
+      "useCase": "UC-065",
+      "provability": "formal",
+      "source": {
+        "quote": "Features are laid out in columns by how deep\ntheir dependencies go, in a deterministic order, so the same workspace always draws the same map.",
+        "start": 4724,
+        "end": 4866
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-24",
+      "slug": "map-node-proof-state",
+      "name": "Each node shows surfaces and proof state",
+      "description": "Each node shows the use case's name, its surfaces and its proofs' state: all passed, some only evidenced, one failing, or no proofs.",
+      "change": "add",
+      "useCase": "UC-065",
+      "provability": "empirical",
+      "source": {
+        "quote": "Each node shows\nthe feature's name, its surfaces and the state of its proofs",
+        "start": 4867,
+        "end": 4943
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-25",
+      "slug": "map-unreachable",
+      "name": "Features without a surface are drawn as unreachable",
+      "description": "A use case with no surface is drawn as not reachable by a driver.",
+      "change": "add",
+      "useCase": "UC-065",
+      "provability": "empirical",
+      "source": {
+        "quote": "A feature with no surface is drawn as not reachable by a driver.",
+        "start": 5013,
+        "end": 5077
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-26",
+      "slug": "map-errors-in-red",
+      "name": "Broken dependencies and cycles in red",
+      "description": "A dependency on a use case that does not exist or was removed, and every dependency cycle, are drawn in red and listed above the map with the use cases involved.",
+      "change": "add",
+      "useCase": "UC-065",
+      "provability": "empirical",
+      "source": {
+        "quote": "A dependency on a feature that does\nnot exist or was removed, and every dependency cycle, are drawn in red",
+        "start": 5078,
+        "end": 5184
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-27",
+      "slug": "map-proposal-highlight",
+      "name": "The map shows one proposal's impact",
+      "description": "With a proposal selected, the use cases it adds, modifies and removes are colored by change, those depending on them directly or not are marked affected, and the rest fade; a proposal's page links to its map.",
+      "change": "add",
+      "useCase": "UC-065",
+      "provability": "empirical",
+      "source": {
+        "quote": "The map can show one proposal: the features it adds, modifies and removes are colored by change",
+        "start": 5243,
+        "end": 5338
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-28",
+      "slug": "map-click-and-filter",
+      "name": "Open a feature from the map, and filter it",
+      "description": "Clicking a node opens the use case's page, which lists what it depends on and what depends on it; the map filters by text.",
+      "change": "add",
+      "useCase": "UC-065",
+      "provability": "empirical",
+      "source": {
+        "quote": "Clicking a feature opens its page, which lists what it depends on and what depends on it.",
+        "start": 5472,
+        "end": 5561
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-29",
+      "slug": "complexity-snapshot-taken",
+      "name": "Complexity snapshots before and after",
+      "description": "A complexity snapshot of the repository's code is taken when a proposal is extracted (before) and when it is proved (after), stored as complexity.json in .lastro/docs/<proposal>/repository/before|after/, committed with the proposal, with its SHA-256 in the proposal.",
+      "change": "add",
+      "useCase": "UC-066",
+      "provability": "empirical",
+      "source": {
+        "quote": "Two more snapshot kinds, taken like the other snapshots of a proposal",
+        "start": 5626,
+        "end": 5695
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-30",
+      "slug": "complexity-metric",
+      "name": "Cyclomatic complexity per function",
+      "description": "Each function's cyclomatic complexity is one plus its decision points: each if, loop, case, catch, conditional expression and short-circuit operator.",
+      "change": "add",
+      "useCase": "UC-066",
+      "provability": "formal",
+      "source": {
+        "quote": "the cyclomatic complexity of every function in the repository's source files: one plus its decision\n  points",
+        "start": 6109,
+        "end": 6217
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-31",
+      "slug": "complexity-languages",
+      "name": "Which languages are measured",
+      "description": "TypeScript and JavaScript are read with a parser, Rust, Go and C# with a scanner that skips comments and strings; files in other languages are listed as not measured.",
+      "change": "add",
+      "useCase": "UC-066",
+      "provability": "empirical",
+      "source": {
+        "quote": "TypeScript and JavaScript\n  are read with a parser; Rust, Go and C# with a scanner that skips comments and strings.",
+        "start": 6299,
+        "end": 6414
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-32",
+      "slug": "code-files-config",
+      "name": "Which files the code snapshots cover",
+      "description": "The code snapshots cover the source files not ignored by .gitignore, narrowed by include and exclude paths in the code section of .lastro/config.json; the same files give the same snapshot on every machine.",
+      "change": "add",
+      "useCase": "UC-066",
+      "provability": "formal",
+      "source": {
+        "quote": "Which files count follows `.gitignore` and the `code` section of `.lastro/config.json`",
+        "start": 6814,
+        "end": 6900
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-33",
+      "slug": "complexity-comparison",
+      "name": "Compare complexity before and after",
+      "description": "The comparison lists every function added, removed or changed in complexity with file, before, after and difference, and each file's total and highest complexity before and after.",
+      "change": "add",
+      "useCase": "UC-066",
+      "provability": "formal",
+      "source": {
+        "quote": "The comparison of a complexity pair lists every function added, removed or whose complexity changed",
+        "start": 6997,
+        "end": 7096
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-34",
+      "slug": "complexity-threshold",
+      "name": "Flag functions over the threshold",
+      "description": "Functions above code.complexityThreshold (default 10) are marked, and those that crossed it in this proposal are flagged.",
+      "change": "add",
+      "useCase": "UC-066",
+      "provability": "formal",
+      "source": {
+        "quote": "A function above\nthe threshold (`code.complexityThreshold`, 10 by default) is marked, and one that crossed it in this proposal is\nflagged.",
+        "start": 7206,
+        "end": 7344
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-35",
+      "slug": "code-comparisons-never-block",
+      "name": "Code comparisons never block a proposal",
+      "description": "Neither the complexity nor the imports comparison changes a verdict or blocks a proposal's approval, proof or apply.",
+      "change": "add",
+      "useCase": "UC-066",
+      "provability": "formal",
+      "source": {
+        "quote": "Neither comparison blocks a proposal.",
+        "start": 7583,
+        "end": 7620
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-36",
+      "slug": "code-snapshots-sdk-parity",
+      "name": "Every SDK takes code snapshots identically",
+      "description": "The TypeScript, Go and .NET SDKs take and compare complexity and imports snapshots with identical results and hashes.",
+      "change": "add",
+      "useCase": "UC-066",
+      "provability": "empirical",
+      "source": {
+        "quote": "The TypeScript, Go and .NET SDKs take and compare\nthese snapshots with identical results",
+        "start": 7621,
+        "end": 7709
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-37",
+      "slug": "imports-snapshot",
+      "name": "Imports snapshots of the source files",
+      "description": "An imports snapshot is the graph of imports between the repository's source files that resolve to another of its files (relative and workspace imports in TypeScript and JavaScript, mod and use crate in Rust, same-module packages in Go); files whose imports cannot be resolved are listed as not mapped. It is taken and stored like the complexity snapshot.",
+      "change": "add",
+      "useCase": "UC-067",
+      "provability": "empirical",
+      "source": {
+        "quote": "imports: the dependency graph between the repository's source files",
+        "start": 6472,
+        "end": 6539
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-38",
+      "slug": "imports-comparison",
+      "name": "Compare imports before and after",
+      "description": "The comparison lists arrows added and removed, files added and removed, each changed file's fan-out and fan-in before and after, and every import cycle the change introduced, by its files.",
+      "change": "add",
+      "useCase": "UC-067",
+      "provability": "formal",
+      "source": {
+        "quote": "The comparison of an imports pair lists the arrows added and removed",
+        "start": 7345,
+        "end": 7413
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-39",
+      "slug": "code-tab-complexity",
+      "name": "The Code tab shows complexity",
+      "description": "A proposal's Code tab shows the complexity comparison as a table of changed files that expands into their functions, sortable by difference.",
+      "change": "add",
+      "useCase": "UC-068",
+      "provability": "empirical",
+      "source": {
+        "quote": "A proposal has a Code tab. It shows the complexity comparison as a table of changed files that opens into their\nfunctions, sortable by difference",
+        "start": 7768,
+        "end": 7913
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-40",
+      "slug": "code-tab-imports-graph",
+      "name": "The Code tab draws the imports diff",
+      "description": "The Code tab draws the changed files and their neighbors, with added arrows in green, removed ones dashed in red and new cycles highlighted.",
+      "change": "add",
+      "useCase": "UC-068",
+      "provability": "empirical",
+      "source": {
+        "quote": "the imports comparison as a graph of the changed files and the files next to\nthem",
+        "start": 7919,
+        "end": 8000
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    },
+    {
+      "id": "P-008.I-41",
+      "slug": "code-tab-working-tree",
+      "name": "Follow the implementation before the proof run",
+      "description": "Until the proposal is proved, the after side is taken from the working tree each time the page loads and is labeled as not yet snapshotted.",
+      "change": "add",
+      "useCase": "UC-068",
+      "provability": "empirical",
+      "source": {
+        "quote": "Until the proposal is\nproved, the after side is taken from the working tree each time the page loads",
+        "start": 8085,
+        "end": 8185
+      },
+      "replaces": [],
+      "status": "proposed",
+      "approvals": []
+    }
+  ],
+  "useCases": [
+    {
+      "useCase": "UC-045",
+      "slug": "show-live-board-in-claude-code",
+      "change": "modify",
+      "name": "Review in the Lastro pane beside the chat",
+      "before": "The lastro-board mod for Claude Code (plugins/lastro-board) reads .lastro/ once a second when the session starts in a repository with a Lastro workspace: config, the current proposal, the use cases and the plugin's progress.jsonl. It opens a pane with the review (each decision answered or not, each intent with its approvals out of the policy's count and the proofs it replaces) and the proofs (○ pending, … running, ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, and the beyond-proof intents), updating each proof as the run under way reports it. It shows a one-line summary above the prompt and in the status line, and a toast when every intent is approved and when a proof run ends. /lastro-board opens the pane. It decides nothing and works only in Claude Code.",
+      "after": "The lastro-board mod for Claude Code (plugins/lastro-board) reads .lastro/ once a second when the session starts in a repository with a Lastro workspace: config, the current proposal, the use cases and the plugin's progress.jsonl. Its pane opens by itself, with the keyboard on it, whenever the current proposal has decisions or intents waiting for the reviewer (after extraction, and whenever a re-extraction or derivation sends intents back to review), and after the reviewer closes it, only when something new waits. It shows open decisions first with their options and the recommended one, then intents one at a time with the use case they change, its description before and after, the quote and the proofs approving would replace. Buttons with keys answer decisions, approve, amend (new wording) or reject (reason) intents, and rewrite or recombine a use case after an amend or reject, each running the same lastro review command as the reviewer named by LASTRO_REVIEWER or git, never an agent name; the pane then moves to the next waiting item and says when none waits. It also shows the proofs (○ pending, … running, ✓ proved, ≈ evidenced, ✗ violated with its counterexample, ! weak or vacuous, and the beyond-proof intents) as the run reports them, and Map and Code views with the current proposal's feature map and code comparisons as text. It shows a one-line summary above the prompt and in the status line, and a toast when every intent is approved and when a proof run ends. /lastro-board opens the pane. It works only in Claude Code.",
+      "intents": [
+        "P-008.I-01",
+        "P-008.I-02",
+        "P-008.I-03",
+        "P-008.I-04",
+        "P-008.I-05",
+        "P-008.I-06",
+        "P-008.I-07"
+      ]
+    },
+    {
+      "useCase": "UC-040",
+      "slug": "review-intents-like-a-pull-request",
+      "change": "modify",
+      "name": "Review an agent's proposal like a pull request",
+      "before": "The plugin's propose skill has the agent write the change as prose in .lastro/proposals/<id>-<slug>.md, run lastro propose (answering handoffs itself), show the user the review the plugin renders as Markdown (the PostToolUse hook adds it to the agent's context after the first lastro command that shows a new or re-extracted proposal in a session, and a one-line summary after later ones; lastro-plugin.mjs review prints it), then ask the user every open decision and, per intent, shown with the existing proofs it replaces, approve, request changes (amend) or reject, recording only the user's answers with lastro review --as <user>, until lastro status is ready; then lastro derive writes the proposal's proofs. The PreToolUse hook makes every lastro review command that approves, answers, amends or rejects show a Claude Code permission prompt, and denies it in both harnesses when --as names an agent (claude, codex, agent, assistant, ai, bot). With a policy above one approval the board shows each intent's approvals out of the required number and the proposal waits for the other reviewers.",
+      "after": "The plugin's propose skill has the agent write the change as prose in .lastro/proposals/<id>-<slug>.md, run lastro propose (answering handoffs itself), show the user the review the plugin renders as Markdown (the PostToolUse hook adds it to the agent's context after the first lastro command that shows a new or re-extracted proposal in a session, and a one-line summary after later ones; lastro-plugin.mjs review prints it), then ask the user every open decision and, per intent, shown with the existing proofs it replaces, approve, request changes (amend) or reject, recording only the user's answers with lastro review --as <user>, until lastro status is ready; then lastro derive writes the proposal's proofs. The PreToolUse hook makes every lastro review command that approves, answers, amends or rejects show a Claude Code permission prompt, and denies it in both harnesses when --as names an agent (claude, codex, agent, assistant, ai, bot). With a policy above one approval the board shows each intent's approvals out of the required number and the proposal waits for the other reviewers. While the lastro-board pane is installed, the agent is told the review happens there: it points the user to the pane instead of asking each decision and intent in the chat, and waits for the review to be recorded.",
+      "intents": [
+        "P-008.I-08"
+      ]
+    },
+    {
+      "useCase": "UC-062",
+      "slug": "explain-review-screens",
+      "change": "add",
+      "name": "Explain what the review screens show",
+      "after": "Every section of the Lastro pane and the review web app starts with one sentence on what it shows and what the reviewer does there. Every badge and mark (add, modify, remove; formal, empirical, beyond proof and why proof stops; approvals against the policy; proof verdicts; map and code states) is explained on hover in the web app and in a legend the pane opens with ?. A glossary page in the web app, with the same text in the pane's legend, defines proposal, intent, feature, decision, proof, regression, snapshot and verdict in one sentence each. An empty view says why it is empty and what makes it fill.",
+      "intents": [
+        "P-008.I-09",
+        "P-008.I-10",
+        "P-008.I-11",
+        "P-008.I-12"
+      ]
+    },
+    {
+      "useCase": "UC-063",
+      "slug": "review-intents-in-app",
+      "change": "add",
+      "name": "Review intents in the review app",
+      "after": "Every open proposal in the review app has an Intents tab, which the app opens first while the proposal has intents not yet settled. It lists the intents in id order, each with the use case it adds, modifies or removes, that use case's description before and after as a word diff, the quote it came from, the proofs it replaces and its threads; the reviewer approves, amends or rejects each one there with the same SDK review actions and rules as the use-case view. It filters to intents not settled or waiting for the reviewer; j and k select the next and previous intent and a, m and r open approve, amend and reject on it (not while typing in a field). One action approves every intent waiting for the reviewer after stating how many and which proofs they replace and waiting for confirmation; rejected and newly amended intents are never approved that way.",
+      "intents": [
+        "P-008.I-13",
+        "P-008.I-14",
+        "P-008.I-15",
+        "P-008.I-16",
+        "P-008.I-17",
+        "P-008.I-18",
+        "P-008.I-19"
+      ]
+    },
+    {
+      "useCase": "UC-064",
+      "slug": "see-intents-waiting-for-me",
+      "change": "add",
+      "name": "See the intents waiting for me",
+      "after": "The review app's header shows how many intents wait for the current reviewer across every open proposal and links to an inbox that lists them grouped by proposal, oldest proposal first, each linking to the intent in its proposal's Intents tab.",
+      "intents": [
+        "P-008.I-20",
+        "P-008.I-21"
+      ]
+    },
+    {
+      "useCase": "UC-065",
+      "slug": "draw-feature-map",
+      "change": "add",
+      "name": "Draw the feature map",
+      "after": "The review app's Map page draws every use case as a node and every dependency (dependsOn) as an arrow to the use case it depends on, in columns by dependency depth with a deterministic order, so the same workspace always gives the same map. Each node shows the name, the surfaces and the proofs' state (all passed, some only evidenced, one failing, none); a use case with no surface is drawn as not reachable by a driver. Dependencies on missing or removed use cases and dependency cycles are drawn in red and listed above the map. With a proposal selected (a proposal's page links to it), the use cases it adds, modifies and removes are colored by change, those depending on them directly or not are marked affected, and the others fade. Clicking a node opens the use case's page, which lists what it depends on and what depends on it; the map filters by text.",
+      "intents": [
+        "P-008.I-22",
+        "P-008.I-23",
+        "P-008.I-24",
+        "P-008.I-25",
+        "P-008.I-26",
+        "P-008.I-27",
+        "P-008.I-28"
+      ]
+    },
+    {
+      "useCase": "UC-066",
+      "slug": "snapshot-code-complexity",
+      "change": "add",
+      "name": "Snapshot the code's complexity before and after",
+      "after": "When a proposal is extracted, and again when it is proved, the SDK takes a complexity snapshot of the repository's source files (not ignored by .gitignore, narrowed by include and exclude paths in the code section of .lastro/config.json) into .lastro/docs/<proposal>/repository/before|after/complexity.json, committed with the proposal, recording its SHA-256 in the proposal. It holds the cyclomatic complexity of every function, one plus its decision points (if, loop, case, catch, conditional expression, short-circuit operator): TypeScript and JavaScript through a parser, Rust, Go and C# through a scanner that skips comments and strings, other files listed as not measured. The comparison lists every function added, removed or changed with file, before, after and difference, each file's total and highest complexity before and after, marks functions above code.complexityThreshold (default 10) and flags those that crossed it. It never changes a verdict or blocks a proposal. The TypeScript, Go and .NET SDKs give identical snapshots, comparisons and hashes.",
+      "intents": [
+        "P-008.I-29",
+        "P-008.I-30",
+        "P-008.I-31",
+        "P-008.I-32",
+        "P-008.I-33",
+        "P-008.I-34",
+        "P-008.I-35",
+        "P-008.I-36"
+      ]
+    },
+    {
+      "useCase": "UC-067",
+      "slug": "snapshot-code-imports",
+      "change": "add",
+      "name": "Snapshot the code's imports before and after",
+      "after": "With the complexity snapshot, the SDK takes an imports snapshot: the graph of imports between the same source files that resolve to another file of the repository (relative and workspace imports in TypeScript and JavaScript, mod and use crate in Rust, same-module packages in Go), listing files whose imports cannot be resolved as not mapped, stored as imports.json next to it and hashed the same way. The comparison lists arrows added and removed, files added and removed, each changed file's fan-out and fan-in before and after, and every import cycle the change introduced. It never blocks a proposal, and the three SDKs give identical results.",
+      "intents": [
+        "P-008.I-37",
+        "P-008.I-38"
+      ]
+    },
+    {
+      "useCase": "UC-068",
+      "slug": "show-code-before-and-after",
+      "change": "add",
+      "name": "Show the code before and after in the review app",
+      "after": "A proposal's Code tab in the review app shows the complexity comparison as a table of changed files that expands into their functions, sortable by difference, with marked and flagged functions, and draws the imports comparison as a graph of the changed files and their neighbors, added arrows in green, removed ones dashed in red and new cycles highlighted. Until the proposal is proved the after side is taken from the working tree each time the page loads and labeled as not yet snapshotted.",
+      "intents": [
+        "P-008.I-39",
+        "P-008.I-40",
+        "P-008.I-41"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "slug": "before-snapshot-scope",
+      "name": "How much code the before snapshot covers",
+      "origin": "extraction",
+      "question": "At extraction no one knows yet which files the change will touch. Should the before snapshot cover every source file, or only the paths listed in the code section of config.json?",
+      "options": [
+        {
+          "label": "Every source file, narrowed by config",
+          "consequence": "Any file the implementation touches has a before; large repositories pay a full scan at every extraction unless they set include paths."
+        },
+        {
+          "label": "Only configured paths",
+          "consequence": "Fast on any repository, but a repository without a code section gets no code snapshots at all."
+        }
+      ],
+      "recommended": 0,
+      "intents": [
+        "P-008.I-32",
+        "P-008.I-29"
+      ]
+    },
+    {
+      "id": "D2",
+      "slug": "code-snapshots-where",
+      "name": "Where the code snapshots are computed",
+      "origin": "extraction",
+      "question": "Should the complexity and imports snapshots be computed by every SDK (TypeScript, Go, .NET) like the other snapshot kinds, or only by the TypeScript SDK for the review app?",
+      "options": [
+        {
+          "label": "Every SDK, identical results",
+          "consequence": "Consistent with P-006 snapshots and the repo's parity rule; the Go and .NET ports need a TypeScript parser equivalent and cross-check tests, so the change is several times larger."
+        },
+        {
+          "label": "TypeScript SDK only",
+          "consequence": "Ships much sooner; the snapshots are evidence that changes no verdict, so the CLIs in Go and .NET would skip them and say so, breaking parity for this one feature."
+        }
+      ],
+      "recommended": 0,
+      "intents": [
+        "P-008.I-36",
+        "P-008.I-29",
+        "P-008.I-37"
+      ]
+    }
+  ],
+  "threads": [],
+  "notPromised": [
+    "The receipt does not get a Code section in this proposal (P-006 and P-007 already change the receipt).",
+    "Complexity and imports never become proofs or verdicts, and no threshold fails a proposal.",
+    "No code-to-feature mapping: the map links features to features, not to the files that implement them.",
+    "Languages other than TypeScript, JavaScript, Rust, Go and C# are not measured, and C# imports are not mapped.",
+    "The feature map's data (surfaces, dependsOn, affected) comes from P-006; this proposal only draws it.",
+    "The review app's existing behavior (described in .lastro/proposals/review-app.md) is not added to the catalog here.",
+    "The web app is not embedded in Claude Code: the pane is its own text interface over the same SDK commands.",
+    "In Codex, which has no mods, the review stays in the chat."
+  ],
+  "policy": {
+    "approvals": 1,
+    "submitterCanApprove": true
+  },
+  "proofs": [],
+  "supersedes": []
+}

@@ -47,6 +47,15 @@ export const NAV: NavSection[] = [
     ],
   },
   {
+    title: "Runtime and evidence",
+    pages: [
+      { slug: "runtime/feature-map", title: "Features and the feature map", description: "Surfaces, dependencies, lastro map and the features a change affects.", keywords: "feature map surfaces screen route command api dependsOn affected unreachable bootstrap surfaces" },
+      { slug: "runtime/state-machines", title: "State machines", description: "Actors, interleavings, invariants, SMT induction, counterexamples and statecharts.", keywords: "state machine actors race interleaving invariant step reach bfs smt induction random walk statechart mermaid explore" },
+      { slug: "runtime/drivers", title: "Drivers", description: "Drive web, Android, iOS, HTTP and commands over WebDriver, Appium, HTTP or JSON lines.", keywords: "driver webdriver appium http jsonlines electron android ios driven scenario property action sequence" },
+      { slug: "runtime/evidence", title: "Before and after evidence", description: "Snapshots, structural diffs, unexpected changes and sign-offs before a proposal is proved.", keywords: "snapshot before after screenshot contract data examples diff breaking unexpected change signoff accept request changes reference" },
+    ],
+  },
+  {
     title: "CLI",
     pages: [
       { slug: "cli/overview", title: "Commands", description: "init, propose, status, review, derive, prove, feedback, apply and regress, with their JSON and exit codes.", keywords: "commands flags exit codes json derive usecases" },

@@ -50,7 +50,8 @@ import { driveRunner, takeSnapshots } from "./evidence.js";
 import { proposalFromSurfaces, SURFACES_SCHEMA, SURFACES_SYSTEM, surfacesUserPrompt, featuresWithoutSurfaces, type SurfacesOut } from "./surfaces.js";
 import { copyFileSync, mkdirSync } from "node:fs";
 import { dueOf, judgmentIntents, withStatus } from "./proposal.js";
-import type { Model, Subject } from "./types.js";
+import type { Env, Model, Subject } from "./types.js";
+import { exploreMachine, mermaidStatechart, statechart, tableStep, type MachineClause, type MachineEvent, type MachineModel } from "./machine.js";
 import { commandSolver } from "./solver.js";
 
 class Exit extends Error {
@@ -81,6 +82,8 @@ const USAGE = `lastro <command> [options]
   map [<P>]                                     the feature map: surfaces, dependencies and dependents; with a
                                                 proposal, as it would be after it, with the affected features
   snapshot <P> [before|after]                   take the before (or after) snapshots of the intents' features
+  explore [<request.json>]                      explore a state machine over a recorded step table (stdin without a
+                                                file), as the Rust prover does: the engines' cross-check
   status [<P>]                                  proposals, or one proposal's intents and pending items
   review <P> --as <name> <action> ...           approve <I..> | approve-all | amend <I> <text> | reject <I> <note>
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
@@ -420,6 +423,21 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
           if (e instanceof FeatureMapError) return { code: 1, body: { status: "invalid-map", error: e.message, cycle: e.cycle } };
           throw e;
         }
+      }
+      case "explore": {
+        // A state machine over a recorded step table, as the Rust prover takes it: the cross-check of the engines.
+        const text = rest[0] ? readFileSync(rest[0], "utf8") : readFileSync(0, "utf8");
+        let req: { machine: MachineModel; clauses?: MachineClause[]; table?: { input: Env; output: Env | null }[]; limit?: number; path?: MachineEvent[] };
+        try {
+          req = JSON.parse(text);
+        } catch (e) {
+          return { code: 2, body: { error: `explore needs {machine, clauses, table}: ${(e as Error).message}` } };
+        }
+        const step = tableStep(req.table ?? []);
+        const limit = req.limit ? { limit: req.limit } : {};
+        const report = await exploreMachine(req.machine, step, req.clauses ?? [], limit);
+        const chart = await statechart(req.machine, step, req.clauses ?? [], req.path ?? [], limit);
+        return { code: 0, body: { status: "explored", report, statechart: chart, mermaid: mermaidStatechart(chart) } };
       }
       case "snapshot": {
         const cfg = ws.config();

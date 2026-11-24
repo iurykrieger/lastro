@@ -211,3 +211,16 @@ test("proofs live in .lastro/proof, and the CLI page shows how to derive them fr
   await expect(page.getByRole("heading", { name: "Use cases without proofs", exact: true })).toBeVisible();
   await expect(page.locator("figure[data-code]", { hasText: "lastro prove --usecases" }).first()).toBeVisible();
 });
+
+test("the runtime pages cover the feature map, state machines, drivers and evidence, linked from the CLI", async ({ page }) => {
+  await page.goto("#/runtime/state-machines");
+  await expect(page.locator("figure[data-code]", { hasText: '"method": "bfs"' })).toContainText('"actor": 2');
+  await page.goto("#/runtime/drivers");
+  for (const h of ["Web", "Android and iOS with Appium", "HTTP, commands and data", "JSON lines"]) await expect(page.getByRole("heading", { name: h, exact: true })).toBeVisible();
+  await page.goto("#/runtime/evidence");
+  await expect(page.locator("figure[data-code]", { hasText: "waiting-for-review" })).toContainText('"signoffsDue"');
+  await page.goto("#/cli/overview");
+  await expect(page.getByRole("heading", { name: "map, snapshot and explore", exact: true })).toBeVisible();
+  await page.locator("main").getByRole("link", { name: "feature map", exact: true }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Features and the feature map" })).toBeVisible();
+});

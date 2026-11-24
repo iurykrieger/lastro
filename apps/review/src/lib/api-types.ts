@@ -28,7 +28,12 @@ export type ReviewAction =
   | { type: "reply"; thread: string; text: string }
   | { type: "resolve"; thread: string }
   | { type: "rewrite"; useCase: string; after: string }
-  | { type: "recombine"; useCase: string; instructions?: string };
+  | { type: "recombine"; useCase: string; instructions?: string }
+  /** After the proof run: sign off an intent beyond proof (the after screenshots listed become references). */
+  | { type: "signoff"; intent: string; references?: string[] }
+  | { type: "request-changes"; intent: string; note: string }
+  /** Accept an unexpected change (U1, U2...). */
+  | { type: "accept"; change: string };
 
 export interface ReviewResult {
   proposal: Proposal;

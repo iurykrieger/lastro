@@ -7,6 +7,7 @@ import { CliLlm, CliOverview, CliWorkspace } from "./cli";
 import { PluginAgents, PluginReviewApp } from "./plugins";
 import { SdkDotnet, SdkGo, SdkInterop, SdkTypeScript } from "./sdks";
 import { RefDataModel, RefLsl, RefRust } from "./reference";
+import { RuntimeDrivers, RuntimeEvidence, RuntimeFeatureMap, RuntimeStateMachines } from "./runtime";
 
 /** Slug → page. Every slug in content/nav.ts must have a page here (the e2e tests visit them all). */
 export const PAGE_COMPONENTS: Record<string, ComponentType> = {
@@ -28,6 +29,10 @@ export const PAGE_COMPONENTS: Record<string, ComponentType> = {
   "concepts/verdicts": ConceptVerdicts,
   "concepts/receipts": ConceptReceipts,
   "concepts/proposals": ConceptProposals,
+  "runtime/feature-map": RuntimeFeatureMap,
+  "runtime/state-machines": RuntimeStateMachines,
+  "runtime/drivers": RuntimeDrivers,
+  "runtime/evidence": RuntimeEvidence,
   "cli/overview": CliOverview,
   "cli/workspace": CliWorkspace,
   "cli/llm": CliLlm,

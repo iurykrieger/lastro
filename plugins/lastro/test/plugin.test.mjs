@@ -415,3 +415,26 @@ test("a bootstrap's failing proofs go to the user's review, never back to the co
   assert.match(out.systemMessage, /proofs FAILED/);
   assert.match(out.systemMessage, /do not change the code/);
 });
+
+test("after the run, the review lists the snapshots, the unexpected changes and the sign-offs still due", () => {
+  const p = {
+    id: "P-009", name: "Chat", hash: "sha256:x", policy: { approvals: 1, submitterCanApprove: true }, submittedBy: "ana", decisions: [], threads: [], proofs: [],
+    intents: [{ id: "P-009.I-01", description: "It looks right.", status: "approved", approvals: ["ana"], provability: "beyond-proof", beyondProofReason: "human-judgment", source: { quote: "look" } }],
+    useCases: [{ useCase: "UC-001", slug: "chat", change: "modify", name: "Chat", intents: ["P-009.I-01"] }],
+    snapshots: [{ intent: "P-009.I-01", feature: "UC-001", kind: "screen", side: "after", path: "docs/P-009/UC-001/I-01/after/chat-1.png", sha256: "a" }],
+    comparisons: [{ intent: "P-009.I-01", feature: "UC-001", kind: "screen", name: "chat-1.png", pixelShare: 0.25 }],
+    unexpected: [{ id: "U1", intent: "P-009.I-01", input: { x: 1 }, before: { y: 1 }, after: { y: 2 }, acceptedBy: [] }],
+    lastRun: { ok: true, outcomes: [], regressions: [], replacedStillPass: [], unproved: [] },
+  };
+  const review = renderReview({ phase: "passed", proposal: p, useCases: [] });
+  assert.match(review, /`docs\/P-009\/UC-001\/I-01\/after\/chat-1\.png` \(screen, after, I-01\)/);
+  assert.match(review, /25\.00% of pixels changed/);
+  assert.match(review, /\*\*U1\*\* I-01 \{"x":1\}: \{"y":1\} → \{"y":2\} _\(to accept\)_/);
+  assert.match(review, /\*\*Sign-offs due\*\*[\s\S]*\*\*I-01\*\* waits for a sign-off/);
+  p.unexpected[0].acceptedBy = ["bob"];
+  p.signoffs = [{ intent: "P-009.I-01", by: "bob", verdict: "signed-off" }];
+  const settled = renderReview({ phase: "passed", proposal: p, useCases: [] });
+  assert.match(settled, /accepted by bob/);
+  assert.doesNotMatch(settled, /Sign-offs due/);
+  assert.ok(isReviewCommand("lastro review P-009 --as ana signoff I-01"));
+});

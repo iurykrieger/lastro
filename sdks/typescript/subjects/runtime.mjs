@@ -286,7 +286,7 @@ export function shippedDrivers({ sdk, setup }) {
     const pkg = JSON.parse(text);
     return JSON.stringify({ ...pkg.dependencies, ...pkg.peerDependencies, ...pkg.optionalDependencies });
   })();
-  const page = join(ROOT, "apps/docs/src/pages/DriversPage.tsx");
+  const page = join(ROOT, "apps/docs/src/pages/runtime.tsx");
   const heading = { web: "data-setup=\"web\"", appium: "data-setup=\"appium\"", http: "data-setup=\"http\"", jsonlines: "data-setup=\"jsonlines\"" }[setup];
   return { bundlesBrowser: BROWSERS.test(deps), documented: existsSync(page) && readFileSync(page, "utf8").includes(heading) };
 }
@@ -705,4 +705,25 @@ function runParity(sdk, filter) {
   }
 }
 // I-37: the plugin's review screen.
-export const pluginReviewEvidence = pending("evidence in the plugin's review");
+export async function pluginReviewEvidence({ snapshots, unexpected, signoffDue }) {
+  const { renderReview } = await import("../../../plugins/lastro/scripts/lib.mjs");
+  const p = {
+    id: "P-001", name: "Chat", hash: "sha256:x", policy: { approvals: 1, submitterCanApprove: true }, submittedBy: "ana", decisions: [], threads: [],
+    intents: [
+      { id: "P-001.I-01", description: "Send a message.", status: "approved", approvals: ["ana"], provability: "formal", source: { quote: "send" } },
+      { id: "P-001.I-02", description: "It looks right.", status: "approved", approvals: ["ana"], provability: "beyond-proof", beyondProofReason: "human-judgment", source: { quote: "look" } },
+    ],
+    useCases: [{ useCase: "UC-001", slug: "chat", change: "modify", name: "Chat", intents: ["P-001.I-01", "P-001.I-02"] }],
+    proofs: [],
+    lastRun: { ok: true, outcomes: [], regressions: [], replacedStillPass: [], unproved: [] },
+    ...(snapshots ? { snapshots: [{ intent: "P-001.I-02", feature: "UC-001", kind: "screen", side: "after", path: "docs/P-001/UC-001/I-02/after/chat-1.png", sha256: "a" }] } : {}),
+    ...(unexpected ? { unexpected: [{ id: "U1", intent: "P-001.I-01", input: { x: 1 }, before: { y: 1 }, after: { y: 2 }, acceptedBy: [] }] } : {}),
+    signoffs: signoffDue ? [] : [{ intent: "P-001.I-02", by: "bob", verdict: "signed-off" }],
+  };
+  const text = renderReview({ phase: "passed", proposal: p, useCases: [] });
+  return {
+    listsPaths: text.includes("docs/P-001/UC-001/I-02/after/chat-1.png"),
+    listsUnexpected: /\*\*Unexpected changes\*\*[\s\S]*\*\*U1\*\*/.test(text),
+    listsSignoffs: /\*\*Sign-offs due\*\*[\s\S]*\*\*I-02\*\*/.test(text),
+  };
+}

@@ -48,6 +48,7 @@ test("proposals list, proposal and use cases render without errors or horizontal
     ["#/proposals/P-002/proofs", "Raise the free shipping threshold"],
     ["#/proposals/P-002/timeline", "Raise the free shipping threshold"],
     ["#/proposals/P-003/timeline", "Discount codes"],
+    ["#/proposals/P-004", "Order counter"],
     ["#/usecases", "Use cases"],
     ["#/usecases/UC-001", "Free shipping over a threshold"],
   ] as const) {
@@ -62,9 +63,8 @@ test("proposals list, proposal and use cases render without errors or horizontal
 test("the proposals list shows status and progress, and opens a proposal", async ({ page }) => {
   await page.goto("./");
   const rows = page.getByTestId("proposal-row");
-  await expect(rows).toHaveCount(3);
-  await expect(rows.first()).toContainText("P-003");
-  await expect(rows.first()).toContainText("Proving");
+  await expect(rows).toHaveCount(4);
+  await expect(rows.filter({ hasText: "P-003" })).toContainText("Proving");
   const p2 = rows.filter({ hasText: "P-002" });
   await expect(p2).toContainText("In review");
   await expect(p2).toContainText("0/3 intents settled");
@@ -291,5 +291,57 @@ test.describe("proof time-lapse", () => {
     await page.goto("#/proposals/P-002/timeline");
     await expect(page.getByText("No proof runs yet.")).toBeVisible();
     await expect(page.getByText("P-002-raise-free-shipping-threshold.runs.jsonl")).toBeVisible();
+  });
+});
+
+test.describe("evidence", () => {
+  test("during review an intent shows its place in the feature map and only its before snapshots", async ({ page }) => {
+    await page.goto("#/proposals/P-002/changes");
+    const ev = page.locator('[data-intent="P-002.I-01"]').getByTestId("evidence");
+    await expect(ev.getByTestId("evidence-map")).toContainText("UC-001");
+    await expect(ev.getByTestId("snapshots")).toContainText("the after snapshots come with the proof run");
+    await expect(ev.getByTestId("snapshots")).toContainText("before/model-shipping.json");
+    await expect(ev.getByTestId("comparison")).toHaveCount(0);
+    await expect(ev.getByTestId("statechart")).toHaveCount(0);
+  });
+
+  test("after the run an intent shows its statechart, the comparisons for each kind and the counterexample", async ({ page }) => {
+    await page.goto("#/proposals/P-004/changes");
+    const i1 = page.locator('[data-intent="P-004.I-01"]').getByTestId("evidence");
+    await expect(i1.getByTestId("evidence-map")).toContainText("Orders page");
+    await expect(i1.getByTestId("evidence-map")).toContainText("Depends on: UC-001");
+    const chart = i1.getByTestId("statechart");
+    await expect(chart).toContainText("Statechart · counter");
+    await expect(chart.locator("[data-counterexample]")).toHaveCount(3);
+    await expect(i1.locator('[data-view="diff"]')).toContainText("out.total");
+    await expect(i1.locator('[data-view="diff"]')).toContainText("breaking");
+    await expect(i1.locator('[data-view="rows"]')).toContainText('{"total":"1"}');
+    await expect(i1.getByTestId("counterexample")).toContainText('{"n":1}');
+    const i2 = page.locator('[data-intent="P-004.I-02"]').getByTestId("evidence");
+    const images = i2.locator('[data-view="images"]');
+    await expect(images).toContainText("100.00% of pixels changed");
+    await expect(images.getByRole("img")).toHaveCount(2);
+    const loaded = await images.getByRole("img").evaluateAll((imgs) => imgs.every((i) => (i as HTMLImageElement).naturalWidth === 40));
+    expect(loaded).toBe(true);
+  });
+
+  test("a reviewer accepts the unexpected change and signs off the intent beyond proof", async ({ page }) => {
+    await page.goto("#/proposals/P-004/changes");
+    await reviewAs(page, "carla");
+    const i1 = page.locator('[data-intent="P-004.I-01"]');
+    await i1.getByTestId("unexpected").getByRole("button", { name: "Accept" }).click();
+    await expect(i1.getByTestId("unexpected")).toContainText("accepted");
+    const signoff = page.locator('[data-intent="P-004.I-02"]').getByTestId("signoff");
+    await expect(signoff).toHaveAttribute("data-state", "due");
+    await signoff.getByRole("button", { name: "Sign off" }).click();
+    await expect(signoff).toHaveAttribute("data-state", "signed-off");
+    await expect(signoff).toContainText("signed off");
+    expect(existsSync(join(WORK_DIR, "docs/P-004/UC-002/I-02/reference/orders-header-1.png"))).toBe(true);
+  });
+
+  test("snapshot files are served from docs/ only", async ({ request }) => {
+    expect((await request.get("/api/files?path=docs/P-004/UC-002/I-02/after/orders-header-1.png")).headers()["content-type"]).toBe("image/png");
+    expect((await request.get("/api/files?path=config.json")).status()).toBe(404);
+    expect((await request.get("/api/files?path=docs/../config.json")).status()).toBe(404);
   });
 });

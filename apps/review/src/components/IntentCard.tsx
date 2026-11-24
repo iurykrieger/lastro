@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ChangeBadge, IntentStatusBadge, Person } from "@/components/bits";
 import { Threads } from "@/components/Threads";
+import { Evidence } from "@/components/Evidence";
 import { useWorkspace } from "@/lib/workspace";
 import { mayApprove, need, reviewOpen, settled, shortId } from "@/lib/review";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,8 @@ export function IntentCard({ p, it, proofs }: { p: Proposal; it: ProposalIntent;
           })}
         </div>
       )}
+
+      <Evidence p={p} it={it} />
 
       <footer className="mt-3 flex flex-wrap items-center gap-3 border-t pt-3">
         <div className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="approvals">

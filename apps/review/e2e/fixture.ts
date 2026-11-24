@@ -4,6 +4,7 @@
  * the submitter (ana) does not count. Every test starts from a fresh copy.
  */
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { deflateSync } from "node:zlib";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { L, approveProposal, baselineOf, withStatus, type ProofEntry, type ProofOutcome, type Proposal, type UseCase } from "../../../sdks/typescript/src/index.ts";
@@ -174,7 +175,8 @@ export function proposals(): Proposal[] {
     proofs: [],
     supersedes: [],
   };
-  return [applied, open, proving()];
+  open.snapshots = [{ intent: "P-002.I-01", feature: "UC-001", kind: "contract", side: "before", path: "docs/P-002/UC-001/I-01/before/model-shipping.json", sha256: "0".repeat(64) }];
+  return [applied, open, proving(), evidenced()];
 }
 
 const DISCOUNT_PROSE = "A discount code takes 10% off the items. Expired codes are refused.";
@@ -263,14 +265,151 @@ export function provingRuns(): ProofRunRecord[] {
   });
 }
 
+// ---------------------------------------------------------------------------
+// P-004: proved once, with before and after evidence waiting for the reviewers
+// ---------------------------------------------------------------------------
+
+const COUNTER_PROSE = "Two tabs can add to the order count at once without losing an update. The orders page shows the count in the header.";
+
+/** The statechart the SDK draws for the lost update (mermaidStatechart), with the counterexample path. */
+export const COUNTER_CHART = `stateDiagram-v2
+  state "counter" as machine {
+    %% shared
+    state "n=0" as r0_0
+    [*] --> r0_0
+    state "n=1" as r0_1
+    r0_0 --> r0_1 : write (counterexample)
+    --
+    %% actor 1
+    state "pc=idle, t=0" as r1_2
+    [*] --> r1_2
+    state "pc=read, t=0" as r1_3
+    state "pc=done, t=0" as r1_4
+    r1_2 --> r1_3 : read (counterexample)
+    r1_3 --> r1_4 : write (counterexample)
+  }
+  classDef forbidden fill:#fdd,stroke:#c00
+  class r0_1,r1_4 forbidden
+`;
+
+/** A solid PNG, w x h, of one RGB color. */
+function png(w: number, h: number, rgb: [number, number, number]): Buffer {
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc = (b: Buffer) => {
+    let c = 0xffffffff;
+    for (const x of b) c = crcTable[(c ^ x) & 0xff]! ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type: string, data: Buffer) => {
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(data.length);
+    const td = Buffer.concat([Buffer.from(type), data]);
+    const c = Buffer.alloc(4);
+    c.writeUInt32BE(crc(td));
+    return Buffer.concat([len, td, c]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  const row = Buffer.concat([Buffer.from([0]), Buffer.from(Array.from({ length: w }, () => rgb).flat())]);
+  const raw = Buffer.concat(Array.from({ length: h }, () => row));
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", ihdr), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
+}
+
+const EVIDENCE_FILES: Record<string, Buffer | string> = {
+  "docs/P-004/UC-002/I-02/before/orders-header-1.png": png(40, 24, [230, 230, 230]),
+  "docs/P-004/UC-002/I-02/after/orders-header-1.png": png(40, 24, [40, 120, 200]),
+  "docs/P-004/UC-002/I-01/before/examples-counter.json": JSON.stringify({ model: "counter", rows: [] }, null, 2) + "\n",
+  "docs/P-004/UC-002/I-01/after/examples-counter.json": JSON.stringify({ model: "counter", rows: [] }, null, 2) + "\n",
+  "docs/P-004/UC-002/I-01/before/model-counter.json": JSON.stringify({ model: "counter", fields: { "in.n": "int", "out.total": "string" } }, null, 2) + "\n",
+  "docs/P-004/UC-002/I-01/after/model-counter.json": JSON.stringify({ model: "counter", fields: { "in.n": "int", "out.total": "int" } }, null, 2) + "\n",
+};
+
+export function evidenced(): Proposal {
+  const ucs = useCases();
+  const draft: Proposal = {
+    lastro: "proposal/v1",
+    id: "P-004",
+    slug: "order-counter",
+    name: "Order counter",
+    description: "Concurrent tabs never lose an order count update; the orders page shows the count in its header.",
+    status: "open",
+    submittedBy: "bruno",
+    prose: COUNTER_PROSE,
+    baseline: baselineOf(ucs),
+    intents: [
+      { id: "P-004.I-01", slug: "no-lost-update", name: "No lost update", description: "Two tabs adding to the order count at once never lose an update.", change: "modify", useCase: "UC-002", provability: "formal", source: at(COUNTER_PROSE, "Two tabs can add to the order count at once without losing an update."), replaces: [], status: "approved", approvals: ["ana"] },
+      { id: "P-004.I-02", slug: "count-in-header", name: "Count in the header", description: "The orders page shows the order count in its header.", change: "modify", useCase: "UC-002", provability: "beyond-proof", beyondProofReason: "human-judgment", source: at(COUNTER_PROSE, "The orders page shows the count in the header."), replaces: [], status: "approved", approvals: ["ana"] },
+    ],
+    useCases: [
+      {
+        useCase: "UC-002",
+        slug: "checkout-total",
+        change: "modify",
+        name: "Checkout total",
+        after: "The checkout total is the sum of the items plus the shipping fee; concurrent tabs never lose an order count update, and the orders page shows the count in its header.",
+        intents: ["P-004.I-01", "P-004.I-02"],
+        surfaces: [{ kind: "screen", name: "Orders page", locator: "/orders" }],
+        dependsOn: ["UC-001"],
+      },
+    ],
+    decisions: [],
+    threads: [],
+    notPromised: [],
+    policy: { approvals: 1, submitterCanApprove: true },
+    proofs: [],
+    supersedes: [],
+  };
+  const p = approveProposal(draft, ucs);
+  p.proofs = [
+    { id: "P-004.PF-01", slug: "count-is-exact", name: "The count is exact", description: "In every interleaving of two tabs, the count equals the number of finished adds.", intent: "P-004.I-01", useCase: "UC-002", model: "counter", subject: "counter", check: { kind: "machine", clause: "invariant", ensures: L.eq(L.in("n"), 2) }, status: "pending" },
+    { id: "P-004.PF-02", slug: "orders-header", name: "Orders header", description: "The orders page opens and shows the count.", intent: "P-004.I-02", useCase: "UC-002", model: "orders", subject: "orders", check: { kind: "driven", surface: { kind: "screen", locator: "/orders" }, steps: [{ input: { open: "/orders" }, expect: {} }] }, status: "pending" },
+  ];
+  p.statecharts = { counter: COUNTER_CHART };
+  const sha = (path: string) => (path.endsWith(".png") ? "a" : "b").repeat(64);
+  p.snapshots = Object.keys(EVIDENCE_FILES)
+    .sort()
+    .map((path) => {
+      const intent = path.includes("/I-01/") ? "P-004.I-01" : "P-004.I-02";
+      const kind = path.endsWith(".png") ? ("screen" as const) : path.includes("/examples-") ? ("examples" as const) : ("contract" as const);
+      return { intent, feature: "UC-002", kind, side: path.includes("/after/") ? ("after" as const) : ("before" as const), path, sha256: sha(path) };
+    });
+  p.comparisons = [
+    { intent: "P-004.I-01", feature: "UC-002", kind: "contract", name: "model-counter.json", diff: [{ path: "out.total", change: "type", before: "string", after: "int", breaking: true }], breaking: true },
+    { intent: "P-004.I-01", feature: "UC-002", kind: "examples", name: "examples-counter.json", changedRows: [{ input: { n: 1 }, before: { total: "1" }, after: { total: 1 } }] },
+    { intent: "P-004.I-02", feature: "UC-002", kind: "screen", name: "orders-header-1.png", pixelShare: 1 },
+  ];
+  p.unexpected = [{ id: "U1", intent: "P-004.I-01", feature: "UC-002", input: { n: 1 }, before: { total: "1" }, after: { total: 1 }, acceptedBy: [] }];
+  p.lastRun = {
+    ok: false,
+    outcomes: [
+      { proof: "P-004.PF-01", useCase: "UC-002", intent: "P-004.I-01", role: "proposal", verdict: "violated", passed: false, counterexample: { input: { actor: 2, event: "write" }, output: { n: 1 } } },
+    ],
+    regressions: [],
+    replacedStillPass: [],
+    unproved: [],
+  } as Proposal["lastRun"];
+  return withStatus(p);
+}
+
 /** Write a fresh copy of the workspace. Files are replaced in place, so the server's file watcher keeps working. */
 export function resetWorkspace() {
-  for (const sub of ["usecases", "proposals", "llm"]) {
+  for (const sub of ["usecases", "proposals", "llm", "docs"]) {
     const d = join(WORK_DIR, sub);
     mkdirSync(d, { recursive: true });
     for (const f of readdirSync(d)) rmSync(join(d, f), { recursive: true, force: true });
   }
   for (const u of useCases()) writeJson(join(WORK_DIR, "usecases", `${u.id}-${u.slug}.json`), u);
   for (const p of proposals()) writeJson(join(WORK_DIR, "proposals", `${p.id}-${p.slug}.json`), p);
+  for (const [path, content] of Object.entries(EVIDENCE_FILES)) {
+    mkdirSync(dirname(join(WORK_DIR, path)), { recursive: true });
+    writeFileSync(join(WORK_DIR, path), content);
+  }
   writeFileSync(join(WORK_DIR, "proposals", "P-003-discount-codes.runs.jsonl"), provingRuns().map((r) => JSON.stringify(r)).join("\n") + "\n");
 }

@@ -530,6 +530,16 @@ async function replay(m: MachineModel, step: MachineStep, path: MachineEvent[]):
 // Statechart
 // ---------------------------------------------------------------------------
 
+/** A step that answers from a recorded table ({input, output|null} rows), as the Rust prover and the other SDKs take it. */
+export function tableStep(rows: { input: Env; output: Env | null }[]): MachineStep {
+  const by = new Map(rows.map((r) => [key(r.input), r.output] as const));
+  return (input) => {
+    const k = key(input);
+    if (!by.has(k)) throw new Error(`the table has no row for ${k}`);
+    return by.get(k) ?? null;
+  };
+}
+
 export interface StatechartRegion {
   /** "shared" or "actor <k>". */
   name: string;

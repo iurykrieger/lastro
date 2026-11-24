@@ -41,30 +41,75 @@ type ProposalPolicy struct {
 // DefaultPolicy is one approval, and the submitter counts.
 var DefaultPolicy = ProposalPolicy{Approvals: 1, SubmitterCanApprove: true}
 
-// ProofCheck is a clause ("requires ⇒ ensures" for every input) or a scenario (one input and an expectation).
+// ProofCheck is a clause ("requires ⇒ ensures" for every input), a scenario (one input and an expectation), a
+// state-machine clause (machine), a scenario driven through a surface (driven) or a property over action sequences.
 type ProofCheck struct {
-	Kind        string   `json:"kind"` // clause | scenario
+	Kind        string   `json:"kind"` // clause | scenario | machine | driven | property
 	Requires    *Expr    `json:"requires,omitempty"`
 	Ensures     *Expr    `json:"ensures,omitempty"`
 	Assumptions []string `json:"assumptions,omitempty"`
 	// Input keeps the key order it was written in, as the TS SDK does.
 	Input  json.RawMessage `json:"input,omitempty"`
 	Expect *Expr           `json:"expect,omitempty"`
+	// Clause is the machine clause: invariant, step or reach.
+	Clause string `json:"clause,omitempty"`
+	// Surface ({kind, locator}), Steps ([{input, expect, reference?}]) and Actions are kept as written.
+	Surface   json.RawMessage `json:"surface,omitempty"`
+	Steps     json.RawMessage `json:"steps,omitempty"`
+	Tolerance float64         `json:"tolerance,omitempty"`
+	Actions   json.RawMessage `json:"actions,omitempty"`
+	Invariant *Expr           `json:"invariant,omitempty"`
+	Machine   string          `json:"machine,omitempty"`
+	Events    []string        `json:"events,omitempty"`
 }
 
 func (c ProofCheck) MarshalJSON() ([]byte, error) {
-	if c.Kind == "scenario" {
+	switch c.Kind {
+	case "scenario":
 		input := c.Input
 		if len(input) == 0 {
 			input = json.RawMessage("{}")
 		}
 		return json.Marshal(obj{{"kind", c.Kind}, {"input", input}, {"expect", c.Expect}})
+	case "machine":
+		o := obj{{"kind", c.Kind}, {"clause", c.Clause}}
+		if c.Requires != nil {
+			o = append(o, kv{"requires", c.Requires})
+		}
+		return json.Marshal(append(o, kv{"ensures", c.Ensures}))
+	case "driven":
+		o := obj{{"kind", c.Kind}, {"surface", c.Surface}, {"steps", c.Steps}}
+		if c.Tolerance != 0 {
+			o = append(o, kv{"tolerance", c.Tolerance})
+		}
+		return json.Marshal(o)
+	case "property":
+		o := obj{{"kind", c.Kind}, {"surface", c.Surface}, {"actions", c.Actions}, {"invariant", c.Invariant}}
+		if c.Machine != "" {
+			o = append(o, kv{"machine", c.Machine})
+		}
+		if len(c.Events) > 0 {
+			o = append(o, kv{"events", c.Events})
+		}
+		return json.Marshal(o)
 	}
 	o := obj{{"kind", c.Kind}}
 	if c.Requires != nil {
 		o = append(o, kv{"requires", c.Requires})
 	}
 	return json.Marshal(append(o, kv{"ensures", c.Ensures}, kv{"assumptions", nonNil(c.Assumptions)}))
+}
+
+// MachineClause is the state-machine clause a machine proof checks, named by the proof's id.
+func (pr ProofEntry) MachineClause() MachineClause {
+	c := pr.Check
+	switch c.Clause {
+	case "invariant":
+		return MachineClause{ID: pr.ID, Kind: "invariant", Holds: c.Ensures}
+	case "reach":
+		return MachineClause{ID: pr.ID, Kind: "reach", Condition: c.Ensures}
+	}
+	return MachineClause{ID: pr.ID, Kind: "step", Requires: c.Requires, Ensures: c.Ensures}
 }
 
 // InputEnv is the scenario's input as an Env.
@@ -1307,6 +1352,7 @@ type DeriveV1Out struct {
 		InputJSON   json.RawMessage `json:"inputJson"`
 		Expect      json.RawMessage `json:"expect"`
 		Replaces    []string        `json:"replaces"`
+		ProofExtras
 	} `json:"proofs"`
 	Decisions []struct {
 		Slug        string           `json:"slug"`
@@ -1319,9 +1365,21 @@ type DeriveV1Out struct {
 	} `json:"decisions"`
 }
 
+// ProofExtras are the derive answer's fields for machine, driven and property proofs.
+type ProofExtras struct {
+	// ClauseKind is the machine clause: invariant, step or reach.
+	ClauseKind  string          `json:"clauseKind,omitempty"`
+	SurfaceJSON json.RawMessage `json:"surfaceJson,omitempty"`
+	StepsJSON   json.RawMessage `json:"stepsJson,omitempty"`
+	ActionsJSON json.RawMessage `json:"actionsJson,omitempty"`
+	Tolerance   *float64        `json:"tolerance,omitempty"`
+}
+
 // ProofSetup is what proofs may name: the declared models and subjects.
 type ProofSetup struct {
-	Models map[string]Model
+	// Machines are the declared state-machine models.
+	Machines map[string]MachineModel
+	Models   map[string]Model
 	// ModelOrder keeps the config's order (for prompts and messages).
 	ModelOrder []string
 	Subjects   []string
@@ -1338,7 +1396,14 @@ func jsonText(raw json.RawMessage) (text string, isString bool) {
 
 // checkFromAnswer parses and validates the check of one derived proof (clause or scenario) against its model,
 // appending every problem.
-func checkFromAnswer(pid, kind string, requiresRaw, ensuresRaw json.RawMessage, assumptions []string, inputRaw, expectRaw json.RawMessage, model Model, problems *[]string) *ProofCheck {
+func checkFromAnswer(pid, kind string, requiresRaw, ensuresRaw json.RawMessage, assumptions []string, inputRaw, expectRaw json.RawMessage, model Model, problems *[]string, more ...checkMore) *ProofCheck {
+	var ex checkMore
+	if len(more) > 0 {
+		ex = more[0]
+	}
+	if check, done := otherCheck(pid, kind, ensuresRaw, requiresRaw, ex, problems); done {
+		return check
+	}
 	parse := func(where string, raw json.RawMessage) *Expr {
 		text, _ := jsonText(raw)
 		var e Expr
@@ -1415,6 +1480,9 @@ func ProofsFromDerivation(p Proposal, useCases []UseCase, setup ProofSetup, out 
 		}
 		slugs[d.Slug] = true
 		model, hasModel := setup.Models[d.Model]
+		if _, isMachine := setup.Machines[d.Model]; isMachine {
+			hasModel = true
+		}
 		if !hasModel {
 			declared := strings.Join(setup.ModelOrder, ", ")
 			if declared == "" {
@@ -1443,7 +1511,7 @@ func ProofsFromDerivation(p Proposal, useCases []UseCase, setup ProofSetup, out 
 		if !hasModel {
 			continue
 		}
-		check := checkFromAnswer(pid, d.Kind, d.Requires, d.Ensures, d.Assumptions, d.InputJSON, d.Expect, model, &problems)
+		check := checkFromAnswer(pid, d.Kind, d.Requires, d.Ensures, d.Assumptions, d.InputJSON, d.Expect, model, &problems, checkMore{d.ProofExtras, machineOf(setup, d.Model)})
 		if check == nil || !hasIt {
 			continue
 		}
@@ -1614,8 +1682,12 @@ func artifactFor(plan ProofPlan) IntentArtifact {
 type RunOptions struct {
 	Subjects map[string]Subject
 	Models   map[string]Model
-	Rust     RustProver
-	Verify   VerifyOptions
+	// Machines are the state-machine models; their proofs explore every interleaving of the actors.
+	Machines map[string]MachineModel
+	// Drive runs driven scenarios and properties through the application's surfaces (see Drivers).
+	Drive  DriveRunner
+	Rust   RustProver
+	Verify VerifyOptions
 }
 
 // RoleProof is a proof and its role in a run.
@@ -1661,16 +1733,80 @@ func RunProofs(ctx context.Context, proofs []RoleProof, o RunOptions) ([]ProofOu
 		all = append(all, x.Proof)
 	}
 	runnable := []ProofEntry{}
+	machines := map[string][]ProofEntry{}
+	machineKeys := []string{}
 	for _, pr := range all {
 		_, hasModel := o.Models[pr.Model]
+		_, isMachine := o.Machines[pr.Model]
+		hasModel = hasModel || isMachine
 		_, hasSubject := o.Subjects[pr.Subject]
 		switch {
+		case pr.Check.Kind == "driven" || pr.Check.Kind == "property":
+			if o.Drive == nil {
+				outcomes = append(outcomes, ProofOutcome{Proof: pr.ID, UseCase: pr.UseCase, Intent: pr.Intent, Role: role[pr.ID], Verdict: "not-run", Note: "no driver runner: driven scenarios and properties run from the CLI or with lastro/drive"})
+			} else if r, err := o.Drive.Run(ctx, pr); err != nil {
+				outcomes = append(outcomes, ProofOutcome{Proof: pr.ID, UseCase: pr.UseCase, Intent: pr.Intent, Role: role[pr.ID], Verdict: "violated", Note: err.Error()})
+			} else {
+				outcomes = append(outcomes, ProofOutcome{Proof: pr.ID, UseCase: pr.UseCase, Intent: pr.Intent, Role: role[pr.ID], Verdict: r.Verdict, Passed: r.Passed, Counterexample: r.Counterexample, Note: r.Note})
+			}
 		case !hasModel:
 			outcomes = append(outcomes, ProofOutcome{Proof: pr.ID, UseCase: pr.UseCase, Intent: pr.Intent, Role: role[pr.ID], Verdict: "not-run", Note: "model " + pr.Model + " is not declared"})
 		case !hasSubject:
 			outcomes = append(outcomes, ProofOutcome{Proof: pr.ID, UseCase: pr.UseCase, Intent: pr.Intent, Role: role[pr.ID], Verdict: "not-run", Note: "subject " + pr.Subject + " is not available"})
+		case pr.Check.Kind == "machine":
+			k := pr.Model + "\x00" + pr.Subject
+			if _, seen := machines[k]; !seen {
+				machineKeys = append(machineKeys, k)
+			}
+			machines[k] = append(machines[k], pr)
+		case isMachine:
+			outcomes = append(outcomes, ProofOutcome{Proof: pr.ID, UseCase: pr.UseCase, Intent: pr.Intent, Role: role[pr.ID], Verdict: "not-run", Note: "model " + pr.Model + " is a state machine: its proofs are machine clauses"})
 		default:
 			runnable = append(runnable, pr)
+		}
+	}
+	// State-machine clauses: every interleaving of the actors, breadth first.
+	for _, k := range machineKeys {
+		prs := machines[k]
+		parts := strings.SplitN(k, "\x00", 2)
+		m, ok := o.Machines[parts[0]]
+		if !ok {
+			for _, pr := range prs {
+				outcomes = append(outcomes, ProofOutcome{Proof: pr.ID, UseCase: pr.UseCase, Intent: pr.Intent, Role: role[pr.ID], Verdict: "not-run", Note: "model " + parts[0] + " is not a state machine"})
+			}
+			continue
+		}
+		clauses := make([]MachineClause, len(prs))
+		for i, pr := range prs {
+			clauses[i] = pr.MachineClause()
+		}
+		report := ExploreMachine(m, MachineStep(o.Subjects[parts[1]]), clauses, MachineOptions{})
+		for _, r := range report.Clauses {
+			var pr ProofEntry
+			for _, x := range prs {
+				if x.ID == r.ClauseID {
+					pr = x
+				}
+			}
+			oc := ProofOutcome{Proof: pr.ID, UseCase: pr.UseCase, Intent: pr.Intent, Role: role[pr.ID], Verdict: r.Verdict, Passed: r.Verdict == "proved" || r.Verdict == "evidenced"}
+			if r.Path != nil && r.Verdict == "violated" {
+				oc.Counterexample = &ProofCounterexample{Input: mustJSON(obj{{"path", pathText(r.Path)}}), Output: envJSON(r.State, machineStateOrder(m))}
+			}
+			unit := "states"
+			if r.Method == "random-walk" {
+				unit = "steps"
+			} else if r.Kind == "step" {
+				unit = "steps checked"
+			}
+			notes := []string{fmt.Sprintf("%s: %d %s", r.Method, r.Checked, unit)}
+			if r.Note != "" {
+				notes = append(notes, r.Note)
+			}
+			if len(report.Errors) > 0 {
+				notes = append(notes, report.Errors[0])
+			}
+			oc.Note = strings.Join(notes, "; ")
+			outcomes = append(outcomes, oc)
 		}
 	}
 	find := func(id string) ProofEntry {
@@ -1864,7 +2000,46 @@ func ProveProposal(ctx context.Context, p Proposal, useCases []UseCase, o RunOpt
 		}
 	}
 	next.LastRun = &run
+	next.Statecharts = statechartsOf(p, run, o)
 	return WithStatus(next), run, nil
+}
+
+// statechartsOf draws each state-machine model the proposal's proofs use, with the first counterexample path.
+func statechartsOf(p Proposal, run ProposalRun, o RunOptions) map[string]string {
+	charts := map[string]string{}
+	for _, pr := range p.Proofs {
+		m, ok := o.Machines[pr.Model]
+		step, hasStep := o.Subjects[pr.Subject]
+		if pr.Check.Kind != "machine" || !ok || !hasStep || charts[pr.Model] != "" {
+			continue
+		}
+		clauses := []MachineClause{}
+		for _, x := range p.Proofs {
+			if x.Model == pr.Model && x.Check.Kind == "machine" {
+				clauses = append(clauses, x.MachineClause())
+			}
+		}
+		path := []MachineEvent{}
+		for _, oc := range run.Outcomes {
+			mine := false
+			for _, c := range clauses {
+				mine = mine || c.ID == oc.Proof
+			}
+			if mine && oc.Verdict == "violated" && oc.Counterexample != nil {
+				var in struct {
+					Path string `json:"path"`
+				}
+				_ = json.Unmarshal(oc.Counterexample.Input, &in)
+				path = parsePath(in.Path)
+				break
+			}
+		}
+		charts[pr.Model] = MermaidStatechart(MachineStatechart(m, MachineStep(step), clauses, path, 0))
+	}
+	if len(charts) == 0 {
+		return nil
+	}
+	return charts
 }
 
 // Regress runs every use case's passed proofs alone (`regress`).

@@ -742,3 +742,71 @@ func MermaidStatechart(c Statechart) string {
 	}
 	return strings.Join(lines, "\n") + "\n"
 }
+
+// StepModel is the model a step clause is written against: in.* the state, the actor's locals, the actor, the event
+// and its inputs; out.* the next state and the actor's locals.
+func StepModel(m MachineModel) Model {
+	set := func(fs Fields, name string, d Domain) Fields {
+		for i := range fs {
+			if fs[i].Name == name {
+				fs[i].Domain = d
+				return fs
+			}
+		}
+		return append(fs, Field{Name: name, Domain: d})
+	}
+	in := Fields{}
+	for _, f := range append(append(Fields{}, m.State...), m.Local...) {
+		in = set(in, f.Name, f.Domain)
+	}
+	lo, hi := 1.0, float64(m.actors())
+	in = set(in, "actor", Domain{Type: "int", Min: &lo, Max: &hi})
+	events := []any{}
+	for _, e := range m.eventNames() {
+		events = append(events, e)
+	}
+	in = set(in, "event", Domain{Type: "enum", Values: events})
+	for _, e := range m.eventNames() {
+		for _, f := range m.Events[e] {
+			in = set(in, f.Name, f.Domain)
+		}
+	}
+	out := Fields{}
+	for _, f := range append(append(Fields{}, m.State...), m.Local...) {
+		out = set(out, f.Name, f.Domain)
+	}
+	return Model{Name: m.Name, Inputs: in, Outputs: out}
+}
+
+// StateModel is the model an invariant or a reachability condition is written against (in.* = the whole state).
+func StateModel(m MachineModel) Model {
+	in := append(Fields{}, m.State...)
+	for k := 1; k <= m.actors(); k++ {
+		for _, f := range m.Local {
+			in = append(in, Field{Name: fmt.Sprintf("%s_%d", f.Name, k), Domain: f.Domain})
+		}
+	}
+	return Model{Name: m.Name, Inputs: in, Outputs: Fields{}}
+}
+
+// MachineClauseProblems validates a clause's expressions against the machine.
+func MachineClauseProblems(m MachineModel, c MachineClause) []string {
+	out := []string{}
+	if c.Kind == "step" {
+		if c.Requires != nil {
+			out = append(out, ValidateExpr(*c.Requires, StepModel(m), nil, "expr")...)
+		}
+		if c.Ensures != nil {
+			out = append(out, ValidateExpr(*c.Ensures, StepModel(m), nil, "expr")...)
+		}
+		return out
+	}
+	e := c.Holds
+	if c.Kind == "reach" {
+		e = c.Condition
+	}
+	if e != nil {
+		out = append(out, ValidateExpr(*e, StateModel(m), nil, "expr")...)
+	}
+	return out
+}

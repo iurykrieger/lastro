@@ -183,8 +183,14 @@ func writeJSON(path string, v any) error {
 var legacyFiles = []string{"intents.json", "spec.json", "proof.json"}
 
 type config struct {
-	models     map[string]lastro.Model
+	models map[string]lastro.Model
+	// machines are the state-machine models; machineRaw keeps every model as written, for writing the config back.
+	machines   map[string]lastro.MachineModel
+	modelRaw   map[string]json.RawMessage
 	modelOrder []string
+	drivers    *lastro.DriverConfig
+	// rest keeps the config's other keys (drivers, smt...) as written.
+	rest obj
 	// subjects keeps the TS CLI's {module, export} entries as written.
 	subjects     json.RawMessage
 	subjectNames []string
@@ -229,12 +235,39 @@ func (w workspace) config() (config, error) {
 	if err := readJSON(w.file("config.json"), &raw); err != nil {
 		return config{}, err
 	}
-	c := config{models: map[string]lastro.Model{}, subjects: raw.Subjects, review: lastro.ReadPolicy(raw.Review, raw.RequiredApprovals)}
+	c := config{models: map[string]lastro.Model{}, machines: map[string]lastro.MachineModel{}, modelRaw: map[string]json.RawMessage{}, subjects: raw.Subjects, review: lastro.ReadPolicy(raw.Review, raw.RequiredApprovals)}
 	if len(raw.Models) > 0 {
-		if err := json.Unmarshal(raw.Models, &c.models); err != nil {
+		if err := json.Unmarshal(raw.Models, &c.modelRaw); err != nil {
 			return config{}, err
 		}
+		for name, m := range c.modelRaw {
+			if lastro.IsMachine(m) {
+				var mm lastro.MachineModel
+				if err := json.Unmarshal(m, &mm); err != nil {
+					return config{}, err
+				}
+				c.machines[name] = mm
+				continue
+			}
+			var mo lastro.Model
+			if err := json.Unmarshal(m, &mo); err != nil {
+				return config{}, err
+			}
+			c.models[name] = mo
+		}
 		c.modelOrder = lastro.ObjectKeys(raw.Models)
+	}
+	var all map[string]json.RawMessage
+	if readJSON(w.file("config.json"), &all) == nil {
+		if d, ok := all["drivers"]; ok {
+			c.drivers = &lastro.DriverConfig{}
+			_ = json.Unmarshal(d, c.drivers)
+		}
+		for _, k := range lastro.ObjectKeys(mustRaw(w.file("config.json"))) {
+			if k != "models" && k != "model" && k != "subjects" && k != "review" && k != "requiredApprovals" {
+				c.rest = append(c.rest, kv{k, all[k]})
+			}
+		}
 	}
 	if raw.Model != nil && c.models[raw.Model.Name].Name == "" {
 		c.models[raw.Model.Name] = *raw.Model // the v0 `model` key is still read
@@ -250,9 +283,25 @@ func (w workspace) config() (config, error) {
 func (w workspace) writeConfig(c config) error {
 	models := obj{}
 	for _, n := range c.modelOrder {
-		models = append(models, kv{n, c.models[n]})
+		if m, ok := c.models[n]; ok {
+			models = append(models, kv{n, m})
+		} else {
+			models = append(models, kv{n, c.modelRaw[n]})
+		}
 	}
-	return writeJSON(w.file("config.json"), obj{{"models", models}, {"subjects", c.subjects}, {"review", c.review}})
+	return writeJSON(w.file("config.json"), append(obj{{"models", models}, {"subjects", c.subjects}, {"review", c.review}}, c.rest...))
+}
+
+// drivers runs driven scenarios and properties through the configured drivers, from the folder that holds .lastro/.
+func (w workspace) drivers(c config) lastro.DriveRunner {
+	abs, _ := filepath.Abs(w.dir)
+	return lastro.Drivers{Config: c.drivers, Dir: w.dir, Root: filepath.Dir(abs)}
+}
+
+// mustRaw reads a JSON file as raw bytes (nil when it cannot be read).
+func mustRaw(path string) json.RawMessage {
+	b, _ := os.ReadFile(path)
+	return b
 }
 
 func listJSON(dir string) []string {
@@ -714,7 +763,7 @@ func setup(cfg config) lastro.ProofSetup {
 	if len(subjects) == 0 {
 		subjects = cfg.modelOrder
 	}
-	return lastro.ProofSetup{Models: cfg.models, ModelOrder: cfg.modelOrder, Subjects: subjects}
+	return lastro.ProofSetup{Models: cfg.models, Machines: cfg.machines, ModelOrder: cfg.modelOrder, Subjects: subjects}
 }
 
 func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
@@ -756,7 +805,7 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 				return 0, nil, err
 			}
 		}
-		cfg := config{models: map[string]lastro.Model{}, subjects: json.RawMessage("{}"), review: lastro.DefaultPolicy}
+		cfg := config{models: map[string]lastro.Model{}, machines: map[string]lastro.MachineModel{}, modelRaw: map[string]json.RawMessage{}, subjects: json.RawMessage("{}"), review: lastro.DefaultPolicy}
 		if ws.exists() {
 			var err error
 			if cfg, err = ws.config(); err != nil {
@@ -764,10 +813,20 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 			}
 		}
 		if hasModel {
-			if _, ok := cfg.models[model.Name]; !ok {
+			_, known := cfg.models[model.Name]
+			_, knownMachine := cfg.machines[model.Name]
+			if !known && !knownMachine {
 				cfg.modelOrder = append(cfg.modelOrder, model.Name)
 			}
-			cfg.models[model.Name] = model
+			if raw := mustRaw(a.flags["model"]); lastro.IsMachine(raw) {
+				// A state machine is kept as written.
+				var m lastro.MachineModel
+				_ = json.Unmarshal(raw, &m)
+				delete(cfg.models, model.Name)
+				cfg.machines[model.Name], cfg.modelRaw[model.Name] = m, raw
+			} else {
+				cfg.models[model.Name] = model
+			}
 		}
 		if s := a.flags["subject"]; hasModel && s != "" && s != "true" {
 			module, exp, _ := strings.Cut(s, "#")
@@ -1236,7 +1295,7 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 				return 0, nil, err
 			}
 			defer stop()
-			changed, run, err := lastro.ProveUseCases(ctx, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Rust: rustProver(a)})
+			changed, run, err := lastro.ProveUseCases(ctx, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Machines: cfg.machines, Drive: ws.drivers(cfg), Rust: rustProver(a)})
 			if err != nil {
 				return 0, nil, err
 			}
@@ -1288,7 +1347,7 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 			}
 			stream(obj{{"event", "start"}, {"proposal", p.ID}, {"proofs", ids}})
 		}
-		proposal, run, err := lastro.ProveProposal(ctx, p, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Rust: rustProver(a)})
+		proposal, run, err := lastro.ProveProposal(ctx, p, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Machines: cfg.machines, Drive: ws.drivers(cfg), Rust: rustProver(a)})
 		if err != nil {
 			return 0, nil, err
 		}
@@ -1419,7 +1478,7 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 			return 0, nil, err
 		}
 		defer stop()
-		run, err := lastro.Regress(ctx, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Rust: rustProver(a)})
+		run, err := lastro.Regress(ctx, useCases, lastro.RunOptions{Subjects: subs, Models: cfg.models, Machines: cfg.machines, Drive: ws.drivers(cfg), Rust: rustProver(a)})
 		if err != nil {
 			return 0, nil, err
 		}

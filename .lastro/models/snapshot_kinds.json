@@ -1,0 +1,49 @@
+{
+  "name": "snapshot_kinds",
+  "inputs": {
+    "surface": {
+      "type": "enum",
+      "values": [
+        "screen",
+        "route",
+        "api",
+        "command",
+        "none"
+      ]
+    },
+    "hasModel": {
+      "type": "bool"
+    },
+    "hasData": {
+      "type": "bool"
+    },
+    "phase": {
+      "type": "enum",
+      "values": [
+        "extract",
+        "prove"
+      ]
+    }
+  },
+  "outputs": {
+    "screen": {
+      "type": "bool"
+    },
+    "contract": {
+      "type": "bool"
+    },
+    "data": {
+      "type": "bool"
+    },
+    "examples": {
+      "type": "bool"
+    },
+    "side": {
+      "type": "enum",
+      "values": [
+        "before",
+        "after"
+      ]
+    }
+  }
+}

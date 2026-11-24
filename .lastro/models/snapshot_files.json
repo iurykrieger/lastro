@@ -1,0 +1,40 @@
+{
+  "name": "snapshot_files",
+  "inputs": {
+    "scope": {
+      "type": "enum",
+      "values": [
+        "feature",
+        "repository"
+      ]
+    },
+    "side": {
+      "type": "enum",
+      "values": [
+        "before",
+        "after"
+      ]
+    },
+    "file": {
+      "type": "enum",
+      "values": [
+        "png",
+        "json"
+      ]
+    }
+  },
+  "outputs": {
+    "layoutOk": {
+      "type": "bool"
+    },
+    "ignored": {
+      "type": "bool"
+    },
+    "hashRecorded": {
+      "type": "bool"
+    },
+    "hashMatches": {
+      "type": "bool"
+    }
+  }
+}

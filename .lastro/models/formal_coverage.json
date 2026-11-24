@@ -1,0 +1,42 @@
+{
+  "name": "formal_coverage",
+  "inputs": {
+    "formal": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "evidenced": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "beyond": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    }
+  },
+  "outputs": {
+    "countFormal": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "countEvidenced": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "countBeyond": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "reasons": {
+      "type": "int",
+      "min": 0,
+      "max": 6
+    }
+  }
+}

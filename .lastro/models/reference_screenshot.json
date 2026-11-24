@@ -1,0 +1,16 @@
+{
+  "name": "reference_screenshot",
+  "inputs": {
+    "signedOff": {
+      "type": "bool"
+    },
+    "hadReference": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "referenceIsAfter": {
+      "type": "bool"
+    }
+  }
+}

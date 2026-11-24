@@ -1,0 +1,30 @@
+{
+  "name": "shipped_drivers",
+  "inputs": {
+    "sdk": {
+      "type": "enum",
+      "values": [
+        "typescript",
+        "go",
+        "dotnet"
+      ]
+    },
+    "setup": {
+      "type": "enum",
+      "values": [
+        "web",
+        "appium",
+        "http",
+        "jsonlines"
+      ]
+    }
+  },
+  "outputs": {
+    "bundlesBrowser": {
+      "type": "bool"
+    },
+    "documented": {
+      "type": "bool"
+    }
+  }
+}

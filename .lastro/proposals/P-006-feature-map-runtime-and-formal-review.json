@@ -4,7 +4,7 @@
   "slug": "feature-map-runtime-and-formal-review",
   "name": "Feature map, formal proofs whenever possible, and review with before/after snapshots",
   "description": "Features learn their surfaces and dependencies, derivation proves formally whenever a finite model fits (including state machines with interleaving actors, and SMT when the space is too large), drivers run the application, action-sequence properties are evidenced, and reviewers see before/after snapshots of screens, contracts, data and examples per intent.",
-  "status": "approved",
+  "status": "proving",
   "submittedBy": "iury",
   "prose": "# Feature map, formal proofs whenever possible, and review with before/after snapshots\n\nLastro learns how a user reaches each feature, proves behavior formally whenever a finite model can express it\n(including state machines whose actors interleave, as TLA+ model checking does, and with an SMT solver when the space is too large to enumerate), runs the application through its\nsurfaces, and shows the reviewer what changed next to the intents and verdicts: screens for the frontend, contracts,\ndata structures and examples of behavior for the backend. The engines stay the judges: Lastro never writes or fixes\napplication code, and its only AI steps stay intent extraction (with the survey that reads code) and proof\nderivation. This proposal speaks of features, as the proposal that renames use cases to features does.\n\n## The feature map\n\nA feature may carry surfaces and dependencies. A surface says how a user or a client reaches the feature: its kind\n(screen, route, command or api), a name in the user's words (\"the left sidebar's chat list\") and a locator the\ndriver understands (a URL path, a CLI command, an HTTP method and path, a selector). A dependency names another\nfeature this one needs to work (opening a chat depends on signing in). The extraction step proposes surfaces and\ndependencies for every feature an intent adds, and for a feature an intent modifies it keeps the surfaces and\ndependencies the feature already has, adding or removing only the ones the change calls for; the reviewer approves\nthem with the intent, like the description. A feature with no surface is not reachable by the driver and is listed as such.\n\n`lastro map` prints the feature map: every feature with its surfaces, what it depends on and what depends on it. It\nis deterministic. It rejects a dependency on a feature that does not exist or that was removed, and a dependency\ncycle, naming the features in it. When a proposal changes a feature, the map lists the features that depend on it,\ndirectly or not, as affected: their proofs and snapshots run again with the proposal's own.\n\nFor a repository whose features have no surfaces yet, `lastro bootstrap --surfaces` asks the survey step to read the\ncode and propose surfaces and dependencies for them. It writes a bootstrap proposal whose intents only add surfaces\nand dependencies, never change a description, and that proposal is reviewed like any other.\n\n## Formal whenever possible\n\nThe derive step must prove formally whenever it can. For each approved intent it first tries a finite model the\ncode can be checked against exhaustively: an input space of at most 100,000 points, or a state machine whose\nreachable states number at most 100,000. When the space is larger, it tries an SMT proof (the clauses compiled to\nSMT-LIB and checked by an SMT solver, by induction over the steps for a state machine). Only when neither can\nexpress the intent does it fall back to sampling, traces or scenarios, and it then records why, in one of the reasons where proof stops or as a domain too\nlarge to enumerate. The receipt counts how many intents are proved formally, evidenced, and beyond proof, with the\nreason for each one that is not formal.\n\n## State-machine proofs\n\nA model may be a state machine: state variables with finite domains, an initial state, and events, each with finite\ninputs. It may declare actors, several copies of the same process (two devices, three clients) that share part of\nthe state; their events interleave in every possible order, which is how races between them are found. The code\nunder proof is a step function from a state and an event (with the actor that raised it) to the next state.\n\nClauses are of three kinds: an invariant must hold in every reachable state; a step clause relates a state, an\nevent and the next state; a reachability clause says a state that satisfies a condition can be reached, which guards\nthe other clauses against proving nothing. When the reachable state space, across every interleaving, has at most\n100,000 states, Lastro visits all of it breadth first, and a clause that holds everywhere it applies is proved, with\nformal evidence and the number of states visited. A larger or unbounded space is not sampled first: if it can be proved, it is. Lastro tries an inductive proof\nwith the SMT solver (the invariant holds initially and every step preserves it), and a clause it proves this way is\nproved, with formal evidence and the method named. Only when the solver cannot decide does Lastro explore by random\nwalks from the initial state with a fixed seed, and a clause that holds is then evidenced, never proved. A violation\ncomes back as the shortest sequence of events, each with its actor, from the initial state that reaches it. The TypeScript engine, the\nRust prover, the Go SDK and the .NET SDK visit the states in the same order and give the same verdicts and\ncounterexamples.\n\nEvery state-machine model is drawn as a statechart from the user's point of view: its states, the transitions\nbetween them labelled with the events that cause them, each actor as a parallel region, and the states each invariant\nforbids marked. The reviewer sees the statechart next to the intent's proofs and the counterexample path drawn on it,\nand requests changes on the intent when the statechart does not match what they meant.\n\n## Driving the application\n\nLastro drives the application through the protocols the market already uses, so any existing driver works. A web or\nElectron surface is driven over W3C WebDriver (BiDi where the driver supports it), with any WebDriver server such\nas chromedriver or geckodriver. An Android or iOS surface is driven over the same protocol through Appium. An api\nsurface is called over HTTP directly, and a command surface is run as a process. `.lastro/config.json` names, under\n`drivers`, the WebDriver or Appium server and its capabilities, the HTTP base URL, or the command for each surface\nkind. Only when no standard protocol fits does a driver speak Lastro's own JSON lines protocol: Lastro sends a\nsurface and a list of actions, and the driver answers with the observed state and the snapshots it took. Lastro\nships no browser or device of its own; the docs show a web setup, an Android and iOS setup with Appium, an HTTP setup\nand a JSON lines driver.\n\nA scenario is a list of steps, each an input and the output expected from it. For a screen the input is a user\naction and the expected output is the observed state and, where layout matters, a reference screenshot; for an api\nthe input is a request and the expected output is the response, its status and its body; for a pure function it is\nan input and an output of the model. A scenario that names a surface runs through its driver, each step's output is\nchecked against the expected one, and the result is empirical evidence; a reference screenshot matches when the share\nof pixels changed stays under the tolerance the scenario sets. A driver that fails to start or times out fails the\nscenario with the driver's error, never passes it. When a reviewer signs off an after screenshot, it becomes the\nreference screenshot of that step for the regressions that follow.\n\n## Properties over action sequences\n\nA property-based check names a surface, the actions a user or client can take there and an invariant over the\nobserved state. Lastro generates action sequences with a fixed seed, runs each through the driver and checks the\ninvariant after every action. If it can be proved, it is: when the surface has a\nstate-machine model, the property is first checked over that model (exhaustively or by SMT induction) and is\nproved there, and the action sequences then check that the running application follows the model. A property with\nno model that holds on every sequence is evidenced, with the number of sequences and actions run and the\nrule-of-three failure bound; it is never proved. A failing sequence is shortened to the shortest\nprefix that still fails and then replayed once: if the replay does not fail, the check is reported as\nnondeterministic instead of violated.\n\n## Before and after snapshots\n\nWhen a proposal is extracted, every intent gets a before snapshot of each feature it touches, taken on the current\ncode; when the proposal is proved, the same snapshot is taken on the new code and is the after. A snapshot has one\nof four kinds, chosen by the feature's surfaces and models:\n\n- screen: for a screen or route surface, the images the driver captured while running that surface's scenarios;\n- contract: for an api or command surface, the contract the driver reports (the endpoint's or command's request and\n  response shapes, as JSON Schema) and, for every feature, the model's inputs and outputs with their domains;\n- data: the structure of the data the feature reads or writes, as the driver reports it (tables and columns, or a\n  JSON Schema of a stored document);\n- examples: a table of example inputs, the scenarios' inputs plus a fixed-seed sample of the model's inputs, each\n  run on the before and the after code with both outputs side by side.\n\nEach pair gets a deterministic comparison: for screens, the share of pixels changed; for contracts and data, a\nstructural diff that lists every field or column added, removed or changed in type, and marks a removal or a type\nchange as breaking; for examples, the rows whose output changed. An example whose output changed although no\napproved intent's clause applies to its input is flagged as an unexpected change, and the proposal is not proved\nwhile an unexpected change is not accepted by a reviewer.\n\nSnapshots are kept with the documentation of the change, under the proposal, the feature and the intent that changed\nit: `.lastro/docs/<proposal>/<feature>/<intent>/before|after/`. They are committed with the proposal, images included,\nso every reviewer sees them in the pull request without taking them again; the proposal also records the SHA-256 of\neach one, so anyone can take it again and see whether the result still matches. A snapshot of the whole repository\nrather than of one feature lives in `.lastro/docs/<proposal>/repository/before|after/`.\n\nAn intent whose promise is a matter of human judgment (the layout looks right, the message is clear, the new error\nresponse is helpful) stays beyond proof, but after the proof run it waits for a sign-off: a reviewer looks at its\nbefore and after snapshots and signs it off or requests changes. A proposal is not proved while such an intent waits\nfor its sign-off.\n\n## Reviewing the evidence\n\nThe review app shows, for each intent: the feature's place in the feature map (its surfaces, what it depends on and\nwhat it affects), the statechart drawn from its state-machine model when it has one, its before snapshots during the\nreview and its before and after snapshots with their comparison after the proof run (images side by side for\nscreens, a diff for contracts and data, the changed rows for examples), and the verdict of every proof and property\nwith its counterexample. The receipt adds a Feature map section with the affected features, a state diagram in\nMermaid for every state-machine model, the formal coverage counts, the snapshots with their hashes and comparisons,\nthe unexpected changes and who accepted them, and the sign-offs with who gave them.\n\nThe CLI, the TypeScript, Go and .NET SDKs, the docs and the plugin's skills cover all of this, and the plugin's\nreview shows the snapshots' paths, the unexpected changes and the sign-offs still due.",
   "baseline": "sha256:e1df572be471d7f3a5c74a900afa64c438ffb7d13755a66229196de4ecbc7c07",
@@ -1179,7 +1179,5256 @@
     "approvals": 1,
     "submitterCanApprove": true
   },
-  "proofs": [],
+  "proofs": [
+    {
+      "id": "P-006.PF-01",
+      "slug": "surface-fields-accepted",
+      "name": "A surface is accepted with a known kind, a name and a locator",
+      "description": "A feature file is accepted exactly when it has no surface, or its surfaces have a kind of screen, route, command or api, a name and a locator; dependsOn never makes it invalid.",
+      "intent": "P-006.I-01",
+      "useCase": "UC-046",
+      "model": "feature_surfaces",
+      "subject": "feature_surfaces",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.accepted"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "or",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.surfaces"
+                    },
+                    {
+                      "const": 0
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "neq",
+                      "args": [
+                        {
+                          "var": "in.kind"
+                        },
+                        {
+                          "const": "other"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.hasName"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.hasLocator"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-02",
+      "slug": "plain-feature-file-stays-valid",
+      "name": "A feature file without surfaces or dependsOn stays valid",
+      "description": "A feature file written before surfaces existed, with neither surfaces nor dependsOn, is still accepted.",
+      "intent": "P-006.I-01",
+      "useCase": "UC-046",
+      "model": "feature_surfaces",
+      "subject": "feature_surfaces",
+      "check": {
+        "kind": "scenario",
+        "input": {
+          "kind": "other",
+          "hasName": false,
+          "hasLocator": false,
+          "surfaces": 0,
+          "hasDependsOn": false
+        },
+        "expect": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.accepted"
+            },
+            {
+              "const": true
+            }
+          ]
+        }
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-03",
+      "slug": "modify-keeps-surfaces",
+      "name": "A modify keeps the feature's surfaces and only adds or removes what the change names",
+      "description": "For a modified feature the after has the existing surfaces plus the ones added minus the ones removed, and removing more than the feature has is refused.",
+      "intent": "P-006.I-02",
+      "useCase": "UC-001",
+      "model": "extract_surfaces",
+      "subject": "extract_surfaces",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.change"
+            },
+            {
+              "const": "modify"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.accepted"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "le",
+                  "args": [
+                    {
+                      "var": "in.removes"
+                    },
+                    {
+                      "var": "in.existing"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.accepted"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.after"
+                    },
+                    {
+                      "op": "sub",
+                      "args": [
+                        {
+                          "op": "add",
+                          "args": [
+                            {
+                              "var": "in.existing"
+                            },
+                            {
+                              "var": "in.adds"
+                            }
+                          ]
+                        },
+                        {
+                          "var": "in.removes"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-04",
+      "slug": "add-takes-proposed-surfaces",
+      "name": "An added feature takes the surfaces the extraction proposed",
+      "description": "For a feature an intent adds, the after carries exactly the surfaces and dependencies the extraction proposed.",
+      "intent": "P-006.I-02",
+      "useCase": "UC-001",
+      "model": "extract_surfaces",
+      "subject": "extract_surfaces",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.change"
+            },
+            {
+              "const": "add"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.accepted"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.after"
+                },
+                {
+                  "var": "in.proposedOnAdd"
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-05",
+      "slug": "map-is-deterministic",
+      "name": "lastro map prints the same map every time",
+      "description": "Printing the feature map twice over the same features gives the same output.",
+      "intent": "P-006.I-03",
+      "useCase": "UC-055",
+      "model": "feature_map",
+      "subject": "feature_map",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.same"
+            },
+            {
+              "const": true
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-06",
+      "slug": "no-surface-not-reachable",
+      "name": "A feature with no surface is listed as not reachable",
+      "description": "In a valid map a feature is listed as reachable by the driver exactly when it has a surface.",
+      "intent": "P-006.I-03",
+      "useCase": "UC-055",
+      "model": "feature_map",
+      "subject": "feature_map",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "implies",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.ok"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.aReachable"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.aSurface"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-07",
+      "slug": "map-rejects-bad-dependencies",
+      "name": "The map rejects unknown, removed and cyclic dependencies",
+      "description": "The map is accepted exactly when no feature depends on an unknown or removed feature and the dependencies form no cycle.",
+      "intent": "P-006.I-04",
+      "useCase": "UC-055",
+      "model": "feature_map",
+      "subject": "feature_map",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.ok"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ab"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.bc"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ca"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "not",
+                          "args": [
+                            {
+                              "op": "eq",
+                              "args": [
+                                {
+                                  "var": "in.bRemoved"
+                                },
+                                {
+                                  "const": true
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.aUnknown"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.bRemoved"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ab"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-08",
+      "slug": "cycle-names-its-features",
+      "name": "A dependency cycle is reported with every feature in it",
+      "description": "A cycle is reported exactly when A, B and C depend on each other in a ring, and the error names all three.",
+      "intent": "P-006.I-04",
+      "useCase": "UC-055",
+      "model": "feature_map",
+      "subject": "feature_map",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.cycle"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.ab"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.bc"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.ca"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.bRemoved"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.cycle"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.named"
+                    },
+                    {
+                      "const": 3
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-09",
+      "slug": "transitive-dependents-affected",
+      "name": "Every direct or transitive dependent of a changed feature is affected",
+      "description": "With A depending on B, B on C and C on A as given, a feature is affected exactly when it depends, directly or through others, on the changed feature; the changed feature itself is not listed.",
+      "intent": "P-006.I-05",
+      "useCase": "UC-055",
+      "model": "feature_map",
+      "subject": "feature_map",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ab"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.bc"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ca"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "not",
+                          "args": [
+                            {
+                              "op": "eq",
+                              "args": [
+                                {
+                                  "var": "in.bRemoved"
+                                },
+                                {
+                                  "const": true
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.aUnknown"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.bRemoved"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ab"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.bRemoved"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.affectedA"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "or",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.changed"
+                            },
+                            {
+                              "const": "b"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ab"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.changed"
+                            },
+                            {
+                              "const": "c"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ab"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.bc"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.affectedB"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "or",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.changed"
+                            },
+                            {
+                              "const": "c"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.bc"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.changed"
+                            },
+                            {
+                              "const": "a"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.bc"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ca"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.affectedC"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "or",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.changed"
+                            },
+                            {
+                              "const": "a"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ca"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.changed"
+                            },
+                            {
+                              "const": "b"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ca"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.ab"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-10",
+      "slug": "bootstrap-only-featureless-surfaces",
+      "name": "bootstrap --surfaces proposes only for features without surfaces",
+      "description": "A feature gets a bootstrap intent exactly when it has no surfaces yet.",
+      "intent": "P-006.I-06",
+      "useCase": "UC-056",
+      "model": "bootstrap_surfaces",
+      "subject": "bootstrap_surfaces",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.proposed"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.hasSurfaces"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-11",
+      "slug": "bootstrap-never-changes-descriptions",
+      "name": "A bootstrap intent that changes a description is refused",
+      "description": "A bootstrap --surfaces intent is accepted exactly when it adds a surface or dependency and does not touch the description, and every description is kept.",
+      "intent": "P-006.I-06",
+      "useCase": "UC-056",
+      "model": "bootstrap_surfaces",
+      "subject": "bootstrap_surfaces",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.accepted"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.addsSurface"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.touchesDescription"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.descriptionKept"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-12",
+      "slug": "bootstrap-proposal-is-reviewed",
+      "name": "The surfaces bootstrap proposal waits for review",
+      "description": "The bootstrap proposal starts open and is reviewed like any other.",
+      "intent": "P-006.I-06",
+      "useCase": "UC-056",
+      "model": "bootstrap_surfaces",
+      "subject": "bootstrap_surfaces",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.reviewed"
+            },
+            {
+              "const": true
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-13",
+      "slug": "small-space-exhaustive",
+      "name": "A space of at most 100,000 points is checked exhaustively",
+      "description": "When the input space or reachable states number at most 100,000, the clause is checked exhaustively: proved when it holds, violated otherwise, with no reason recorded.",
+      "intent": "P-006.I-07",
+      "useCase": "UC-013",
+      "model": "formal_first",
+      "subject": "formal_first",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.space"
+                },
+                {
+                  "const": "small"
+                }
+              ]
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "implies",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.smt"
+                        },
+                        {
+                          "const": "proves"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.holds"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "implies",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.smt"
+                        },
+                        {
+                          "const": "refutes"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.holds"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.method"
+                },
+                {
+                  "const": "exhaustive"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.reason"
+                },
+                {
+                  "const": "none"
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "proved"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.holds"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "violated"
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.holds"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-14",
+      "slug": "large-space-tries-smt",
+      "name": "A larger space is decided by the SMT solver when it can",
+      "description": "When the space is too large and the solver proves or refutes the clause, the method is smt and the verdict is proved or violated accordingly.",
+      "intent": "P-006.I-07",
+      "useCase": "UC-013",
+      "model": "formal_first",
+      "subject": "formal_first",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.space"
+                },
+                {
+                  "const": "large"
+                }
+              ]
+            },
+            {
+              "op": "or",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.smt"
+                    },
+                    {
+                      "const": "proves"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.smt"
+                    },
+                    {
+                      "const": "refutes"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "implies",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.smt"
+                        },
+                        {
+                          "const": "proves"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.holds"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "implies",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.smt"
+                        },
+                        {
+                          "const": "refutes"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.holds"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.method"
+                },
+                {
+                  "const": "smt"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.reason"
+                },
+                {
+                  "const": "none"
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "proved"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.smt"
+                    },
+                    {
+                      "const": "proves"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "violated"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.smt"
+                    },
+                    {
+                      "const": "refutes"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-15",
+      "slug": "sampling-only-as-fallback-with-reason",
+      "name": "Sampling is used only when neither works, records why, and never proves",
+      "description": "When the space is too large and the solver cannot decide or express the clause, it is sampled, the reason is solver-unknown or not-expressible, and the verdict is never proved.",
+      "intent": "P-006.I-07",
+      "useCase": "UC-013",
+      "model": "formal_first",
+      "subject": "formal_first",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.space"
+                },
+                {
+                  "const": "large"
+                }
+              ]
+            },
+            {
+              "op": "or",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.smt"
+                    },
+                    {
+                      "const": "unknown"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.smt"
+                    },
+                    {
+                      "const": "inexpressible"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "implies",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.smt"
+                        },
+                        {
+                          "const": "proves"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.holds"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "implies",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.smt"
+                        },
+                        {
+                          "const": "refutes"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.holds"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.method"
+                },
+                {
+                  "const": "sampled"
+                }
+              ]
+            },
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "out.verdict"
+                },
+                {
+                  "const": "proved"
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.smt"
+                    },
+                    {
+                      "const": "unknown"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.reason"
+                    },
+                    {
+                      "const": "solver-unknown"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.smt"
+                    },
+                    {
+                      "const": "inexpressible"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.reason"
+                    },
+                    {
+                      "const": "not-expressible"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.holds"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "evidenced"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": [
+          "The sampled subject's violation, when there is one, is dense enough for the fixed-seed sample to hit it."
+        ]
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-16",
+      "slug": "receipt-counts-coverage",
+      "name": "The receipt counts formal, evidenced and beyond-proof intents with a reason for each non-formal one",
+      "description": "The counts equal the number of intents proved formally, evidenced and beyond proof, and there is one reason per evidenced or beyond-proof intent.",
+      "intent": "P-006.I-08",
+      "useCase": "UC-026",
+      "model": "formal_coverage",
+      "subject": "formal_coverage",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.countFormal"
+                },
+                {
+                  "var": "in.formal"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.countEvidenced"
+                },
+                {
+                  "var": "in.evidenced"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.countBeyond"
+                },
+                {
+                  "var": "in.beyond"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.reasons"
+                },
+                {
+                  "op": "add",
+                  "args": [
+                    {
+                      "var": "in.evidenced"
+                    },
+                    {
+                      "var": "in.beyond"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-17",
+      "slug": "state-machine-model-accepted",
+      "name": "A state-machine model is accepted exactly when it is finite",
+      "description": "A state-machine model is accepted exactly when its state variables have finite domains, its initial state is in them and its events have finite inputs, with or without actors.",
+      "intent": "P-006.I-09",
+      "useCase": "UC-011",
+      "model": "sm_model",
+      "subject": "sm_model",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.accepted"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.stateFinite"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.initialInDomain"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.eventsFinite"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-18",
+      "slug": "interleaving-finds-race",
+      "name": "Interleaving the actors finds a lost update",
+      "description": "A shared counter that actors increment by reading and then writing is violated exactly when two or more actors run without an atomic step, and the counterexample uses two actors.",
+      "intent": "P-006.I-10",
+      "useCase": "UC-057",
+      "model": "sm_interleave",
+      "subject": "sm_interleave",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.violated"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "ge",
+                      "args": [
+                        {
+                          "var": "in.actors"
+                        },
+                        {
+                          "const": 2
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.atomic"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.violated"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.cexActors"
+                    },
+                    {
+                      "const": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-19",
+      "slug": "clause-kinds-verdicts",
+      "name": "Invariant, step and reachability clauses get the verdict their truth calls for",
+      "description": "Over a state space small enough to visit, each kind of clause is proved when it holds (for a reachability clause, when the state is reached) and violated otherwise.",
+      "intent": "P-006.I-11",
+      "useCase": "UC-057",
+      "model": "sm_clauses",
+      "subject": "sm_clauses",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.space"
+            },
+            {
+              "const": "small"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "proved"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.holds"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "violated"
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.holds"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-20",
+      "slug": "bfs-proves-small-spaces",
+      "name": "A small state space is visited breadth first and proves formally",
+      "description": "When the reachable states number at most 100,000 the method is breadth-first search, every state is counted, and a clause that holds is proved with formal evidence.",
+      "intent": "P-006.I-12",
+      "useCase": "UC-057",
+      "model": "sm_clauses",
+      "subject": "sm_clauses",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.space"
+            },
+            {
+              "const": "small"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.method"
+                },
+                {
+                  "const": "bfs"
+                }
+              ]
+            },
+            {
+              "op": "gt",
+              "args": [
+                {
+                  "var": "out.states"
+                },
+                {
+                  "const": 0
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.holds"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.verdict"
+                        },
+                        {
+                          "const": "proved"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.evidence"
+                        },
+                        {
+                          "const": "formal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-21",
+      "slug": "smt-induction-proves-large-spaces",
+      "name": "A large space is proved by SMT induction when the solver decides",
+      "description": "For an invariant or step clause over a space too large to visit, a solver that proves the induction gives proved with formal evidence and the smt-induction method named.",
+      "intent": "P-006.I-13",
+      "useCase": "UC-057",
+      "model": "sm_clauses",
+      "subject": "sm_clauses",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.space"
+                },
+                {
+                  "const": "large"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.smt"
+                },
+                {
+                  "const": "proves"
+                }
+              ]
+            },
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "in.clause"
+                },
+                {
+                  "const": "reach"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.smt"
+                        },
+                        {
+                          "const": "proves"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.holds"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.verdict"
+                },
+                {
+                  "const": "proved"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.evidence"
+                },
+                {
+                  "const": "formal"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.method"
+                },
+                {
+                  "const": "smt-induction"
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-22",
+      "slug": "random-walks-only-evidence",
+      "name": "Random walks run only when the solver cannot decide, and never prove",
+      "description": "For an invariant or step clause over a large space that the solver cannot decide, the method is random walks with a fixed seed and the verdict is never proved; a clause that holds is evidenced.",
+      "intent": "P-006.I-13",
+      "useCase": "UC-057",
+      "model": "sm_clauses",
+      "subject": "sm_clauses",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.space"
+                },
+                {
+                  "const": "large"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.smt"
+                },
+                {
+                  "const": "unknown"
+                }
+              ]
+            },
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "in.clause"
+                },
+                {
+                  "const": "reach"
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.method"
+                },
+                {
+                  "const": "random-walk"
+                }
+              ]
+            },
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "out.verdict"
+                },
+                {
+                  "const": "proved"
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.holds"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.verdict"
+                        },
+                        {
+                          "const": "evidenced"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.evidence"
+                        },
+                        {
+                          "const": "empirical"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-23",
+      "slug": "shortest-counterexample-with-actors",
+      "name": "A violation comes back as the shortest event path with its actors",
+      "description": "A violated invariant or step clause over a visited state space comes back with the shortest sequence of events from the initial state, each naming its actor.",
+      "intent": "P-006.I-14",
+      "useCase": "UC-057",
+      "model": "sm_clauses",
+      "subject": "sm_clauses",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.space"
+                },
+                {
+                  "const": "small"
+                }
+              ]
+            },
+            {
+              "op": "not",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.holds"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "in.clause"
+                },
+                {
+                  "const": "reach"
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.verdict"
+                },
+                {
+                  "const": "violated"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.evidence"
+                },
+                {
+                  "const": "counterexample"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.shortest"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.actorsNamed"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-24",
+      "slug": "statechart-draws-model",
+      "name": "The statechart draws actors as regions, marks forbidden states and the counterexample path",
+      "description": "The statechart has one parallel region per actor, labels every transition with its event, marks the states an invariant forbids exactly when there are some, and draws the counterexample path exactly when there is one.",
+      "intent": "P-006.I-15",
+      "useCase": "UC-057",
+      "model": "statechart",
+      "subject": "statechart",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.regions"
+                },
+                {
+                  "var": "in.actors"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.labelled"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.marked"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.forbids"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.pathDrawn"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.cex"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-25",
+      "slug": "engines-agree-on-state-machines",
+      "name": "Every engine gives the TypeScript verdict, states and counterexample",
+      "description": "For correct and buggy state machines, the Rust prover, the Go SDK and the .NET SDK visit the same number of states and give the same verdicts and counterexamples as the TypeScript engine.",
+      "intent": "P-006.I-16",
+      "useCase": "UC-025",
+      "model": "sm_crosscheck",
+      "subject": "sm_crosscheck",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.sameVerdict"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.sameCounterexample"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.sameStates"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-26",
+      "slug": "market-protocol-per-surface",
+      "name": "Each surface is driven over its market protocol",
+      "description": "With a standard driver configured, web and Electron surfaces use WebDriver, Android and iOS use Appium, api surfaces use HTTP and command surfaces run as a process.",
+      "intent": "P-006.I-17",
+      "useCase": "UC-058",
+      "model": "driver_protocol",
+      "subject": "driver_protocol",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.config"
+            },
+            {
+              "const": "standard"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "or",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.target"
+                        },
+                        {
+                          "const": "web"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.target"
+                        },
+                        {
+                          "const": "electron"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.protocol"
+                    },
+                    {
+                      "const": "webdriver"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "or",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.target"
+                        },
+                        {
+                          "const": "android"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.target"
+                        },
+                        {
+                          "const": "ios"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.protocol"
+                    },
+                    {
+                      "const": "appium"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.target"
+                    },
+                    {
+                      "const": "api"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.protocol"
+                    },
+                    {
+                      "const": "http"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.target"
+                    },
+                    {
+                      "const": "command"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.protocol"
+                    },
+                    {
+                      "const": "process"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-27",
+      "slug": "json-lines-only-when-configured",
+      "name": "JSON lines is used only when a driver is configured for it, and nothing is driven without configuration",
+      "description": "The protocol is JSON lines exactly when the configuration names a JSON lines driver, and none when no driver is configured.",
+      "intent": "P-006.I-17",
+      "useCase": "UC-058",
+      "model": "driver_protocol",
+      "subject": "driver_protocol",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.protocol"
+                    },
+                    {
+                      "const": "jsonlines"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.config"
+                    },
+                    {
+                      "const": "jsonlines"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.protocol"
+                    },
+                    {
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.config"
+                    },
+                    {
+                      "const": "none"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-28",
+      "slug": "no-browser-shipped-setups-documented",
+      "name": "No SDK bundles a browser and every driver setup is documented",
+      "description": "No SDK package depends on a browser or device, and the docs have a web, an Appium, an HTTP and a JSON lines setup.",
+      "intent": "P-006.I-18",
+      "useCase": "UC-058",
+      "model": "shipped_drivers",
+      "subject": "shipped_drivers",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.bundlesBrowser"
+                },
+                {
+                  "const": false
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.documented"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-29",
+      "slug": "driven-step-checked",
+      "name": "A driven step passes when its output matches and its screenshot stays within tolerance",
+      "description": "With a driver that runs, a scenario step passes exactly when its observed output matches the expected one and, for a screen step with a reference screenshot, the share of pixels changed is at most the tolerance; a pass counts as empirical evidence.",
+      "intent": "P-006.I-19",
+      "useCase": "UC-021",
+      "model": "driven_scenario",
+      "subject": "driven_scenario",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.driver"
+            },
+            {
+              "const": "ok"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.passed"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.matches"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "or",
+                      "args": [
+                        {
+                          "op": "neq",
+                          "args": [
+                            {
+                              "var": "in.step"
+                            },
+                            {
+                              "const": "screen"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "not",
+                          "args": [
+                            {
+                              "op": "eq",
+                              "args": [
+                                {
+                                  "var": "in.hasReference"
+                                },
+                                {
+                                  "const": true
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "op": "le",
+                          "args": [
+                            {
+                              "var": "in.pixelShare"
+                            },
+                            {
+                              "var": "in.tolerance"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.passed"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.evidence"
+                    },
+                    {
+                      "const": "empirical"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.driverError"
+                },
+                {
+                  "const": false
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-30",
+      "slug": "driver-failure-fails-scenario",
+      "name": "A driver that fails to start or times out fails the scenario with its error",
+      "description": "When the driver fails to start or times out, the scenario fails with the driver's error and is never passed.",
+      "intent": "P-006.I-20",
+      "useCase": "UC-021",
+      "model": "driven_scenario",
+      "subject": "driven_scenario",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "neq",
+          "args": [
+            {
+              "var": "in.driver"
+            },
+            {
+              "const": "ok"
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.passed"
+                },
+                {
+                  "const": false
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.driverError"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.evidence"
+                },
+                {
+                  "const": "none"
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-31",
+      "slug": "fixed-seed-action-sequences",
+      "name": "Action sequences are generated with a fixed seed",
+      "description": "Running the same property-based check twice generates the same action sequences.",
+      "intent": "P-006.I-21",
+      "useCase": "UC-059",
+      "model": "action_property",
+      "subject": "action_property",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.sameSequences"
+            },
+            {
+              "const": true
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-32",
+      "slug": "property-without-model-evidenced",
+      "name": "A property with no model that holds on every sequence is evidenced",
+      "description": "A property checked through the driver, with no state-machine model, that holds after every action of every sequence is evidenced with the rule-of-three bound.",
+      "intent": "P-006.I-21",
+      "useCase": "UC-059",
+      "model": "action_property",
+      "subject": "action_property",
+      "check": {
+        "kind": "scenario",
+        "input": {
+          "hasModel": false,
+          "modelHolds": false,
+          "sequencesHold": true,
+          "replayFails": false
+        },
+        "expect": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.verdict"
+                },
+                {
+                  "const": "evidenced"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.evidence"
+                },
+                {
+                  "const": "empirical"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.bound"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-33",
+      "slug": "model-first-proves-property",
+      "name": "A property with a state-machine model is proved over the model when the application follows it",
+      "description": "With a model, a property that holds over the model and on every driven sequence is proved formally; one that the model violates is violated.",
+      "intent": "P-006.I-22",
+      "useCase": "UC-059",
+      "model": "action_property",
+      "subject": "action_property",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "in.hasModel"
+            },
+            {
+              "const": true
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.modelHolds"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.sequencesHold"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.verdict"
+                        },
+                        {
+                          "const": "proved"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.evidence"
+                        },
+                        {
+                          "const": "formal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.modelHolds"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "violated"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-34",
+      "slug": "no-model-never-proved",
+      "name": "A property with no model is never proved",
+      "description": "Without a model, a property that holds on every sequence is evidenced with the rule-of-three bound, never proved.",
+      "intent": "P-006.I-22",
+      "useCase": "UC-059",
+      "model": "action_property",
+      "subject": "action_property",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "not",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.hasModel"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "neq",
+              "args": [
+                {
+                  "var": "out.verdict"
+                },
+                {
+                  "const": "proved"
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.sequencesHold"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.verdict"
+                        },
+                        {
+                          "const": "evidenced"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.bound"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-35",
+      "slug": "replay-decides-violated-or-nondeterministic",
+      "name": "A failing sequence is replayed: violated if it fails again, nondeterministic otherwise",
+      "description": "When a driven sequence fails, the check is violated exactly when the replay of its shortened prefix fails again, and nondeterministic exactly when it does not.",
+      "intent": "P-006.I-23",
+      "useCase": "UC-059",
+      "model": "action_property",
+      "subject": "action_property",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "not",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.sequencesHold"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "or",
+              "args": [
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.hasModel"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.modelHolds"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "violated"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.replayFails"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.verdict"
+                    },
+                    {
+                      "const": "nondeterministic"
+                    }
+                  ]
+                },
+                {
+                  "op": "not",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.replayFails"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-36",
+      "slug": "shrink-to-shortest-prefix",
+      "name": "A failing sequence is shortened to its shortest failing prefix",
+      "description": "A sequence that first fails at action k is shortened to its first k actions; one that never fails has no prefix.",
+      "intent": "P-006.I-23",
+      "useCase": "UC-059",
+      "model": "shrink_sequence",
+      "subject": "shrink_sequence",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "le",
+                  "args": [
+                    {
+                      "var": "in.failAt"
+                    },
+                    {
+                      "var": "in.length"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.prefix"
+                    },
+                    {
+                      "var": "in.failAt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "gt",
+                  "args": [
+                    {
+                      "var": "in.failAt"
+                    },
+                    {
+                      "var": "in.length"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.prefix"
+                    },
+                    {
+                      "const": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-37",
+      "slug": "before-at-extraction-after-at-proof",
+      "name": "Snapshots are before at extraction and after at the proof run",
+      "description": "A snapshot taken at extraction is a before snapshot, and one taken at the proof run is an after snapshot.",
+      "intent": "P-006.I-24",
+      "useCase": "UC-060",
+      "model": "snapshot_kinds",
+      "subject": "snapshot_kinds",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.side"
+                },
+                {
+                  "const": "before"
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.phase"
+                },
+                {
+                  "const": "extract"
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-38",
+      "slug": "screen-snapshot-for-screens",
+      "name": "A screen or route surface gets a screen snapshot",
+      "description": "A feature gets a screen snapshot exactly when its surface is a screen or a route.",
+      "intent": "P-006.I-25",
+      "useCase": "UC-060",
+      "model": "snapshot_kinds",
+      "subject": "snapshot_kinds",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.screen"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "or",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.surface"
+                    },
+                    {
+                      "const": "screen"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.surface"
+                    },
+                    {
+                      "const": "route"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-39",
+      "slug": "contract-snapshot",
+      "name": "An api or command surface, or a model, gets a contract snapshot",
+      "description": "A feature gets a contract snapshot exactly when its surface is an api or a command, or it has a model.",
+      "intent": "P-006.I-26",
+      "useCase": "UC-060",
+      "model": "snapshot_kinds",
+      "subject": "snapshot_kinds",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.contract"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "or",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.surface"
+                    },
+                    {
+                      "const": "api"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.surface"
+                    },
+                    {
+                      "const": "command"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.hasModel"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-40",
+      "slug": "data-snapshot",
+      "name": "A feature whose driver reports data gets a data snapshot",
+      "description": "A feature gets a data snapshot exactly when its driver reports the structure of the data it reads or writes.",
+      "intent": "P-006.I-27",
+      "useCase": "UC-060",
+      "model": "snapshot_kinds",
+      "subject": "snapshot_kinds",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.data"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.hasData"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-41",
+      "slug": "structural-diff",
+      "name": "The structural diff names every added, removed or retyped field and marks breaking ones",
+      "description": "A field present only after is added, present only before is removed, present in both with different types is a type change, and otherwise unchanged; removals and type changes are breaking.",
+      "intent": "P-006.I-28",
+      "useCase": "UC-060",
+      "model": "structural_diff",
+      "subject": "structural_diff",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.change"
+                    },
+                    {
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.before"
+                    },
+                    {
+                      "var": "in.after"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.change"
+                    },
+                    {
+                      "const": "added"
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.before"
+                        },
+                        {
+                          "const": "absent"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "neq",
+                      "args": [
+                        {
+                          "var": "in.after"
+                        },
+                        {
+                          "const": "absent"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.change"
+                    },
+                    {
+                      "const": "removed"
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.after"
+                        },
+                        {
+                          "const": "absent"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "neq",
+                      "args": [
+                        {
+                          "var": "in.before"
+                        },
+                        {
+                          "const": "absent"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.breaking"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "or",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.change"
+                        },
+                        {
+                          "const": "removed"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.change"
+                        },
+                        {
+                          "const": "type"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-42",
+      "slug": "examples-sample-and-changed-rows",
+      "name": "The examples cover the whole space up to 1,000 points and list the changed rows",
+      "description": "The examples snapshot runs the whole model space when it has at most 1,000 points, and the comparison lists a row exactly when its output changed.",
+      "intent": "P-006.I-29",
+      "useCase": "UC-060",
+      "model": "examples_compare",
+      "subject": "examples_compare",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.wholeSpace"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.points"
+                    },
+                    {
+                      "const": "small"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.listed"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.changed"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-43",
+      "slug": "unexpected-change-blocks",
+      "name": "A change no clause explains is unexpected and blocks until accepted",
+      "description": "An example is an unexpected change exactly when its output changed and no approved clause applies to its input, and it blocks the proposal until the policy's number of reviewers accept it.",
+      "intent": "P-006.I-30",
+      "useCase": "UC-060",
+      "model": "examples_compare",
+      "subject": "examples_compare",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.unexpected"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.changed"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.clauseApplies"
+                            },
+                            {
+                              "const": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.blocks"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "out.unexpected"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "lt",
+                      "args": [
+                        {
+                          "var": "in.acceptances"
+                        },
+                        {
+                          "var": "in.required"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-44",
+      "slug": "snapshots-under-lastro-docs",
+      "name": "Snapshots are written under .lastro/docs, committed and hashed",
+      "description": "Every snapshot file lands in .lastro/docs/<proposal>/<feature>/<intent>/before|after/ (or repository/before|after/), is not ignored by git, and its recorded SHA-256 matches the file.",
+      "intent": "P-006.I-31",
+      "useCase": "UC-060",
+      "model": "snapshot_files",
+      "subject": "snapshot_files",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.layoutOk"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.ignored"
+                },
+                {
+                  "const": false
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.hashRecorded"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.hashMatches"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-45",
+      "slug": "proved-waits-for-signoffs-and-acceptances",
+      "name": "A passing run is proved only once sign-offs and acceptances are in",
+      "description": "After an ok run where every proof passed, the proposal is changes-requested when a reviewer requested changes on a human-judgment intent, proved when every due sign-off and acceptance has the policy's number of reviewers, and proving otherwise.",
+      "intent": "P-006.I-33",
+      "useCase": "UC-048",
+      "model": "proved_gate",
+      "subject": "proved_gate",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.runOk"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.allPassed"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.status"
+                    },
+                    {
+                      "const": "changes-requested"
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.judgment"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.changesRequested"
+                        },
+                        {
+                          "const": true
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.status"
+                    },
+                    {
+                      "const": "proved"
+                    }
+                  ]
+                },
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "and",
+                      "args": [
+                        {
+                          "op": "or",
+                          "args": [
+                            {
+                              "op": "not",
+                              "args": [
+                                {
+                                  "op": "eq",
+                                  "args": [
+                                    {
+                                      "var": "in.judgment"
+                                    },
+                                    {
+                                      "const": true
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "op": "ge",
+                              "args": [
+                                {
+                                  "var": "in.signoffs"
+                                },
+                                {
+                                  "var": "in.required"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "op": "or",
+                          "args": [
+                            {
+                              "op": "not",
+                              "args": [
+                                {
+                                  "op": "eq",
+                                  "args": [
+                                    {
+                                      "var": "in.unexpected"
+                                    },
+                                    {
+                                      "const": true
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "op": "ge",
+                              "args": [
+                                {
+                                  "var": "in.acceptances"
+                                },
+                                {
+                                  "var": "in.required"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "op": "and",
+                          "args": [
+                            {
+                              "op": "eq",
+                              "args": [
+                                {
+                                  "var": "in.judgment"
+                                },
+                                {
+                                  "const": true
+                                }
+                              ]
+                            },
+                            {
+                              "op": "eq",
+                              "args": [
+                                {
+                                  "var": "in.changesRequested"
+                                },
+                                {
+                                  "const": true
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "replaces": [
+        "P-001.PF-15"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-46",
+      "slug": "not-proved-without-passing-run",
+      "name": "A proposal whose run failed or did not pass is never proved",
+      "description": "Without an ok run where every proof passed, the proposal is not proved, whatever sign-offs it has.",
+      "intent": "P-006.I-33",
+      "useCase": "UC-048",
+      "model": "proved_gate",
+      "subject": "proved_gate",
+      "check": {
+        "kind": "clause",
+        "requires": {
+          "op": "not",
+          "args": [
+            {
+              "op": "and",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.runOk"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.allPassed"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "ensures": {
+          "op": "neq",
+          "args": [
+            {
+              "var": "out.status"
+            },
+            {
+              "const": "proved"
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-47",
+      "slug": "review-app-shows-evidence",
+      "name": "The review app shows each intent's map, statechart, snapshots, comparison and counterexamples",
+      "description": "For each intent the review app shows its place in the feature map, the statechart when there is a model, the before snapshot, the after snapshot only after the proof run with the comparison for its kind, and a counterexample exactly when a verdict is violated.",
+      "intent": "P-006.I-34",
+      "useCase": "UC-061",
+      "model": "review_evidence",
+      "subject": "review_evidence",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.mapShown"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.statechart"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.machine"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.before"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.after"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.phase"
+                    },
+                    {
+                      "const": "proved"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.phase"
+                    },
+                    {
+                      "const": "review"
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.comparison"
+                    },
+                    {
+                      "const": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.phase"
+                        },
+                        {
+                          "const": "proved"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.kind"
+                        },
+                        {
+                          "const": "screen"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.comparison"
+                    },
+                    {
+                      "const": "images"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.phase"
+                        },
+                        {
+                          "const": "proved"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "or",
+                      "args": [
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.kind"
+                            },
+                            {
+                              "const": "contract"
+                            }
+                          ]
+                        },
+                        {
+                          "op": "eq",
+                          "args": [
+                            {
+                              "var": "in.kind"
+                            },
+                            {
+                              "const": "data"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.comparison"
+                    },
+                    {
+                      "const": "diff"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "implies",
+              "args": [
+                {
+                  "op": "and",
+                  "args": [
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.phase"
+                        },
+                        {
+                          "const": "proved"
+                        }
+                      ]
+                    },
+                    {
+                      "op": "eq",
+                      "args": [
+                        {
+                          "var": "in.kind"
+                        },
+                        {
+                          "const": "examples"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.comparison"
+                    },
+                    {
+                      "const": "rows"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.counterexample"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.violated"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-48",
+      "slug": "receipt-evidence-sections",
+      "name": "The receipt shows the map, the state diagrams, the snapshot hashes, acceptances and sign-offs",
+      "description": "The receipt has a Feature map section exactly when features are affected, a Mermaid diagram exactly when there is a state-machine model, snapshot hashes exactly when there are snapshots, who accepted exactly when an unexpected change was accepted, and who signed off exactly when there is a sign-off.",
+      "intent": "P-006.I-35",
+      "useCase": "UC-026",
+      "model": "receipt_evidence",
+      "subject": "receipt_evidence",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.mapSection"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.affected"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.mermaid"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.machine"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.hashes"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.snapshots"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.acceptedBy"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.unexpected"
+                    },
+                    {
+                      "const": "accepted"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.signedBy"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.signoff"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-49",
+      "slug": "sdks-match-typescript",
+      "name": "The Go and .NET SDKs produce the TypeScript map, statecharts, diffs, verdicts and snapshot hashes",
+      "description": "For the same workspace, the Go and .NET SDKs give byte-identical feature maps, statecharts, structural diffs, verdicts and snapshot hashes to the TypeScript SDK.",
+      "intent": "P-006.I-36",
+      "useCase": "UC-035",
+      "model": "sdk_parity",
+      "subject": "sdk_parity",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "eq",
+          "args": [
+            {
+              "var": "out.same"
+            },
+            {
+              "const": true
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-50",
+      "slug": "plugin-review-lists-evidence",
+      "name": "The plugin's review lists snapshot paths, unexpected changes and sign-offs due",
+      "description": "The plugin's review lists the snapshot paths exactly when there are snapshots, the unexpected changes exactly when there are some, and the sign-offs still due exactly when there are some.",
+      "intent": "P-006.I-37",
+      "useCase": "UC-040",
+      "model": "plugin_review_evidence",
+      "subject": "plugin_review_evidence",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "and",
+          "args": [
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.listsPaths"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.snapshots"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.listsUnexpected"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.unexpected"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "op": "iff",
+              "args": [
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "out.listsSignoffs"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                },
+                {
+                  "op": "eq",
+                  "args": [
+                    {
+                      "var": "in.signoffDue"
+                    },
+                    {
+                      "const": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "P-006.PF-51",
+      "slug": "signed-off-after-becomes-reference",
+      "name": "A signed-off after screenshot becomes the step's reference",
+      "description": "A step's reference screenshot becomes its after screenshot exactly when a reviewer signed that screenshot off, whether or not it had a reference before.",
+      "intent": "P-006.I-38",
+      "useCase": "UC-021",
+      "model": "reference_screenshot",
+      "subject": "reference_screenshot",
+      "check": {
+        "kind": "clause",
+        "ensures": {
+          "op": "iff",
+          "args": [
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "out.referenceIsAfter"
+                },
+                {
+                  "const": true
+                }
+              ]
+            },
+            {
+              "op": "eq",
+              "args": [
+                {
+                  "var": "in.signedOff"
+                },
+                {
+                  "const": true
+                }
+              ]
+            }
+          ]
+        },
+        "assumptions": []
+      },
+      "status": "pending"
+    }
+  ],
   "supersedes": [
     "P-001.PF-15"
   ],

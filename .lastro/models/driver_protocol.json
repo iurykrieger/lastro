@@ -1,0 +1,37 @@
+{
+  "name": "driver_protocol",
+  "inputs": {
+    "target": {
+      "type": "enum",
+      "values": [
+        "web",
+        "electron",
+        "android",
+        "ios",
+        "api",
+        "command"
+      ]
+    },
+    "config": {
+      "type": "enum",
+      "values": [
+        "standard",
+        "jsonlines",
+        "none"
+      ]
+    }
+  },
+  "outputs": {
+    "protocol": {
+      "type": "enum",
+      "values": [
+        "webdriver",
+        "appium",
+        "http",
+        "process",
+        "jsonlines",
+        "none"
+      ]
+    }
+  }
+}

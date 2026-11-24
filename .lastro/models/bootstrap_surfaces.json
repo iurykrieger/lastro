@@ -1,0 +1,28 @@
+{
+  "name": "bootstrap_surfaces",
+  "inputs": {
+    "hasSurfaces": {
+      "type": "bool"
+    },
+    "touchesDescription": {
+      "type": "bool"
+    },
+    "addsSurface": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "accepted": {
+      "type": "bool"
+    },
+    "proposed": {
+      "type": "bool"
+    },
+    "descriptionKept": {
+      "type": "bool"
+    },
+    "reviewed": {
+      "type": "bool"
+    }
+  }
+}

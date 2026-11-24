@@ -1,0 +1,25 @@
+{
+  "name": "plugin_review_evidence",
+  "inputs": {
+    "snapshots": {
+      "type": "bool"
+    },
+    "unexpected": {
+      "type": "bool"
+    },
+    "signoffDue": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "listsPaths": {
+      "type": "bool"
+    },
+    "listsUnexpected": {
+      "type": "bool"
+    },
+    "listsSignoffs": {
+      "type": "bool"
+    }
+  }
+}

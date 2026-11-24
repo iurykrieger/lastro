@@ -1,0 +1,27 @@
+{
+  "name": "sdk_parity",
+  "inputs": {
+    "sdk": {
+      "type": "enum",
+      "values": [
+        "go",
+        "dotnet"
+      ]
+    },
+    "artifact": {
+      "type": "enum",
+      "values": [
+        "map",
+        "statechart",
+        "diff",
+        "verdict",
+        "snapshot-hash"
+      ]
+    }
+  },
+  "outputs": {
+    "same": {
+      "type": "bool"
+    }
+  }
+}

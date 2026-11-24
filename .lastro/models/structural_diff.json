@@ -1,0 +1,35 @@
+{
+  "name": "structural_diff",
+  "inputs": {
+    "before": {
+      "type": "enum",
+      "values": [
+        "absent",
+        "string",
+        "int"
+      ]
+    },
+    "after": {
+      "type": "enum",
+      "values": [
+        "absent",
+        "string",
+        "int"
+      ]
+    }
+  },
+  "outputs": {
+    "change": {
+      "type": "enum",
+      "values": [
+        "none",
+        "added",
+        "removed",
+        "type"
+      ]
+    },
+    "breaking": {
+      "type": "bool"
+    }
+  }
+}

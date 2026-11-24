@@ -1,0 +1,67 @@
+{
+  "name": "sm_clauses",
+  "inputs": {
+    "clause": {
+      "type": "enum",
+      "values": [
+        "invariant",
+        "step",
+        "reach"
+      ]
+    },
+    "holds": {
+      "type": "bool"
+    },
+    "space": {
+      "type": "enum",
+      "values": [
+        "small",
+        "large"
+      ]
+    },
+    "smt": {
+      "type": "enum",
+      "values": [
+        "proves",
+        "unknown"
+      ]
+    }
+  },
+  "outputs": {
+    "verdict": {
+      "type": "enum",
+      "values": [
+        "proved",
+        "violated",
+        "evidenced"
+      ]
+    },
+    "evidence": {
+      "type": "enum",
+      "values": [
+        "formal",
+        "empirical",
+        "counterexample"
+      ]
+    },
+    "method": {
+      "type": "enum",
+      "values": [
+        "bfs",
+        "smt-induction",
+        "random-walk"
+      ]
+    },
+    "states": {
+      "type": "int",
+      "min": 0,
+      "max": 100000
+    },
+    "shortest": {
+      "type": "bool"
+    },
+    "actorsNamed": {
+      "type": "bool"
+    }
+  }
+}

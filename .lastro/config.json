@@ -1670,11 +1670,11 @@
         "mark": {
           "type": "enum",
           "values": [
-            "✓",
-            "≈",
-            "✗",
+            "\u2713",
+            "\u2248",
+            "\u2717",
             "!",
-            "○",
+            "\u25cb",
             "other"
           ]
         },
@@ -1722,6 +1722,1003 @@
           "type": "bool"
         },
         "reminder": {
+          "type": "bool"
+        }
+      }
+    },
+    "feature_surfaces": {
+      "name": "feature_surfaces",
+      "inputs": {
+        "kind": {
+          "type": "enum",
+          "values": [
+            "screen",
+            "route",
+            "command",
+            "api",
+            "other"
+          ]
+        },
+        "hasName": {
+          "type": "bool"
+        },
+        "hasLocator": {
+          "type": "bool"
+        },
+        "surfaces": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "hasDependsOn": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "accepted": {
+          "type": "bool"
+        },
+        "reachable": {
+          "type": "bool"
+        }
+      }
+    },
+    "extract_surfaces": {
+      "name": "extract_surfaces",
+      "inputs": {
+        "change": {
+          "type": "enum",
+          "values": [
+            "add",
+            "modify"
+          ]
+        },
+        "existing": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "adds": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "removes": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        },
+        "proposedOnAdd": {
+          "type": "int",
+          "min": 0,
+          "max": 2
+        }
+      },
+      "outputs": {
+        "accepted": {
+          "type": "bool"
+        },
+        "after": {
+          "type": "int",
+          "min": 0,
+          "max": 4
+        }
+      }
+    },
+    "feature_map": {
+      "name": "feature_map",
+      "inputs": {
+        "ab": {
+          "type": "bool"
+        },
+        "bc": {
+          "type": "bool"
+        },
+        "ca": {
+          "type": "bool"
+        },
+        "aUnknown": {
+          "type": "bool"
+        },
+        "bRemoved": {
+          "type": "bool"
+        },
+        "changed": {
+          "type": "enum",
+          "values": [
+            "none",
+            "a",
+            "b",
+            "c"
+          ]
+        },
+        "aSurface": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "ok": {
+          "type": "bool"
+        },
+        "cycle": {
+          "type": "bool"
+        },
+        "named": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "affectedA": {
+          "type": "bool"
+        },
+        "affectedB": {
+          "type": "bool"
+        },
+        "affectedC": {
+          "type": "bool"
+        },
+        "aReachable": {
+          "type": "bool"
+        },
+        "same": {
+          "type": "bool"
+        }
+      }
+    },
+    "bootstrap_surfaces": {
+      "name": "bootstrap_surfaces",
+      "inputs": {
+        "hasSurfaces": {
+          "type": "bool"
+        },
+        "touchesDescription": {
+          "type": "bool"
+        },
+        "addsSurface": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "accepted": {
+          "type": "bool"
+        },
+        "proposed": {
+          "type": "bool"
+        },
+        "descriptionKept": {
+          "type": "bool"
+        },
+        "reviewed": {
+          "type": "bool"
+        }
+      }
+    },
+    "formal_first": {
+      "name": "formal_first",
+      "inputs": {
+        "space": {
+          "type": "enum",
+          "values": [
+            "small",
+            "large"
+          ]
+        },
+        "smt": {
+          "type": "enum",
+          "values": [
+            "proves",
+            "refutes",
+            "unknown",
+            "inexpressible"
+          ]
+        },
+        "holds": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "method": {
+          "type": "enum",
+          "values": [
+            "exhaustive",
+            "smt",
+            "sampled"
+          ]
+        },
+        "verdict": {
+          "type": "enum",
+          "values": [
+            "proved",
+            "violated",
+            "evidenced"
+          ]
+        },
+        "reason": {
+          "type": "enum",
+          "values": [
+            "none",
+            "too-large",
+            "solver-unknown",
+            "not-expressible"
+          ]
+        }
+      }
+    },
+    "formal_coverage": {
+      "name": "formal_coverage",
+      "inputs": {
+        "formal": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "evidenced": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "beyond": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        }
+      },
+      "outputs": {
+        "countFormal": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "countEvidenced": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "countBeyond": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "reasons": {
+          "type": "int",
+          "min": 0,
+          "max": 6
+        }
+      }
+    },
+    "sm_model": {
+      "name": "sm_model",
+      "inputs": {
+        "stateFinite": {
+          "type": "bool"
+        },
+        "initialInDomain": {
+          "type": "bool"
+        },
+        "eventsFinite": {
+          "type": "bool"
+        },
+        "actors": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        }
+      },
+      "outputs": {
+        "accepted": {
+          "type": "bool"
+        }
+      }
+    },
+    "sm_interleave": {
+      "name": "sm_interleave",
+      "inputs": {
+        "actors": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "atomic": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "violated": {
+          "type": "bool"
+        },
+        "cexActors": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        }
+      }
+    },
+    "sm_clauses": {
+      "name": "sm_clauses",
+      "inputs": {
+        "clause": {
+          "type": "enum",
+          "values": [
+            "invariant",
+            "step",
+            "reach"
+          ]
+        },
+        "holds": {
+          "type": "bool"
+        },
+        "space": {
+          "type": "enum",
+          "values": [
+            "small",
+            "large"
+          ]
+        },
+        "smt": {
+          "type": "enum",
+          "values": [
+            "proves",
+            "unknown"
+          ]
+        }
+      },
+      "outputs": {
+        "verdict": {
+          "type": "enum",
+          "values": [
+            "proved",
+            "violated",
+            "evidenced"
+          ]
+        },
+        "evidence": {
+          "type": "enum",
+          "values": [
+            "formal",
+            "empirical",
+            "counterexample"
+          ]
+        },
+        "method": {
+          "type": "enum",
+          "values": [
+            "bfs",
+            "smt-induction",
+            "random-walk"
+          ]
+        },
+        "states": {
+          "type": "int",
+          "min": 0,
+          "max": 100000
+        },
+        "shortest": {
+          "type": "bool"
+        },
+        "actorsNamed": {
+          "type": "bool"
+        }
+      }
+    },
+    "sm_crosscheck": {
+      "name": "sm_crosscheck",
+      "inputs": {
+        "bug": {
+          "type": "enum",
+          "values": [
+            "none",
+            "invariant",
+            "race",
+            "step"
+          ]
+        },
+        "engine": {
+          "type": "enum",
+          "values": [
+            "rust",
+            "go",
+            "dotnet"
+          ]
+        }
+      },
+      "outputs": {
+        "sameVerdict": {
+          "type": "bool"
+        },
+        "sameCounterexample": {
+          "type": "bool"
+        },
+        "sameStates": {
+          "type": "bool"
+        }
+      }
+    },
+    "statechart": {
+      "name": "statechart",
+      "inputs": {
+        "actors": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "forbids": {
+          "type": "bool"
+        },
+        "cex": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "regions": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "marked": {
+          "type": "bool"
+        },
+        "pathDrawn": {
+          "type": "bool"
+        },
+        "labelled": {
+          "type": "bool"
+        }
+      }
+    },
+    "driver_protocol": {
+      "name": "driver_protocol",
+      "inputs": {
+        "target": {
+          "type": "enum",
+          "values": [
+            "web",
+            "electron",
+            "android",
+            "ios",
+            "api",
+            "command"
+          ]
+        },
+        "config": {
+          "type": "enum",
+          "values": [
+            "standard",
+            "jsonlines",
+            "none"
+          ]
+        }
+      },
+      "outputs": {
+        "protocol": {
+          "type": "enum",
+          "values": [
+            "webdriver",
+            "appium",
+            "http",
+            "process",
+            "jsonlines",
+            "none"
+          ]
+        }
+      }
+    },
+    "shipped_drivers": {
+      "name": "shipped_drivers",
+      "inputs": {
+        "sdk": {
+          "type": "enum",
+          "values": [
+            "typescript",
+            "go",
+            "dotnet"
+          ]
+        },
+        "setup": {
+          "type": "enum",
+          "values": [
+            "web",
+            "appium",
+            "http",
+            "jsonlines"
+          ]
+        }
+      },
+      "outputs": {
+        "bundlesBrowser": {
+          "type": "bool"
+        },
+        "documented": {
+          "type": "bool"
+        }
+      }
+    },
+    "driven_scenario": {
+      "name": "driven_scenario",
+      "inputs": {
+        "step": {
+          "type": "enum",
+          "values": [
+            "screen",
+            "api",
+            "function"
+          ]
+        },
+        "matches": {
+          "type": "bool"
+        },
+        "pixelShare": {
+          "type": "int",
+          "min": 0,
+          "max": 10
+        },
+        "tolerance": {
+          "type": "int",
+          "min": 0,
+          "max": 5
+        },
+        "hasReference": {
+          "type": "bool"
+        },
+        "driver": {
+          "type": "enum",
+          "values": [
+            "ok",
+            "fails-to-start",
+            "timeout"
+          ]
+        }
+      },
+      "outputs": {
+        "passed": {
+          "type": "bool"
+        },
+        "driverError": {
+          "type": "bool"
+        },
+        "evidence": {
+          "type": "enum",
+          "values": [
+            "empirical",
+            "none"
+          ]
+        }
+      }
+    },
+    "reference_screenshot": {
+      "name": "reference_screenshot",
+      "inputs": {
+        "signedOff": {
+          "type": "bool"
+        },
+        "hadReference": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "referenceIsAfter": {
+          "type": "bool"
+        }
+      }
+    },
+    "action_property": {
+      "name": "action_property",
+      "inputs": {
+        "hasModel": {
+          "type": "bool"
+        },
+        "modelHolds": {
+          "type": "bool"
+        },
+        "sequencesHold": {
+          "type": "bool"
+        },
+        "replayFails": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "verdict": {
+          "type": "enum",
+          "values": [
+            "proved",
+            "evidenced",
+            "violated",
+            "nondeterministic"
+          ]
+        },
+        "evidence": {
+          "type": "enum",
+          "values": [
+            "formal",
+            "empirical",
+            "counterexample",
+            "none"
+          ]
+        },
+        "bound": {
+          "type": "bool"
+        },
+        "sameSequences": {
+          "type": "bool"
+        }
+      }
+    },
+    "shrink_sequence": {
+      "name": "shrink_sequence",
+      "inputs": {
+        "length": {
+          "type": "int",
+          "min": 1,
+          "max": 5
+        },
+        "failAt": {
+          "type": "int",
+          "min": 1,
+          "max": 5
+        }
+      },
+      "outputs": {
+        "prefix": {
+          "type": "int",
+          "min": 0,
+          "max": 5
+        }
+      }
+    },
+    "snapshot_kinds": {
+      "name": "snapshot_kinds",
+      "inputs": {
+        "surface": {
+          "type": "enum",
+          "values": [
+            "screen",
+            "route",
+            "api",
+            "command",
+            "none"
+          ]
+        },
+        "hasModel": {
+          "type": "bool"
+        },
+        "hasData": {
+          "type": "bool"
+        },
+        "phase": {
+          "type": "enum",
+          "values": [
+            "extract",
+            "prove"
+          ]
+        }
+      },
+      "outputs": {
+        "screen": {
+          "type": "bool"
+        },
+        "contract": {
+          "type": "bool"
+        },
+        "data": {
+          "type": "bool"
+        },
+        "examples": {
+          "type": "bool"
+        },
+        "side": {
+          "type": "enum",
+          "values": [
+            "before",
+            "after"
+          ]
+        }
+      }
+    },
+    "structural_diff": {
+      "name": "structural_diff",
+      "inputs": {
+        "before": {
+          "type": "enum",
+          "values": [
+            "absent",
+            "string",
+            "int"
+          ]
+        },
+        "after": {
+          "type": "enum",
+          "values": [
+            "absent",
+            "string",
+            "int"
+          ]
+        }
+      },
+      "outputs": {
+        "change": {
+          "type": "enum",
+          "values": [
+            "none",
+            "added",
+            "removed",
+            "type"
+          ]
+        },
+        "breaking": {
+          "type": "bool"
+        }
+      }
+    },
+    "examples_compare": {
+      "name": "examples_compare",
+      "inputs": {
+        "points": {
+          "type": "enum",
+          "values": [
+            "small",
+            "large"
+          ]
+        },
+        "changed": {
+          "type": "bool"
+        },
+        "clauseApplies": {
+          "type": "bool"
+        },
+        "required": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        },
+        "acceptances": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        }
+      },
+      "outputs": {
+        "wholeSpace": {
+          "type": "bool"
+        },
+        "listed": {
+          "type": "bool"
+        },
+        "unexpected": {
+          "type": "bool"
+        },
+        "blocks": {
+          "type": "bool"
+        }
+      }
+    },
+    "snapshot_files": {
+      "name": "snapshot_files",
+      "inputs": {
+        "scope": {
+          "type": "enum",
+          "values": [
+            "feature",
+            "repository"
+          ]
+        },
+        "side": {
+          "type": "enum",
+          "values": [
+            "before",
+            "after"
+          ]
+        },
+        "file": {
+          "type": "enum",
+          "values": [
+            "png",
+            "json"
+          ]
+        }
+      },
+      "outputs": {
+        "layoutOk": {
+          "type": "bool"
+        },
+        "ignored": {
+          "type": "bool"
+        },
+        "hashRecorded": {
+          "type": "bool"
+        },
+        "hashMatches": {
+          "type": "bool"
+        }
+      }
+    },
+    "proved_gate": {
+      "name": "proved_gate",
+      "inputs": {
+        "runOk": {
+          "type": "bool"
+        },
+        "allPassed": {
+          "type": "bool"
+        },
+        "judgment": {
+          "type": "bool"
+        },
+        "signoffs": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "changesRequested": {
+          "type": "bool"
+        },
+        "unexpected": {
+          "type": "bool"
+        },
+        "acceptances": {
+          "type": "int",
+          "min": 0,
+          "max": 3
+        },
+        "required": {
+          "type": "int",
+          "min": 1,
+          "max": 3
+        }
+      },
+      "outputs": {
+        "status": {
+          "type": "enum",
+          "values": [
+            "proving",
+            "proved",
+            "changes-requested"
+          ]
+        }
+      }
+    },
+    "review_evidence": {
+      "name": "review_evidence",
+      "inputs": {
+        "phase": {
+          "type": "enum",
+          "values": [
+            "review",
+            "proved"
+          ]
+        },
+        "kind": {
+          "type": "enum",
+          "values": [
+            "screen",
+            "contract",
+            "data",
+            "examples"
+          ]
+        },
+        "machine": {
+          "type": "bool"
+        },
+        "violated": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "mapShown": {
+          "type": "bool"
+        },
+        "statechart": {
+          "type": "bool"
+        },
+        "before": {
+          "type": "bool"
+        },
+        "after": {
+          "type": "bool"
+        },
+        "comparison": {
+          "type": "enum",
+          "values": [
+            "none",
+            "images",
+            "diff",
+            "rows"
+          ]
+        },
+        "counterexample": {
+          "type": "bool"
+        }
+      }
+    },
+    "receipt_evidence": {
+      "name": "receipt_evidence",
+      "inputs": {
+        "affected": {
+          "type": "bool"
+        },
+        "machine": {
+          "type": "bool"
+        },
+        "snapshots": {
+          "type": "bool"
+        },
+        "unexpected": {
+          "type": "enum",
+          "values": [
+            "none",
+            "open",
+            "accepted"
+          ]
+        },
+        "signoff": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "mapSection": {
+          "type": "bool"
+        },
+        "mermaid": {
+          "type": "bool"
+        },
+        "hashes": {
+          "type": "bool"
+        },
+        "acceptedBy": {
+          "type": "bool"
+        },
+        "signedBy": {
+          "type": "bool"
+        }
+      }
+    },
+    "sdk_parity": {
+      "name": "sdk_parity",
+      "inputs": {
+        "sdk": {
+          "type": "enum",
+          "values": [
+            "go",
+            "dotnet"
+          ]
+        },
+        "artifact": {
+          "type": "enum",
+          "values": [
+            "map",
+            "statechart",
+            "diff",
+            "verdict",
+            "snapshot-hash"
+          ]
+        }
+      },
+      "outputs": {
+        "same": {
+          "type": "bool"
+        }
+      }
+    },
+    "plugin_review_evidence": {
+      "name": "plugin_review_evidence",
+      "inputs": {
+        "snapshots": {
+          "type": "bool"
+        },
+        "unexpected": {
+          "type": "bool"
+        },
+        "signoffDue": {
+          "type": "bool"
+        }
+      },
+      "outputs": {
+        "listsPaths": {
+          "type": "bool"
+        },
+        "listsUnexpected": {
+          "type": "bool"
+        },
+        "listsSignoffs": {
           "type": "bool"
         }
       }
@@ -1915,6 +2912,110 @@
     "plan_to_proposal": {
       "module": "./plugins/lastro/subjects/hooks.mjs",
       "export": "planToProposal"
+    },
+    "feature_surfaces": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "featureSurfaces"
+    },
+    "extract_surfaces": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "extractSurfaces"
+    },
+    "feature_map": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "featureMap"
+    },
+    "bootstrap_surfaces": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "bootstrapSurfaces"
+    },
+    "formal_first": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "formalFirst"
+    },
+    "formal_coverage": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "formalCoverage"
+    },
+    "sm_model": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "smModel"
+    },
+    "sm_interleave": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "smInterleave"
+    },
+    "sm_clauses": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "smClauses"
+    },
+    "sm_crosscheck": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "smCrosscheck"
+    },
+    "statechart": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "statechart"
+    },
+    "driver_protocol": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "driverProtocol"
+    },
+    "shipped_drivers": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "shippedDrivers"
+    },
+    "driven_scenario": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "drivenScenario"
+    },
+    "reference_screenshot": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "referenceScreenshot"
+    },
+    "action_property": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "actionProperty"
+    },
+    "shrink_sequence": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "shrinkSequence"
+    },
+    "snapshot_kinds": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "snapshotKinds"
+    },
+    "structural_diff": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "structuralDiff"
+    },
+    "examples_compare": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "examplesCompare"
+    },
+    "snapshot_files": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "snapshotFiles"
+    },
+    "proved_gate": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "provedGate"
+    },
+    "review_evidence": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "reviewEvidence"
+    },
+    "receipt_evidence": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "receiptEvidence"
+    },
+    "sdk_parity": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "sdkParity"
+    },
+    "plugin_review_evidence": {
+      "module": "./sdks/typescript/subjects/runtime.mjs",
+      "export": "pluginReviewEvidence"
     }
   },
   "review": {

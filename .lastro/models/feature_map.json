@@ -1,0 +1,60 @@
+{
+  "name": "feature_map",
+  "inputs": {
+    "ab": {
+      "type": "bool"
+    },
+    "bc": {
+      "type": "bool"
+    },
+    "ca": {
+      "type": "bool"
+    },
+    "aUnknown": {
+      "type": "bool"
+    },
+    "bRemoved": {
+      "type": "bool"
+    },
+    "changed": {
+      "type": "enum",
+      "values": [
+        "none",
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    "aSurface": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "ok": {
+      "type": "bool"
+    },
+    "cycle": {
+      "type": "bool"
+    },
+    "named": {
+      "type": "int",
+      "min": 0,
+      "max": 3
+    },
+    "affectedA": {
+      "type": "bool"
+    },
+    "affectedB": {
+      "type": "bool"
+    },
+    "affectedC": {
+      "type": "bool"
+    },
+    "aReachable": {
+      "type": "bool"
+    },
+    "same": {
+      "type": "bool"
+    }
+  }
+}

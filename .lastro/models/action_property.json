@@ -1,0 +1,43 @@
+{
+  "name": "action_property",
+  "inputs": {
+    "hasModel": {
+      "type": "bool"
+    },
+    "modelHolds": {
+      "type": "bool"
+    },
+    "sequencesHold": {
+      "type": "bool"
+    },
+    "replayFails": {
+      "type": "bool"
+    }
+  },
+  "outputs": {
+    "verdict": {
+      "type": "enum",
+      "values": [
+        "proved",
+        "evidenced",
+        "violated",
+        "nondeterministic"
+      ]
+    },
+    "evidence": {
+      "type": "enum",
+      "values": [
+        "formal",
+        "empirical",
+        "counterexample",
+        "none"
+      ]
+    },
+    "bound": {
+      "type": "bool"
+    },
+    "sameSequences": {
+      "type": "bool"
+    }
+  }
+}

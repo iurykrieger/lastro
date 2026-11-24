@@ -42,8 +42,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-03",
@@ -78,8 +80,10 @@
         "end": 205
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-05",
@@ -437,8 +441,10 @@
         "end": 1594
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-24",
@@ -454,8 +460,10 @@
         "end": 2036
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-25",
@@ -471,8 +479,10 @@
         "end": 2160
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-26",
@@ -488,8 +498,10 @@
         "end": 588
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     },
     {
       "id": "P-007.I-27",
@@ -505,8 +517,10 @@
         "end": 924
       },
       "replaces": [],
-      "status": "proposed",
-      "approvals": []
+      "status": "approved",
+      "approvals": [
+        "iury"
+      ]
     }
   ],
   "useCases": [
@@ -823,7 +837,8 @@
           "text": "Changed: features are broader and written around the functionality, in the business's words; the extraction and survey prompts write and group them that way (I-26)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T2",
@@ -839,7 +854,8 @@
           "text": "Changed: an intent modifies one or more features, adds one or removes one; each changed feature's after combines all its intents (I-27)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T3",
@@ -855,7 +871,8 @@
           "text": "Changed: each use case becomes the feature with the same number, ids are rewritten and .lastro/usecases/ is removed, with no reader for the old layout (I-23)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     },
     {
       "id": "T4",
@@ -887,7 +904,8 @@
           "text": "Changed: no deprecated aliases; nothing in the repository says use case any more (I-25)."
         }
       ],
-      "resolved": false
+      "resolved": true,
+      "resolvedBy": "iury"
     }
   ],
   "notPromised": [

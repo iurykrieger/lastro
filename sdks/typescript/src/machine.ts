@@ -621,7 +621,9 @@ export async function statechart(m: MachineModel, step: MachineStep, clauses: Ma
   }
   for (const r of out) {
     r.states.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-    r.transitions.sort((a, b) => canonicalJson([a.from, a.to, a.event]).localeCompare(canonicalJson([b.from, b.to, b.event])));
+    // Ordinal, never locale-dependent: every engine draws the same chart.
+    const k = (t: { from: string; to: string; event: string }) => canonicalJson([t.from, t.to, t.event]);
+    r.transitions.sort((a, b) => (k(a) < k(b) ? -1 : k(a) > k(b) ? 1 : 0));
   }
   return { model: m.name, regions: out };
 }

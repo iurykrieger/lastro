@@ -14,7 +14,7 @@ import type { SmtSolver } from "./smt.js";
 import { canonicalJson, hashOf } from "./artifact.js";
 import { show, validateExpr, type Expr } from "./spec/expr.js";
 import { sha256Hex } from "./sha256.js";
-import type { RustProver } from "./rust.js";
+import type { RustMachineReport, RustProver, StepRow } from "./rust.js";
 import { tabulate } from "./rust.js";
 import { checkConsistency, verify, type VerifyOptions } from "./verify/engine.js";
 import type { Grounds, ProposalOrigin, ProposalSetup } from "./bootstrap.js";
@@ -1137,6 +1137,15 @@ export function machineClauseOf(pr: ProofEntry): MachineClause {
   return c.clause === "invariant" ? { id: pr.id, kind: "invariant", holds: c.ensures } : c.clause === "reach" ? { id: pr.id, kind: "reach", condition: c.ensures } : { id: pr.id, kind: "step", ...(c.requires ? { requires: c.requires } : {}), ensures: c.ensures };
 }
 
+/** The TS exploration and the Rust prover's agree on the states visited, every verdict and every path. */
+export function machinesAgree(ts: { states: number; clauses: { clauseId: string; verdict: string; path?: unknown[] }[] }, rust: RustMachineReport): boolean {
+  if (ts.states !== rust.states || rust.missing > 0) return false;
+  return ts.clauses.every((c) => {
+    const r = rust.clauses.find((x) => x.clauseId === c.clauseId);
+    return !!r && r.verdict === c.verdict && canonicalJson(r.path ?? null) === canonicalJson(c.path ?? null);
+  });
+}
+
 /** Run proofs grouped by (model, subject) on the engine (and the Rust prover, if given). */
 export async function runProofs(proofs: { proof: ProofEntry; role: ProofOutcome["role"] }[], o: RunOptions): Promise<{ outcomes: ProofOutcome[]; enginesAgree?: boolean }> {
   const outcomes: ProofOutcome[] = [];
@@ -1169,7 +1178,22 @@ export async function runProofs(proofs: { proof: ProofEntry; role: ProofOutcome[
       for (const pr of prs) outcomes.push(missing(pr, `model ${mname} is not a state machine`));
       continue;
     }
-    const report = await exploreMachine(model, o.subjects[sname]! as MachineStep, prs.map((pr) => machineClauseOf(pr)), o.smt ? { smt: o.smt } : {});
+    // Every step the code is asked about is recorded: with a complete exploration, the Rust prover walks the same
+    // space over that table on its own and must visit the same states and reach the same verdicts and paths.
+    const steps: StepRow[] = [];
+    const code = o.subjects[sname]! as MachineStep;
+    const recorded: MachineStep = async (x) => {
+      const input = { ...x };
+      const out = await code(x);
+      steps.push({ input, output: out ?? null });
+      return out;
+    };
+    const clauses = prs.map((pr) => machineClauseOf(pr));
+    const report = await exploreMachine(model, o.rust?.proveMachine ? recorded : code, clauses, o.smt ? { smt: o.smt } : {});
+    if (o.rust?.proveMachine && report.complete && !report.errors.length) {
+      const r = o.rust.proveMachine({ machine: model, clauses, table: steps });
+      agree = (agree ?? true) && machinesAgree(report, r);
+    }
     for (const r of report.clauses) {
       const pr = prs.find((x) => x.id === r.clauseId)!;
       outcomes.push(

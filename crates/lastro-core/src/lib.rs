@@ -12,11 +12,15 @@
 //! - `evidenced`: holds on every row, but the table does not cover the space.
 //!
 //! It also checks that the clauses are jointly satisfiable (spec consistency).
+//!
+//! A request with a `machine` (a state-machine model, its clauses and the code's step table) is explored breadth
+//! first instead, over every interleaving of the actors (see [`machine`]).
 //! The crate builds natively (`lastro-prove` CLI) and to `wasm32-unknown-unknown`
 //! with a tiny JSON-in/JSON-out ABI (see [`wasm`]).
 
 pub mod domain;
 pub mod lsl;
+pub mod machine;
 pub mod prove;
 pub mod wasm;
 
@@ -24,6 +28,13 @@ pub use prove::{prove, ProofReport, ProveRequest};
 
 /// JSON in, JSON out. Errors are returned as `{"error": "..."}`.
 pub fn prove_json(request: &str) -> String {
+    let is_machine = serde_json::from_str::<serde_json::Value>(request).map(|v| v.get("machine").is_some()).unwrap_or(false);
+    if is_machine {
+        return match serde_json::from_str::<machine::MachineRequest>(request) {
+            Ok(req) => serde_json::to_string(&machine::explore(&req)).unwrap_or_else(|e| error_json(&e.to_string())),
+            Err(e) => error_json(&format!("invalid request: {e}")),
+        };
+    }
     match serde_json::from_str::<ProveRequest>(request) {
         Ok(req) => serde_json::to_string(&prove(&req)).unwrap_or_else(|e| error_json(&e.to_string())),
         Err(e) => error_json(&format!("invalid request: {e}")),

@@ -46,8 +46,29 @@ export interface Row {
   output: Env;
 }
 
+/** The Rust prover's own breadth-first exploration of a state machine over the code's step table. */
+export interface RustMachineReport {
+  engine: string;
+  model: string;
+  states: number;
+  transitions: number;
+  complete: boolean;
+  /** Steps the exploration needed that the table has no row for. */
+  missing: number;
+  clauses: { clauseId: string; kind: string; verdict: string; evidence: string; checked: number; path?: { actor: number; event: string; input: Env }[]; state?: Env; note?: string }[];
+  errors: string[];
+}
+
+/** One step the code was asked about: the step input and the next state it returned (null: not enabled). */
+export interface StepRow {
+  input: Env;
+  output: Env | null;
+}
+
 export interface RustProver {
   prove(plan: Pick<ProofPlan, "model" | "clauses">, table: Row[]): RustProofReport;
+  /** Explores a state machine over the step table, breadth first, in the TS engine's canonical order. */
+  proveMachine?(request: { machine: unknown; clauses: unknown[]; table: StepRow[]; limit?: number }): RustMachineReport;
 }
 
 interface Exports {
@@ -66,22 +87,23 @@ export async function loadRustProver(wasm: BufferSource | WebAssembly.Module): P
   const enc = new TextEncoder();
   const dec = new TextDecoder();
 
+  const call = <T>(request: string): T => {
+    const bytes = enc.encode(request);
+    const ptr = ex.lastro_alloc(bytes.length);
+    new Uint8Array(ex.memory.buffer, ptr, bytes.length).set(bytes);
+    const packed = ex.lastro_prove(ptr, bytes.length);
+    ex.lastro_free(ptr, bytes.length);
+    const outPtr = Number(packed >> 32n);
+    const outLen = Number(packed & 0xffffffffn);
+    const json = dec.decode(new Uint8Array(ex.memory.buffer, outPtr, outLen).slice());
+    ex.lastro_free(outPtr, outLen);
+    const parsed = JSON.parse(json) as T | { error: string };
+    if (typeof parsed === "object" && parsed && "error" in parsed) throw new Error(`lastro-core: ${(parsed as { error: string }).error}`);
+    return parsed as T;
+  };
   return {
-    prove(plan, table) {
-      const request = JSON.stringify({ model: { ...plan.model, defs: plan.model.defs ?? {} }, clauses: plan.clauses, table });
-      const bytes = enc.encode(request);
-      const ptr = ex.lastro_alloc(bytes.length);
-      new Uint8Array(ex.memory.buffer, ptr, bytes.length).set(bytes);
-      const packed = ex.lastro_prove(ptr, bytes.length);
-      ex.lastro_free(ptr, bytes.length);
-      const outPtr = Number(packed >> 32n);
-      const outLen = Number(packed & 0xffffffffn);
-      const json = dec.decode(new Uint8Array(ex.memory.buffer, outPtr, outLen).slice());
-      ex.lastro_free(outPtr, outLen);
-      const parsed = JSON.parse(json) as RustProofReport | { error: string };
-      if ("error" in parsed) throw new Error(`lastro-core: ${parsed.error}`);
-      return parsed;
-    },
+    prove: (plan, table) => call<RustProofReport>(JSON.stringify({ model: { ...plan.model, defs: plan.model.defs ?? {} }, clauses: plan.clauses, table })),
+    proveMachine: (request) => call<RustMachineReport>(JSON.stringify(request)),
   };
 }
 

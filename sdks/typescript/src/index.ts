@@ -46,7 +46,7 @@ export { createLastro, failuresOf, specGapsOf, agentFeedback } from "./lastro.js
 export type { Lastro, LastroOptions, Spec, Proof, ProofFailure } from "./lastro.js";
 export type { IntentExtractor, ProofDeriver } from "./llm/interfaces.js";
 export { loadRustProver, tabulate } from "./rust.js";
-export type { RustProver, RustProofReport, RustClauseProof, Row } from "./rust.js";
+export type { RustProver, RustProofReport, RustClauseProof, Row, RustMachineReport, StepRow } from "./rust.js";
 export {
   CHANGE_KINDS,
   DEFAULT_POLICY,
@@ -76,6 +76,7 @@ export {
   renderProposalReceipt,
   reviewProposal,
   runProofs,
+  machinesAgree,
   supersedesOf,
   withStatus,
 } from "./proposal.js";

@@ -48,9 +48,24 @@ Rules:
 - provability: "formal" for a pure input-to-output fact about the program's decisions, "empirical" when only running tests can check it, "beyond-proof" where proof stops. beyondProofReason is "none" unless beyond-proof: external-code, world-facts, termination-timing, human-judgment or unstated.
 - replaces: for a modify, list each existing proof of that use case whose guarantee the new behavior contradicts, with the reason in plain words. List only proofs of the same use case; leave it empty when nothing breaks. For an add or a remove, leave it empty (the SDK fills it for a remove).
 - useCases: exactly one entry per touched use case, with the same change as its intents, its name, and "after": the complete new description with every intent combined (empty for a remove). Write the whole behavior, not a diff.
+- links, on every useCases entry: the surfaces (how a user or client reaches the use case: kind screen, route, command or api; a name in the user's words; a locator the driver understands, such as a URL path, a CLI command, an HTTP method and path, or a selector) and the dependencies (slugs of the use cases it needs to work). For an add, put every surface and dependency it has in addSurfaces and addDependsOn. For a modify, the use case keeps the ones it has: list only those the change adds, and in removeSurfaces (by locator) and removeDependsOn (by slug) only those it removes. For a remove, leave every list empty.
 - When the prose is ambiguous, or two intents on one use case contradict each other, do not guess: add a decision (one question, 2-4 options each with its consequence, the recommended index, and the slugs of the intents it concerns).
 - notPromised: what a reader might assume but the prose does not promise.
 - name, slug and description at the top level describe the whole proposal.`;
+
+const SURFACE = {
+  type: "object",
+  additionalProperties: false,
+  required: ["kind", "name", "locator"],
+  properties: { kind: { type: "string", enum: ["screen", "route", "command", "api"] }, name: STR, locator: STR },
+};
+
+const LINKS = {
+  type: "object",
+  additionalProperties: false,
+  required: ["addSurfaces", "removeSurfaces", "addDependsOn", "removeDependsOn"],
+  properties: { addSurfaces: { type: "array", items: SURFACE }, removeSurfaces: STR_ARR, addDependsOn: STR_ARR, removeDependsOn: STR_ARR },
+};
 
 export const PROPOSE_SCHEMA = {
   type: "object",
@@ -87,8 +102,8 @@ export const PROPOSE_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["slug", "change", "name", "after"],
-        properties: { slug: STR, change: { type: "string", enum: ["add", "modify", "remove"] }, name: STR, after: STR },
+        required: ["slug", "change", "name", "after", "links"],
+        properties: { slug: STR, change: { type: "string", enum: ["add", "modify", "remove"] }, name: STR, after: STR, links: LINKS },
       },
     },
     decisions: {
@@ -114,7 +129,15 @@ function proofView(u: UseCase) {
 }
 
 export function proposeUserPrompt(prose: string, useCases: UseCase[]): string {
-  const cases = useCases.map((u) => ({ slug: u.slug, name: u.name, description: u.description, ...(u.proofs.length ? { proofs: proofView(u) } : {}) }));
+  const slugOf = (id: string) => useCases.find((u) => u.id === id)?.slug ?? id;
+  const cases = useCases.map((u) => ({
+    slug: u.slug,
+    name: u.name,
+    description: u.description,
+    ...(u.surfaces?.length ? { surfaces: u.surfaces } : {}),
+    ...(u.dependsOn?.length ? { dependsOn: u.dependsOn.map(slugOf) } : {}),
+    ...(u.proofs.length ? { proofs: proofView(u) } : {}),
+  }));
   return `<use-cases>\n${JSON.stringify(cases, null, 2)}\n</use-cases>\n\n<prose>\n${prose}\n</prose>`;
 }
 

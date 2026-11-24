@@ -24,6 +24,10 @@
     "./scan": {
       "types": "./dist/src/bootstrap/scan.d.ts",
       "default": "./dist/src/bootstrap/scan.js"
+    },
+    "./drive": {
+      "types": "./dist/src/drive.d.ts",
+      "default": "./dist/src/drive.js"
     }
   },
   "scripts": {

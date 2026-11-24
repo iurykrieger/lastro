@@ -129,3 +129,14 @@ export { proposalFromSurvey, renderSurveyReport, modelProblems, digestHash, isBo
 export type { RepoDigest, RepoFile, RepoTest, RepoCommit, RepoManifest, RepoArea, ProposalOrigin, Grounds, ProposalSetup, SubjectDecl, SurveyOut, SurveyInput } from "./bootstrap.js";
 export { SURVEY_SYSTEM, SURVEY_SCHEMA, surveyUserPrompt, surveyProposal } from "./llm/bootstrap.js";
 export type { Excerpt } from "./llm/bootstrap.js";
+// The feature map: surfaces and dependencies.
+export { featureMap, affectedBy, renderFeatureMap, surfaceProblems, mergeLinks, FeatureMapError, SURFACE_KINDS } from "./features.js";
+export type { Surface, SurfaceKind, FeatureLinks, FeatureMap, MapEntry } from "./features.js";
+// State-machine proofs and statecharts.
+export { exploreMachine, statechart, mermaidStatechart, machineProblems, machineClauseProblems, stepModel, stateModel, isMachine, MachineError } from "./machine.js";
+export type { MachineModel, MachineClause, MachineStep, MachineEvent, MachineReport, MachineClauseResult, MachineOptions, Statechart, StatechartRegion } from "./machine.js";
+// Before and after snapshots, unexpected changes and sign-offs. Driving the application is Node-only: "lastro/drive".
+export { snapshotKinds, sideOf, snapshotPath, flattenSchema, flattenTables, structuralDiff, inferSchema, modelContract, exampleInputs, changedRows, unexpectedChanges, reviewDue, EXAMPLES_LIMIT } from "./snapshots.js";
+export type { SnapshotKind, SnapshotSide, SnapshotRecord, Comparison, FieldChange, ExampleRow, UnexpectedChange, SignOff } from "./snapshots.js";
+export { judgmentIntents, dueOf, formalCoverage } from "./proposal.js";
+export type { LinksOut } from "./proposal.js";

@@ -17,6 +17,8 @@ import type { RustProver } from "./rust.js";
 import { tabulate } from "./rust.js";
 import { checkConsistency, verify, type VerifyOptions } from "./verify/engine.js";
 import type { Grounds, ProposalOrigin, ProposalSetup } from "./bootstrap.js";
+import { reviewDue, type Comparison, type SignOff, type SnapshotRecord, type UnexpectedChange } from "./snapshots.js";
+import { affectedBy, featureMap, mergeLinks, surfaceProblems, type Surface } from "./features.js";
 import {
   BEYOND_PROOF_REASONS,
   type BeyondProofReason,
@@ -82,6 +84,10 @@ export interface UseCase {
   proofs: ProofEntry[];
   /** Applied proposals that added or changed it. */
   history: string[];
+  /** How a user or client reaches it (see features.ts). Optional: files written before surfaces stay valid. */
+  surfaces?: Surface[];
+  /** The ids of the use cases it needs to work. */
+  dependsOn?: string[];
 }
 
 export interface ProofReplacement {
@@ -122,6 +128,9 @@ export interface UseCaseChange {
   intents: string[];
   /** Set when an intent of this use case was amended or rejected: `after` must be rewritten. */
   stale?: boolean;
+  /** add/modify: the surfaces and dependencies after the change (a modify keeps the existing ones it does not remove). */
+  surfaces?: Surface[];
+  dependsOn?: string[];
 }
 
 export interface ProposalDecision {
@@ -206,6 +215,16 @@ export interface Proposal {
   origin?: ProposalOrigin;
   /** Models and subjects the proposal adds to `.lastro/config.json` at apply, reviewed with its intents. */
   setup?: ProposalSetup;
+  /** Before and after snapshots, kept under .lastro/docs/, with their SHA-256 (see snapshots.ts). */
+  snapshots?: SnapshotRecord[];
+  /** The deterministic comparison of each before and after pair, from the last proof run. */
+  comparisons?: Comparison[];
+  /** Example outputs that changed although no approved clause applies to their input. */
+  unexpected?: UnexpectedChange[];
+  /** Reviewers' sign-offs on intents beyond proof for human judgment. */
+  signoffs?: SignOff[];
+  /** The statechart of each state-machine model the proofs use, in Mermaid, from the last proof run. */
+  statecharts?: Record<string, string>;
 }
 
 export class ProposalError extends Error {
@@ -277,9 +296,17 @@ export interface ProposeOut {
     quote: string;
     replaces: ProofReplacement[];
   }[];
-  useCases: { slug: string; change: ChangeKind; name: string; after: string }[];
+  useCases: { slug: string; change: ChangeKind; name: string; after: string; links?: LinksOut }[];
   decisions: { slug: string; name: string; question: string; options: DecisionOption[]; recommended: number; intents: string[] }[];
   notPromised: string[];
+}
+
+/** The surfaces and dependencies an extracted use-case change adds or removes. Dependencies name use-case slugs. */
+export interface LinksOut {
+  addSurfaces: Surface[];
+  removeSurfaces: string[];
+  addDependsOn: string[];
+  removeDependsOn: string[];
 }
 
 export interface ProposeInput {
@@ -295,6 +322,43 @@ export interface ProposeInput {
 /** Use-case ids reserved by the adds of proposals that are not applied or closed (excluding `except`). */
 export function reservedUseCaseIds(proposals: Proposal[], except?: string): string[] {
   return proposals.filter((p) => p.id !== except && p.status !== "applied" && p.status !== "closed").flatMap((p) => p.useCases.filter((c) => c.change === "add").map((c) => c.useCase));
+}
+
+/**
+ * The surfaces and dependencies of one extracted change. An add takes the ones proposed; a modify keeps the use case's
+ * own and only adds or removes those the change names; a remove has none. Problems are collected, never thrown.
+ */
+function linksOf(entry: ProposeOut["useCases"][number], existing: UseCase | undefined, idOf: (slug: string) => string | undefined, problems: string[], at: string): { surfaces?: Surface[]; dependsOn?: string[] } {
+  const l = entry.links;
+  if (!l || entry.change === "remove") return entry.change === "remove" || !existing ? {} : pickLinks(existing);
+  if (entry.change === "add" && (l.removeSurfaces.length || l.removeDependsOn.length)) {
+    problems.push(`${at}: an add has no surfaces or dependencies to remove`);
+    return {};
+  }
+  const ids = (slugs: string[]) =>
+    slugs.map((s) => {
+      const id = idOf(s);
+      if (!id) problems.push(`${at}: depends on unknown use case "${s}"`);
+      return id ?? s;
+    });
+  try {
+    const merged = mergeLinks(entry.change === "add" ? {} : pickLinks(existing ?? ({} as UseCase)), {
+      addSurfaces: l.addSurfaces,
+      removeSurfaces: l.removeSurfaces,
+      addDependsOn: ids(l.addDependsOn),
+      removeDependsOn: ids(l.removeDependsOn),
+    });
+    const bad = surfaceProblems({ id: at, ...merged });
+    problems.push(...bad);
+    return { ...(merged.surfaces!.length ? { surfaces: merged.surfaces } : {}), ...(merged.dependsOn!.length ? { dependsOn: merged.dependsOn } : {}) };
+  } catch (e) {
+    problems.push(`${at}: ${(e as Error).message}`);
+    return {};
+  }
+}
+
+function pickLinks(u: Pick<UseCase, "surfaces" | "dependsOn">): { surfaces?: Surface[]; dependsOn?: string[] } {
+  return { ...(u.surfaces?.length ? { surfaces: u.surfaces } : {}), ...(u.dependsOn?.length ? { dependsOn: u.dependsOn } : {}) };
 }
 
 /** Build a proposal from the extract step's answer. Throws ProposalError with every problem found. */
@@ -383,6 +447,7 @@ export function proposalFromExtraction(input: ProposeInput, out: ProposeOut): Pr
     } else if (entry.change !== kinds[0]) problems.push(`${uc} (${slug}): the use-case change says ${entry.change} but its intents say ${kinds[0]}`);
     const existing = useCases.find((u) => u.id === uc);
     if (entry.change !== "remove" && !entry.after?.trim()) problems.push(`${uc} (${slug}): ${entry.change} needs the complete after description`);
+    const links = linksOf(entry, existing, (s) => [...reserved].find(([k]) => k === s)?.[1] ?? bySlug.get(s)?.id, problems, `${uc} (${slug})`);
     changes.push({
       useCase: uc,
       slug,
@@ -391,6 +456,7 @@ export function proposalFromExtraction(input: ProposeInput, out: ProposeOut): Pr
       ...(existing && entry.change !== "add" ? { before: existing.description } : {}),
       ...(entry.change !== "remove" ? { after: entry.after } : {}),
       intents: its.map((i) => i.id),
+      ...links,
     });
   }
   for (const c of out.useCases ?? []) if (!changes.some((x) => x.slug === c.slug) && !problems.some((p) => p.includes(`(${c.slug})`))) problems.push(`use-case change "${c.slug}" has no intent`);
@@ -522,11 +588,24 @@ export function isProposalApproved(p: Proposal): boolean {
   return !!p.hash && hashOf(reviewCore(p)) === p.hash;
 }
 
+/** Intents beyond proof for human judgment, which wait for a sign-off after the proof run. */
+export function judgmentIntents(p: Proposal): string[] {
+  return forwardIntents(p).filter((i) => i.provability === "beyond-proof" && i.beyondProofReason === "human-judgment").map((i) => i.id);
+}
+
+/** Sign-offs still due, unexpected changes not accepted and intents a reviewer requested changes on (after a run). */
+export function dueOf(p: Proposal): ReturnType<typeof reviewDue> {
+  if (!p.lastRun) return { signoffs: [], unexpected: [], changesRequested: [] };
+  return reviewDue(judgmentIntents(p), p.signoffs ?? [], p.unexpected ?? [], p.policy.approvals);
+}
+
 /** The status that follows from the proposal's content (applied and closed are kept). */
 export function withStatus(p: Proposal): Proposal {
   if (p.status === "applied" || p.status === "closed") return p;
   if (isProposalApproved(p)) {
-    p.status = !p.proofs.length ? "approved" : p.lastRun?.ok && p.proofs.every((x) => x.status === "passed") ? "proved" : "proving";
+    const passed = !!p.lastRun?.ok && p.proofs.every((x) => x.status === "passed");
+    const due = dueOf(p);
+    p.status = due.changesRequested.length ? "changes-requested" : !p.proofs.length && !p.lastRun ? "approved" : passed && !due.signoffs.length && !due.unexpected.length ? "proved" : "proving";
   } else {
     delete p.hash;
     const stale = p.useCases.some((c) => c.stale);
@@ -654,6 +733,42 @@ export class ProposalReview {
     t.resolved = true;
     t.resolvedBy = this.reviewer;
     return this;
+  }
+
+  /**
+   * After the proof run, sign off an intent beyond proof for human judgment, having looked at its before and after
+   * snapshots. The after screenshots listed in `references` become the reference screenshots of their scenario steps.
+   */
+  signOff(intentId: string, references: string[] = []): this {
+    const it = this.judgment(intentId);
+    const list = (this.p.signoffs ??= []).filter((s) => !(s.intent === it.id && s.by === this.reviewer));
+    list.push({ intent: it.id, by: this.reviewer, verdict: "signed-off", ...(references.length ? { references } : {}) });
+    this.p.signoffs = list;
+    return this;
+  }
+
+  /** After the proof run, request changes on an intent beyond proof for human judgment. */
+  requestChanges(intentId: string, note: string): this {
+    const it = this.judgment(intentId);
+    const list = (this.p.signoffs ??= []).filter((s) => !(s.intent === it.id && s.by === this.reviewer));
+    list.push({ intent: it.id, by: this.reviewer, verdict: "changes-requested", note });
+    this.p.signoffs = list;
+    return this;
+  }
+
+  /** Accept an unexpected change (U1, U2...): its new output is intended. */
+  accept(changeId: string): this {
+    const u = (this.p.unexpected ?? []).find((x) => x.id === changeId);
+    if (!u) throw new Error(`Unknown unexpected change ${changeId}`);
+    if (!u.acceptedBy.includes(this.reviewer)) u.acceptedBy.push(this.reviewer);
+    return this;
+  }
+
+  private judgment(id: string): ProposalIntent {
+    const it = this.intent(id);
+    if (!this.p.lastRun) throw new Error(`${this.p.id} has not been proved yet: sign-offs come after the proof run`);
+    if (!judgmentIntents(this.p).includes(it.id)) throw new Error(`${it.id} is not beyond proof for human judgment; it needs no sign-off`);
+    return it;
   }
 
   private thread(id: string): Thread {
@@ -1037,6 +1152,10 @@ export interface Applied {
  * approved, its baseline still matches and its last run passed every proof,
  * new and regression.
  */
+function linksOfChange(c: UseCaseChange): Pick<UseCase, "surfaces" | "dependsOn"> {
+  return { ...(c.surfaces?.length ? { surfaces: structuredClone(c.surfaces) } : {}), ...(c.dependsOn?.length ? { dependsOn: [...c.dependsOn] } : {}) };
+}
+
 export function applyProposal(p: Proposal, useCases: UseCase[]): Applied {
   const problems: string[] = [];
   if (!isProposalApproved(p)) problems.push(`${p.id} is not approved`);
@@ -1044,6 +1163,10 @@ export function applyProposal(p: Proposal, useCases: UseCase[]): Applied {
   if (!p.lastRun) problems.push(`${p.id} has not been proved: run prove first`);
   else if (!p.lastRun.ok) problems.push(`${p.id}'s last run failed: ${[...p.lastRun.outcomes.filter((x) => x.role === "proposal" && !x.passed).map((x) => x.proof), ...p.lastRun.regressions].join(", ")}`);
   for (const pr of p.proofs) if (pr.status !== "passed") problems.push(`${pr.id} is ${pr.status}`);
+  const due = dueOf(p);
+  for (const i of due.changesRequested) problems.push(`${i}: a reviewer requested changes after looking at its snapshots`);
+  for (const i of due.signoffs) problems.push(`${i} waits for its sign-off`);
+  for (const u of due.unexpected) problems.push(`unexpected change ${u} is not accepted`);
   if (problems.length) throw new ProposalError(problems);
 
   const sup = new Set(p.supersedes);
@@ -1061,17 +1184,25 @@ export function applyProposal(p: Proposal, useCases: UseCase[]): Applied {
       if (i >= 0) out.splice(i, 1);
       removed.push(c.useCase);
     } else if (c.change === "add") {
-      const u: UseCase = { id: c.useCase, slug: c.slug, name: c.name, description: c.after!, proofs: [], history: [] };
+      const u: UseCase = { id: c.useCase, slug: c.slug, name: c.name, description: c.after!, proofs: [], history: [], ...linksOfChange(c) };
       attach(u);
       out.push(u);
     } else {
       const u = out[i]!;
       u.name = c.name;
       u.description = c.after!;
+      delete u.surfaces;
+      delete u.dependsOn;
+      Object.assign(u, linksOfChange(c));
       attach(u);
     }
   }
   out.sort((a, b) => a.id.localeCompare(b.id));
+  try {
+    featureMap(out);
+  } catch (e) {
+    throw new ProposalError([`the feature map after ${p.id} is invalid: ${(e as Error).message}`]);
+  }
   const next = structuredClone(p);
   next.status = "applied";
   return { proposal: next, useCases: out, written, removed, baseline: baselineOf(out), ...(p.setup ? { setup: structuredClone(p.setup) } : {}) };
@@ -1105,6 +1236,84 @@ export function proposalFeedback(p: Proposal, useCases: UseCase[]): string {
 const VERDICT_MARK: Record<string, string> = { proved: "✅ proved", evidenced: "🟡 evidenced", violated: "❌ violated", vacuous: "⚠️ vacuous", weak: "⚠️ weak", "not-run": "⏸ not run" };
 
 /** Markdown receipt: the use-case diff, proofs gained and replaced, regressions. */
+/** How each forward intent is covered: proved formally, evidenced, or beyond proof, with the reason when not formal. */
+export function formalCoverage(p: Proposal, run: ProposalRun): { formal: string[]; evidenced: { intent: string; reason: string }[]; beyond: { intent: string; reason: string }[] } {
+  const out = { formal: [] as string[], evidenced: [] as { intent: string; reason: string }[], beyond: [] as { intent: string; reason: string }[] };
+  for (const it of forwardIntents(p)) {
+    const proofs = p.proofs.filter((x) => x.intent === it.id);
+    const outcomes = run.outcomes.filter((x) => x.role === "proposal" && x.intent === it.id);
+    if (!proofs.length) {
+      out.beyond.push({ intent: it.id, reason: it.beyondProofReason ?? (it.provability === "beyond-proof" ? "unstated" : "no proof derived") });
+      continue;
+    }
+    const informal = outcomes.filter((x) => x.verdict !== "proved");
+    if (!informal.length && outcomes.length === proofs.length) out.formal.push(it.id);
+    else out.evidenced.push({ intent: it.id, reason: informal.map((x) => `${x.proof}: ${x.note ?? (x.verdict === "evidenced" ? "sampled: the domain is too large to enumerate" : x.verdict)}`).join("; ") || "not every proof ran" });
+  }
+  return out;
+}
+
+function coverageSection(p: Proposal, run: ProposalRun): string[] {
+  const c = formalCoverage(p, run);
+  const L = ["## Formal coverage", "", `${c.formal.length} intent(s) proved formally, ${c.evidenced.length} evidenced, ${c.beyond.length} beyond proof.`, ""];
+  for (const e of c.evidenced) L.push(`- ${e.intent} evidenced: ${e.reason}`);
+  for (const b of c.beyond) L.push(`- ${b.intent} beyond proof: ${b.reason}`);
+  if (c.evidenced.length || c.beyond.length) L.push("");
+  return L;
+}
+
+function featureMapSection(p: Proposal, useCases: UseCase[]): string[] {
+  const after = useCases.map((u) => {
+    const c = p.useCases.find((x) => x.useCase === u.id && x.change === "modify");
+    return c ? { ...u, surfaces: c.surfaces, dependsOn: c.dependsOn } : u;
+  });
+  const added = p.useCases.filter((c) => c.change === "add").map((c) => ({ id: c.useCase, slug: c.slug, name: c.name, surfaces: c.surfaces, dependsOn: c.dependsOn }));
+  const removed = p.useCases.filter((c) => c.change === "remove").map((c) => c.useCase);
+  if (![...after, ...added].some((u) => u.surfaces?.length || u.dependsOn?.length)) return [];
+  const L = ["## Feature map", ""];
+  try {
+    const map = featureMap([...after, ...added], removed);
+    const changed = p.useCases.map((c) => c.useCase);
+    const affected = affectedBy(map, changed);
+    L.push(affected.length ? `Affected: ${affected.join(", ")} (their proofs and snapshots run again with this proposal's).` : "No other feature depends on the ones this proposal changes.", "");
+    for (const f of map.features.filter((x) => changed.includes(x.id) || affected.includes(x.id)))
+      L.push(`- ${f.id} ${f.name}: ${f.surfaces.map((s) => `${s.kind} \`${s.locator}\``).join(", ") || "no surface"}${f.dependsOn.length ? `; depends on ${f.dependsOn.join(", ")}` : ""}`);
+  } catch (e) {
+    L.push(`The map is invalid: ${(e as Error).message}`);
+  }
+  L.push("");
+  return L;
+}
+
+function evidenceSections(p: Proposal): string[] {
+  const L: string[] = [];
+  for (const [name, mermaid] of Object.entries(p.statecharts ?? {}).sort(([a], [b]) => a.localeCompare(b))) L.push(`## State machine: ${name}`, "", "```mermaid", mermaid.trimEnd(), "```", "");
+  if (p.snapshots?.length) {
+    L.push("## Snapshots", "");
+    for (const s of p.snapshots) L.push(`- ${s.side} ${s.kind} \`${s.path}\` sha256:${s.sha256}`);
+    for (const c of p.comparisons ?? []) {
+      const what = c.kind === "screen" ? `${((c.pixelShare ?? 0) * 100).toFixed(2)}% of pixels changed` : c.kind === "examples" ? `${c.changedRows?.length ?? 0} row(s) changed` : `${c.diff?.length ?? 0} field change(s)${c.breaking ? ", breaking" : ""}`;
+      L.push(`- ${c.intent}${c.feature ? ` ${c.feature}` : ""} ${c.kind} ${c.name}: ${what}`);
+      for (const d of c.diff ?? []) L.push(`  - ${d.change} \`${d.path}\`${d.before ? ` ${d.before}` : ""}${d.after ? ` → ${d.after}` : ""}${d.breaking ? " (breaking)" : ""}`);
+    }
+    L.push("");
+  }
+  if (p.unexpected?.length) {
+    L.push("## Unexpected changes", "");
+    for (const u of p.unexpected) L.push(`- **${u.id}** (${u.intent}) \`${JSON.stringify(u.input)}\`: \`${JSON.stringify(u.before ?? null)}\` → \`${JSON.stringify(u.after ?? null)}\` · ${u.acceptedBy.length ? `accepted by ${u.acceptedBy.join(", ")}` : "not accepted"}`);
+    L.push("");
+  }
+  if (p.signoffs?.length || judgmentIntents(p).length) {
+    L.push("## Sign-offs", "");
+    for (const i of judgmentIntents(p)) {
+      const by = (p.signoffs ?? []).filter((s) => s.intent === i);
+      L.push(`- ${i}: ${by.length ? by.map((s) => `${s.verdict} by ${s.by}${s.note ? ` (${s.note})` : ""}`).join("; ") : "waiting"}`);
+    }
+    L.push("");
+  }
+  return L;
+}
+
 export function renderProposalReceipt(p: Proposal, useCases: UseCase[]): string {
   const L: string[] = [`# Receipt: ${p.id} ${p.name}`, "", `Status: **${p.status}** · submitted by ${p.submittedBy} · baseline \`${p.baseline}\`${p.hash ? ` · approval \`${p.hash}\`` : ""}`, "", p.description, ""];
   const run = p.lastRun;
@@ -1149,6 +1358,9 @@ export function renderProposalReceipt(p: Proposal, useCases: UseCase[]): string 
     if (run.unproved.length) L.push(`- Unproved use cases (no proofs yet): ${run.unproved.join(", ")}`);
     L.push("");
   }
+  if (run) L.push(...coverageSection(p, run));
+  L.push(...featureMapSection(p, useCases));
+  L.push(...evidenceSections(p));
   if (p.decisions.length) {
     L.push("## Decisions", "");
     for (const d of p.decisions) L.push(`- **${d.id}** ${d.question} → ${d.chosen !== undefined ? `${d.options[d.chosen]!.label}${d.answeredBy ? ` (${d.answeredBy})` : ""}` : "unanswered"}`);

@@ -104,6 +104,10 @@ type UseCase struct {
 	Proofs      []ProofEntry `json:"proofs"`
 	// History lists the applied proposals that added or changed it.
 	History []string `json:"history"`
+	// Surfaces are how a user or client reaches it (see features.go); optional, so older files stay valid.
+	Surfaces []Surface `json:"surfaces,omitempty"`
+	// DependsOn lists the ids of the use cases it needs to work.
+	DependsOn []string `json:"dependsOn,omitempty"`
 }
 
 func (u UseCase) MarshalJSON() ([]byte, error) {
@@ -157,6 +161,9 @@ type UseCaseChange struct {
 	Intents []string `json:"intents"`
 	// Stale is set when an intent of this use case was amended or rejected: After must be rewritten.
 	Stale *bool `json:"stale,omitempty"`
+	// Surfaces and DependsOn are the use case's after the change (add and modify; a modify keeps what it does not remove).
+	Surfaces  []Surface `json:"surfaces,omitempty"`
+	DependsOn []string  `json:"dependsOn,omitempty"`
 }
 
 func (c UseCaseChange) MarshalJSON() ([]byte, error) {
@@ -279,6 +286,16 @@ type Proposal struct {
 	// Origin and Setup are kept as written (set by the TS SDK's bootstrap); approval binds them when present.
 	Origin json.RawMessage `json:"origin,omitempty"`
 	Setup  json.RawMessage `json:"setup,omitempty"`
+	// Snapshots are the before and after snapshots kept under .lastro/docs/, with their SHA-256 (see snapshots.go).
+	Snapshots []SnapshotRecord `json:"snapshots,omitempty"`
+	// Comparisons pair each after snapshot with its before.
+	Comparisons []Comparison `json:"comparisons,omitempty"`
+	// Unexpected are example changes no approved clause explains; each waits for the policy's acceptances.
+	Unexpected []UnexpectedChange `json:"unexpected,omitempty"`
+	// Signoffs are reviewers' looks at intents beyond proof for human judgment, after the proof run.
+	Signoffs []SignOff `json:"signoffs,omitempty"`
+	// Statecharts are the Mermaid drawings of the state-machine models the proofs use, by model name.
+	Statecharts map[string]string `json:"statecharts,omitempty"`
 }
 
 func (p Proposal) MarshalJSON() ([]byte, error) {
@@ -416,6 +433,8 @@ type ProposeOut struct {
 		Change string `json:"change"`
 		Name   string `json:"name"`
 		After  string `json:"after"`
+		// Links are the surfaces and dependencies (by slug) the change adds or removes.
+		Links *LinksChange `json:"links,omitempty"`
 	} `json:"useCases"`
 	Decisions []struct {
 		Slug        string           `json:"slug"`
@@ -657,6 +676,16 @@ func ProposalFromExtraction(in ProposeInput, out ProposeOut) (Proposal, error) {
 			after := entry.After
 			c.After = &after
 		}
+		idOf := func(slug string) string {
+			if id, ok := reserved[slug]; ok {
+				return id
+			}
+			if u := bySlug(slug); u != nil {
+				return u.ID
+			}
+			return ""
+		}
+		c.Surfaces, c.DependsOn = linksOf(entry.Change, entry.Links, existing, idOf, &problems, fmt.Sprintf("%s (%s)", uc, slug))
 		changes = append(changes, c)
 	}
 	for _, c := range out.UseCases {
@@ -939,10 +968,13 @@ func WithStatus(p Proposal) Proposal {
 		return p
 	}
 	if IsProposalApproved(p) {
+		due := DueOf(p)
 		switch {
+		case len(due.ChangesRequested) > 0:
+			p.Status = "changes-requested"
 		case len(p.Proofs) == 0:
 			p.Status = "approved"
-		case p.LastRun != nil && p.LastRun.OK && allPassed(p.Proofs):
+		case p.LastRun != nil && p.LastRun.OK && allPassed(p.Proofs) && len(due.Signoffs) == 0 && len(due.Unexpected) == 0:
 			p.Status = "proved"
 		default:
 			p.Status = "proving"
@@ -1877,8 +1909,21 @@ type Applied struct {
 	Baseline string
 }
 
+// linksOfChange is the surfaces and dependencies a use case has after the change (none when empty).
+func linksOfChange(c UseCaseChange) ([]Surface, []string) {
+	var s []Surface
+	var d []string
+	if len(c.Surfaces) > 0 {
+		s = append([]Surface{}, c.Surfaces...)
+	}
+	if len(c.DependsOn) > 0 {
+		d = append([]string{}, c.DependsOn...)
+	}
+	return s, d
+}
+
 // ApplyProposal attaches the proofs and syncs the use cases. It refuses unless the proposal is approved,
-// its baseline still matches and its last run passed every proof, new and regression.
+// its baseline still matches and its last run passed every proof, new and regression, and nothing waits for review.
 func ApplyProposal(p Proposal, useCases []UseCase) (Applied, error) {
 	problems := []string{}
 	if !IsProposalApproved(p) {
@@ -1903,6 +1948,16 @@ func ApplyProposal(p Proposal, useCases []UseCase) (Applied, error) {
 		if pr.Status != "passed" {
 			problems = append(problems, pr.ID+" is "+pr.Status)
 		}
+	}
+	due := DueOf(p)
+	for _, i := range due.ChangesRequested {
+		problems = append(problems, i+": a reviewer requested changes after looking at its snapshots")
+	}
+	for _, i := range due.Signoffs {
+		problems = append(problems, i+" waits for its sign-off")
+	}
+	for _, u := range due.Unexpected {
+		problems = append(problems, "unexpected change "+u+" is not accepted")
 	}
 	if len(problems) > 0 {
 		return Applied{}, &ProposalError{problems}
@@ -1946,15 +2001,20 @@ func ApplyProposal(p Proposal, useCases []UseCase) (Applied, error) {
 			removed = append(removed, c.UseCase)
 		case "add":
 			u := UseCase{ID: c.UseCase, Slug: c.Slug, Name: c.Name, Description: c.after(), Proofs: []ProofEntry{}, History: []string{}}
+			u.Surfaces, u.DependsOn = linksOfChange(c)
 			attach(&u)
 			out = append(out, u)
 		default:
 			out[i].Name = c.Name
 			out[i].Description = c.after()
+			out[i].Surfaces, out[i].DependsOn = linksOfChange(c)
 			attach(&out[i])
 		}
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	if _, err := BuildFeatureMap(LinkedOf(out), nil); err != nil {
+		return Applied{}, &ProposalError{[]string{fmt.Sprintf("the feature map after %s is invalid: %s", p.ID, err.Error())}}
+	}
 	next := clone(p)
 	next.Status = "applied"
 	return Applied{Proposal: next, UseCases: out, Written: written, Removed: removed, Baseline: BaselineOf(out)}, nil
@@ -2172,6 +2232,8 @@ func RenderProposalReceipt(p Proposal, useCases []UseCase) string {
 		// Counted on a passing run: a failing one has no coverage to report yet.
 		L = append(L, coverageSection(p, *run)...)
 	}
+	L = append(L, featureMapSection(p, useCases)...)
+	L = append(L, evidenceSections(p)...)
 	if len(p.Decisions) > 0 {
 		L = append(L, "## Decisions", "")
 		for _, d := range p.Decisions {

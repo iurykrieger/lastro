@@ -51,6 +51,10 @@ const usage = `lastro-go <command> [options]
   review <P> --as <name> <action> ...           approve <I..> | approve-all | amend <I> <text> | reject <I> <note>
                                                 answer <D> <option> | comment <I|PF|UC|prose> <text> | reply <T> <text>
                                                 resolve <T> | rewrite <UC> <after> | recombine <UC> [instructions]
+                                                after the proof run: signoff <I> | request-changes <I> <note>
+                                                accept <U>
+  map [<P>]                                     the feature map (surfaces and dependencies); with a proposal, the
+                                                features it changes and the ones affected
   derive <P>                                    derive the pending proofs of the approved intents
   derive --usecases [UC-003,UC-016]             derive proofs straight from the established use cases (default:
                                                 every use case with no passed proof) into .lastro/proof/
@@ -580,11 +584,35 @@ func summary(p lastro.Proposal, useCases []lastro.UseCase) []kv {
 		}
 		proofs = append(proofs, o)
 	}
-	return []kv{
+	return append([]kv{
 		{"proposal", obj{{"id", p.ID}, {"slug", p.Slug}, {"name", p.Name}, {"status", p.Status}, {"submittedBy", p.SubmittedBy}, {"policy", p.Policy}, {"approved", p.Hash != ""}}},
 		{"useCases", changes}, {"intents", intents}, {"decisions", decisions}, {"threads", threads}, {"supersedes", nonNil(p.Supersedes)},
 		{"proofs", proofs}, {"pending", nonNil(pending)}, {"ready", len(pending) == 0},
+	}, evidenceOf(p)...)
+}
+
+// evidenceOf is what a proof run leaves to review: the snapshots taken, the sign-offs due and the unexpected changes.
+func evidenceOf(p lastro.Proposal) []kv {
+	if len(p.Snapshots) == 0 && p.LastRun == nil {
+		return nil
 	}
+	due := lastro.DueOf(p)
+	paths := []string{}
+	for _, x := range p.Snapshots {
+		paths = append(paths, x.Path)
+	}
+	unexpected := []obj{}
+	for _, u := range p.Unexpected {
+		unexpected = append(unexpected, obj{{"id", u.ID}, {"intent", u.Intent}, {"input", u.Input}, {"before", orNull(u.Before)}, {"after", orNull(u.After)}, {"acceptedBy", nonNil(u.AcceptedBy)}})
+	}
+	return []kv{{"evidence", obj{{"snapshots", paths}, {"signoffsDue", due.Signoffs}, {"unexpected", unexpected}, {"changesRequested", due.ChangesRequested}, {"judgment", lastro.JudgmentIntents(p)}}}}
+}
+
+func orNull(r json.RawMessage) any {
+	if len(r) == 0 {
+		return nil
+	}
+	return r
 }
 
 func runBody(run lastro.ProposalRun) []kv {
@@ -882,6 +910,65 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 		}
 		return code, append(obj{{"status", "proposed"}, {"file", ws.proposalPath(p, ".json")}}, s...), nil
 
+	case "map":
+		useCases, err := ws.useCases()
+		if err != nil {
+			return 0, nil, err
+		}
+		var p *lastro.Proposal
+		if ref := arg(rest, 0); ref != "" {
+			x, err := ws.proposal(ref)
+			if err != nil {
+				return 0, nil, err
+			}
+			p = &x
+		}
+		features := lastro.LinkedOf(useCases)
+		removed, changed := []string{}, []string{}
+		if p != nil {
+			for k := range features {
+				for _, c := range p.UseCases {
+					if c.UseCase == features[k].ID && c.Change == "modify" {
+						features[k].Surfaces, features[k].DependsOn = c.Surfaces, c.DependsOn
+					}
+				}
+			}
+			for _, c := range p.UseCases {
+				changed = append(changed, c.UseCase)
+				if c.Change == "add" {
+					features = append(features, lastro.Linked{ID: c.UseCase, Slug: c.Slug, Name: c.Name, Surfaces: c.Surfaces, DependsOn: c.DependsOn})
+				}
+				if c.Change == "remove" {
+					removed = append(removed, c.UseCase)
+				}
+			}
+		}
+		m, err := lastro.BuildFeatureMap(features, removed)
+		if err != nil {
+			var fe *lastro.FeatureMapError
+			if errors.As(err, &fe) {
+				return 1, obj{{"status", "invalid-map"}, {"error", fe.Msg}, {"cycle", nonNil(fe.Cycle)}}, nil
+			}
+			return 0, nil, err
+		}
+		affected := []string{}
+		body := obj{{"status", "map"}}
+		if p != nil {
+			affected = lastro.AffectedBy(m, changed)
+			body = append(body, kv{"proposal", p.ID}, kv{"changed", changed}, kv{"affected", affected})
+		}
+		unreachable := []string{}
+		for _, f := range m.Features {
+			if !f.Reachable {
+				unreachable = append(unreachable, f.ID)
+			}
+		}
+		features2 := []obj{}
+		for _, f := range m.Features {
+			features2 = append(features2, obj{{"id", f.ID}, {"slug", f.Slug}, {"name", f.Name}, {"surfaces", nonNil(f.Surfaces)}, {"reachable", f.Reachable}, {"dependsOn", nonNil(f.DependsOn)}, {"dependents", nonNil(f.Dependents)}})
+		}
+		return 0, append(body, kv{"features", features2}, kv{"unreachable", unreachable}, kv{"text", lastro.RenderFeatureMap(m, affected)}), nil
+
 	case "status":
 		useCases, err := ws.useCases()
 		if err != nil {
@@ -986,6 +1073,17 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 			r.Resolve(arg(xs, 0))
 		case "rewrite":
 			r.RewriteAfter(arg(xs, 0), tail, "")
+		case "signoff":
+			r.SignOff(arg(xs, 0), xs[min(1, len(xs)):]...)
+		case "request-changes":
+			if tail == "" {
+				tail = "changes requested"
+			}
+			r.RequestChanges(arg(xs, 0), tail)
+		case "accept":
+			r.Accept(arg(xs, 0))
+		case "reference":
+			r.Reference(arg(xs, 0))
 		case "recombine":
 			current, err := r.Done()
 			if err != nil {
@@ -1176,6 +1274,12 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 				stream(obj{{"event", "crosscheck"}, {"enginesAgree", *run.EnginesAgree}})
 			}
 		}
+		if len(cfg.subjectNames) > 0 {
+			// As in the TS CLI, a failure to take snapshots never fails the run; the receipt shows what was taken.
+			if next, err := lastro.TakeSnapshots(proposal, "after", lastro.SnapshotContext{Dir: ws.dir, Models: cfg.models, Subjects: subs, UseCases: useCases}); err == nil {
+				proposal = lastro.WithStatus(next)
+			}
+		}
 		if err := ws.writeProposal(proposal); err != nil {
 			return 0, nil, err
 		}
@@ -1189,8 +1293,28 @@ func dispatch(ctx context.Context, a args, emit emitter) (int, obj, error) {
 		status, code := "proved", 0
 		if !run.OK {
 			status, code = "not-proved", 1
+		} else if proposal.Status != "proved" {
+			status = "waiting-for-review"
 		}
 		body := append(obj{{"status", status}, {"proposal", proposal.ID}}, runBody(run)...)
+		due := lastro.DueOf(proposal)
+		if len(due.Signoffs) > 0 {
+			body = append(body, kv{"signoffsDue", due.Signoffs})
+		}
+		if len(due.Unexpected) > 0 {
+			open := []lastro.UnexpectedChange{}
+			for _, u := range proposal.Unexpected {
+				for _, id := range due.Unexpected {
+					if u.ID == id {
+						open = append(open, u)
+					}
+				}
+			}
+			body = append(body, kv{"unexpected", open})
+		}
+		if len(due.ChangesRequested) > 0 {
+			body = append(body, kv{"changesRequested", due.ChangesRequested})
+		}
 		return code, append(body, kv{"receipt", receipt}, kv{"feedback", lastro.ProposalFeedback(proposal, useCases)}), nil
 
 	case "feedback":

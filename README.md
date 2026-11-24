@@ -31,6 +31,7 @@ code / production traces ──────── verify ───┤──▶ T
 | [`plugins/lastro`](plugins/lastro) | Plugin for Claude Code and Codex: each implementation proposal becomes intents the user reviews like a pull request; approved intents become proofs in the repository, and the code is checked against them when the agent stops, with a progress board. Install in Claude Code with `/plugin marketplace add iurykrieger/lastro` and `/plugin install lastro@lastro`; this repository enables it for itself in `.claude/settings.json`. |
 | [`plugins/lastro-board`](plugins/lastro-board) | Claude Code mod: a pane beside the chat with each intent's approvals and each proof passing live (from `lastro prove --stream`), a band above the prompt and toasts. |
 | [`apps/sandbox`](apps/sandbox) | Interactive sandbox built with shadcn/ui: the prose and its intents, the generated code, and a contrast section that proves one against the other live, in both engines. |
+| [`apps/review`](apps/review) | Web app built with shadcn/ui to browse the use cases, their proofs and the proposals, and to review intents together like a pull request: a diff per use case, approvals per reviewer under the policy, decisions and threads. It reads and writes `.lastro/` through the TypeScript SDK. |
 | [`apps/docs`](apps/docs) | Developer docs site built with shadcn/ui: getting started, concepts, the CLI, examples for every SDK, and interactive examples that run the real SDK and the WASM prover in the browser. Its examples run in CI, so the docs stay true. Published at [iurykrieger.github.io/lastro](https://iurykrieger.github.io/lastro/). |
 
 ## Quick start
@@ -42,6 +43,7 @@ npm install
 npm test            # cargo tests, WASM build, SDK tests (including the Rust cross-check)
 npm run sandbox     # opens the sandbox on http://localhost:5173
 npm run docs        # opens the developer docs on http://localhost:5174
+npm run review      # opens the review app on this repository's .lastro/, on http://localhost:5175
 ```
 
 The sandbox walks through a store login. Things to try:

@@ -55,9 +55,10 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    title: "Plugins",
+    title: "Plugins and apps",
     pages: [
       { slug: "plugins/agents", title: "Claude Code and Codex", description: "Review the agent's proposal as intents, then check its code against the proofs before it stops.", keywords: "plugin claude code codex hooks skills gate stop progress board pull request review agent" },
+      { slug: "plugins/review-app", title: "Review app", description: "Browse use cases, proofs and proposals, and review intents together like a pull request.", keywords: "web app ui review collaborative reviewers approve amend reject threads diff use cases proposals" },
     ],
   },
   {

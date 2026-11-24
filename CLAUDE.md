@@ -18,6 +18,9 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
   (`"enabled": true`): code edits wait for an approved proposal, as for any user of the plugin.
 - `plugins/lastro-board`: a Claude Code mod (pane, band, toasts) that draws the same board live from `.lastro/`.
 - `apps/sandbox`: Vite + React + shadcn/ui sandbox (prose, code, contrast) running the real SDK and the WASM prover.
+- `apps/review`: Vite + React + shadcn/ui web app to browse use cases, proofs and proposals and review intents together
+  (approve, amend, reject, decisions, threads, after rewrites). A Vite plugin (`server/api.ts`) serves `.lastro/` (or `LASTRO_DIR`)
+  through the TS SDK's `reviewProposal`; no review logic of its own. Playwright tests in `e2e/` run on a fixture workspace.
 - `apps/docs`: Vite + React + shadcn/ui developer docs. Pages live in `src/pages`, the sidebar in `src/content/nav.ts`.
   Code samples come from `examples/shipping`, which `test/` runs through the real SDKs; the interactive examples in `src/live`
   run the real TS SDK and the WASM prover in the browser (build it with `npm run wasm` first); Playwright UI tests are in `e2e/`.
@@ -48,7 +51,7 @@ Every SDK lives in `sdks/<language>`; a new language port goes there too.
 - Stay harness-agnostic: no dependency on a specific agent product. New surfaces wrap `createLastro`.
 - When you change the CLI, an SDK's public API or a verdict, update `apps/docs` in the same change
   (`npm run test:examples -w @lastro/docs` catches drift in the quickstart and the library examples).
-- UI changes (sandbox, docs) come with Playwright tests. Never commit screenshots.
+- UI changes (sandbox, docs, review) come with Playwright tests. Never commit screenshots.
 
 ## Commands
 
@@ -60,6 +63,8 @@ npm run sandbox                      # dev server for the sandbox
 npm run docs                         # dev server for the docs (apps/docs)
 npm run build -w lastro && npm run test:examples -w @lastro/docs   # docs examples through the real SDK
 npm run test:e2e -w @lastro/docs     # docs UI tests (Playwright)
+npm run review                       # the review app on this repository's .lastro/ (LASTRO_DIR=... for another)
+npm run test:e2e -w @lastro/review   # review app UI tests (Playwright, on a fixture workspace)
 npm test -w @lastro/plugin           # Claude Code / Codex plugin hooks, through the real CLI
 claude plugin test plugins/lastro-board   # the Claude Code mod's tests
 dotnet test sdks/dotnet          # .NET SDK tests (cross-checks need the TS build and lastro-prove)

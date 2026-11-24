@@ -4,7 +4,7 @@ import { Bootstrap } from "./bootstrap";
 import { ExampleBugs, ExampleLogin, ExampleReview, ExampleShipping, ExampleTrust, ExamplesOverview } from "./examples";
 import { ConceptDecisions, ConceptIntents, ConceptPipeline, ConceptProposals, ConceptReceipts, ConceptReview, ConceptSpec, ConceptVerdicts } from "./concepts";
 import { CliLlm, CliOverview, CliWorkspace } from "./cli";
-import { PluginAgents } from "./plugins";
+import { PluginAgents, PluginReviewApp } from "./plugins";
 import { SdkDotnet, SdkGo, SdkInterop, SdkTypeScript } from "./sdks";
 import { RefDataModel, RefLsl, RefRust } from "./reference";
 
@@ -32,6 +32,7 @@ export const PAGE_COMPONENTS: Record<string, ComponentType> = {
   "cli/workspace": CliWorkspace,
   "cli/llm": CliLlm,
   "plugins/agents": PluginAgents,
+  "plugins/review-app": PluginReviewApp,
   "sdks/typescript": SdkTypeScript,
   "sdks/go": SdkGo,
   "sdks/dotnet": SdkDotnet,

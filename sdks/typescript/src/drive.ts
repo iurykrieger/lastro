@@ -97,7 +97,14 @@ export async function openSession(kind: SurfaceKind, locator: string, drivers: D
         throw new DriverError(`no driver configured for ${kind} surfaces: add one under "drivers" in .lastro/config.json`);
     }
   };
-  return withTimeout(start(), ms, `starting the ${protocol} driver`);
+  const starting = start();
+  try {
+    return await withTimeout(starting, ms, `starting the ${protocol} driver`);
+  } catch (e) {
+    // A session that opens after the timeout is closed, so its driver does not outlive the scenario.
+    starting.then((s) => s.close()).catch(() => undefined);
+    throw e;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -173,25 +180,42 @@ function httpSession(baseUrl: string, headers: Record<string, string>): Session 
   };
 }
 
+/** Spawn a shell command in its own process group, so that stopping it also stops what the shell started. */
+function spawnGroup(command: string, cwd: string): ChildProcess {
+  return spawn(command, { cwd, shell: true, stdio: ["pipe", "pipe", "pipe"], detached: process.platform !== "win32" });
+}
+
+/** Stop a process started by spawnGroup and everything it started. */
+function stopGroup(child: ChildProcess): void {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  try {
+    if (process.platform !== "win32" && child.pid) process.kill(-child.pid, "SIGKILL");
+    else child.kill("SIGKILL");
+  } catch {
+    /* already gone */
+  }
+}
+
 function processSession(cwd: string, locator: string, ms: number): Session {
   return {
     act(a) {
       const line = typeof a.run === "string" ? a.run : [locator, ...((a.args as string[]) ?? [])].join(" ");
+      let child: ChildProcess | undefined;
       return withTimeout(
         new Promise<Observation>((resolve, reject) => {
-          const child = spawn(line, { cwd, shell: true });
+          child = spawnGroup(line, cwd);
           let stdout = "";
           let stderr = "";
-          child.stdout.on("data", (d) => (stdout += d));
-          child.stderr.on("data", (d) => (stderr += d));
+          child.stdout!.on("data", (d) => (stdout += d));
+          child.stderr!.on("data", (d) => (stderr += d));
           child.on("error", (e) => reject(new DriverError(`could not run ${line}: ${e.message}`)));
           child.on("close", (code) => resolve({ exitCode: code ?? -1, stdout, stderr }));
-          if (typeof a.stdin === "string") child.stdin.end(a.stdin);
-          else child.stdin.end();
+          if (typeof a.stdin === "string") child.stdin!.end(a.stdin);
+          else child.stdin!.end();
         }),
         ms,
         `running ${line}`,
-      );
+      ).finally(() => child && stopGroup(child));
     },
     screenshot: async () => undefined,
     close: async () => undefined,
@@ -211,7 +235,7 @@ function processSession(cwd: string, locator: string, ms: number): Session {
  * Any answer with "error" fails the step with that error.
  */
 async function jsonLinesSession(command: string, cwd: string, kind: SurfaceKind, locator: string, ms: number): Promise<Session> {
-  const child: ChildProcess = spawn(command, { cwd, shell: true, stdio: ["pipe", "pipe", "pipe"] });
+  const child = spawnGroup(command, cwd);
   const lines = createInterface({ input: child.stdout! });
   const waiting: ((l: string) => void)[] = [];
   const buffered: string[] = [];
@@ -231,7 +255,13 @@ async function jsonLinesSession(command: string, cwd: string, kind: SurfaceKind,
     if (out.error) throw new DriverError(String(out.error));
     return out;
   };
-  await ask({ open: { kind, locator } }, "starting the JSON lines driver");
+  child.stdin!.on("error", () => undefined);
+  try {
+    await ask({ open: { kind, locator } }, "starting the JSON lines driver");
+  } catch (e) {
+    stopGroup(child);
+    throw e;
+  }
   let last: Uint8Array | undefined;
   return {
     async act(a) {
@@ -246,7 +276,7 @@ async function jsonLinesSession(command: string, cwd: string, kind: SurfaceKind,
     },
     async close() {
       await ask({ close: true }, "closing the driver").catch(() => undefined);
-      child.kill();
+      stopGroup(child);
     },
   };
 }

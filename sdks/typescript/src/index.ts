@@ -140,3 +140,9 @@ export { snapshotKinds, sideOf, snapshotPath, flattenSchema, flattenTables, stru
 export type { SnapshotKind, SnapshotSide, SnapshotRecord, Comparison, FieldChange, ExampleRow, UnexpectedChange, SignOff } from "./snapshots.js";
 export { judgmentIntents, dueOf, formalCoverage } from "./proposal.js";
 export type { LinksOut } from "./proposal.js";
+export { intentEvidence, comparisonView } from "./review-evidence.js";
+export type { IntentEvidence } from "./review-evidence.js";
+export { proposalFromSurfaces, featuresWithoutSurfaces, SURFACES_SYSTEM, SURFACES_SCHEMA, surfacesUserPrompt } from "./surfaces.js";
+export type { SurfacesOut, SurfacesInput } from "./surfaces.js";
+export { formalOf, machineClauseOf } from "./proposal.js";
+export type { DrivenStep, DriveRunner, DrivenOutcome } from "./proposal.js";

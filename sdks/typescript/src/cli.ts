@@ -413,7 +413,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
           const affected = p ? affectedBy(map, live.map((c) => c.useCase)) : [];
           return { code: 0, body: { status: "map", ...(p ? { proposal: p.id, changed: live.map((c) => c.useCase), affected } : {}), features: map.features, unreachable: map.features.filter((f) => !f.reachable).map((f) => f.id), text: renderFeatureMap(map, affected) } };
         } catch (e) {
-          if (e instanceof FeatureMapError) return { code: 1, body: { status: "invalid-map", error: e.message, features: e.features } };
+          if (e instanceof FeatureMapError) return { code: 1, body: { status: "invalid-map", error: e.message, cycle: e.cycle } };
           throw e;
         }
       }

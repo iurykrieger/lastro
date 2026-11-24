@@ -27,8 +27,8 @@ export interface FeatureLinks {
 export class FeatureMapError extends Error {
   constructor(
     message: string,
-    /** The features the error is about (for a cycle, every feature in it, in cycle order). */
-    readonly features: string[] = [],
+    /** The features of the dependency cycle, in cycle order from the smallest id; empty when there is none. */
+    readonly cycle: string[] = [],
   ) {
     super(message);
   }
@@ -80,12 +80,14 @@ export function featureMap(features: Linked[], removed: string[] = []): FeatureM
   const ids = new Set(live.map((f) => f.id));
   for (const f of live)
     for (const d of [...(f.dependsOn ?? [])].sort(byId)) {
-      if (gone.has(d)) throw new FeatureMapError(`${f.id} depends on ${d}, which is removed`, [f.id, d]);
-      if (!ids.has(d)) throw new FeatureMapError(`${f.id} depends on ${d}, which does not exist`, [f.id, d]);
+      if (gone.has(d)) problems.push(`${f.id} depends on ${d}, which is removed`);
+      else if (!ids.has(d)) problems.push(`${f.id} depends on ${d}, which does not exist`);
     }
-  const deps = new Map(live.map((f) => [f.id, [...new Set(f.dependsOn ?? [])].sort(byId)]));
+  // Cycles among the features that exist; a dangling dependency is reported above, not followed.
+  const deps = new Map(live.map((f) => [f.id, [...new Set(f.dependsOn ?? [])].filter((d) => ids.has(d)).sort(byId)]));
   const cycle = findCycle(live.map((f) => f.id), deps);
-  if (cycle) throw new FeatureMapError(`dependency cycle: ${[...cycle, cycle[0]].join(" -> ")}`, cycle);
+  if (cycle) problems.push(`dependency cycle: ${[...cycle, cycle[0]].join(" -> ")}`);
+  if (problems.length) throw new FeatureMapError(problems.join("; "), cycle ?? []);
   return {
     features: live.map((f) => ({
       id: f.id,

@@ -725,7 +725,9 @@
       "intents": [
         "P-007.I-23",
         "P-007.I-18"
-      ]
+      ],
+      "chosen": 0,
+      "answeredBy": "iury"
     }
   ],
   "threads": [],

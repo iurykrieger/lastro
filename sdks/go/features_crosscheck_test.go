@@ -65,6 +65,7 @@ func TestFeatureMapAndSnapshotsMatchTS(t *testing.T) {
 			{ID: "UC-001", Slug: "a", Name: "A", DependsOn: []string{"UC-002"}},
 			{ID: "UC-002", Slug: "b", Name: "B"},
 		}, Removed: []string{"UC-002"}, Changed: []string{"UC-002"}},
+		{Features: []lastro.Linked{}, Removed: []string{}, Changed: []string{}},
 	}
 	in, _ := json.Marshal(cases)
 	cmd := exec.Command("node", "--input-type=module", "-e", featuresScript, string(in))

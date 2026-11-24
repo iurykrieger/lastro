@@ -366,6 +366,10 @@ public static partial class Proposals
             problems.Add($"{p.Id}'s last run failed: {string.Join(", ", p.LastRun.Outcomes.Where(x => x.Role == "proposal" && !x.Passed).Select(x => x.Proof).Concat(p.LastRun.Regressions))}");
         foreach (var pr in p.Proofs)
             if (pr.Status != "passed") problems.Add($"{pr.Id} is {pr.Status}");
+        var due = DueOf(p);
+        foreach (var i in due.ChangesRequested) problems.Add($"{i}: a reviewer requested changes after looking at its snapshots");
+        foreach (var i in due.Signoffs) problems.Add($"{i} waits for its sign-off");
+        foreach (var u in due.Unexpected) problems.Add($"unexpected change {u} is not accepted");
         if (problems.Count > 0) throw new ProposalException(problems);
         var sup = p.Supersedes.ToHashSet(StringComparer.Ordinal);
         var o = LastroJson.Clone(useCases.ToList());
@@ -387,18 +391,28 @@ public static partial class Proposals
                     removed.Add(c.UseCase);
                     break;
                 case "add":
-                    var nu = new UseCase { Id = c.UseCase, Slug = c.Slug, Name = c.Name, Description = c.After ?? "" };
+                    var nu = new UseCase { Id = c.UseCase, Slug = c.Slug, Name = c.Name, Description = c.After ?? "", Surfaces = LinksCopy(c.Surfaces), DependsOn = LinksCopy(c.DependsOn) };
                     Attach(nu);
                     o.Add(nu);
                     break;
                 default:
                     u!.Name = c.Name;
                     u.Description = c.After ?? "";
+                    u.Surfaces = LinksCopy(c.Surfaces);
+                    u.DependsOn = LinksCopy(c.DependsOn);
                     Attach(u);
                     break;
             }
         }
         o = o.OrderBy(x => x.Id, StringComparer.Ordinal).ToList();
+        try
+        {
+            Features.Build(Features.LinkedOf(o));
+        }
+        catch (FeatureMapException e)
+        {
+            throw new ProposalException([$"the feature map after {p.Id} is invalid: {e.Message}"]);
+        }
         var next = LastroJson.Clone(p);
         next.Status = "applied";
         return new Applied(next, o, written, removed, BaselineOf(o));
@@ -407,6 +421,8 @@ public static partial class Proposals
     // -----------------------------------------------------------------------
     // Feedback and receipt
     // -----------------------------------------------------------------------
+
+    private static List<T>? LinksCopy<T>(List<T>? xs) => xs is { Count: > 0 } ? LastroJson.Clone(xs) : null;
 
     private static string Js(Env? e) => e is null ? "null" : e.ToString();
 
@@ -505,6 +521,8 @@ public static partial class Proposals
             L.Add("");
         }
         if (run is { Ok: true }) L.AddRange(CoverageSection(p, run)); // a failing run has no coverage to report yet
+        L.AddRange(Snapshots.FeatureMapSection(p, useCases));
+        L.AddRange(Snapshots.EvidenceSections(p));
         if (p.Decisions.Count > 0)
         {
             L.AddRange(["## Decisions", ""]);

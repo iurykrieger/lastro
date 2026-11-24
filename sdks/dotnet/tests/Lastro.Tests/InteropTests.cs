@@ -273,6 +273,7 @@ public class InteropTests
         Answer(n.Body, "propose.json");
         Assert.Equal(1, Node(dir, "propose", Path.Combine(dir, "prose.md"), "--as", "ana").Code);
         Same("status of a TS proposal", Node(dir, "status", "P-001").Body, (await DotNet(dir, "status", "P-001")).Body);
+        Same("the feature map", Node(dir, "map", "P-001").Body, (await DotNet(dir, "map", "P-001")).Body);
 
         // .NET reviews what TypeScript proposed; TypeScript sees the approval as valid (same hash).
         await DotNet(dir, "review", "P-001", "--as", "ana", "answer", "D1", "1");
@@ -305,6 +306,8 @@ public class InteropTests
         Assert.Equal(1, r.Code);
         Same("prove (failing)", Comparable(n.Body), Comparable(r.Body));
         Assert.Equal(NoEngines(tsReceipt), NoEngines(File.ReadAllText(receipt)));
+        // Both took the same after snapshots: same files, same SHA-256.
+        Assert.Contains("after examples `docs/P-001/", File.ReadAllText(receipt));
         Same("feedback", Node(dir, "feedback", "P-001").Body, (await DotNet(dir, "feedback", "P-001")).Body);
 
         // prove --stream: the same events (progress and crosscheck aside: they depend on the subject and the provers found).

@@ -261,6 +261,9 @@ func RenderFeatureMap(m FeatureMap, affected []string) string {
 			b.WriteString("  needed by " + strings.Join(f.Dependents, ", ") + "\n")
 		}
 	}
+	if len(m.Features) == 0 {
+		return "\n" // as the TS SDK: the lines joined, then a newline
+	}
 	return b.String()
 }
 

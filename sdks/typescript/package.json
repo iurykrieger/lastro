@@ -28,6 +28,10 @@
     "./drive": {
       "types": "./dist/src/drive.d.ts",
       "default": "./dist/src/drive.js"
+    },
+    "./solver": {
+      "types": "./dist/src/solver.d.ts",
+      "default": "./dist/src/solver.js"
     }
   },
   "scripts": {

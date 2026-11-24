@@ -11,6 +11,7 @@ import * as Lastro from "../dist/src/index.js";
 import * as Drive from "../dist/src/drive.js";
 import { takeSnapshots } from "../dist/src/evidence.js";
 import { openWorkspace } from "../dist/src/workspace.js";
+import { commandSolver } from "../dist/src/solver.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const PROSE = "Add the shipping rule. Change the checkout. Remove the coupons.";
@@ -169,6 +170,90 @@ export async function statechart({ actors, forbids, cex }) {
     marked: c.regions.some((r) => r.states.some((s) => s.forbidden)),
     pathDrawn: ts.some((t) => t.onPath),
     labelled: ts.length > 0 && ts.every((t) => t.event === "flip"),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Formal first, and SMT for spaces too large to enumerate (I-07, I-11 .. I-14)
+// ---------------------------------------------------------------------------
+
+const z3 = commandSolver();
+/** A solver that cannot decide anything: what Lastro does when the real one gives up. */
+const undecided = async () => ({ answer: "unknown", values: {} });
+
+// I-07: exhaustive when the space is small; SMT on the model's definition when it is large; sampling, with the
+// reason, when the solver cannot decide or the model cannot express the clause.
+export async function formalFirst({ space, smt, holds }) {
+  const v = (n) => ({ var: n });
+  const k = (x) => ({ const: x });
+  const op = (o, ...args) => ({ op: o, args });
+  const max = space === "small" ? 999 : 1_000_000;
+  // The clause: from 100 on, shipping is free. A broken fee charges 15 at exactly one subtotal, which sampling misses.
+  const bad = space === "small" ? 500 : 777_777;
+  const fee = (s) => (s < 100 || (!holds && s === bad) ? 15 : 0);
+  const model = {
+    name: "fee",
+    inputs: { subtotal: { type: "int", min: 0, max } },
+    outputs: { fee: { type: "int", min: 0, max: 15 } },
+    ...(smt === "inexpressible" ? {} : { defines: { fee: op("ite", op("or", op("lt", v("in.subtotal"), k(100)), ...(holds ? [] : [op("eq", v("in.subtotal"), k(bad))])), k(15), k(0)) } }),
+  };
+  const a = { lastro: "intent-artifact/v0", prose: "", intents: [{ id: "C1", statement: "C1", kind: "behavior", provability: "formal", source: { quote: "", start: 0, end: 0 }, status: "approved" }], decisions: [], notPromised: [] };
+  const artifact = { ...a, hash: Lastro.hashOf(a) };
+  const plan = { artifactHash: artifact.hash, model, clauses: [{ id: "C1", intentIds: ["C1"], description: "free from 100", requires: op("ge", v("in.subtotal"), k(100)), ensures: op("eq", v("out.fee"), k(0)) }], scenarios: [], assumptions: [], beyondProof: [] };
+  const r = (await Lastro.verify(artifact, plan, { subject: (x) => ({ fee: fee(x.subtotal) }), smt: smt === "unknown" ? undecided : z3, mutation: false })).clauses[0];
+  const reason = /solver-unknown/.test(r.note ?? "") ? "solver-unknown" : /not-expressible/.test(r.note ?? "") ? "not-expressible" : r.method === "sampling" ? "too-large" : "none";
+  return { method: { exhaustive: "exhaustive", smt: "smt", sampling: "sampled" }[r.method] ?? "sampled", verdict: r.verdict, reason };
+}
+
+/** Two actors and a counter: atomic when the clause should hold, the lost update otherwise. */
+function counterModel(atomic) {
+  const v = (n) => ({ var: n });
+  const k = (x) => ({ const: x });
+  const op = (o, ...args) => ({ op: o, args });
+  return {
+    name: "counter", kind: "machine", actors: 2,
+    state: { n: { type: "int", min: 0, max: 9 } },
+    local: { pc: { type: "enum", values: ["idle", "read", "done"] }, t: { type: "int", min: 0, max: 9 } },
+    initial: { n: 0, pc: "idle", t: 0 },
+    events: { read: {}, write: {} },
+    transitions: atomic
+      ? { read: { when: op("eq", v("in.pc"), k("idle")), next: { n: op("add", v("in.n"), k(1)), pc: k("done") } }, write: { when: k(false), next: {} } }
+      : { read: { when: op("eq", v("in.pc"), k("idle")), next: { t: v("in.n"), pc: k("read") } }, write: { when: op("eq", v("in.pc"), k("read")), next: { n: op("add", v("in.t"), k(1)), pc: k("done") } } },
+  };
+}
+
+// I-11 .. I-14: each kind of clause, over a space visited breadth first or (large) proved by SMT, else walked.
+export async function smClauses({ clause, holds, space, smt }) {
+  const v = (n) => ({ var: n });
+  const k = (x) => ({ const: x });
+  const op = (o, ...args) => ({ op: o, args });
+  const m = counterModel(holds);
+  const step = (x) => {
+    if (x.event === "read" && x.pc === "idle") return holds ? { n: x.n + 1, pc: "done" } : { t: x.n, pc: "read" };
+    if (!holds && x.event === "write" && x.pc === "read") return { n: x.t + 1, pc: "done" };
+    return null;
+  };
+  const finished = (a) => op("ite", op("eq", v(`in.pc_${a}`), k("done")), k(1), k(0));
+  const c =
+    clause === "invariant"
+      ? { id: "C1", kind: "invariant", holds: op("eq", v("in.n"), op("add", finished(1), finished(2))) }
+      : clause === "step"
+        ? { id: "C1", kind: "step", requires: op("eq", v("in.event"), k("read")), ensures: op("eq", v("out.n"), op("add", v("in.n"), k(1))) }
+        : { id: "C1", kind: "reach", condition: op("eq", v("in.n"), k(holds ? 2 : 9)) };
+  // "large": more reachable states than the limit allows, so the exploration cannot finish.
+  const opts = space === "small" ? {} : { limit: 2, conformanceLimit: 100_000, smt: smt === "proves" ? z3 : undecided };
+  const report = await Lastro.exploreMachine(m, step, [c], opts);
+  const r = report.clauses[0];
+  // The shortest violations, found independently: the lost update needs both reads before both writes; a read that
+  // does not raise the counter breaks the step clause at once.
+  const shortest = r.path ? r.path.length === (clause === "invariant" ? 4 : 1) : false;
+  return {
+    verdict: r.verdict,
+    evidence: r.evidence === "none" ? "empirical" : r.evidence,
+    method: r.method,
+    states: Math.min(100_000, report.states),
+    shortest,
+    actorsNamed: !!r.path && r.path.length > 0 && r.path.every((e) => Number.isInteger(e.actor) && e.actor >= 1),
   };
 }
 
@@ -509,9 +594,6 @@ export function receiptEvidence({ affected, machine, snapshots, unexpected, sign
 const pending = (what) => () => {
   throw new Error(`not implemented yet: ${what}`);
 };
-// I-07, I-14: SMT-backed proofs for large spaces (waits for the decision on what SMT proves for opaque code).
-export const formalFirst = pending("SMT for large spaces");
-export const smClauses = pending("SMT induction for state-machine clauses");
 // I-16, I-36: the Rust prover and the Go and .NET ports.
 export const smCrosscheck = pending("state machines in the Rust prover");
 export const sdkParity = pending("the Go and .NET ports");

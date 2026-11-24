@@ -31,6 +31,8 @@ export interface WorkspaceConfig {
   review: ProposalPolicy;
   /** How the application is driven through its surfaces (see drive.ts). */
   drivers?: DriverConfig;
+  /** The SMT solver for spaces too large to enumerate (see solver.ts): a command reading SMT-LIB 2 on stdin. */
+  smt?: { command?: string; timeoutMs?: number };
 }
 
 /** Files of the intent-artifact/v0 workspace, which proposal/v1 refuses. */
@@ -81,10 +83,10 @@ export function openWorkspace(dir: string) {
 
     config(): WorkspaceConfig {
       if (!existsSync(file("config.json"))) throw new WorkspaceError(`no workspace at ${dir}: run \`lastro init --model model.json\``);
-      const raw = readJson<{ models?: Record<string, Model | MachineModel>; model?: Model; subjects?: Record<string, SubjectRef>; review?: Partial<ProposalPolicy>; requiredApprovals?: number; drivers?: DriverConfig }>(file("config.json"));
+      const raw = readJson<{ models?: Record<string, Model | MachineModel>; model?: Model; subjects?: Record<string, SubjectRef>; review?: Partial<ProposalPolicy>; requiredApprovals?: number; drivers?: DriverConfig; smt?: WorkspaceConfig["smt"] }>(file("config.json"));
       const models = { ...(raw.models ?? {}) };
       if (raw.model && !models[raw.model.name]) models[raw.model.name] = raw.model; // the v0 `model` key is still read
-      return { models, subjects: raw.subjects ?? {}, review: readPolicy(raw), ...(raw.drivers ? { drivers: raw.drivers } : {}) };
+      return { models, subjects: raw.subjects ?? {}, review: readPolicy(raw), ...(raw.drivers ? { drivers: raw.drivers } : {}), ...(raw.smt ? { smt: raw.smt } : {}) };
     },
 
     writeConfig(c: WorkspaceConfig) {

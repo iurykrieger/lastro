@@ -10,6 +10,7 @@
  * run on the existing engine: each (model, subject) group becomes a ProofPlan
  * over a synthetic approved artifact, so verdicts are the engine's verdicts.
  */
+import type { SmtSolver } from "./smt.js";
 import { canonicalJson, hashOf } from "./artifact.js";
 import { show, validateExpr, type Expr } from "./spec/expr.js";
 import { sha256Hex } from "./sha256.js";
@@ -1114,6 +1115,8 @@ export interface RunOptions {
   verify?: Omit<VerifyOptions, "subject" | "traces">;
   /** Runs driven scenarios and properties through the application's surfaces (see drive.ts; Node only). */
   drive?: DriveRunner;
+  /** Proves spaces too large to enumerate from the models' LSL definitions and transitions (see smt.ts). */
+  smt?: SmtSolver;
 }
 
 /** What a driven scenario or a property check came to. */
@@ -1166,7 +1169,7 @@ export async function runProofs(proofs: { proof: ProofEntry; role: ProofOutcome[
       for (const pr of prs) outcomes.push(missing(pr, `model ${mname} is not a state machine`));
       continue;
     }
-    const report = await exploreMachine(model, o.subjects[sname]! as MachineStep, prs.map((pr) => machineClauseOf(pr)));
+    const report = await exploreMachine(model, o.subjects[sname]! as MachineStep, prs.map((pr) => machineClauseOf(pr)), o.smt ? { smt: o.smt } : {});
     for (const r of report.clauses) {
       const pr = prs.find((x) => x.id === r.clauseId)!;
       outcomes.push(
@@ -1184,16 +1187,16 @@ export async function runProofs(proofs: { proof: ProofEntry; role: ProofOutcome[
     const subject = o.subjects[key.split("\u0000")[1]!]!;
     const artifact = artifactFor(plan);
     plan.artifactHash = artifact.hash!;
-    const report = await verify(artifact, plan, { ...o.verify, subject });
+    const report = await verify(artifact, plan, { ...o.verify, subject, ...(o.smt ? { smt: o.smt } : {}) });
     let rust: ReturnType<RustProver["prove"]> | undefined;
     if (o.rust && plan.clauses.length) {
-      // A subject that throws has no table to give the Rust prover: the engines agree only if the TS engine ran nothing either.
+      // No table (a space too large to tabulate, or a subject that throws): nothing for the Rust prover to check.
       const table = await tabulate(plan.model, subject).catch(() => undefined);
       if (table) {
         rust = o.rust.prove(plan, table);
         const same = report.clauses.every((c) => rust!.clauses.find((r) => r.clauseId === c.clauseId)?.verdict === c.verdict);
         agree = (agree ?? true) && same;
-      } else agree = (agree ?? true) && report.clauses.every((c) => c.verdict === "not-run");
+      }
     }
     for (const r of report.clauses) {
       const pr = runnable.find((x) => x.id === r.clauseId)!;

@@ -17,7 +17,8 @@
  */
 import { canonicalJson } from "./artifact.js";
 import { enumerateSpace, inDomain, rng, spaceSize, type Domain } from "./spec/domain.js";
-import { holds, LslError, validateExpr, type Expr } from "./spec/expr.js";
+import { evaluate, holds, LslError, validateExpr, type Expr } from "./spec/expr.js";
+import { boundedPath, canonicalBounded, inductionScript, SmtUnsupported, stepClauseScript, type SmtSolver } from "./smt.js";
 import type { ClauseVerdict, Env, Evidence, Model, Value } from "./types.js";
 
 export interface MachineModel {
@@ -33,6 +34,11 @@ export interface MachineModel {
   initial: Env;
   /** Event name -> its inputs (finite domains; {} for none). */
   events: Record<string, Record<string, Domain>>;
+  /**
+   * The transitions in LSL, so a space too large to visit can be proved by SMT: per event, the guard (`when`, over
+   * in.* as a step sees it; always enabled when left out) and the next value of each variable it changes.
+   */
+  transitions?: Record<string, { when?: Expr; next: Record<string, Expr> }>;
 }
 
 export type MachineClause =
@@ -86,6 +92,12 @@ export interface MachineOptions {
   seed?: number;
   walks?: number;
   depth?: number;
+  /** Proves a space too large to visit from the model's LSL transitions (see smt.ts and solver.ts). */
+  smt?: SmtSolver;
+  /** Max state/event pairs on which the code is checked against the model's transitions. Default: `limit`. */
+  conformanceLimit?: number;
+  /** Max steps of the bounded search for a violation of the model. Default 12. */
+  boundedDepth?: number;
 }
 
 export class MachineError extends Error {}
@@ -110,6 +122,18 @@ export function machineProblems(m: MachineModel): string[] {
   const actors = m.actors ?? 1;
   if (!Number.isInteger(actors) || actors < 1) errs.push("actors: must be a positive integer");
   for (const k of Object.keys(m.local ?? {})) if (k in (m.state ?? {})) errs.push(`local.${k}: also a shared variable`);
+  if (m.transitions) {
+    const sm = stepModel(m);
+    for (const e of Object.keys(m.events ?? {})) if (!m.transitions[e]) errs.push(`transitions.${e}: every event needs a transition`);
+    for (const [e, t] of Object.entries(m.transitions)) {
+      if (!(e in (m.events ?? {}))) errs.push(`transitions.${e}: no such event`);
+      if (t.when) errs.push(...validateExpr(t.when, sm).map((x) => `transitions.${e}.when: ${x}`));
+      for (const [k, x] of Object.entries(t.next ?? {})) {
+        if (!(k in (m.state ?? {})) && !(k in (m.local ?? {}))) errs.push(`transitions.${e}.next.${k}: no such variable`);
+        errs.push(...validateExpr(x, sm).map((y) => `transitions.${e}.next.${k}: ${y}`));
+      }
+    }
+  }
   return errs;
 }
 
@@ -308,6 +332,10 @@ export async function exploreMachine(m: MachineModel, step: MachineStep, clauses
     return report("bfs", nodes.length, transitions, true, [...results.values()]);
   }
 
+  // Too many states. If the model writes its transitions in LSL and a solver is at hand, prove the model by SMT and
+  // check the code against it on every state/event pair; what the solver cannot decide goes to random walks.
+  if (opts.smt && m.transitions) await proveBySmt(m, step, clauses, results, opts, limit);
+
   // Too many states: random walks with a fixed seed. A clause that holds is evidenced, never proved; a reach witness
   // still proves the state reachable.
   const next = rng(opts.seed ?? 42);
@@ -334,13 +362,168 @@ export async function exploreMachine(m: MachineModel, step: MachineStep, clauses
   for (const c of clauses) {
     const r = results.get(c.id)!;
     if (r.verdict !== "not-run") continue;
+    const smtNote = r.note;
     r.method = "random-walk";
     r.checked = steps;
     if (c.kind === "reach") Object.assign(r, { verdict: "evidenced", evidence: "none", note: "not reached by the walks; the space is too large to show it unreachable" });
     else if (c.kind === "step" && !applied.get(c.id)) Object.assign(r, { verdict: "vacuous", note: "no step of the walks makes the if-part true" });
-    else Object.assign(r, { verdict: "evidenced", evidence: "empirical", failureRateUpperBound95: Math.min(1, 3 / Math.max(1, c.kind === "step" ? applied.get(c.id)! : steps)), note: `more than ${limit} reachable states: explored by ${walks} random walks of up to ${depth} steps (seed ${opts.seed ?? 42})` });
+    else Object.assign(r, { verdict: "evidenced", evidence: "empirical", failureRateUpperBound95: Math.min(1, 3 / Math.max(1, c.kind === "step" ? applied.get(c.id)! : steps)), note: [`more than ${limit} reachable states: explored by ${walks} random walks of up to ${depth} steps (seed ${opts.seed ?? 42})`, smtNote].filter(Boolean).join("; ") });
   }
   return report("random-walk", nodes.length, transitions, false, [...results.values()]);
+}
+
+// ---------------------------------------------------------------------------
+// SMT: the model's LSL transitions, and the code checked against them
+// ---------------------------------------------------------------------------
+
+/** The model's own step function, from its LSL transitions: null when the event's guard is false. */
+export function modelStep(m: MachineModel): MachineStep {
+  return (x) => {
+    const t = m.transitions?.[String(x.event)];
+    if (!t) return null;
+    const ctx = { input: x, output: {}, defs: undefined };
+    if (t.when && !holds(t.when, ctx)) return null;
+    const out: Env = {};
+    for (const [k, e] of Object.entries(t.next)) out[k] = evaluate(e, ctx);
+    return out;
+  };
+}
+
+export interface Conformance {
+  /** Every state/event pair in the declared domains was checked. */
+  complete: boolean;
+  checked: number;
+  /** The first pair where the code and the model disagree. */
+  mismatch?: { input: Env; code: Env | null; model: Env | null };
+}
+
+/**
+ * Check the code's step against the model's on every pair of a state (in the declared domains) and an event raised by
+ * an actor, or on a fixed-seed sample of them when there are more than `limit`. Two steps agree when both are
+ * disabled, or both give the same next value for every variable.
+ */
+export async function conformance(m: MachineModel, step: MachineStep, limit = 100_000, seed = 42): Promise<Conformance> {
+  const vars: Record<string, Domain> = { ...m.state, ...(m.local ?? {}) };
+  const model = modelStep(m);
+  const perEvent = sortedKeys(m.events).map((e) => [e, spaceSize(m.events[e]!)] as const);
+  const states = spaceSize(vars);
+  const total = states * actorsOf(m) * perEvent.reduce((n, [, k]) => n + k, 0);
+  const same = (x: Env, a: Env | null | undefined, b: Env | null | undefined) =>
+    (!a && !b) || (!!a && !!b && Object.keys(vars).every((k) => canonicalJson((k in a ? a[k] : x[k]) ?? null) === canonicalJson((k in b ? b[k] : x[k]) ?? null)));
+  const check = async (x: Env): Promise<Conformance["mismatch"]> => {
+    let code: Env | null | undefined;
+    try {
+      code = await step({ ...x });
+    } catch (e) {
+      return { input: x, code: { error: (e as Error).message }, model: model(x) as Env | null };
+    }
+    const mine = model(x) as Env | null;
+    return same(x, code, mine) ? undefined : { input: x, code: code ?? null, model: mine };
+  };
+  if (total <= limit) {
+    let checked = 0;
+    for (let actor = 1; actor <= actorsOf(m); actor++)
+      for (const event of sortedKeys(m.events))
+        for (const input of enumerateSpace(m.events[event]!))
+          for (const st of enumerateSpace(vars)) {
+            checked++;
+            const bad = await check({ ...st, actor, event, ...input });
+            if (bad) return { complete: true, checked, mismatch: bad };
+          }
+    return { complete: true, checked };
+  }
+  const next = rng(seed);
+  const n = 2000;
+  for (let i = 0; i < n; i++) {
+    const actor = 1 + Math.floor(next() * actorsOf(m));
+    const event = sortedKeys(m.events)[Math.floor(next() * perEvent.length)]!;
+    const bad = await check({ ...sampleOf(vars, next), actor, event, ...sampleOf(m.events[event]!, next) });
+    if (bad) return { complete: false, checked: i + 1, mismatch: bad };
+  }
+  return { complete: false, checked: n };
+}
+
+function sampleOf(table: Record<string, Domain>, next: () => number): Env {
+  const out: Env = {};
+  for (const k of sortedKeys(table)) {
+    const values = [...enumerateSpace({ [k]: table[k]! })].map((x) => x[k]!);
+    out[k] = values[Math.floor(next() * values.length)]!;
+  }
+  return out;
+}
+
+async function proveBySmt(m: MachineModel, step: MachineStep, clauses: MachineClause[], results: Map<string, MachineClauseResult>, opts: MachineOptions, limit: number) {
+  const solve = opts.smt!;
+  let conf: Conformance | undefined;
+  const conforms = async () => (conf ??= await conformance(m, step, opts.conformanceLimit ?? limit, opts.seed ?? 42));
+  for (const c of clauses) {
+    const r = results.get(c.id)!;
+    if (r.verdict !== "not-run" || c.kind === "reach") continue;
+    let proved = false;
+    try {
+      if (c.kind === "invariant") {
+        const s0 = initialState(m);
+        if (!holds(c.holds, { input: s0, output: {}, defs: undefined })) {
+          Object.assign(r, { verdict: "violated", evidence: "counterexample", method: "smt-induction", path: [], state: s0, note: "the initial state breaks the invariant" });
+          continue;
+        }
+        const ind = await solve(inductionScript(m, c.holds), []);
+        if (ind.answer === "unsat") proved = true;
+        else {
+          // Not inductive (or undecided): look for a real violation of the model, shortest first.
+          for (let d = 1; d <= (opts.boundedDepth ?? 12) && !proved; d++) {
+            const values = await canonicalBounded(m, c.holds, d, solve);
+            if (!values) continue;
+            const path = boundedPath(m, d, values);
+            const end = await replay(m, step, path);
+            const broken = typeof end !== "string" && !holds(c.holds, { input: end, output: {}, defs: undefined });
+            Object.assign(r, broken
+              ? { verdict: "violated", evidence: "counterexample", method: "smt-induction", path, state: end, note: `the model breaks the invariant in ${d} step(s), and so does the code` }
+              : { note: `the model breaks the invariant in ${d} step(s), but the code does not follow that path${typeof end === "string" ? ` (${end})` : ""}` });
+            break;
+          }
+          if (r.verdict === "not-run" && !r.note) r.note = ind.answer === "unknown" ? "solver-unknown: the solver could not decide the induction" : "solver-unknown: the invariant is not inductive and no violation was found within the bound";
+          continue;
+        }
+      } else {
+        let all = true;
+        for (let a = 1; a <= actorsOf(m) && all; a++) all = (await solve(stepClauseScript(m, c, a), [])).answer === "unsat";
+        if (all) proved = true;
+        else {
+          r.note = "solver-unknown: the step clause does not hold over every state of the declared domains";
+          continue;
+        }
+      }
+    } catch (e) {
+      if (!(e instanceof SmtUnsupported) && !(e instanceof LslError)) throw e;
+      r.note = `not-expressible: ${e.message}`;
+      continue;
+    }
+    if (!proved) continue;
+    const k = await conforms();
+    if (k.mismatch)
+      Object.assign(r, { verdict: "violated", evidence: "counterexample", method: "smt-induction", checked: k.checked, state: k.mismatch.input, note: `the model is proved by SMT, but the code differs from it at ${canonicalJson(k.mismatch.input)}: code ${canonicalJson(k.mismatch.code)}, model ${canonicalJson(k.mismatch.model)}` });
+    else if (k.complete) Object.assign(r, { verdict: "proved", evidence: "formal", method: "smt-induction", checked: k.checked, note: `proved by SMT induction on the model; the code matches the model on all ${k.checked} state/event pairs` });
+    else Object.assign(r, { verdict: "evidenced", evidence: "empirical", method: "smt-induction", checked: k.checked, failureRateUpperBound95: Math.min(1, 3 / k.checked), note: `proved by SMT induction on the model; the code matches it on ${k.checked} sampled state/event pairs (too many to check them all)` });
+  }
+}
+
+/** Run the code along a path from the initial state; the state it ends in, or what went wrong. */
+async function replay(m: MachineModel, step: MachineStep, path: MachineEvent[]): Promise<Env | string> {
+  let s = initialState(m);
+  for (const e of path) {
+    let out: Env | null | undefined;
+    try {
+      out = await step(stepInput(m, s, e));
+    } catch (err) {
+      return `the step function threw on ${show(e)}: ${(err as Error).message}`;
+    }
+    if (!out) return `the code does not enable ${show(e)}`;
+    const n = nextState(m, s, e, out);
+    if (typeof n === "string") return n;
+    s = n;
+  }
+  return s;
 }
 
 // ---------------------------------------------------------------------------

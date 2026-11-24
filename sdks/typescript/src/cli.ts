@@ -51,6 +51,7 @@ import { proposalFromSurfaces, SURFACES_SCHEMA, SURFACES_SYSTEM, surfacesUserPro
 import { copyFileSync, mkdirSync } from "node:fs";
 import { dueOf, judgmentIntents, withStatus } from "./proposal.js";
 import type { Model, Subject } from "./types.js";
+import { commandSolver } from "./solver.js";
 
 class Exit extends Error {
   constructor(
@@ -297,6 +298,9 @@ async function loadSubjects(ws: Workspace, cfg: WorkspaceConfig, args: Args, mod
   if (!names.length) throw new Exit(2, { error: "no subject: pass the module under proof, or declare subjects in .lastro/config.json (lastro init --subject)" });
   return out;
 }
+
+/** The SMT solver the workspace names under "smt", if any: verdicts never depend on what happens to be installed. */
+const smtOf = (cfg: WorkspaceConfig) => (cfg.smt ? { smt: commandSolver(cfg.smt.command, cfg.smt.timeoutMs) } : {});
 
 function counting(subjects: Record<string, Subject>, stream: Emit | undefined): Record<string, Subject> {
   if (!stream) return subjects;
@@ -581,7 +585,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         if (args.flags.usecases !== undefined) {
           const cfg = ws.config();
           const module = args.flags.usecases !== "true" && !isUseCaseList(args.flags.usecases) ? args.flags.usecases : rest[0];
-          const r = await proveUseCases(ws.useCases(), { subjects: await loadSubjects(ws, cfg, args, module), models: cfg.models, rust: await rustProver() });
+          const r = await proveUseCases(ws.useCases(), { subjects: await loadSubjects(ws, cfg, args, module), models: cfg.models, rust: await rustProver(), ...smtOf(cfg) });
           for (const u of r.useCases) ws.writeUseCase(u);
           return {
             code: r.run.ok ? 0 : 1,
@@ -608,7 +612,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
         const stream = args.flags.stream === "true" && emit ? emit : undefined;
         const subjects = counting(await loadSubjects(ws, cfg, args, module), stream);
         stream?.({ event: "start", proposal: p.id, proofs: p.proofs.map((x) => x.id) });
-        const proved = await proveProposal(p, useCases, { subjects, models: cfg.models, rust: await rustProver(), drive: driveRunner(ws, cfg.drivers) });
+        const proved = await proveProposal(p, useCases, { subjects, models: cfg.models, rust: await rustProver(), drive: driveRunner(ws, cfg.drivers), ...smtOf(cfg) });
         const run = proved.run;
         const proposal = await snapshotSide(ws, cfg, args, proved.proposal, useCases, "after", false, subjects);
         if (stream) {
@@ -646,7 +650,7 @@ export async function main(argv: string[], emit?: Emit): Promise<{ code: number;
       case "regress": {
         const cfg = ws.config();
         const useCases = ws.useCases();
-        const run = await regress(useCases, { subjects: await loadSubjects(ws, cfg, args, rest[0]), models: cfg.models, rust: await rustProver() });
+        const run = await regress(useCases, { subjects: await loadSubjects(ws, cfg, args, rest[0]), models: cfg.models, rust: await rustProver(), ...smtOf(cfg) });
         return { code: run.ok ? 0 : 1, body: { status: run.ok ? "no-regressions" : "regressions", ...runBody(run) } };
       }
       default:

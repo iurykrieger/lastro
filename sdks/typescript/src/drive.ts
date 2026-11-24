@@ -10,6 +10,7 @@
  * `.lastro/config.json` names them under `drivers`. Lastro ships no browser, device or Appium server. A driver that
  * fails to start or times out (30 s per action by default) fails the scenario with the driver's error, never passes it.
  */
+import type { SmtSolver } from "./smt.js";
 import { spawn, type ChildProcess } from "node:child_process";
 import { createInterface } from "node:readline";
 import { canonicalJson } from "./artifact.js";
@@ -449,10 +450,12 @@ export interface ModelledProperty extends Omit<PropertyCheck, "invariant" | "act
   invariant: Extract<MachineClause, { kind: "invariant" }>;
   /** Each action with the model event it raises (actor 1). */
   actions: { action: Action; event: string; input?: Record<string, Json> }[];
+  /** Proves a model too large to visit from its LSL transitions. */
+  smt?: SmtSolver;
 }
 
 export async function checkModelledProperty(c: ModelledProperty, drivers: DriverConfig | undefined, open: typeof openSession = openSession): Promise<PropertyResult> {
-  const report = await exploreMachine(c.model, c.step, [c.invariant]);
+  const report = await exploreMachine(c.model, c.step, [c.invariant], c.smt ? { smt: c.smt } : {});
   const r = report.clauses[0]!;
   if (r.verdict === "violated") return { checkId: c.id, verdict: "violated", evidence: "counterexample", sequences: 0, actions: 0, note: `violated over the model (${r.method})` };
   // Follow the model: after each action, every state variable the driver observes must equal the model's.

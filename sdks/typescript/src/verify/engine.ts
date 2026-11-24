@@ -11,6 +11,7 @@
 import { approvedIntents, hashOf } from "../artifact.js";
 import { checkPlan, PlanError } from "../plan.js";
 import { evaluate, holds, LslError } from "../spec/expr.js";
+import { definedClauseScript, definedOutputs, sameOutputs, SmtUnsupported, type DefinedModel, type SmtSolver } from "../smt.js";
 import {
   enumerateDomain,
   enumerateSpace,
@@ -47,6 +48,11 @@ export interface VerifyOptions {
   mutation?: boolean;
   /** Max output-space size for the consistency check. */
   consistencyLimit?: number;
+  /**
+   * An SMT solver for input spaces too large to enumerate: when the model defines its outputs in LSL (`defines`), the
+   * solver proves each clause over that definition and the code is checked against it (see smt.ts).
+   */
+  smt?: SmtSolver;
 }
 
 interface Run {
@@ -175,6 +181,7 @@ export async function verify(artifact: IntentArtifact, plan: ProofPlan, opts: Ve
   const clauses: ClauseResult[] = plan.clauses.map((c) => checkClause(c, runs, exhaustive, mutants, opts.traces ?? [], model));
   if (runErrors.length)
     for (const r of clauses) r.note = [r.note, `${runErrors.length} invalid runs (e.g. ${runErrors[0]})`].filter(Boolean).join("; ");
+  if (opts.smt && opts.subject && runs.length && !exhaustive) await smtClauses(plan, clauses, runs, opts.subject, opts.smt);
 
   // 3. Scenarios (Given/When/Then).
   const scenarios: ScenarioResult[] = [];
@@ -313,6 +320,60 @@ function checkClause(c: Clause, runs: Run[], exhaustive: boolean, mutants: Mutan
     result.note = `evaluation error: ${e.message}`;
   }
   return result;
+}
+
+/**
+ * A space too large to enumerate, with a solver at hand: each clause is proved over the model's LSL definition, and
+ * the code is checked against that definition on the sampled inputs. The code is never proved this way (its inputs
+ * were sampled): a clause the solver proves stays evidenced, and a definition that breaks the clause is a
+ * counterexample only if the code breaks it there too. Every clause records why it is not proved.
+ */
+async function smtClauses(plan: ProofPlan, results: ClauseResult[], runs: Run[], subject: Subject, solve: SmtSolver) {
+  const model = plan.model as DefinedModel;
+  const outs = Object.keys(model.outputs);
+  for (const c of plan.clauses) {
+    const r = results.find((x) => x.clauseId === c.id)!;
+    if (r.verdict === "violated" || r.verdict === "not-run") continue;
+    const reason = (why: string) => (r.note = [r.note, why].filter(Boolean).join("; "));
+    if (!model.defines) {
+      reason("not-expressible: the model does not define its outputs in LSL, so the solver has nothing to prove");
+      continue;
+    }
+    let script: ReturnType<typeof definedClauseScript>;
+    try {
+      script = definedClauseScript(model, c);
+    } catch (e) {
+      if (!(e instanceof SmtUnsupported)) throw e;
+      reason(`not-expressible: ${e.message}`);
+      continue;
+    }
+    const res = await solve(script.script, script.values);
+    if (res.answer === "unknown") {
+      reason("solver-unknown: the solver could not decide the clause");
+      continue;
+    }
+    if (res.answer === "sat") {
+      const input: Env = {};
+      for (const k of Object.keys(model.inputs)) input[k] = res.values[`in.${k}`]!;
+      let output: Env | undefined;
+      try {
+        output = await subject({ ...input });
+      } catch {
+        output = undefined;
+      }
+      const breaks = output && (!c.requires || holds(c.requires, { input, output, defs: model.defs })) && !holds(c.ensures, { input, output, defs: model.defs });
+      if (breaks) Object.assign(r, { verdict: "violated", evidence: "formal", method: "smt", counterexample: { input, output: output! }, note: "the solver found an input where the model's definition breaks the clause, and the code breaks it there too" });
+      else reason(`the model's definition breaks the clause at ${JSON.stringify(input)}, but the code does not`);
+      continue;
+    }
+    // unsat: the definition satisfies the clause everywhere. Does the code follow the definition?
+    const off = runs.find((x) => !sameOutputs(x.output, definedOutputs(model, x.input, evaluate), outs));
+    if (off) {
+      Object.assign(r, { verdict: "violated", evidence: "empirical", method: "smt", counterexample: { input: off.input, output: off.output }, note: `the solver proves the model's definition, but the code differs from it at ${JSON.stringify(off.input)}` });
+      continue;
+    }
+    Object.assign(r, { method: "smt", note: [r.note, `proved by SMT on the model's definition; the code matches the definition on ${runs.length} sampled inputs (too many to check them all)`].filter(Boolean).join("; ") });
+  }
 }
 
 // ---------------------------------------------------------------------------

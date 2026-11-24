@@ -133,8 +133,11 @@ export type { Excerpt } from "./llm/bootstrap.js";
 export { featureMap, affectedBy, renderFeatureMap, surfaceProblems, mergeLinks, FeatureMapError, SURFACE_KINDS } from "./features.js";
 export type { Surface, SurfaceKind, FeatureLinks, FeatureMap, MapEntry } from "./features.js";
 // State-machine proofs and statecharts.
-export { exploreMachine, statechart, mermaidStatechart, machineProblems, machineClauseProblems, stepModel, stateModel, isMachine, MachineError } from "./machine.js";
-export type { MachineModel, MachineClause, MachineStep, MachineEvent, MachineReport, MachineClauseResult, MachineOptions, Statechart, StatechartRegion } from "./machine.js";
+export { exploreMachine, statechart, mermaidStatechart, machineProblems, machineClauseProblems, stepModel, stateModel, isMachine, MachineError, modelStep, conformance } from "./machine.js";
+export type { MachineModel, MachineClause, MachineStep, MachineEvent, MachineReport, MachineClauseResult, MachineOptions, Statechart, StatechartRegion, Conformance } from "./machine.js";
+// SMT over LSL models (the solver itself runs from "lastro/solver", Node only).
+export { definedClauseScript, inductionScript, boundedScript, boundedPath, canonicalBounded, stepClauseScript, machineChoices, parseValues, smtTerm, SmtUnsupported } from "./smt.js";
+export type { SmtSolver, SmtAnswer, DefinedModel, SmtMachine } from "./smt.js";
 // Before and after snapshots, unexpected changes and sign-offs. Driving the application is Node-only: "lastro/drive".
 export { snapshotKinds, sideOf, snapshotPath, flattenSchema, flattenTables, structuralDiff, inferSchema, modelContract, exampleInputs, changedRows, unexpectedChanges, reviewDue, EXAMPLES_LIMIT } from "./snapshots.js";
 export type { SnapshotKind, SnapshotSide, SnapshotRecord, Comparison, FieldChange, ExampleRow, UnexpectedChange, SignOff } from "./snapshots.js";

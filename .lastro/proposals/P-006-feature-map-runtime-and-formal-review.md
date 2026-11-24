@@ -96,8 +96,11 @@ change as breaking; for examples, the rows whose output changed. An example whos
 approved intent's clause applies to its input is flagged as an unexpected change, and the proposal is not proved
 while an unexpected change is not accepted by a reviewer.
 
-Snapshots live in `.lastro/snapshots/<proposal>/<feature>/before|after/` and are never committed to git; the
-proposal records the SHA-256 of each one, so anyone can take it again and see whether the result still matches.
+Snapshots are kept with the documentation of the change, tied to the intent that changed the feature:
+`.lastro/docs/<proposal>/<intent>/<feature>/before|after/`. They are committed with the proposal, images included,
+so every reviewer sees them in the pull request without taking them again; the proposal also records the SHA-256 of
+each one, so anyone can take it again and see whether the result still matches. A snapshot of the whole repository
+rather than of one feature lives in `.lastro/docs/<proposal>/repository/before|after/`.
 
 An intent whose promise is a matter of human judgment (the layout looks right, the message is clear, the new error
 response is helpful) stays beyond proof, but after the proof run it waits for a sign-off: a reviewer looks at its

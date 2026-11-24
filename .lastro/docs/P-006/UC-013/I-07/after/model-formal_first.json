@@ -1,0 +1,11 @@
+{
+  "model": "formal_first",
+  "fields": {
+    "in.holds": "bool",
+    "in.smt": "enum[\"proves\",\"refutes\",\"unknown\",\"inexpressible\"]",
+    "in.space": "enum[\"small\",\"large\"]",
+    "out.method": "enum[\"exhaustive\",\"smt\",\"sampled\"]",
+    "out.reason": "enum[\"none\",\"too-large\",\"solver-unknown\",\"not-expressible\"]",
+    "out.verdict": "enum[\"proved\",\"violated\",\"evidenced\"]"
+  }
+}

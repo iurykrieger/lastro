@@ -1,0 +1,167 @@
+{
+  "model": "supersedes",
+  "subject": "supersedes",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "first": "proposed",
+        "second": "proposed"
+      },
+      "after": {
+        "first": false,
+        "second": false
+      }
+    },
+    {
+      "input": {
+        "first": "proposed",
+        "second": "approved"
+      },
+      "after": {
+        "first": false,
+        "second": true
+      }
+    },
+    {
+      "input": {
+        "first": "proposed",
+        "second": "amended"
+      },
+      "after": {
+        "first": false,
+        "second": true
+      }
+    },
+    {
+      "input": {
+        "first": "proposed",
+        "second": "rejected"
+      },
+      "after": {
+        "first": false,
+        "second": false
+      }
+    },
+    {
+      "input": {
+        "first": "approved",
+        "second": "proposed"
+      },
+      "after": {
+        "first": true,
+        "second": false
+      }
+    },
+    {
+      "input": {
+        "first": "approved",
+        "second": "approved"
+      },
+      "after": {
+        "first": true,
+        "second": true
+      }
+    },
+    {
+      "input": {
+        "first": "approved",
+        "second": "amended"
+      },
+      "after": {
+        "first": true,
+        "second": true
+      }
+    },
+    {
+      "input": {
+        "first": "approved",
+        "second": "rejected"
+      },
+      "after": {
+        "first": true,
+        "second": false
+      }
+    },
+    {
+      "input": {
+        "first": "amended",
+        "second": "proposed"
+      },
+      "after": {
+        "first": true,
+        "second": false
+      }
+    },
+    {
+      "input": {
+        "first": "amended",
+        "second": "approved"
+      },
+      "after": {
+        "first": true,
+        "second": true
+      }
+    },
+    {
+      "input": {
+        "first": "amended",
+        "second": "amended"
+      },
+      "after": {
+        "first": true,
+        "second": true
+      }
+    },
+    {
+      "input": {
+        "first": "amended",
+        "second": "rejected"
+      },
+      "after": {
+        "first": true,
+        "second": false
+      }
+    },
+    {
+      "input": {
+        "first": "rejected",
+        "second": "proposed"
+      },
+      "after": {
+        "first": false,
+        "second": false
+      }
+    },
+    {
+      "input": {
+        "first": "rejected",
+        "second": "approved"
+      },
+      "after": {
+        "first": false,
+        "second": true
+      }
+    },
+    {
+      "input": {
+        "first": "rejected",
+        "second": "amended"
+      },
+      "after": {
+        "first": false,
+        "second": true
+      }
+    },
+    {
+      "input": {
+        "first": "rejected",
+        "second": "rejected"
+      },
+      "after": {
+        "first": false,
+        "second": false
+      }
+    }
+  ]
+}

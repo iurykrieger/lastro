@@ -1,0 +1,607 @@
+{
+  "model": "snapshot_kinds",
+  "subject": "snapshot_kinds",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "screen"
+      },
+      "after": {
+        "screen": true,
+        "contract": false,
+        "data": false,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "route"
+      },
+      "after": {
+        "screen": true,
+        "contract": false,
+        "data": false,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "api"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "command"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "none"
+      },
+      "after": {
+        "screen": false,
+        "contract": false,
+        "data": false,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "screen"
+      },
+      "after": {
+        "screen": true,
+        "contract": false,
+        "data": false,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "route"
+      },
+      "after": {
+        "screen": true,
+        "contract": false,
+        "data": false,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "api"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "command"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "none"
+      },
+      "after": {
+        "screen": false,
+        "contract": false,
+        "data": false,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "screen"
+      },
+      "after": {
+        "screen": true,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "route"
+      },
+      "after": {
+        "screen": true,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "api"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "command"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "none"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "screen"
+      },
+      "after": {
+        "screen": true,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "route"
+      },
+      "after": {
+        "screen": true,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "api"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "command"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": false,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "none"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": false,
+        "examples": true,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "screen"
+      },
+      "after": {
+        "screen": true,
+        "contract": false,
+        "data": true,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "route"
+      },
+      "after": {
+        "screen": true,
+        "contract": false,
+        "data": true,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "api"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "command"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "extract",
+        "surface": "none"
+      },
+      "after": {
+        "screen": false,
+        "contract": false,
+        "data": true,
+        "examples": false,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "screen"
+      },
+      "after": {
+        "screen": true,
+        "contract": false,
+        "data": true,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "route"
+      },
+      "after": {
+        "screen": true,
+        "contract": false,
+        "data": true,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "api"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "command"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": false,
+        "phase": "prove",
+        "surface": "none"
+      },
+      "after": {
+        "screen": false,
+        "contract": false,
+        "data": true,
+        "examples": false,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "screen"
+      },
+      "after": {
+        "screen": true,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "route"
+      },
+      "after": {
+        "screen": true,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "api"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "command"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "extract",
+        "surface": "none"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "before"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "screen"
+      },
+      "after": {
+        "screen": true,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "route"
+      },
+      "after": {
+        "screen": true,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "api"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "command"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "after"
+      }
+    },
+    {
+      "input": {
+        "hasData": true,
+        "hasModel": true,
+        "phase": "prove",
+        "surface": "none"
+      },
+      "after": {
+        "screen": false,
+        "contract": true,
+        "data": true,
+        "examples": true,
+        "side": "after"
+      }
+    }
+  ]
+}

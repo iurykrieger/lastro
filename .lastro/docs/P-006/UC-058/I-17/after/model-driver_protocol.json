@@ -1,0 +1,8 @@
+{
+  "model": "driver_protocol",
+  "fields": {
+    "in.config": "enum[\"standard\",\"jsonlines\",\"none\"]",
+    "in.target": "enum[\"web\",\"electron\",\"android\",\"ios\",\"api\",\"command\"]",
+    "out.protocol": "enum[\"webdriver\",\"appium\",\"http\",\"process\",\"jsonlines\",\"none\"]"
+  }
+}

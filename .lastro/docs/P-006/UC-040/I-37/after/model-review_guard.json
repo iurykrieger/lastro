@@ -1,0 +1,9 @@
+{
+  "model": "review_guard",
+  "fields": {
+    "in.action": "enum[\"approve\",\"approve-all\",\"answer\",\"amend\",\"reject\",\"comment\"]",
+    "in.as": "enum[\"iury\",\"claude\",\"codex\",\"agent\",\"assistant\",\"ai\",\"bot\"]",
+    "in.harness": "enum[\"claude\",\"codex\"]",
+    "out.decision": "enum[\"ask\",\"deny\",\"none\"]"
+  }
+}

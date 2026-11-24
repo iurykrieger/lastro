@@ -1,0 +1,8 @@
+{
+  "model": "sdk_parity",
+  "fields": {
+    "in.artifact": "enum[\"map\",\"statechart\",\"diff\",\"verdict\",\"snapshot-hash\"]",
+    "in.sdk": "enum[\"go\",\"dotnet\"]",
+    "out.same": "bool"
+  }
+}

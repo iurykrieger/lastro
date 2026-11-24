@@ -1,0 +1,12 @@
+{
+  "model": "formal_coverage",
+  "fields": {
+    "in.beyond": "int[0..3]",
+    "in.evidenced": "int[0..3]",
+    "in.formal": "int[0..3]",
+    "out.countBeyond": "int[0..3]",
+    "out.countEvidenced": "int[0..3]",
+    "out.countFormal": "int[0..3]",
+    "out.reasons": "int[0..6]"
+  }
+}

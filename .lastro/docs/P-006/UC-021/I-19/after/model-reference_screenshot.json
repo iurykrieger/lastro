@@ -1,0 +1,8 @@
+{
+  "model": "reference_screenshot",
+  "fields": {
+    "in.hadReference": "bool",
+    "in.signedOff": "bool",
+    "out.referenceIsAfter": "bool"
+  }
+}

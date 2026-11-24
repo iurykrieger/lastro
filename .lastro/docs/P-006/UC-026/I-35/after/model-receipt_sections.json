@@ -1,0 +1,15 @@
+{
+  "model": "receipt_sections",
+  "fields": {
+    "in.notPromised": "bool",
+    "in.regression": "bool",
+    "in.stillPass": "bool",
+    "in.violated": "bool",
+    "out.showsCounterexample": "bool",
+    "out.showsDiff": "bool",
+    "out.showsNotPromised": "bool",
+    "out.showsRegression": "bool",
+    "out.showsReplaced": "bool",
+    "out.showsStillPass": "bool"
+  }
+}

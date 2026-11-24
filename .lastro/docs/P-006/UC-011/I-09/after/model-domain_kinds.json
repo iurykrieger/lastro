@@ -1,0 +1,11 @@
+{
+  "model": "domain_kinds",
+  "fields": {
+    "in.hasOutputs": "bool",
+    "in.kind": "enum[\"bool\",\"enum\",\"int-bounded\",\"int-unbounded\",\"string\"]",
+    "out.finite": "bool",
+    "out.rejected": "bool",
+    "out.size": "int[0..10]",
+    "out.sortedOrder": "bool"
+  }
+}

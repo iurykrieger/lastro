@@ -1,0 +1,55 @@
+{
+  "model": "proof_files",
+  "subject": "proof_files",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "legacy": false,
+        "rewrite": false
+      },
+      "after": {
+        "loaded": 1,
+        "proofFiles": 1,
+        "embedded": false,
+        "fileComplete": true
+      }
+    },
+    {
+      "input": {
+        "legacy": false,
+        "rewrite": true
+      },
+      "after": {
+        "loaded": 1,
+        "proofFiles": 1,
+        "embedded": false,
+        "fileComplete": true
+      }
+    },
+    {
+      "input": {
+        "legacy": true,
+        "rewrite": false
+      },
+      "after": {
+        "loaded": 1,
+        "proofFiles": 0,
+        "embedded": true,
+        "fileComplete": false
+      }
+    },
+    {
+      "input": {
+        "legacy": true,
+        "rewrite": true
+      },
+      "after": {
+        "loaded": 1,
+        "proofFiles": 1,
+        "embedded": false,
+        "fileComplete": true
+      }
+    }
+  ]
+}

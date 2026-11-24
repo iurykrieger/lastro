@@ -1,0 +1,97 @@
+{
+  "model": "sdk_parity",
+  "subject": "sdk_parity",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "artifact": "map",
+        "sdk": "go"
+      },
+      "after": {
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "artifact": "map",
+        "sdk": "dotnet"
+      },
+      "after": {
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "artifact": "statechart",
+        "sdk": "go"
+      },
+      "after": {
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "artifact": "statechart",
+        "sdk": "dotnet"
+      },
+      "after": {
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "artifact": "diff",
+        "sdk": "go"
+      },
+      "after": {
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "artifact": "diff",
+        "sdk": "dotnet"
+      },
+      "after": {
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "artifact": "verdict",
+        "sdk": "go"
+      },
+      "after": {
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "artifact": "verdict",
+        "sdk": "dotnet"
+      },
+      "after": {
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "artifact": "snapshot-hash",
+        "sdk": "go"
+      },
+      "after": {
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "artifact": "snapshot-hash",
+        "sdk": "dotnet"
+      },
+      "after": {
+        "same": true
+      }
+    }
+  ]
+}

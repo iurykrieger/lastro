@@ -1,0 +1,67 @@
+{
+  "model": "sm_interleave",
+  "subject": "sm_interleave",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "actors": 1,
+        "atomic": false
+      },
+      "after": {
+        "violated": false,
+        "cexActors": 0
+      }
+    },
+    {
+      "input": {
+        "actors": 1,
+        "atomic": true
+      },
+      "after": {
+        "violated": false,
+        "cexActors": 0
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "atomic": false
+      },
+      "after": {
+        "violated": true,
+        "cexActors": 2
+      }
+    },
+    {
+      "input": {
+        "actors": 2,
+        "atomic": true
+      },
+      "after": {
+        "violated": false,
+        "cexActors": 0
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "atomic": false
+      },
+      "after": {
+        "violated": true,
+        "cexActors": 2
+      }
+    },
+    {
+      "input": {
+        "actors": 3,
+        "atomic": true
+      },
+      "after": {
+        "violated": false,
+        "cexActors": 0
+      }
+    }
+  ]
+}

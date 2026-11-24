@@ -1,0 +1,12 @@
+{
+  "model": "statechart",
+  "fields": {
+    "in.actors": "int[1..3]",
+    "in.cex": "bool",
+    "in.forbids": "bool",
+    "out.labelled": "bool",
+    "out.marked": "bool",
+    "out.pathDrawn": "bool",
+    "out.regions": "int[1..3]"
+  }
+}

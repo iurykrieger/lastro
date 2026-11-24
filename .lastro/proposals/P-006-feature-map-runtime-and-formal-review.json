@@ -1263,7 +1263,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-02",
@@ -1295,7 +1297,9 @@
           ]
         }
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "evidenced",
+      "evidence": "empirical"
     },
     {
       "id": "P-006.PF-03",
@@ -1396,7 +1400,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-04",
@@ -1449,7 +1455,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-05",
@@ -1475,7 +1483,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-06",
@@ -1533,7 +1543,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-07",
@@ -1676,7 +1688,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-08",
@@ -1793,7 +1807,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-09",
@@ -2204,7 +2220,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-10",
@@ -2251,7 +2269,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-11",
@@ -2330,7 +2350,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-12",
@@ -2356,7 +2378,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-13",
@@ -2537,7 +2561,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-14",
@@ -2740,7 +2766,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "failed",
+      "verdict": "violated",
+      "evidence": "empirical"
     },
     {
       "id": "P-006.PF-15",
@@ -2972,7 +3000,9 @@
           "The sampled subject's violation, when there is one, is dense enough for the fixed-seed sample to hit it."
         ]
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-16",
@@ -3044,7 +3074,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-17",
@@ -3113,7 +3145,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-18",
@@ -3208,7 +3242,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-19",
@@ -3298,7 +3334,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-20",
@@ -3394,7 +3432,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-21",
@@ -3522,7 +3562,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-22",
@@ -3645,7 +3687,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "failed",
+      "verdict": "violated",
+      "evidence": "empirical"
     },
     {
       "id": "P-006.PF-23",
@@ -3752,7 +3796,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-24",
@@ -3848,7 +3894,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-25",
@@ -3901,7 +3949,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-26",
@@ -4072,7 +4122,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-27",
@@ -4146,7 +4198,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-28",
@@ -4188,7 +4242,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-29",
@@ -4332,7 +4388,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-30",
@@ -4396,7 +4454,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-31",
@@ -4422,7 +4482,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-32",
@@ -4480,7 +4542,9 @@
           ]
         }
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "evidenced",
+      "evidence": "empirical"
     },
     {
       "id": "P-006.PF-33",
@@ -4602,7 +4666,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-34",
@@ -4692,7 +4758,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-35",
@@ -4824,7 +4892,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-36",
@@ -4898,7 +4968,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-37",
@@ -4940,7 +5012,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-38",
@@ -4998,7 +5072,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-39",
@@ -5067,7 +5143,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-40",
@@ -5109,7 +5187,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-41",
@@ -5285,7 +5365,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-42",
@@ -5359,7 +5441,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-43",
@@ -5470,7 +5554,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-44",
@@ -5534,7 +5620,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-45",
@@ -5749,7 +5837,9 @@
       "replaces": [
         "P-001.PF-15"
       ],
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-46",
@@ -5807,7 +5897,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-47",
@@ -6102,7 +6194,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-48",
@@ -6257,7 +6351,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-49",
@@ -6283,7 +6379,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-50",
@@ -6384,7 +6482,9 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     },
     {
       "id": "P-006.PF-51",
@@ -6426,11 +6526,3043 @@
         },
         "assumptions": []
       },
-      "status": "pending"
+      "status": "passed",
+      "verdict": "proved",
+      "evidence": "formal"
     }
   ],
   "supersedes": [
     "P-001.PF-15"
   ],
-  "hash": "sha256:5abe81fe01967f4d7a19964ed533613d37b8f2c7e01fb0b514822d2e27a15673"
+  "hash": "sha256:5abe81fe01967f4d7a19964ed533613d37b8f2c7e01fb0b514822d2e27a15673",
+  "lastRun": {
+    "ok": false,
+    "outcomes": [
+      {
+        "proof": "P-006.PF-01",
+        "useCase": "UC-046",
+        "intent": "P-006.I-01",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-02",
+        "useCase": "UC-046",
+        "intent": "P-006.I-01",
+        "role": "proposal",
+        "verdict": "evidenced",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-03",
+        "useCase": "UC-001",
+        "intent": "P-006.I-02",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-04",
+        "useCase": "UC-001",
+        "intent": "P-006.I-02",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-05",
+        "useCase": "UC-055",
+        "intent": "P-006.I-03",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-06",
+        "useCase": "UC-055",
+        "intent": "P-006.I-03",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-07",
+        "useCase": "UC-055",
+        "intent": "P-006.I-04",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-08",
+        "useCase": "UC-055",
+        "intent": "P-006.I-04",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-09",
+        "useCase": "UC-055",
+        "intent": "P-006.I-05",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-10",
+        "useCase": "UC-056",
+        "intent": "P-006.I-06",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-11",
+        "useCase": "UC-056",
+        "intent": "P-006.I-06",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-12",
+        "useCase": "UC-056",
+        "intent": "P-006.I-06",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-13",
+        "useCase": "UC-013",
+        "intent": "P-006.I-07",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-14",
+        "useCase": "UC-013",
+        "intent": "P-006.I-07",
+        "role": "proposal",
+        "verdict": "violated",
+        "passed": false,
+        "counterexample": {
+          "input": {
+            "holds": true,
+            "smt": "proves",
+            "space": "large"
+          },
+          "output": {
+            "method": "smt",
+            "verdict": "evidenced",
+            "reason": "none"
+          }
+        }
+      },
+      {
+        "proof": "P-006.PF-15",
+        "useCase": "UC-013",
+        "intent": "P-006.I-07",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-16",
+        "useCase": "UC-026",
+        "intent": "P-006.I-08",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-17",
+        "useCase": "UC-011",
+        "intent": "P-006.I-09",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-18",
+        "useCase": "UC-057",
+        "intent": "P-006.I-10",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-19",
+        "useCase": "UC-057",
+        "intent": "P-006.I-11",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-20",
+        "useCase": "UC-057",
+        "intent": "P-006.I-12",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-21",
+        "useCase": "UC-057",
+        "intent": "P-006.I-13",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-22",
+        "useCase": "UC-057",
+        "intent": "P-006.I-13",
+        "role": "proposal",
+        "verdict": "violated",
+        "passed": false,
+        "counterexample": {
+          "input": {
+            "clause": "step",
+            "holds": false,
+            "smt": "unknown",
+            "space": "large"
+          },
+          "output": {
+            "verdict": "violated",
+            "evidence": "counterexample",
+            "method": "bfs",
+            "states": 2,
+            "shortest": true,
+            "actorsNamed": true
+          }
+        }
+      },
+      {
+        "proof": "P-006.PF-23",
+        "useCase": "UC-057",
+        "intent": "P-006.I-14",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-24",
+        "useCase": "UC-057",
+        "intent": "P-006.I-15",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-25",
+        "useCase": "UC-025",
+        "intent": "P-006.I-16",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-26",
+        "useCase": "UC-058",
+        "intent": "P-006.I-17",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-27",
+        "useCase": "UC-058",
+        "intent": "P-006.I-17",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-28",
+        "useCase": "UC-058",
+        "intent": "P-006.I-18",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-29",
+        "useCase": "UC-021",
+        "intent": "P-006.I-19",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-30",
+        "useCase": "UC-021",
+        "intent": "P-006.I-20",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-31",
+        "useCase": "UC-059",
+        "intent": "P-006.I-21",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-32",
+        "useCase": "UC-059",
+        "intent": "P-006.I-21",
+        "role": "proposal",
+        "verdict": "evidenced",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-33",
+        "useCase": "UC-059",
+        "intent": "P-006.I-22",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-34",
+        "useCase": "UC-059",
+        "intent": "P-006.I-22",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-35",
+        "useCase": "UC-059",
+        "intent": "P-006.I-23",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-36",
+        "useCase": "UC-059",
+        "intent": "P-006.I-23",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-37",
+        "useCase": "UC-060",
+        "intent": "P-006.I-24",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-38",
+        "useCase": "UC-060",
+        "intent": "P-006.I-25",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-39",
+        "useCase": "UC-060",
+        "intent": "P-006.I-26",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-40",
+        "useCase": "UC-060",
+        "intent": "P-006.I-27",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-41",
+        "useCase": "UC-060",
+        "intent": "P-006.I-28",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-42",
+        "useCase": "UC-060",
+        "intent": "P-006.I-29",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-43",
+        "useCase": "UC-060",
+        "intent": "P-006.I-30",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-44",
+        "useCase": "UC-060",
+        "intent": "P-006.I-31",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-45",
+        "useCase": "UC-048",
+        "intent": "P-006.I-33",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-46",
+        "useCase": "UC-048",
+        "intent": "P-006.I-33",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-47",
+        "useCase": "UC-061",
+        "intent": "P-006.I-34",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-48",
+        "useCase": "UC-026",
+        "intent": "P-006.I-35",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-49",
+        "useCase": "UC-035",
+        "intent": "P-006.I-36",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-50",
+        "useCase": "UC-040",
+        "intent": "P-006.I-37",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-006.PF-51",
+        "useCase": "UC-021",
+        "intent": "P-006.I-38",
+        "role": "proposal",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-04",
+        "useCase": "UC-001",
+        "intent": "P-001.I-08",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-05",
+        "useCase": "UC-001",
+        "intent": "P-001.I-10",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-06",
+        "useCase": "UC-002",
+        "intent": "P-001.I-12",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-07",
+        "useCase": "UC-002",
+        "intent": "P-001.I-13",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-01",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-02",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-03",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-04",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-003.PF-05",
+        "useCase": "UC-003",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-004.PF-01",
+        "useCase": "UC-004",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-004.PF-02",
+        "useCase": "UC-004",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-004.PF-03",
+        "useCase": "UC-004",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-004.PF-04",
+        "useCase": "UC-004",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-08",
+        "useCase": "UC-005",
+        "intent": "P-001.I-15",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-006.PF-01",
+        "useCase": "UC-006",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-006.PF-02",
+        "useCase": "UC-006",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-006.PF-03",
+        "useCase": "UC-006",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-11",
+        "useCase": "UC-007",
+        "intent": "P-001.I-21",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-13",
+        "useCase": "UC-007",
+        "intent": "P-001.I-20",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-14",
+        "useCase": "UC-007",
+        "intent": "P-001.I-22",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-008.PF-01",
+        "useCase": "UC-008",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-008.PF-02",
+        "useCase": "UC-008",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-008.PF-03",
+        "useCase": "UC-008",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-008.PF-04",
+        "useCase": "UC-008",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-12",
+        "useCase": "UC-009",
+        "intent": "P-001.I-23",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-16",
+        "useCase": "UC-009",
+        "intent": "P-001.I-24",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-17",
+        "useCase": "UC-010",
+        "intent": "P-001.I-25",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-011.PF-01",
+        "useCase": "UC-011",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-011.PF-02",
+        "useCase": "UC-011",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-011.PF-03",
+        "useCase": "UC-011",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-011.PF-04",
+        "useCase": "UC-011",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-012.PF-01",
+        "useCase": "UC-012",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-012.PF-02",
+        "useCase": "UC-012",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-012.PF-03",
+        "useCase": "UC-012",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-012.PF-04",
+        "useCase": "UC-012",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-18",
+        "useCase": "UC-013",
+        "intent": "P-001.I-28",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-014.PF-01",
+        "useCase": "UC-014",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-014.PF-02",
+        "useCase": "UC-014",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-005.PF-01",
+        "useCase": "UC-015",
+        "intent": "P-005.I-01",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-015.PF-01",
+        "useCase": "UC-015",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-015.PF-02",
+        "useCase": "UC-015",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-015.PF-03",
+        "useCase": "UC-015",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-015.PF-04",
+        "useCase": "UC-015",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-016.PF-01",
+        "useCase": "UC-016",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-016.PF-02",
+        "useCase": "UC-016",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-017.PF-01",
+        "useCase": "UC-017",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-017.PF-02",
+        "useCase": "UC-017",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-018.PF-01",
+        "useCase": "UC-018",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-018.PF-02",
+        "useCase": "UC-018",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-019.PF-01",
+        "useCase": "UC-019",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-019.PF-02",
+        "useCase": "UC-019",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-020.PF-01",
+        "useCase": "UC-020",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-020.PF-02",
+        "useCase": "UC-020",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-020.PF-03",
+        "useCase": "UC-020",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-021.PF-01",
+        "useCase": "UC-021",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-021.PF-02",
+        "useCase": "UC-021",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-021.PF-03",
+        "useCase": "UC-021",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-022.PF-01",
+        "useCase": "UC-022",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-022.PF-02",
+        "useCase": "UC-022",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-023.PF-01",
+        "useCase": "UC-023",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-01",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-02",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-03",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-04",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-05",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-06",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-024.PF-07",
+        "useCase": "UC-024",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-005.PF-02",
+        "useCase": "UC-025",
+        "intent": "P-005.I-02",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-025.PF-02",
+        "useCase": "UC-025",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-025.PF-03",
+        "useCase": "UC-025",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-025.PF-04",
+        "useCase": "UC-025",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-025.PF-05",
+        "useCase": "UC-025",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-01",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-02",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-03",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-04",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-026.PF-05",
+        "useCase": "UC-026",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-027.PF-01",
+        "useCase": "UC-027",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-027.PF-02",
+        "useCase": "UC-027",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-027.PF-03",
+        "useCase": "UC-027",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-028.PF-01",
+        "useCase": "UC-028",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-029.PF-01",
+        "useCase": "UC-029",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-029.PF-02",
+        "useCase": "UC-029",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-030.PF-01",
+        "useCase": "UC-030",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-030.PF-02",
+        "useCase": "UC-030",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-030.PF-03",
+        "useCase": "UC-030",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-030.PF-04",
+        "useCase": "UC-030",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-031.PF-01",
+        "useCase": "UC-031",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-031.PF-02",
+        "useCase": "UC-031",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-031.PF-03",
+        "useCase": "UC-031",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-032.PF-01",
+        "useCase": "UC-032",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-032.PF-02",
+        "useCase": "UC-032",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-034.PF-01",
+        "useCase": "UC-034",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-034.PF-02",
+        "useCase": "UC-034",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-05",
+        "useCase": "UC-036",
+        "intent": "P-004.I-05",
+        "role": "regression",
+        "verdict": "evidenced",
+        "passed": true
+      },
+      {
+        "proof": "UC-037.PF-01",
+        "useCase": "UC-037",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-26",
+        "useCase": "UC-039",
+        "intent": "P-001.I-40",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-040.PF-01",
+        "useCase": "UC-040",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-040.PF-02",
+        "useCase": "UC-040",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-01",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-02",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-03",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-04",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-05",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-06",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-041.PF-07",
+        "useCase": "UC-041",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-042.PF-01",
+        "useCase": "UC-042",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-042.PF-02",
+        "useCase": "UC-042",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-005.PF-03",
+        "useCase": "UC-043",
+        "intent": "P-005.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-005.PF-04",
+        "useCase": "UC-043",
+        "intent": "P-005.I-04",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-043.PF-01",
+        "useCase": "UC-043",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-044.PF-01",
+        "useCase": "UC-044",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-044.PF-02",
+        "useCase": "UC-044",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-044.PF-03",
+        "useCase": "UC-044",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "UC-044.PF-04",
+        "useCase": "UC-044",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-01",
+        "useCase": "UC-046",
+        "intent": "P-001.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-02",
+        "useCase": "UC-046",
+        "intent": "P-001.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-03",
+        "useCase": "UC-046",
+        "intent": "P-001.I-04",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-02",
+        "useCase": "UC-046",
+        "intent": "P-004.I-02",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-03",
+        "useCase": "UC-046",
+        "intent": "P-004.I-03",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-09",
+        "useCase": "UC-047",
+        "intent": "P-001.I-17",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-10",
+        "useCase": "UC-047",
+        "intent": "P-001.I-18",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-19",
+        "useCase": "UC-049",
+        "intent": "P-001.I-30",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-20",
+        "useCase": "UC-049",
+        "intent": "P-001.I-31",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-21",
+        "useCase": "UC-049",
+        "intent": "P-001.I-32",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-22",
+        "useCase": "UC-049",
+        "intent": "P-001.I-33",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-01",
+        "useCase": "UC-049",
+        "intent": "P-004.I-01",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-23",
+        "useCase": "UC-050",
+        "intent": "P-001.I-34",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-24",
+        "useCase": "UC-050",
+        "intent": "P-001.I-35",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-25",
+        "useCase": "UC-050",
+        "intent": "P-001.I-36",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-04",
+        "useCase": "UC-050",
+        "intent": "P-004.I-04",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-06",
+        "useCase": "UC-054",
+        "intent": "P-004.I-06",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-07",
+        "useCase": "UC-054",
+        "intent": "P-004.I-07",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-08",
+        "useCase": "UC-054",
+        "intent": "P-004.I-08",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-09",
+        "useCase": "UC-054",
+        "intent": "P-004.I-09",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-10",
+        "useCase": "UC-054",
+        "intent": "P-004.I-10",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-004.PF-11",
+        "useCase": "UC-054",
+        "intent": "P-004.I-11",
+        "role": "regression",
+        "verdict": "proved",
+        "passed": true
+      },
+      {
+        "proof": "P-001.PF-15",
+        "useCase": "UC-048",
+        "intent": "P-001.I-19",
+        "role": "superseded",
+        "verdict": "proved",
+        "passed": true
+      }
+    ],
+    "regressions": [],
+    "replacedStillPass": [
+      "P-001.PF-15"
+    ],
+    "unproved": [
+      "UC-033",
+      "UC-038",
+      "UC-045"
+    ],
+    "enginesAgree": true
+  },
+  "snapshots": [
+    {
+      "intent": "P-006.I-02",
+      "feature": "UC-001",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-001/I-02/after/examples-extract_surfaces.json",
+      "sha256": "b04d903a6bfed42129c585bedb08fb42289c5c7d3c1b93b0559a3e036d44e612"
+    },
+    {
+      "intent": "P-006.I-02",
+      "feature": "UC-001",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-001/I-02/after/examples-extraction_rules.json",
+      "sha256": "f6ba77427af9eec0ad080cefdaa269fff34f43c5cee2bba714ebe9a235307a58"
+    },
+    {
+      "intent": "P-006.I-02",
+      "feature": "UC-001",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-001/I-02/after/model-extract_surfaces.json",
+      "sha256": "8a9ae2bc5b3a1c5def960dc366728a2c28242007a38976b1e01537b4e347d520"
+    },
+    {
+      "intent": "P-006.I-02",
+      "feature": "UC-001",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-001/I-02/after/model-extraction_rules.json",
+      "sha256": "1c951ef34d72dd1b3d0d35ba95521a6d021c5970b182ac068d1ca4887bbceee1"
+    },
+    {
+      "intent": "P-006.I-09",
+      "feature": "UC-011",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-011/I-09/after/examples-domain_kinds.json",
+      "sha256": "34472ac394855c72264f1b9d4caa82372c24ad43c82b68ff0bf14a50933d8930"
+    },
+    {
+      "intent": "P-006.I-09",
+      "feature": "UC-011",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-011/I-09/after/examples-sm_model.json",
+      "sha256": "a8d784356a89c89d6844bb1e3d5fc964580d8bfcb7e24c663c354420a8b2436d"
+    },
+    {
+      "intent": "P-006.I-09",
+      "feature": "UC-011",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-011/I-09/after/model-domain_kinds.json",
+      "sha256": "18d3fdf8496f1ff3c338c72db3c9fd466b9e9ab496288fffcaa09079b2163927"
+    },
+    {
+      "intent": "P-006.I-09",
+      "feature": "UC-011",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-011/I-09/after/model-sm_model.json",
+      "sha256": "e882367430ad4d25089803380b9ecb9024128c898756859f7d4e23a87854e7df"
+    },
+    {
+      "intent": "P-006.I-07",
+      "feature": "UC-013",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-013/I-07/after/examples-formal_first.json",
+      "sha256": "166f287aaec03221cb186bba3ceaec520d889c7491968d57387783d90e1cd985"
+    },
+    {
+      "intent": "P-006.I-07",
+      "feature": "UC-013",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-013/I-07/after/examples-supersedes.json",
+      "sha256": "b755b0f39875126ef5bcd9b85c6a7303ab3cf662cd8408aa03ae13815ae49b08"
+    },
+    {
+      "intent": "P-006.I-07",
+      "feature": "UC-013",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-013/I-07/after/model-formal_first.json",
+      "sha256": "9bdff6d46d2389ecdfe105fb55745f843d18a4a43a5b122692ac9b9291ef2903"
+    },
+    {
+      "intent": "P-006.I-07",
+      "feature": "UC-013",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-013/I-07/after/model-supersedes.json",
+      "sha256": "cfaf69deab351c511bdbc9e2543fe1336dd0190710ee2e0f6a0c8fe14e8875dd"
+    },
+    {
+      "intent": "P-006.I-19",
+      "feature": "UC-021",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-19/after/examples-driven_scenario.json",
+      "sha256": "0864f7aa376a4914791439ce459036453c140a6ae4323effbcc5f1408b4abfed"
+    },
+    {
+      "intent": "P-006.I-19",
+      "feature": "UC-021",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-19/after/examples-reference_screenshot.json",
+      "sha256": "daf0254ecadf7c3aeee2f40fcd74fd0e3bd06b17a35487ce3024446af87c3db5"
+    },
+    {
+      "intent": "P-006.I-19",
+      "feature": "UC-021",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-19/after/examples-scenario_run.json",
+      "sha256": "bc18557e265b4ef951240cd98393b4d5c5a346f2b71fbc162ca87c2a3495c53d"
+    },
+    {
+      "intent": "P-006.I-19",
+      "feature": "UC-021",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-19/after/model-driven_scenario.json",
+      "sha256": "65dd88071d098e1fcc2de79f61adbf860ac97a513c92db1e2560e5289c6e34f7"
+    },
+    {
+      "intent": "P-006.I-19",
+      "feature": "UC-021",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-19/after/model-reference_screenshot.json",
+      "sha256": "6269d0c326e01b4e412b2b22ebe6b6104c5b1c266958a6dc1880b830803e393d"
+    },
+    {
+      "intent": "P-006.I-19",
+      "feature": "UC-021",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-19/after/model-scenario_run.json",
+      "sha256": "a3944eaabd727106877ac8ba8bc39d36812b5ebd143992d68215592c098226b3"
+    },
+    {
+      "intent": "P-006.I-20",
+      "feature": "UC-021",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-20/after/examples-driven_scenario.json",
+      "sha256": "0864f7aa376a4914791439ce459036453c140a6ae4323effbcc5f1408b4abfed"
+    },
+    {
+      "intent": "P-006.I-20",
+      "feature": "UC-021",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-20/after/examples-reference_screenshot.json",
+      "sha256": "daf0254ecadf7c3aeee2f40fcd74fd0e3bd06b17a35487ce3024446af87c3db5"
+    },
+    {
+      "intent": "P-006.I-20",
+      "feature": "UC-021",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-20/after/examples-scenario_run.json",
+      "sha256": "bc18557e265b4ef951240cd98393b4d5c5a346f2b71fbc162ca87c2a3495c53d"
+    },
+    {
+      "intent": "P-006.I-20",
+      "feature": "UC-021",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-20/after/model-driven_scenario.json",
+      "sha256": "65dd88071d098e1fcc2de79f61adbf860ac97a513c92db1e2560e5289c6e34f7"
+    },
+    {
+      "intent": "P-006.I-20",
+      "feature": "UC-021",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-20/after/model-reference_screenshot.json",
+      "sha256": "6269d0c326e01b4e412b2b22ebe6b6104c5b1c266958a6dc1880b830803e393d"
+    },
+    {
+      "intent": "P-006.I-20",
+      "feature": "UC-021",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-20/after/model-scenario_run.json",
+      "sha256": "a3944eaabd727106877ac8ba8bc39d36812b5ebd143992d68215592c098226b3"
+    },
+    {
+      "intent": "P-006.I-38",
+      "feature": "UC-021",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-38/after/examples-driven_scenario.json",
+      "sha256": "0864f7aa376a4914791439ce459036453c140a6ae4323effbcc5f1408b4abfed"
+    },
+    {
+      "intent": "P-006.I-38",
+      "feature": "UC-021",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-38/after/examples-reference_screenshot.json",
+      "sha256": "daf0254ecadf7c3aeee2f40fcd74fd0e3bd06b17a35487ce3024446af87c3db5"
+    },
+    {
+      "intent": "P-006.I-38",
+      "feature": "UC-021",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-38/after/examples-scenario_run.json",
+      "sha256": "bc18557e265b4ef951240cd98393b4d5c5a346f2b71fbc162ca87c2a3495c53d"
+    },
+    {
+      "intent": "P-006.I-38",
+      "feature": "UC-021",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-38/after/model-driven_scenario.json",
+      "sha256": "65dd88071d098e1fcc2de79f61adbf860ac97a513c92db1e2560e5289c6e34f7"
+    },
+    {
+      "intent": "P-006.I-38",
+      "feature": "UC-021",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-38/after/model-reference_screenshot.json",
+      "sha256": "6269d0c326e01b4e412b2b22ebe6b6104c5b1c266958a6dc1880b830803e393d"
+    },
+    {
+      "intent": "P-006.I-38",
+      "feature": "UC-021",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-021/I-38/after/model-scenario_run.json",
+      "sha256": "a3944eaabd727106877ac8ba8bc39d36812b5ebd143992d68215592c098226b3"
+    },
+    {
+      "intent": "P-006.I-32",
+      "feature": "UC-023",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-023/I-32/after/examples-intent_rollup.json",
+      "sha256": "53e8e37ec0cda450d116f9087024ad693876f931163895c62a40073af42242f2"
+    },
+    {
+      "intent": "P-006.I-32",
+      "feature": "UC-023",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-023/I-32/after/model-intent_rollup.json",
+      "sha256": "bd6b3e0c6e7643965bed4c2bcf87f288198266cedbf9bac109fa316918b21e27"
+    },
+    {
+      "intent": "P-006.I-16",
+      "feature": "UC-025",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-025/I-16/after/examples-crosscheck.json",
+      "sha256": "ebcc5b2108f216ce6b44fc465bed10be4795ead45ff3143f3f9240a321eae62c"
+    },
+    {
+      "intent": "P-006.I-16",
+      "feature": "UC-025",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-025/I-16/after/examples-sm_crosscheck.json",
+      "sha256": "6c8a6479049670a8ba05cfd993ec909df2d37a18216eefe264d78a13e91fe6eb"
+    },
+    {
+      "intent": "P-006.I-16",
+      "feature": "UC-025",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-025/I-16/after/model-crosscheck.json",
+      "sha256": "973ebfd5516dc694169bf10286ba8e6eb58fc4c2dba4e83d9a784a92527c3436"
+    },
+    {
+      "intent": "P-006.I-16",
+      "feature": "UC-025",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-025/I-16/after/model-sm_crosscheck.json",
+      "sha256": "577d3d42409c672858839fb0f41ac6341325d080a03ab8ed662cc54f86bf7fa5"
+    },
+    {
+      "intent": "P-006.I-08",
+      "feature": "UC-026",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-08/after/examples-formal_coverage.json",
+      "sha256": "72b02104929e18a0ebd0874b153bedf47d872bed425eb3f58604399bb0387371"
+    },
+    {
+      "intent": "P-006.I-08",
+      "feature": "UC-026",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-08/after/examples-receipt_evidence.json",
+      "sha256": "33e516b468ef921882ba01f02494692b3c45446100836355e36ae20c54b0ad0f"
+    },
+    {
+      "intent": "P-006.I-08",
+      "feature": "UC-026",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-08/after/examples-receipt_sections.json",
+      "sha256": "06dc80f770c9695b90e25f0e1eeff72a20783b104e5826b8522413525e906400"
+    },
+    {
+      "intent": "P-006.I-08",
+      "feature": "UC-026",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-08/after/model-formal_coverage.json",
+      "sha256": "8c478d0b9b602a0fe9eb8bb356c87ab49969827d333f1e6fd37e0584108a87dc"
+    },
+    {
+      "intent": "P-006.I-08",
+      "feature": "UC-026",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-08/after/model-receipt_evidence.json",
+      "sha256": "34391badc732a4427e4a71d5c00b4beb51175acdf718dfe381584c341714d06a"
+    },
+    {
+      "intent": "P-006.I-08",
+      "feature": "UC-026",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-08/after/model-receipt_sections.json",
+      "sha256": "1f69f9e9efa7a4dbf15339e3ef04f159036a4cf9a8390c1f709207a678339542"
+    },
+    {
+      "intent": "P-006.I-35",
+      "feature": "UC-026",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-35/after/examples-formal_coverage.json",
+      "sha256": "72b02104929e18a0ebd0874b153bedf47d872bed425eb3f58604399bb0387371"
+    },
+    {
+      "intent": "P-006.I-35",
+      "feature": "UC-026",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-35/after/examples-receipt_evidence.json",
+      "sha256": "33e516b468ef921882ba01f02494692b3c45446100836355e36ae20c54b0ad0f"
+    },
+    {
+      "intent": "P-006.I-35",
+      "feature": "UC-026",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-35/after/examples-receipt_sections.json",
+      "sha256": "06dc80f770c9695b90e25f0e1eeff72a20783b104e5826b8522413525e906400"
+    },
+    {
+      "intent": "P-006.I-35",
+      "feature": "UC-026",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-35/after/model-formal_coverage.json",
+      "sha256": "8c478d0b9b602a0fe9eb8bb356c87ab49969827d333f1e6fd37e0584108a87dc"
+    },
+    {
+      "intent": "P-006.I-35",
+      "feature": "UC-026",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-35/after/model-receipt_evidence.json",
+      "sha256": "34391badc732a4427e4a71d5c00b4beb51175acdf718dfe381584c341714d06a"
+    },
+    {
+      "intent": "P-006.I-35",
+      "feature": "UC-026",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-026/I-35/after/model-receipt_sections.json",
+      "sha256": "1f69f9e9efa7a4dbf15339e3ef04f159036a4cf9a8390c1f709207a678339542"
+    },
+    {
+      "intent": "P-006.I-36",
+      "feature": "UC-035",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-035/I-36/after/examples-sdk_parity.json",
+      "sha256": "b9c026dcd655f3e7e8c05563d7b46c68359594378b5f53a7c6865ee946b336e4"
+    },
+    {
+      "intent": "P-006.I-36",
+      "feature": "UC-035",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-035/I-36/after/model-sdk_parity.json",
+      "sha256": "ff0e20e54b41bac869676c89ba755e65c874c1f6744721934ed4f8fed3a50ca2"
+    },
+    {
+      "intent": "P-006.I-37",
+      "feature": "UC-040",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-040/I-37/after/examples-plugin_review_evidence.json",
+      "sha256": "9bd29d0424c16be3244d93c8d7b48552023ad73e97f3800eab2e940e072d7fc7"
+    },
+    {
+      "intent": "P-006.I-37",
+      "feature": "UC-040",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-040/I-37/after/examples-review_guard.json",
+      "sha256": "75135bbfca5c65640ffc610ae6054ad1fb720bfccec415deb29b35f170e553bc"
+    },
+    {
+      "intent": "P-006.I-37",
+      "feature": "UC-040",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-040/I-37/after/model-plugin_review_evidence.json",
+      "sha256": "7d1eb4a231803d9cb40d93f00d147f945697390e55a4ef8ce02e1e298f393122"
+    },
+    {
+      "intent": "P-006.I-37",
+      "feature": "UC-040",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-040/I-37/after/model-review_guard.json",
+      "sha256": "7814070f052492a22c7040acba8a7b3f87950d33ff0110e8aa2135306bbaa7d1"
+    },
+    {
+      "intent": "P-006.I-01",
+      "feature": "UC-046",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-046/I-01/after/examples-feature_surfaces.json",
+      "sha256": "5ae7cb918745773c408773950fed3eed326e1aaee00a927d7fba83efbd61649d"
+    },
+    {
+      "intent": "P-006.I-01",
+      "feature": "UC-046",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-046/I-01/after/examples-next_use_case_id.json",
+      "sha256": "d4ba6763d4d04bf4637451b385698304b78ffb2a1087befc9cb00547889ccd8d"
+    },
+    {
+      "intent": "P-006.I-01",
+      "feature": "UC-046",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-046/I-01/after/examples-proof_files.json",
+      "sha256": "ee5943f28cbdcdd234277ff1051bb4ef428dc1aa55aa856368e897bae62e3db3"
+    },
+    {
+      "intent": "P-006.I-01",
+      "feature": "UC-046",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-046/I-01/after/examples-slug_check.json",
+      "sha256": "ed9e94ac7ae825637952739df1321683bff99335322d5634fafa3ee1ca53ad5c"
+    },
+    {
+      "intent": "P-006.I-01",
+      "feature": "UC-046",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-046/I-01/after/model-feature_surfaces.json",
+      "sha256": "316d475bc7cbbfa3547b7a9941ecfe713a0cf5d94714f859058e3bc4d7fe77b4"
+    },
+    {
+      "intent": "P-006.I-01",
+      "feature": "UC-046",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-046/I-01/after/model-next_use_case_id.json",
+      "sha256": "5107c0822786c29b610d9e0b01a7cc1bd576ba2ce173faccd1f58cc9595101ae"
+    },
+    {
+      "intent": "P-006.I-01",
+      "feature": "UC-046",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-046/I-01/after/model-proof_files.json",
+      "sha256": "84d405bac87f027e31a625f211d12e1e1359c27b2ad7b79f9df2604d0fad81c5"
+    },
+    {
+      "intent": "P-006.I-01",
+      "feature": "UC-046",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-046/I-01/after/model-slug_check.json",
+      "sha256": "92aabcfe103e382885ca17b70a3afc75bcc47ba1b061905cfb23973d73d983e1"
+    },
+    {
+      "intent": "P-006.I-33",
+      "feature": "UC-048",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-048/I-33/after/examples-proposal_status.json",
+      "sha256": "1009ec88d135238c88576d2adbc61ffe4f16f83094b4499becfcde8a30175e29"
+    },
+    {
+      "intent": "P-006.I-33",
+      "feature": "UC-048",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-048/I-33/after/examples-proved_gate.json",
+      "sha256": "2f64c2d07aca47238b9ef610f9e4f3cf9bc82212319ed768aa6c485873d92db7"
+    },
+    {
+      "intent": "P-006.I-33",
+      "feature": "UC-048",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-048/I-33/after/model-proposal_status.json",
+      "sha256": "5c46a9c69997af8d49289a5b0a88a8634ba6c05015ca98bb08a9048ae9f5000b"
+    },
+    {
+      "intent": "P-006.I-33",
+      "feature": "UC-048",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-048/I-33/after/model-proved_gate.json",
+      "sha256": "3744d5e3ff270effb9a5e490c0a1bc76742f9e9d076cc2ad32773f1369ae9166"
+    },
+    {
+      "intent": "P-006.I-03",
+      "feature": "UC-055",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-055/I-03/after/examples-feature_map.json",
+      "sha256": "2ad5365a587ccaefac2a9b41ab896663e0496fe1bd717099f1b02d8bb8b7d3bf"
+    },
+    {
+      "intent": "P-006.I-03",
+      "feature": "UC-055",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-055/I-03/after/model-feature_map.json",
+      "sha256": "a0b1c3dd2384d44efb8c884d7b46ce6a637e11a485c5804f8acd8416bebe83af"
+    },
+    {
+      "intent": "P-006.I-04",
+      "feature": "UC-055",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-055/I-04/after/examples-feature_map.json",
+      "sha256": "2ad5365a587ccaefac2a9b41ab896663e0496fe1bd717099f1b02d8bb8b7d3bf"
+    },
+    {
+      "intent": "P-006.I-04",
+      "feature": "UC-055",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-055/I-04/after/model-feature_map.json",
+      "sha256": "a0b1c3dd2384d44efb8c884d7b46ce6a637e11a485c5804f8acd8416bebe83af"
+    },
+    {
+      "intent": "P-006.I-05",
+      "feature": "UC-055",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-055/I-05/after/examples-feature_map.json",
+      "sha256": "2ad5365a587ccaefac2a9b41ab896663e0496fe1bd717099f1b02d8bb8b7d3bf"
+    },
+    {
+      "intent": "P-006.I-05",
+      "feature": "UC-055",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-055/I-05/after/model-feature_map.json",
+      "sha256": "a0b1c3dd2384d44efb8c884d7b46ce6a637e11a485c5804f8acd8416bebe83af"
+    },
+    {
+      "intent": "P-006.I-06",
+      "feature": "UC-056",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-056/I-06/after/examples-bootstrap_surfaces.json",
+      "sha256": "444993e39268ae84d9e002f2a53a729dce22f9d44501b98ec939291cbdc851ec"
+    },
+    {
+      "intent": "P-006.I-06",
+      "feature": "UC-056",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-056/I-06/after/model-bootstrap_surfaces.json",
+      "sha256": "a7ac25263c97c4ec45c9419cf67bc82005772ad5ae8ead982d7398b610f6958a"
+    },
+    {
+      "intent": "P-006.I-10",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-10/after/examples-sm_clauses.json",
+      "sha256": "67c372f8bd1094b07d63d87db9b74201bd9d70dbab565948b56fa73e43d7ddee"
+    },
+    {
+      "intent": "P-006.I-10",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-10/after/examples-sm_interleave.json",
+      "sha256": "f69a714ead2de9ba7ed900ac9e0fd2669a78ce685990bcff72653beef96c90bb"
+    },
+    {
+      "intent": "P-006.I-10",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-10/after/examples-statechart.json",
+      "sha256": "42f1ccfdfdcb339236bfc682a7c4488c4cffc075b4bfced5289a51606a14e673"
+    },
+    {
+      "intent": "P-006.I-10",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-10/after/model-sm_clauses.json",
+      "sha256": "157591db4d2eced383a2556f66a9241edefd7c86716916de1e7293fa2ada5560"
+    },
+    {
+      "intent": "P-006.I-10",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-10/after/model-sm_interleave.json",
+      "sha256": "8a54d5368b2f66bba1047814be9f4dc9b743d414219e5b6dcbc1562d5d3e912f"
+    },
+    {
+      "intent": "P-006.I-10",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-10/after/model-statechart.json",
+      "sha256": "033ef8f7d87330ce31b77b8755d0f468a85e925bab76b3d06b8970d3220456e3"
+    },
+    {
+      "intent": "P-006.I-11",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-11/after/examples-sm_clauses.json",
+      "sha256": "67c372f8bd1094b07d63d87db9b74201bd9d70dbab565948b56fa73e43d7ddee"
+    },
+    {
+      "intent": "P-006.I-11",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-11/after/examples-sm_interleave.json",
+      "sha256": "f69a714ead2de9ba7ed900ac9e0fd2669a78ce685990bcff72653beef96c90bb"
+    },
+    {
+      "intent": "P-006.I-11",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-11/after/examples-statechart.json",
+      "sha256": "42f1ccfdfdcb339236bfc682a7c4488c4cffc075b4bfced5289a51606a14e673"
+    },
+    {
+      "intent": "P-006.I-11",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-11/after/model-sm_clauses.json",
+      "sha256": "157591db4d2eced383a2556f66a9241edefd7c86716916de1e7293fa2ada5560"
+    },
+    {
+      "intent": "P-006.I-11",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-11/after/model-sm_interleave.json",
+      "sha256": "8a54d5368b2f66bba1047814be9f4dc9b743d414219e5b6dcbc1562d5d3e912f"
+    },
+    {
+      "intent": "P-006.I-11",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-11/after/model-statechart.json",
+      "sha256": "033ef8f7d87330ce31b77b8755d0f468a85e925bab76b3d06b8970d3220456e3"
+    },
+    {
+      "intent": "P-006.I-12",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-12/after/examples-sm_clauses.json",
+      "sha256": "67c372f8bd1094b07d63d87db9b74201bd9d70dbab565948b56fa73e43d7ddee"
+    },
+    {
+      "intent": "P-006.I-12",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-12/after/examples-sm_interleave.json",
+      "sha256": "f69a714ead2de9ba7ed900ac9e0fd2669a78ce685990bcff72653beef96c90bb"
+    },
+    {
+      "intent": "P-006.I-12",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-12/after/examples-statechart.json",
+      "sha256": "42f1ccfdfdcb339236bfc682a7c4488c4cffc075b4bfced5289a51606a14e673"
+    },
+    {
+      "intent": "P-006.I-12",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-12/after/model-sm_clauses.json",
+      "sha256": "157591db4d2eced383a2556f66a9241edefd7c86716916de1e7293fa2ada5560"
+    },
+    {
+      "intent": "P-006.I-12",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-12/after/model-sm_interleave.json",
+      "sha256": "8a54d5368b2f66bba1047814be9f4dc9b743d414219e5b6dcbc1562d5d3e912f"
+    },
+    {
+      "intent": "P-006.I-12",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-12/after/model-statechart.json",
+      "sha256": "033ef8f7d87330ce31b77b8755d0f468a85e925bab76b3d06b8970d3220456e3"
+    },
+    {
+      "intent": "P-006.I-13",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-13/after/examples-sm_clauses.json",
+      "sha256": "67c372f8bd1094b07d63d87db9b74201bd9d70dbab565948b56fa73e43d7ddee"
+    },
+    {
+      "intent": "P-006.I-13",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-13/after/examples-sm_interleave.json",
+      "sha256": "f69a714ead2de9ba7ed900ac9e0fd2669a78ce685990bcff72653beef96c90bb"
+    },
+    {
+      "intent": "P-006.I-13",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-13/after/examples-statechart.json",
+      "sha256": "42f1ccfdfdcb339236bfc682a7c4488c4cffc075b4bfced5289a51606a14e673"
+    },
+    {
+      "intent": "P-006.I-13",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-13/after/model-sm_clauses.json",
+      "sha256": "157591db4d2eced383a2556f66a9241edefd7c86716916de1e7293fa2ada5560"
+    },
+    {
+      "intent": "P-006.I-13",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-13/after/model-sm_interleave.json",
+      "sha256": "8a54d5368b2f66bba1047814be9f4dc9b743d414219e5b6dcbc1562d5d3e912f"
+    },
+    {
+      "intent": "P-006.I-13",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-13/after/model-statechart.json",
+      "sha256": "033ef8f7d87330ce31b77b8755d0f468a85e925bab76b3d06b8970d3220456e3"
+    },
+    {
+      "intent": "P-006.I-14",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-14/after/examples-sm_clauses.json",
+      "sha256": "67c372f8bd1094b07d63d87db9b74201bd9d70dbab565948b56fa73e43d7ddee"
+    },
+    {
+      "intent": "P-006.I-14",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-14/after/examples-sm_interleave.json",
+      "sha256": "f69a714ead2de9ba7ed900ac9e0fd2669a78ce685990bcff72653beef96c90bb"
+    },
+    {
+      "intent": "P-006.I-14",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-14/after/examples-statechart.json",
+      "sha256": "42f1ccfdfdcb339236bfc682a7c4488c4cffc075b4bfced5289a51606a14e673"
+    },
+    {
+      "intent": "P-006.I-14",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-14/after/model-sm_clauses.json",
+      "sha256": "157591db4d2eced383a2556f66a9241edefd7c86716916de1e7293fa2ada5560"
+    },
+    {
+      "intent": "P-006.I-14",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-14/after/model-sm_interleave.json",
+      "sha256": "8a54d5368b2f66bba1047814be9f4dc9b743d414219e5b6dcbc1562d5d3e912f"
+    },
+    {
+      "intent": "P-006.I-14",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-14/after/model-statechart.json",
+      "sha256": "033ef8f7d87330ce31b77b8755d0f468a85e925bab76b3d06b8970d3220456e3"
+    },
+    {
+      "intent": "P-006.I-15",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-15/after/examples-sm_clauses.json",
+      "sha256": "67c372f8bd1094b07d63d87db9b74201bd9d70dbab565948b56fa73e43d7ddee"
+    },
+    {
+      "intent": "P-006.I-15",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-15/after/examples-sm_interleave.json",
+      "sha256": "f69a714ead2de9ba7ed900ac9e0fd2669a78ce685990bcff72653beef96c90bb"
+    },
+    {
+      "intent": "P-006.I-15",
+      "feature": "UC-057",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-15/after/examples-statechart.json",
+      "sha256": "42f1ccfdfdcb339236bfc682a7c4488c4cffc075b4bfced5289a51606a14e673"
+    },
+    {
+      "intent": "P-006.I-15",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-15/after/model-sm_clauses.json",
+      "sha256": "157591db4d2eced383a2556f66a9241edefd7c86716916de1e7293fa2ada5560"
+    },
+    {
+      "intent": "P-006.I-15",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-15/after/model-sm_interleave.json",
+      "sha256": "8a54d5368b2f66bba1047814be9f4dc9b743d414219e5b6dcbc1562d5d3e912f"
+    },
+    {
+      "intent": "P-006.I-15",
+      "feature": "UC-057",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-057/I-15/after/model-statechart.json",
+      "sha256": "033ef8f7d87330ce31b77b8755d0f468a85e925bab76b3d06b8970d3220456e3"
+    },
+    {
+      "intent": "P-006.I-17",
+      "feature": "UC-058",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-058/I-17/after/examples-driver_protocol.json",
+      "sha256": "277ce91a3c59488a4d6328d99238056b6a3ba8666869854b293ae30e4e6ade50"
+    },
+    {
+      "intent": "P-006.I-17",
+      "feature": "UC-058",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-058/I-17/after/examples-shipped_drivers.json",
+      "sha256": "8a3c4fc03abe04c29ff8430438b1841f6b2e5739ea74980411d66f6ffd0d675f"
+    },
+    {
+      "intent": "P-006.I-17",
+      "feature": "UC-058",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-058/I-17/after/model-driver_protocol.json",
+      "sha256": "e8627d424eb5401f76892b7c74f2ffa3724b3ef2ed44d93eb727c1f167a21827"
+    },
+    {
+      "intent": "P-006.I-17",
+      "feature": "UC-058",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-058/I-17/after/model-shipped_drivers.json",
+      "sha256": "88d1655bb7fc5dbea9037bca7b7b2f293b0803260cd2e40e57cb91f6af393001"
+    },
+    {
+      "intent": "P-006.I-18",
+      "feature": "UC-058",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-058/I-18/after/examples-driver_protocol.json",
+      "sha256": "277ce91a3c59488a4d6328d99238056b6a3ba8666869854b293ae30e4e6ade50"
+    },
+    {
+      "intent": "P-006.I-18",
+      "feature": "UC-058",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-058/I-18/after/examples-shipped_drivers.json",
+      "sha256": "8a3c4fc03abe04c29ff8430438b1841f6b2e5739ea74980411d66f6ffd0d675f"
+    },
+    {
+      "intent": "P-006.I-18",
+      "feature": "UC-058",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-058/I-18/after/model-driver_protocol.json",
+      "sha256": "e8627d424eb5401f76892b7c74f2ffa3724b3ef2ed44d93eb727c1f167a21827"
+    },
+    {
+      "intent": "P-006.I-18",
+      "feature": "UC-058",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-058/I-18/after/model-shipped_drivers.json",
+      "sha256": "88d1655bb7fc5dbea9037bca7b7b2f293b0803260cd2e40e57cb91f6af393001"
+    },
+    {
+      "intent": "P-006.I-21",
+      "feature": "UC-059",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-21/after/examples-action_property.json",
+      "sha256": "34c3f09f76d1e3c1e8f4d4bbfcc856d9313e5548b22f20cdb3fa1e331200d204"
+    },
+    {
+      "intent": "P-006.I-21",
+      "feature": "UC-059",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-21/after/examples-shrink_sequence.json",
+      "sha256": "2981b955afe10ccf8a7c0a270ba52c646045cd1c1356edfd6d9d153fc9af7f25"
+    },
+    {
+      "intent": "P-006.I-21",
+      "feature": "UC-059",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-21/after/model-action_property.json",
+      "sha256": "e23e22cb7da8347f8ab7e464e0aaabedce5dfb2668399258947eeaf6782e3c42"
+    },
+    {
+      "intent": "P-006.I-21",
+      "feature": "UC-059",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-21/after/model-shrink_sequence.json",
+      "sha256": "46badf323fd321890b129250d2232b780c864922f4c15bdbf0f829d23d5c7b09"
+    },
+    {
+      "intent": "P-006.I-22",
+      "feature": "UC-059",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-22/after/examples-action_property.json",
+      "sha256": "34c3f09f76d1e3c1e8f4d4bbfcc856d9313e5548b22f20cdb3fa1e331200d204"
+    },
+    {
+      "intent": "P-006.I-22",
+      "feature": "UC-059",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-22/after/examples-shrink_sequence.json",
+      "sha256": "2981b955afe10ccf8a7c0a270ba52c646045cd1c1356edfd6d9d153fc9af7f25"
+    },
+    {
+      "intent": "P-006.I-22",
+      "feature": "UC-059",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-22/after/model-action_property.json",
+      "sha256": "e23e22cb7da8347f8ab7e464e0aaabedce5dfb2668399258947eeaf6782e3c42"
+    },
+    {
+      "intent": "P-006.I-22",
+      "feature": "UC-059",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-22/after/model-shrink_sequence.json",
+      "sha256": "46badf323fd321890b129250d2232b780c864922f4c15bdbf0f829d23d5c7b09"
+    },
+    {
+      "intent": "P-006.I-23",
+      "feature": "UC-059",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-23/after/examples-action_property.json",
+      "sha256": "34c3f09f76d1e3c1e8f4d4bbfcc856d9313e5548b22f20cdb3fa1e331200d204"
+    },
+    {
+      "intent": "P-006.I-23",
+      "feature": "UC-059",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-23/after/examples-shrink_sequence.json",
+      "sha256": "2981b955afe10ccf8a7c0a270ba52c646045cd1c1356edfd6d9d153fc9af7f25"
+    },
+    {
+      "intent": "P-006.I-23",
+      "feature": "UC-059",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-23/after/model-action_property.json",
+      "sha256": "e23e22cb7da8347f8ab7e464e0aaabedce5dfb2668399258947eeaf6782e3c42"
+    },
+    {
+      "intent": "P-006.I-23",
+      "feature": "UC-059",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-059/I-23/after/model-shrink_sequence.json",
+      "sha256": "46badf323fd321890b129250d2232b780c864922f4c15bdbf0f829d23d5c7b09"
+    },
+    {
+      "intent": "P-006.I-24",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-24/after/examples-examples_compare.json",
+      "sha256": "d9dce6a79529c133e6229f0d5e728afe7757a265d222f8b100a1354ea6f3a880"
+    },
+    {
+      "intent": "P-006.I-24",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-24/after/examples-snapshot_files.json",
+      "sha256": "51aa5b889ddc75436579768679e0946d1df24a9739c6e0caaa16e7c4c264ebe3"
+    },
+    {
+      "intent": "P-006.I-24",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-24/after/examples-snapshot_kinds.json",
+      "sha256": "c5a94a94013e5c98bac32cd7e4dc1f4a5e6b95f9ca18b94e91dd5d327bb8519a"
+    },
+    {
+      "intent": "P-006.I-24",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-24/after/examples-structural_diff.json",
+      "sha256": "bd04a242a40cbf66b0500870cdd812f134666f04f952b7f2785ba034a591459d"
+    },
+    {
+      "intent": "P-006.I-24",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-24/after/model-examples_compare.json",
+      "sha256": "5e1beaabb2d7e9be2ddb321b06b11e412a86c6a24cdb05ee71b35a53bb228ab3"
+    },
+    {
+      "intent": "P-006.I-24",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-24/after/model-snapshot_files.json",
+      "sha256": "2989aa23a65e85a788e0148ce64bf70ec12ce1a36af94d31f0d2b20872af3dd1"
+    },
+    {
+      "intent": "P-006.I-24",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-24/after/model-snapshot_kinds.json",
+      "sha256": "3d2f3ccbbd2cd00e09f8880d438d5956b745a9afd3653e165a487eabd87cf1c3"
+    },
+    {
+      "intent": "P-006.I-24",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-24/after/model-structural_diff.json",
+      "sha256": "02b91e73be45e27b13fd34b79fc64425676853c2af6548b6b0496ad5b0f98086"
+    },
+    {
+      "intent": "P-006.I-25",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-25/after/examples-examples_compare.json",
+      "sha256": "d9dce6a79529c133e6229f0d5e728afe7757a265d222f8b100a1354ea6f3a880"
+    },
+    {
+      "intent": "P-006.I-25",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-25/after/examples-snapshot_files.json",
+      "sha256": "51aa5b889ddc75436579768679e0946d1df24a9739c6e0caaa16e7c4c264ebe3"
+    },
+    {
+      "intent": "P-006.I-25",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-25/after/examples-snapshot_kinds.json",
+      "sha256": "c5a94a94013e5c98bac32cd7e4dc1f4a5e6b95f9ca18b94e91dd5d327bb8519a"
+    },
+    {
+      "intent": "P-006.I-25",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-25/after/examples-structural_diff.json",
+      "sha256": "bd04a242a40cbf66b0500870cdd812f134666f04f952b7f2785ba034a591459d"
+    },
+    {
+      "intent": "P-006.I-25",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-25/after/model-examples_compare.json",
+      "sha256": "5e1beaabb2d7e9be2ddb321b06b11e412a86c6a24cdb05ee71b35a53bb228ab3"
+    },
+    {
+      "intent": "P-006.I-25",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-25/after/model-snapshot_files.json",
+      "sha256": "2989aa23a65e85a788e0148ce64bf70ec12ce1a36af94d31f0d2b20872af3dd1"
+    },
+    {
+      "intent": "P-006.I-25",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-25/after/model-snapshot_kinds.json",
+      "sha256": "3d2f3ccbbd2cd00e09f8880d438d5956b745a9afd3653e165a487eabd87cf1c3"
+    },
+    {
+      "intent": "P-006.I-25",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-25/after/model-structural_diff.json",
+      "sha256": "02b91e73be45e27b13fd34b79fc64425676853c2af6548b6b0496ad5b0f98086"
+    },
+    {
+      "intent": "P-006.I-26",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-26/after/examples-examples_compare.json",
+      "sha256": "d9dce6a79529c133e6229f0d5e728afe7757a265d222f8b100a1354ea6f3a880"
+    },
+    {
+      "intent": "P-006.I-26",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-26/after/examples-snapshot_files.json",
+      "sha256": "51aa5b889ddc75436579768679e0946d1df24a9739c6e0caaa16e7c4c264ebe3"
+    },
+    {
+      "intent": "P-006.I-26",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-26/after/examples-snapshot_kinds.json",
+      "sha256": "c5a94a94013e5c98bac32cd7e4dc1f4a5e6b95f9ca18b94e91dd5d327bb8519a"
+    },
+    {
+      "intent": "P-006.I-26",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-26/after/examples-structural_diff.json",
+      "sha256": "bd04a242a40cbf66b0500870cdd812f134666f04f952b7f2785ba034a591459d"
+    },
+    {
+      "intent": "P-006.I-26",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-26/after/model-examples_compare.json",
+      "sha256": "5e1beaabb2d7e9be2ddb321b06b11e412a86c6a24cdb05ee71b35a53bb228ab3"
+    },
+    {
+      "intent": "P-006.I-26",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-26/after/model-snapshot_files.json",
+      "sha256": "2989aa23a65e85a788e0148ce64bf70ec12ce1a36af94d31f0d2b20872af3dd1"
+    },
+    {
+      "intent": "P-006.I-26",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-26/after/model-snapshot_kinds.json",
+      "sha256": "3d2f3ccbbd2cd00e09f8880d438d5956b745a9afd3653e165a487eabd87cf1c3"
+    },
+    {
+      "intent": "P-006.I-26",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-26/after/model-structural_diff.json",
+      "sha256": "02b91e73be45e27b13fd34b79fc64425676853c2af6548b6b0496ad5b0f98086"
+    },
+    {
+      "intent": "P-006.I-27",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-27/after/examples-examples_compare.json",
+      "sha256": "d9dce6a79529c133e6229f0d5e728afe7757a265d222f8b100a1354ea6f3a880"
+    },
+    {
+      "intent": "P-006.I-27",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-27/after/examples-snapshot_files.json",
+      "sha256": "51aa5b889ddc75436579768679e0946d1df24a9739c6e0caaa16e7c4c264ebe3"
+    },
+    {
+      "intent": "P-006.I-27",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-27/after/examples-snapshot_kinds.json",
+      "sha256": "c5a94a94013e5c98bac32cd7e4dc1f4a5e6b95f9ca18b94e91dd5d327bb8519a"
+    },
+    {
+      "intent": "P-006.I-27",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-27/after/examples-structural_diff.json",
+      "sha256": "bd04a242a40cbf66b0500870cdd812f134666f04f952b7f2785ba034a591459d"
+    },
+    {
+      "intent": "P-006.I-27",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-27/after/model-examples_compare.json",
+      "sha256": "5e1beaabb2d7e9be2ddb321b06b11e412a86c6a24cdb05ee71b35a53bb228ab3"
+    },
+    {
+      "intent": "P-006.I-27",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-27/after/model-snapshot_files.json",
+      "sha256": "2989aa23a65e85a788e0148ce64bf70ec12ce1a36af94d31f0d2b20872af3dd1"
+    },
+    {
+      "intent": "P-006.I-27",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-27/after/model-snapshot_kinds.json",
+      "sha256": "3d2f3ccbbd2cd00e09f8880d438d5956b745a9afd3653e165a487eabd87cf1c3"
+    },
+    {
+      "intent": "P-006.I-27",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-27/after/model-structural_diff.json",
+      "sha256": "02b91e73be45e27b13fd34b79fc64425676853c2af6548b6b0496ad5b0f98086"
+    },
+    {
+      "intent": "P-006.I-28",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-28/after/examples-examples_compare.json",
+      "sha256": "d9dce6a79529c133e6229f0d5e728afe7757a265d222f8b100a1354ea6f3a880"
+    },
+    {
+      "intent": "P-006.I-28",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-28/after/examples-snapshot_files.json",
+      "sha256": "51aa5b889ddc75436579768679e0946d1df24a9739c6e0caaa16e7c4c264ebe3"
+    },
+    {
+      "intent": "P-006.I-28",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-28/after/examples-snapshot_kinds.json",
+      "sha256": "c5a94a94013e5c98bac32cd7e4dc1f4a5e6b95f9ca18b94e91dd5d327bb8519a"
+    },
+    {
+      "intent": "P-006.I-28",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-28/after/examples-structural_diff.json",
+      "sha256": "bd04a242a40cbf66b0500870cdd812f134666f04f952b7f2785ba034a591459d"
+    },
+    {
+      "intent": "P-006.I-28",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-28/after/model-examples_compare.json",
+      "sha256": "5e1beaabb2d7e9be2ddb321b06b11e412a86c6a24cdb05ee71b35a53bb228ab3"
+    },
+    {
+      "intent": "P-006.I-28",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-28/after/model-snapshot_files.json",
+      "sha256": "2989aa23a65e85a788e0148ce64bf70ec12ce1a36af94d31f0d2b20872af3dd1"
+    },
+    {
+      "intent": "P-006.I-28",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-28/after/model-snapshot_kinds.json",
+      "sha256": "3d2f3ccbbd2cd00e09f8880d438d5956b745a9afd3653e165a487eabd87cf1c3"
+    },
+    {
+      "intent": "P-006.I-28",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-28/after/model-structural_diff.json",
+      "sha256": "02b91e73be45e27b13fd34b79fc64425676853c2af6548b6b0496ad5b0f98086"
+    },
+    {
+      "intent": "P-006.I-29",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-29/after/examples-examples_compare.json",
+      "sha256": "d9dce6a79529c133e6229f0d5e728afe7757a265d222f8b100a1354ea6f3a880"
+    },
+    {
+      "intent": "P-006.I-29",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-29/after/examples-snapshot_files.json",
+      "sha256": "51aa5b889ddc75436579768679e0946d1df24a9739c6e0caaa16e7c4c264ebe3"
+    },
+    {
+      "intent": "P-006.I-29",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-29/after/examples-snapshot_kinds.json",
+      "sha256": "c5a94a94013e5c98bac32cd7e4dc1f4a5e6b95f9ca18b94e91dd5d327bb8519a"
+    },
+    {
+      "intent": "P-006.I-29",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-29/after/examples-structural_diff.json",
+      "sha256": "bd04a242a40cbf66b0500870cdd812f134666f04f952b7f2785ba034a591459d"
+    },
+    {
+      "intent": "P-006.I-29",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-29/after/model-examples_compare.json",
+      "sha256": "5e1beaabb2d7e9be2ddb321b06b11e412a86c6a24cdb05ee71b35a53bb228ab3"
+    },
+    {
+      "intent": "P-006.I-29",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-29/after/model-snapshot_files.json",
+      "sha256": "2989aa23a65e85a788e0148ce64bf70ec12ce1a36af94d31f0d2b20872af3dd1"
+    },
+    {
+      "intent": "P-006.I-29",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-29/after/model-snapshot_kinds.json",
+      "sha256": "3d2f3ccbbd2cd00e09f8880d438d5956b745a9afd3653e165a487eabd87cf1c3"
+    },
+    {
+      "intent": "P-006.I-29",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-29/after/model-structural_diff.json",
+      "sha256": "02b91e73be45e27b13fd34b79fc64425676853c2af6548b6b0496ad5b0f98086"
+    },
+    {
+      "intent": "P-006.I-30",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-30/after/examples-examples_compare.json",
+      "sha256": "d9dce6a79529c133e6229f0d5e728afe7757a265d222f8b100a1354ea6f3a880"
+    },
+    {
+      "intent": "P-006.I-30",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-30/after/examples-snapshot_files.json",
+      "sha256": "51aa5b889ddc75436579768679e0946d1df24a9739c6e0caaa16e7c4c264ebe3"
+    },
+    {
+      "intent": "P-006.I-30",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-30/after/examples-snapshot_kinds.json",
+      "sha256": "c5a94a94013e5c98bac32cd7e4dc1f4a5e6b95f9ca18b94e91dd5d327bb8519a"
+    },
+    {
+      "intent": "P-006.I-30",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-30/after/examples-structural_diff.json",
+      "sha256": "bd04a242a40cbf66b0500870cdd812f134666f04f952b7f2785ba034a591459d"
+    },
+    {
+      "intent": "P-006.I-30",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-30/after/model-examples_compare.json",
+      "sha256": "5e1beaabb2d7e9be2ddb321b06b11e412a86c6a24cdb05ee71b35a53bb228ab3"
+    },
+    {
+      "intent": "P-006.I-30",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-30/after/model-snapshot_files.json",
+      "sha256": "2989aa23a65e85a788e0148ce64bf70ec12ce1a36af94d31f0d2b20872af3dd1"
+    },
+    {
+      "intent": "P-006.I-30",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-30/after/model-snapshot_kinds.json",
+      "sha256": "3d2f3ccbbd2cd00e09f8880d438d5956b745a9afd3653e165a487eabd87cf1c3"
+    },
+    {
+      "intent": "P-006.I-30",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-30/after/model-structural_diff.json",
+      "sha256": "02b91e73be45e27b13fd34b79fc64425676853c2af6548b6b0496ad5b0f98086"
+    },
+    {
+      "intent": "P-006.I-31",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-31/after/examples-examples_compare.json",
+      "sha256": "d9dce6a79529c133e6229f0d5e728afe7757a265d222f8b100a1354ea6f3a880"
+    },
+    {
+      "intent": "P-006.I-31",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-31/after/examples-snapshot_files.json",
+      "sha256": "51aa5b889ddc75436579768679e0946d1df24a9739c6e0caaa16e7c4c264ebe3"
+    },
+    {
+      "intent": "P-006.I-31",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-31/after/examples-snapshot_kinds.json",
+      "sha256": "c5a94a94013e5c98bac32cd7e4dc1f4a5e6b95f9ca18b94e91dd5d327bb8519a"
+    },
+    {
+      "intent": "P-006.I-31",
+      "feature": "UC-060",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-31/after/examples-structural_diff.json",
+      "sha256": "bd04a242a40cbf66b0500870cdd812f134666f04f952b7f2785ba034a591459d"
+    },
+    {
+      "intent": "P-006.I-31",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-31/after/model-examples_compare.json",
+      "sha256": "5e1beaabb2d7e9be2ddb321b06b11e412a86c6a24cdb05ee71b35a53bb228ab3"
+    },
+    {
+      "intent": "P-006.I-31",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-31/after/model-snapshot_files.json",
+      "sha256": "2989aa23a65e85a788e0148ce64bf70ec12ce1a36af94d31f0d2b20872af3dd1"
+    },
+    {
+      "intent": "P-006.I-31",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-31/after/model-snapshot_kinds.json",
+      "sha256": "3d2f3ccbbd2cd00e09f8880d438d5956b745a9afd3653e165a487eabd87cf1c3"
+    },
+    {
+      "intent": "P-006.I-31",
+      "feature": "UC-060",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-060/I-31/after/model-structural_diff.json",
+      "sha256": "02b91e73be45e27b13fd34b79fc64425676853c2af6548b6b0496ad5b0f98086"
+    },
+    {
+      "intent": "P-006.I-34",
+      "feature": "UC-061",
+      "kind": "examples",
+      "side": "after",
+      "path": "docs/P-006/UC-061/I-34/after/examples-review_evidence.json",
+      "sha256": "a8aed9971553defc5ee51e162b317716377337396d6923f6d3c3ca7c7aecd99c"
+    },
+    {
+      "intent": "P-006.I-34",
+      "feature": "UC-061",
+      "kind": "contract",
+      "side": "after",
+      "path": "docs/P-006/UC-061/I-34/after/model-review_evidence.json",
+      "sha256": "95b5736ad8715ac434eb1f4e25d3d7084feffe529ec2273b7ac73c18d114ced8"
+    }
+  ],
+  "comparisons": [],
+  "unexpected": []
 }

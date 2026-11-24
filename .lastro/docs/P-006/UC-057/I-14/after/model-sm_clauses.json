@@ -1,0 +1,15 @@
+{
+  "model": "sm_clauses",
+  "fields": {
+    "in.clause": "enum[\"invariant\",\"step\",\"reach\"]",
+    "in.holds": "bool",
+    "in.smt": "enum[\"proves\",\"unknown\"]",
+    "in.space": "enum[\"small\",\"large\"]",
+    "out.actorsNamed": "bool",
+    "out.evidence": "enum[\"formal\",\"empirical\",\"counterexample\"]",
+    "out.method": "enum[\"bfs\",\"smt-induction\",\"random-walk\"]",
+    "out.shortest": "bool",
+    "out.states": "int[0..100000]",
+    "out.verdict": "enum[\"proved\",\"violated\",\"evidenced\"]"
+  }
+}

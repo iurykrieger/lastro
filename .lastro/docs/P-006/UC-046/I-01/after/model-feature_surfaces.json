@@ -1,0 +1,12 @@
+{
+  "model": "feature_surfaces",
+  "fields": {
+    "in.hasDependsOn": "bool",
+    "in.hasLocator": "bool",
+    "in.hasName": "bool",
+    "in.kind": "enum[\"screen\",\"route\",\"command\",\"api\",\"other\"]",
+    "in.surfaces": "int[0..2]",
+    "out.accepted": "bool",
+    "out.reachable": "bool"
+  }
+}

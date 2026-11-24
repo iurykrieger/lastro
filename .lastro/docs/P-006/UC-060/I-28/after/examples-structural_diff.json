@@ -1,0 +1,97 @@
+{
+  "model": "structural_diff",
+  "subject": "structural_diff",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "after": "absent",
+        "before": "absent"
+      },
+      "after": {
+        "change": "none",
+        "breaking": false
+      }
+    },
+    {
+      "input": {
+        "after": "absent",
+        "before": "string"
+      },
+      "after": {
+        "change": "removed",
+        "breaking": true
+      }
+    },
+    {
+      "input": {
+        "after": "absent",
+        "before": "int"
+      },
+      "after": {
+        "change": "removed",
+        "breaking": true
+      }
+    },
+    {
+      "input": {
+        "after": "string",
+        "before": "absent"
+      },
+      "after": {
+        "change": "added",
+        "breaking": false
+      }
+    },
+    {
+      "input": {
+        "after": "string",
+        "before": "string"
+      },
+      "after": {
+        "change": "none",
+        "breaking": false
+      }
+    },
+    {
+      "input": {
+        "after": "string",
+        "before": "int"
+      },
+      "after": {
+        "change": "type",
+        "breaking": true
+      }
+    },
+    {
+      "input": {
+        "after": "int",
+        "before": "absent"
+      },
+      "after": {
+        "change": "added",
+        "breaking": false
+      }
+    },
+    {
+      "input": {
+        "after": "int",
+        "before": "string"
+      },
+      "after": {
+        "change": "type",
+        "breaking": true
+      }
+    },
+    {
+      "input": {
+        "after": "int",
+        "before": "int"
+      },
+      "after": {
+        "change": "none",
+        "breaking": false
+      }
+    }
+  ]
+}

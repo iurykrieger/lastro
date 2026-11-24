@@ -1,0 +1,14 @@
+{
+  "model": "examples_compare",
+  "fields": {
+    "in.acceptances": "int[0..3]",
+    "in.changed": "bool",
+    "in.clauseApplies": "bool",
+    "in.points": "enum[\"small\",\"large\"]",
+    "in.required": "int[1..3]",
+    "out.blocks": "bool",
+    "out.listed": "bool",
+    "out.unexpected": "bool",
+    "out.wholeSpace": "bool"
+  }
+}

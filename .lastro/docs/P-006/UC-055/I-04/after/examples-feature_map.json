@@ -1,0 +1,5383 @@
+{
+  "model": "feature_map",
+  "subject": "feature_map",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": true,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": true,
+        "affectedC": true,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": true,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": true,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": true,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": true,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": true,
+        "affectedB": true,
+        "affectedC": false,
+        "aReachable": false
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": false,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": true,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": true,
+        "affectedC": true,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": true,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": true,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": true,
+        "affectedB": false,
+        "affectedC": true,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": true,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": true,
+        "cycle": false,
+        "named": 0,
+        "same": true,
+        "affectedA": true,
+        "affectedB": true,
+        "affectedC": false,
+        "aReachable": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": false,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": false,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": false,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": true,
+        "named": 3,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": false,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": false,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "none"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "a"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "b"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    },
+    {
+      "input": {
+        "aSurface": true,
+        "aUnknown": true,
+        "ab": true,
+        "bRemoved": true,
+        "bc": true,
+        "ca": true,
+        "changed": "c"
+      },
+      "after": {
+        "ok": false,
+        "cycle": false,
+        "named": 0,
+        "affectedA": false,
+        "affectedB": false,
+        "affectedC": false,
+        "aReachable": false,
+        "same": true
+      }
+    }
+  ]
+}

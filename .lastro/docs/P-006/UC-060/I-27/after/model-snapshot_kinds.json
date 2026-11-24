@@ -1,0 +1,14 @@
+{
+  "model": "snapshot_kinds",
+  "fields": {
+    "in.hasData": "bool",
+    "in.hasModel": "bool",
+    "in.phase": "enum[\"extract\",\"prove\"]",
+    "in.surface": "enum[\"screen\",\"route\",\"api\",\"command\",\"none\"]",
+    "out.contract": "bool",
+    "out.data": "bool",
+    "out.examples": "bool",
+    "out.screen": "bool",
+    "out.side": "enum[\"before\",\"after\"]"
+  }
+}

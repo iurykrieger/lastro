@@ -1,0 +1,4039 @@
+{
+  "model": "proposal_status",
+  "subject": "proposal_status",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": false,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "open"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "changes-requested"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": false,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "approved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": false,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": false,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "none",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proved"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "ok",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": false,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "none"
+      },
+      "after": {
+        "status": "proving"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "applied"
+      },
+      "after": {
+        "status": "applied"
+      }
+    },
+    {
+      "input": {
+        "allPassed": true,
+        "approved": true,
+        "proofs": true,
+        "raised": true,
+        "run": "failed",
+        "stale": true,
+        "terminal": "closed"
+      },
+      "after": {
+        "status": "closed"
+      }
+    }
+  ]
+}

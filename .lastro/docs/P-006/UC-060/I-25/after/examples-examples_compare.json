@@ -1,0 +1,1447 @@
+{
+  "model": "examples_compare",
+  "subject": "examples_compare",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 0,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 1,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": true
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 2,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": false,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": false,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": false,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": true,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "small",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": true,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 1
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 2
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    },
+    {
+      "input": {
+        "acceptances": 3,
+        "changed": true,
+        "clauseApplies": true,
+        "points": "large",
+        "required": 3
+      },
+      "after": {
+        "wholeSpace": false,
+        "listed": true,
+        "unexpected": false,
+        "blocks": false
+      }
+    }
+  ]
+}

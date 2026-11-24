@@ -1,0 +1,139 @@
+{
+  "model": "sm_crosscheck",
+  "subject": "sm_crosscheck",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "bug": "none",
+        "engine": "rust"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "none",
+        "engine": "go"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "none",
+        "engine": "dotnet"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "invariant",
+        "engine": "rust"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "invariant",
+        "engine": "go"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "invariant",
+        "engine": "dotnet"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "race",
+        "engine": "rust"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "race",
+        "engine": "go"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "race",
+        "engine": "dotnet"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "step",
+        "engine": "rust"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "step",
+        "engine": "go"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    },
+    {
+      "input": {
+        "bug": "step",
+        "engine": "dotnet"
+      },
+      "after": {
+        "sameVerdict": true,
+        "sameCounterexample": true,
+        "sameStates": true
+      }
+    }
+  ]
+}

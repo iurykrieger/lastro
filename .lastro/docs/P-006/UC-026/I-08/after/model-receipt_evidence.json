@@ -1,0 +1,15 @@
+{
+  "model": "receipt_evidence",
+  "fields": {
+    "in.affected": "bool",
+    "in.machine": "bool",
+    "in.signoff": "bool",
+    "in.snapshots": "bool",
+    "in.unexpected": "enum[\"none\",\"open\",\"accepted\"]",
+    "out.acceptedBy": "bool",
+    "out.hashes": "bool",
+    "out.mapSection": "bool",
+    "out.mermaid": "bool",
+    "out.signedBy": "bool"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "model": "next_use_case_id",
+  "fields": {
+    "in.a": "int[0..12]",
+    "in.b": "int[0..12]",
+    "in.hasReserved": "bool",
+    "in.reserved": "int[0..12]",
+    "out.next": "int[1..13]"
+  }
+}

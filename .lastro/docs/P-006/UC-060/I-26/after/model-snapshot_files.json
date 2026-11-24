@@ -1,0 +1,12 @@
+{
+  "model": "snapshot_files",
+  "fields": {
+    "in.file": "enum[\"png\",\"json\"]",
+    "in.scope": "enum[\"feature\",\"repository\"]",
+    "in.side": "enum[\"before\",\"after\"]",
+    "out.hashMatches": "bool",
+    "out.hashRecorded": "bool",
+    "out.ignored": "bool",
+    "out.layoutOk": "bool"
+  }
+}

@@ -1,0 +1,391 @@
+{
+  "model": "sm_clauses",
+  "subject": "sm_clauses",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "clause": "invariant",
+        "holds": false,
+        "smt": "proves",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "method": "bfs",
+        "states": 13,
+        "shortest": true,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "invariant",
+        "holds": false,
+        "smt": "proves",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "method": "smt-induction",
+        "states": 2,
+        "shortest": true,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "invariant",
+        "holds": false,
+        "smt": "unknown",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "method": "bfs",
+        "states": 13,
+        "shortest": true,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "invariant",
+        "holds": false,
+        "smt": "unknown",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "method": "random-walk",
+        "states": 2,
+        "shortest": true,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "invariant",
+        "holds": true,
+        "smt": "proves",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "bfs",
+        "states": 4,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "invariant",
+        "holds": true,
+        "smt": "proves",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "smt-induction",
+        "states": 2,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "invariant",
+        "holds": true,
+        "smt": "unknown",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "bfs",
+        "states": 4,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "invariant",
+        "holds": true,
+        "smt": "unknown",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "evidence": "empirical",
+        "method": "random-walk",
+        "states": 2,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "step",
+        "holds": false,
+        "smt": "proves",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "method": "bfs",
+        "states": 13,
+        "shortest": true,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "step",
+        "holds": false,
+        "smt": "proves",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "method": "bfs",
+        "states": 2,
+        "shortest": true,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "step",
+        "holds": false,
+        "smt": "unknown",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "method": "bfs",
+        "states": 13,
+        "shortest": true,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "step",
+        "holds": false,
+        "smt": "unknown",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "counterexample",
+        "method": "bfs",
+        "states": 2,
+        "shortest": true,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "step",
+        "holds": true,
+        "smt": "proves",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "bfs",
+        "states": 4,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "step",
+        "holds": true,
+        "smt": "proves",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "smt-induction",
+        "states": 2,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "step",
+        "holds": true,
+        "smt": "unknown",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "bfs",
+        "states": 4,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "step",
+        "holds": true,
+        "smt": "unknown",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "evidence": "empirical",
+        "method": "random-walk",
+        "states": 2,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "reach",
+        "holds": false,
+        "smt": "proves",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "formal",
+        "method": "bfs",
+        "states": 13,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "reach",
+        "holds": false,
+        "smt": "proves",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "evidence": "empirical",
+        "method": "random-walk",
+        "states": 2,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "reach",
+        "holds": false,
+        "smt": "unknown",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "violated",
+        "evidence": "formal",
+        "method": "bfs",
+        "states": 13,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "reach",
+        "holds": false,
+        "smt": "unknown",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "evidenced",
+        "evidence": "empirical",
+        "method": "random-walk",
+        "states": 2,
+        "shortest": false,
+        "actorsNamed": false
+      }
+    },
+    {
+      "input": {
+        "clause": "reach",
+        "holds": true,
+        "smt": "proves",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "bfs",
+        "states": 4,
+        "shortest": false,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "reach",
+        "holds": true,
+        "smt": "proves",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "random-walk",
+        "states": 2,
+        "shortest": false,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "reach",
+        "holds": true,
+        "smt": "unknown",
+        "space": "small"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "bfs",
+        "states": 4,
+        "shortest": false,
+        "actorsNamed": true
+      }
+    },
+    {
+      "input": {
+        "clause": "reach",
+        "holds": true,
+        "smt": "unknown",
+        "space": "large"
+      },
+      "after": {
+        "verdict": "proved",
+        "evidence": "formal",
+        "method": "random-walk",
+        "states": 2,
+        "shortest": false,
+        "actorsNamed": true
+      }
+    }
+  ]
+}

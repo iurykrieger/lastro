@@ -1,0 +1,10 @@
+{
+  "model": "scenario_run",
+  "fields": {
+    "in.subject": "enum[\"none\",\"right\",\"wrong\",\"throws\"]",
+    "out.empirical": "bool",
+    "out.error": "bool",
+    "out.output": "bool",
+    "out.status": "enum[\"passed\",\"failed\"]"
+  }
+}

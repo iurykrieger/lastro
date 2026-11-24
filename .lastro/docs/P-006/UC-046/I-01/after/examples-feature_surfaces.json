@@ -1,0 +1,1567 @@
+{
+  "model": "feature_surfaces",
+  "subject": "feature_surfaces",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "kind": "other",
+        "hasName": false,
+        "hasLocator": false,
+        "surfaces": 0,
+        "hasDependsOn": false
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": false,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": false,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "screen",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "route",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "command",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "api",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": false,
+        "kind": "other",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "screen",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "route",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "command",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "api",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": true,
+        "reachable": true
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 0
+      },
+      "after": {
+        "accepted": true,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 1
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    },
+    {
+      "input": {
+        "hasDependsOn": true,
+        "hasLocator": true,
+        "hasName": true,
+        "kind": "other",
+        "surfaces": 2
+      },
+      "after": {
+        "accepted": false,
+        "reachable": false
+      }
+    }
+  ]
+}

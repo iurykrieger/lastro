@@ -1,0 +1,11 @@
+{
+  "model": "extraction_rules",
+  "fields": {
+    "in.change": "enum[\"add\",\"modify\",\"remove\"]",
+    "in.known": "bool",
+    "in.replaces": "enum[\"none\",\"own\",\"other\",\"unknown\"]",
+    "out.accepted": "bool",
+    "out.beforeFromUseCase": "bool",
+    "out.replacesAll": "bool"
+  }
+}

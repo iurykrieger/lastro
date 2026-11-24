@@ -1,0 +1,847 @@
+{
+  "model": "review_guard",
+  "subject": "review_guard",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "action": "approve",
+        "as": "iury",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "ask"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "iury",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "claude",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "claude",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "codex",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "codex",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "agent",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "agent",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "assistant",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "assistant",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "ai",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "ai",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "bot",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve",
+        "as": "bot",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "iury",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "ask"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "iury",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "claude",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "claude",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "codex",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "codex",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "agent",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "agent",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "assistant",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "assistant",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "ai",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "ai",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "bot",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "approve-all",
+        "as": "bot",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "iury",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "ask"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "iury",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "claude",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "claude",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "codex",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "codex",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "agent",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "agent",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "assistant",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "assistant",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "ai",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "ai",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "bot",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "answer",
+        "as": "bot",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "iury",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "ask"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "iury",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "claude",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "claude",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "codex",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "codex",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "agent",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "agent",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "assistant",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "assistant",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "ai",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "ai",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "bot",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "amend",
+        "as": "bot",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "iury",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "ask"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "iury",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "claude",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "claude",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "codex",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "codex",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "agent",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "agent",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "assistant",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "assistant",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "ai",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "ai",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "bot",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "reject",
+        "as": "bot",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "deny"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "iury",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "iury",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "claude",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "claude",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "codex",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "codex",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "agent",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "agent",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "assistant",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "assistant",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "ai",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "ai",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "bot",
+        "harness": "claude"
+      },
+      "after": {
+        "decision": "none"
+      }
+    },
+    {
+      "input": {
+        "action": "comment",
+        "as": "bot",
+        "harness": "codex"
+      },
+      "after": {
+        "decision": "none"
+      }
+    }
+  ]
+}

@@ -1,0 +1,775 @@
+{
+  "model": "receipt_evidence",
+  "subject": "receipt_evidence",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": true,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": true,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": true,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": false,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": true,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": true,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": true,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": true,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": false,
+        "machine": true,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": false,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": true,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": true,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": true,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": false,
+        "acceptedBy": true,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": false,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": false,
+        "hashes": true,
+        "acceptedBy": true,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": false,
+        "snapshots": false,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": true,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": false,
+        "snapshots": true,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": true,
+        "signedBy": false
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": true,
+        "snapshots": false,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": false,
+        "acceptedBy": true,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "none"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "open"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": false,
+        "signedBy": true
+      }
+    },
+    {
+      "input": {
+        "affected": true,
+        "machine": true,
+        "signoff": true,
+        "snapshots": true,
+        "unexpected": "accepted"
+      },
+      "after": {
+        "mapSection": true,
+        "mermaid": true,
+        "hashes": true,
+        "acceptedBy": true,
+        "signedBy": true
+      }
+    }
+  ]
+}

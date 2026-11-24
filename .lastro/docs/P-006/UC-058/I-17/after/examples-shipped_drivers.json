@@ -1,0 +1,127 @@
+{
+  "model": "shipped_drivers",
+  "subject": "shipped_drivers",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "sdk": "typescript",
+        "setup": "web"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "typescript",
+        "setup": "appium"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "typescript",
+        "setup": "http"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "typescript",
+        "setup": "jsonlines"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "go",
+        "setup": "web"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "go",
+        "setup": "appium"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "go",
+        "setup": "http"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "go",
+        "setup": "jsonlines"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "dotnet",
+        "setup": "web"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "dotnet",
+        "setup": "appium"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "dotnet",
+        "setup": "http"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    },
+    {
+      "input": {
+        "sdk": "dotnet",
+        "setup": "jsonlines"
+      },
+      "after": {
+        "bundlesBrowser": false,
+        "documented": true
+      }
+    }
+  ]
+}

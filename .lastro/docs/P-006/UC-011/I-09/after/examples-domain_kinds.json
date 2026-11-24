@@ -1,0 +1,127 @@
+{
+  "model": "domain_kinds",
+  "subject": "domain_kinds",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "hasOutputs": false,
+        "kind": "bool"
+      },
+      "after": {
+        "finite": true,
+        "size": 2,
+        "sortedOrder": true,
+        "rejected": true
+      }
+    },
+    {
+      "input": {
+        "hasOutputs": false,
+        "kind": "enum"
+      },
+      "after": {
+        "finite": true,
+        "size": 3,
+        "sortedOrder": true,
+        "rejected": true
+      }
+    },
+    {
+      "input": {
+        "hasOutputs": false,
+        "kind": "int-bounded"
+      },
+      "after": {
+        "finite": true,
+        "size": 5,
+        "sortedOrder": true,
+        "rejected": true
+      }
+    },
+    {
+      "input": {
+        "hasOutputs": false,
+        "kind": "int-unbounded"
+      },
+      "after": {
+        "finite": false,
+        "size": 0,
+        "sortedOrder": true,
+        "rejected": true
+      }
+    },
+    {
+      "input": {
+        "hasOutputs": false,
+        "kind": "string"
+      },
+      "after": {
+        "finite": false,
+        "size": 0,
+        "sortedOrder": true,
+        "rejected": true
+      }
+    },
+    {
+      "input": {
+        "hasOutputs": true,
+        "kind": "bool"
+      },
+      "after": {
+        "finite": true,
+        "size": 2,
+        "sortedOrder": true,
+        "rejected": false
+      }
+    },
+    {
+      "input": {
+        "hasOutputs": true,
+        "kind": "enum"
+      },
+      "after": {
+        "finite": true,
+        "size": 3,
+        "sortedOrder": true,
+        "rejected": false
+      }
+    },
+    {
+      "input": {
+        "hasOutputs": true,
+        "kind": "int-bounded"
+      },
+      "after": {
+        "finite": true,
+        "size": 5,
+        "sortedOrder": true,
+        "rejected": false
+      }
+    },
+    {
+      "input": {
+        "hasOutputs": true,
+        "kind": "int-unbounded"
+      },
+      "after": {
+        "finite": false,
+        "size": 0,
+        "sortedOrder": true,
+        "rejected": false
+      }
+    },
+    {
+      "input": {
+        "hasOutputs": true,
+        "kind": "string"
+      },
+      "after": {
+        "finite": false,
+        "size": 0,
+        "sortedOrder": true,
+        "rejected": false
+      }
+    }
+  ]
+}

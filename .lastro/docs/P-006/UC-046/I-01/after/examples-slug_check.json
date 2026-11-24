@@ -1,0 +1,103 @@
+{
+  "model": "slug_check",
+  "subject": "slug_check",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "slug": "a"
+      },
+      "after": {
+        "accepted": true
+      }
+    },
+    {
+      "input": {
+        "slug": "rule"
+      },
+      "after": {
+        "accepted": true
+      }
+    },
+    {
+      "input": {
+        "slug": "free-shipping"
+      },
+      "after": {
+        "accepted": true
+      }
+    },
+    {
+      "input": {
+        "slug": "a1-b2"
+      },
+      "after": {
+        "accepted": true
+      }
+    },
+    {
+      "input": {
+        "slug": "A"
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "slug": "Free-Shipping"
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "slug": "free_shipping"
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "slug": "free--shipping"
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "slug": "-free"
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "slug": "free-"
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "slug": "free shipping"
+      },
+      "after": {
+        "accepted": false
+      }
+    },
+    {
+      "input": {
+        "slug": ""
+      },
+      "after": {
+        "accepted": false
+      }
+    }
+  ]
+}

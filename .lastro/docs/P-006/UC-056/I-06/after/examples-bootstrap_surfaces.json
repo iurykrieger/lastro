@@ -1,0 +1,111 @@
+{
+  "model": "bootstrap_surfaces",
+  "subject": "bootstrap_surfaces",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "addsSurface": false,
+        "hasSurfaces": false,
+        "touchesDescription": false
+      },
+      "after": {
+        "proposed": true,
+        "accepted": false,
+        "descriptionKept": true,
+        "reviewed": true
+      }
+    },
+    {
+      "input": {
+        "addsSurface": false,
+        "hasSurfaces": false,
+        "touchesDescription": true
+      },
+      "after": {
+        "proposed": true,
+        "accepted": false,
+        "descriptionKept": true,
+        "reviewed": true
+      }
+    },
+    {
+      "input": {
+        "addsSurface": false,
+        "hasSurfaces": true,
+        "touchesDescription": false
+      },
+      "after": {
+        "proposed": false,
+        "accepted": false,
+        "descriptionKept": true,
+        "reviewed": true
+      }
+    },
+    {
+      "input": {
+        "addsSurface": false,
+        "hasSurfaces": true,
+        "touchesDescription": true
+      },
+      "after": {
+        "proposed": false,
+        "accepted": false,
+        "descriptionKept": true,
+        "reviewed": true
+      }
+    },
+    {
+      "input": {
+        "addsSurface": true,
+        "hasSurfaces": false,
+        "touchesDescription": false
+      },
+      "after": {
+        "proposed": true,
+        "accepted": true,
+        "descriptionKept": true,
+        "reviewed": true
+      }
+    },
+    {
+      "input": {
+        "addsSurface": true,
+        "hasSurfaces": false,
+        "touchesDescription": true
+      },
+      "after": {
+        "proposed": true,
+        "accepted": false,
+        "descriptionKept": true,
+        "reviewed": true
+      }
+    },
+    {
+      "input": {
+        "addsSurface": true,
+        "hasSurfaces": true,
+        "touchesDescription": false
+      },
+      "after": {
+        "proposed": false,
+        "accepted": true,
+        "descriptionKept": true,
+        "reviewed": true
+      }
+    },
+    {
+      "input": {
+        "addsSurface": true,
+        "hasSurfaces": true,
+        "touchesDescription": true
+      },
+      "after": {
+        "proposed": false,
+        "accepted": false,
+        "descriptionKept": true,
+        "reviewed": true
+      }
+    }
+  ]
+}

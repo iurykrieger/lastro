@@ -1,0 +1,9 @@
+{
+  "model": "supersedes",
+  "fields": {
+    "in.first": "enum[\"proposed\",\"approved\",\"amended\",\"rejected\"]",
+    "in.second": "enum[\"proposed\",\"approved\",\"amended\",\"rejected\"]",
+    "out.first": "bool",
+    "out.second": "bool"
+  }
+}

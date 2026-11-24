@@ -1,0 +1,43 @@
+{
+  "model": "reference_screenshot",
+  "subject": "reference_screenshot",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "hadReference": false,
+        "signedOff": false
+      },
+      "after": {
+        "referenceIsAfter": false
+      }
+    },
+    {
+      "input": {
+        "hadReference": false,
+        "signedOff": true
+      },
+      "after": {
+        "referenceIsAfter": true
+      }
+    },
+    {
+      "input": {
+        "hadReference": true,
+        "signedOff": false
+      },
+      "after": {
+        "referenceIsAfter": false
+      }
+    },
+    {
+      "input": {
+        "hadReference": true,
+        "signedOff": true
+      },
+      "after": {
+        "referenceIsAfter": true
+      }
+    }
+  ]
+}

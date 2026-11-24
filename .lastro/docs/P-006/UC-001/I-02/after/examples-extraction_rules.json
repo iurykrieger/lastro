@@ -1,0 +1,295 @@
+{
+  "model": "extraction_rules",
+  "subject": "extraction_rules",
+  "wholeSpace": true,
+  "rows": [
+    {
+      "input": {
+        "change": "add",
+        "known": false,
+        "replaces": "none"
+      },
+      "after": {
+        "accepted": true,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "add",
+        "known": false,
+        "replaces": "own"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "add",
+        "known": false,
+        "replaces": "other"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "add",
+        "known": false,
+        "replaces": "unknown"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "add",
+        "known": true,
+        "replaces": "none"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "add",
+        "known": true,
+        "replaces": "own"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "add",
+        "known": true,
+        "replaces": "other"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "add",
+        "known": true,
+        "replaces": "unknown"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "modify",
+        "known": false,
+        "replaces": "none"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "modify",
+        "known": false,
+        "replaces": "own"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "modify",
+        "known": false,
+        "replaces": "other"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "modify",
+        "known": false,
+        "replaces": "unknown"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "modify",
+        "known": true,
+        "replaces": "none"
+      },
+      "after": {
+        "accepted": true,
+        "replacesAll": false,
+        "beforeFromUseCase": true
+      }
+    },
+    {
+      "input": {
+        "change": "modify",
+        "known": true,
+        "replaces": "own"
+      },
+      "after": {
+        "accepted": true,
+        "replacesAll": false,
+        "beforeFromUseCase": true
+      }
+    },
+    {
+      "input": {
+        "change": "modify",
+        "known": true,
+        "replaces": "other"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "modify",
+        "known": true,
+        "replaces": "unknown"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "remove",
+        "known": false,
+        "replaces": "none"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "remove",
+        "known": false,
+        "replaces": "own"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "remove",
+        "known": false,
+        "replaces": "other"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "remove",
+        "known": false,
+        "replaces": "unknown"
+      },
+      "after": {
+        "accepted": false,
+        "replacesAll": false,
+        "beforeFromUseCase": false
+      }
+    },
+    {
+      "input": {
+        "change": "remove",
+        "known": true,
+        "replaces": "none"
+      },
+      "after": {
+        "accepted": true,
+        "replacesAll": true,
+        "beforeFromUseCase": true
+      }
+    },
+    {
+      "input": {
+        "change": "remove",
+        "known": true,
+        "replaces": "own"
+      },
+      "after": {
+        "accepted": true,
+        "replacesAll": true,
+        "beforeFromUseCase": true
+      }
+    },
+    {
+      "input": {
+        "change": "remove",
+        "known": true,
+        "replaces": "other"
+      },
+      "after": {
+        "accepted": true,
+        "replacesAll": true,
+        "beforeFromUseCase": true
+      }
+    },
+    {
+      "input": {
+        "change": "remove",
+        "known": true,
+        "replaces": "unknown"
+      },
+      "after": {
+        "accepted": true,
+        "replacesAll": true,
+        "beforeFromUseCase": true
+      }
+    }
+  ]
+}
